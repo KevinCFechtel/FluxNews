@@ -1,0 +1,474 @@
+import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+
+import 'flux_news_state.dart';
+import 'miniflux_backend.dart';
+import 'news_model.dart';
+
+// function to insert news in database which are located in the newsList parameter
+Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
+  // init the return value of the function
+  int result = 0;
+  // if not already initialized, init the database
+  appState.db ??= await appState.initializeDB();
+  // init resultset to check the existance of the news
+  List<Map<String, Object?>> resultSelect = [];
+  // prevent a uninitialized database
+  if (appState.db != null) {
+    // iterate over the new news
+    for (News news in newsList.news) {
+      // check if news already present in the database
+      resultSelect = await appState.db!
+          .rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
+      // if the news is not present, insert the news
+      if (resultSelect.isEmpty) {
+        result = await appState.db!.insert('news', news.toMap());
+      } else {
+        // if the news is present, update the status of the news
+        result = await appState.db!.rawUpdate(
+            'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
+            [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
+      }
+      // check if the feed of the news already contains an icon
+      resultSelect = await appState.db!
+          .rawQuery('SELECT icon FROM feeds WHERE feedID = ?', [news.feedID]);
+      if (resultSelect.isEmpty) {
+        // if the feed doesn't contain a icon, fetch the icon from the miniflux server
+        FeedIcon? icon =
+            await getFeedIcon(http.Client(), appState, news.feedID);
+        if (icon != null) {
+          // if the icon is successflully fetched, insert the icon into the database
+          result = await appState.db!.rawInsert(
+              'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
+              [news.feedID, news.feedTitel, icon.getIcon(), icon.iconMimeType]);
+        }
+      }
+    }
+  }
+
+  // return the result from the inserts into the database
+  return result;
+}
+
+// update the bookmarked news in the database which are located in the newsList parameter
+Future<int> updateStarredNewsInDB(
+    NewsList newsList, FluxNewsState appState) async {
+  int result = 0;
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    List<Map<String, Object?>> resultSelect = [];
+    for (News news in newsList.news) {
+      // check if the news is already marked as bookmarked
+      resultSelect = await appState.db!.rawQuery(
+          'SELECT * FROM news WHERE newsID = ? AND starred = ?',
+          [news.newsID, 1]);
+      if (resultSelect.isEmpty) {
+        // if the news is not already marked, mark it as bookmarked
+        result = await appState.db!.rawUpdate(
+            'UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
+      }
+    }
+    // check if the existing bookmakrs also exist in the given list.
+    // if not, delete the bookmark flag at the news
+    List<News> existingNotStarredNews = [];
+    resultSelect = await appState.db!
+        .rawQuery('SELECT * FROM news WHERE starred = ?', [1]);
+    if (resultSelect.isNotEmpty) {
+      existingNotStarredNews =
+          resultSelect.map((e) => News.fromMap(e)).toList();
+    }
+    for (News news in existingNotStarredNews) {
+      if (!newsList.news.any((item) => item.newsID == news.newsID)) {
+        result = await appState.db!.rawUpdate(
+            'UPDATE news SET starred = ? WHERE newsId = ?', [0, news.newsID]);
+      }
+    }
+  }
+  return result;
+}
+
+// chek if the local unread news exists in the list of new fetched unread news.
+// if the news doesn't exists, it means that this news was marked by another app as read.
+// so we mark the news also as read.
+Future<int> markNotFetchedNewsAsRead(
+    NewsList newNewsList, FluxNewsState appState) async {
+  int result = 0;
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    List<Map<String, Object?>> resultSelect = [];
+    List<News> existingNews = [];
+    // get the local unread news
+    resultSelect = await appState.db!.rawQuery(
+        'SELECT * FROM news WHERE status = ? AND syncStatus = ?',
+        [FluxNewsState.unreadNewsStatus, FluxNewsState.notSyncedSyncStatus]);
+    if (resultSelect.isNotEmpty) {
+      existingNews = resultSelect.map((e) => News.fromMap(e)).toList();
+    }
+
+    for (News news in existingNews) {
+      // check if the news exists in the unread news list which was fetched.
+      if (!newNewsList.news.any((item) => item.newsID == news.newsID)) {
+        // if not, mark the news as read
+        result = await appState.db!.rawUpdate(
+            'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?', [
+          FluxNewsState.readNewsStatus,
+          FluxNewsState.syncedSyncStatus,
+          news.newsID
+        ]);
+      }
+    }
+  }
+  return result;
+}
+
+// get the local saved news from the database
+Future<List<News>> queryNewsFromDB(
+    FluxNewsState appState, List<int>? feedIDs) async {
+  List<News> newList = [];
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    String status = '';
+    // decide if the news status is set to diyplay all news or only the unread
+    if (appState.newsStatus == FluxNewsState.allNewsString) {
+      status = FluxNewsState.databaseAllString;
+    } else {
+      status = appState.newsStatus;
+    }
+
+    // decide if the sort order is ascending or descending
+    String sortOrder = FluxNewsState.databaseDescString;
+    if (appState.sortOrder != null) {
+      if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+        sortOrder = FluxNewsState.databaseDescString;
+      } else {
+        sortOrder = FluxNewsState.databaseAscString;
+      }
+    }
+
+    if (feedIDs != null) {
+      // if the feed id is not null a categorie, a feed or the bookmarked news ar selected
+      if (appState.feedIDs?.first == -1) {
+        // if the feed id is -1 the bookmarked news are selected
+        List<Map<String, Object?>> queryResult =
+            await appState.db!.rawQuery('''SELECT news.newsID, 
+                      news.feedID, 
+                      news.title, 
+                      news.url, 
+                      news.content, 
+                      news.hash, 
+                      news.publishedAt, 
+                      news.createdAt, 
+                      news.status, 
+                      news.readingTime, 
+                      news.starred, 
+                      news.feedTitle, 
+                      news.syncStatus,
+                      feeds.icon,
+                      feeds.iconMimeType 
+                FROM news 
+                LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+                WHERE news.starred = ? 
+                ORDER BY news.publishedAt $sortOrder''', [1]);
+        newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+      } else {
+        // if the feed id is not -1 a feed or a categorie with multiple feeds is selected
+        for (int feedID in feedIDs) {
+          List<Map<String, Object?>> queryResult =
+              await appState.db!.rawQuery('''SELECT news.newsID, 
+                      news.feedID, 
+                      news.title, 
+                      news.url, 
+                      news.content, 
+                      news.hash, 
+                      news.publishedAt, 
+                      news.createdAt, 
+                      news.status, 
+                      news.readingTime, 
+                      news.starred, 
+                      news.feedTitle, 
+                      news.syncStatus,
+                      feeds.icon,
+                      feeds.iconMimeType 
+                  FROM news 
+                  LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+                  WHERE (news.status LIKE ?) 
+                    AND news.feedID LIKE ? 
+                  ORDER BY news.publishedAt $sortOrder''', [status, feedID]);
+          newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+        }
+      }
+    } else {
+      // if the feed id is null, "all news" are selected
+      List<Map<String, Object?>> queryResult =
+          await appState.db!.rawQuery('''SELECT news.newsID, 
+                      news.feedID, 
+                      news.title, 
+                      news.url, 
+                      news.content, 
+                      news.hash, 
+                      news.publishedAt, 
+                      news.createdAt, 
+                      news.status, 
+                      news.readingTime, 
+                      news.starred, 
+                      news.feedTitle, 
+                      news.syncStatus,
+                      feeds.icon,
+                      feeds.iconMimeType
+              FROM news 
+              LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+              WHERE (news.status LIKE ?) 
+              ORDER BY news.publishedAt $sortOrder''', [status]);
+      newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+    }
+  }
+  return newList;
+}
+
+// update the status (read or unread) of the news in the database
+void updateNewsStatusInDB(
+    int newsID, String status, FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawUpdate(
+        'UPDATE news SET status = ? WHERE newsId = ?', [status, newsID]);
+  }
+}
+
+// update the counter of the bookmarked news
+void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
+  int? starredNewsCount;
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    starredNewsCount = Sqflite.firstIntValue(await appState.db!
+        .rawQuery('SELECT COUNT(*) FROM news WHERE starred = ?', [1]));
+  }
+  starredNewsCount ??= 0;
+  // assign the count of bookmarked news to the app state variable
+  appState.starredCount = starredNewsCount;
+  if (context.mounted) {
+    if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
+      // if the bookmarked news are selected to display, assign the count
+      // also to the app bar counter variable.
+      appState.appBarNewsCount = starredNewsCount;
+    }
+  }
+  appState.refreshView();
+}
+
+// update the bookmarked flag in the database
+void updateNewsStarredStatusInDB(
+    int newsID, bool starred, FluxNewsState appState) async {
+  int starredStatus = 0;
+  if (starred) {
+    starredStatus = 1;
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?',
+        [starredStatus, newsID]);
+  }
+}
+
+// delete the not bookmarked news, which are beyond the limit of news
+// which should be saved locally.
+// this limit can be changed in the settings.
+Future<void> cleanUnstarredNews(FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawDelete('''DELETE FROM news 
+                        WHERE starred = 0 AND newsID NOT IN 
+                          (SELECT newsID 
+                            FROM news 
+                            WHERE starred = 0
+                            ORDER BY publishedAt DESC
+                            LIMIT ${appState.amountOfSavedNews})''');
+  }
+}
+
+// delete the bookmarked news, which are beyond the limit of news
+// which should be saved locally.
+// this limit can be changed in the settings.
+// maybe the bookmarked news should have another limit as the not bookmarked news
+Future<void> cleanStarredNews(FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawDelete('''DELETE FROM news 
+                        WHERE starred = 1 AND newsID NOT IN 
+                          (SELECT newsID 
+                            FROM news 
+                            WHERE starred = 1
+                            ORDER BY publishedAt DESC
+                            LIMIT ${appState.amountOfSavedStarredNews})''');
+  }
+}
+
+// insert the fetched categories in the database
+Future<int> insertCategoriesInDB(
+    Categories categorieList, FluxNewsState appState) async {
+  int result = 0;
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    List<Map<String, Object?>> resultSelect = [];
+    for (Categorie categorie in categorieList.categories) {
+      // iterate over the categories and check if they already exists locally.
+      resultSelect = await appState.db!.rawQuery(
+          'SELECT * FROM categories WHERE categorieID = ?',
+          [categorie.categorieID]);
+      if (resultSelect.isEmpty) {
+        // if they don't exists locally, insert the categorie
+        result = await appState.db!.insert('categories', categorie.toMap());
+      } else {
+        // if they exists locally, update the categorie
+        result = await appState.db!.rawUpdate(
+            'UPDATE categories SET title = ? WHERE categorieID = ?',
+            [categorie.title, categorie.categorieID]);
+      }
+      for (Feed feed in categorie.feeds) {
+        // iterate over the feeds of the categorie and check if they already exists locally
+        resultSelect = await appState.db!
+            .rawQuery('SELECT * FROM feeds WHERE feedID = ?', [feed.feedID]);
+        if (resultSelect.isEmpty) {
+          // if they don't exists locally, insert the feed
+          result = await appState.db!.rawInsert(
+              'INSERT INTO feeds (feedID, title, site_url, icon, iconMimeType, newsCount, categorieID) VALUES(?,?,?,?,?,?,?)',
+              [
+                feed.feedID,
+                feed.title,
+                feed.siteUrl,
+                feed.icon,
+                feed.iconMimeType,
+                feed.newsCount,
+                categorie.categorieID
+              ]);
+        } else {
+          // if they exists locally, update the feed
+          result = await appState.db!.rawUpdate(
+              'UPDATE feeds SET title = ?, site_url = ?, icon = ?, iconMimeType = ?, newsCount = ?, categorieID = ? WHERE feedID = ?',
+              [
+                feed.title,
+                feed.siteUrl,
+                feed.icon,
+                feed.iconMimeType,
+                feed.newsCount,
+                categorie.categorieID,
+                feed.feedID
+              ]);
+        }
+      }
+    }
+
+    // check if the local categories exists in the fetched categories.
+    // if they don't exists, the categorie is deleted and needs also to be deleted locally
+    List<Categorie> existingCategories = [];
+    // get a list of the local categories
+    resultSelect = await appState.db!.rawQuery('SELECT * FROM categories');
+    if (resultSelect.isNotEmpty) {
+      existingCategories =
+          resultSelect.map((e) => Categorie.fromMap(e)).toList();
+    }
+
+    for (Categorie categorie in existingCategories) {
+      // check if the local categoires exists in the fetched list of categories
+      if (!categorieList.categories
+          .any((item) => item.categorieID == categorie.categorieID)) {
+        result = await appState.db!.rawDelete(
+            'DELETE FROM categories WHERE categorieID = ?',
+            [categorie.categorieID]);
+      }
+    }
+
+    // check if the local feeds exists in the fetched feeds.
+    // if they don't exists, the feed is deleted and needs also to be deleted locally
+    List<Feed> existingFeeds = [];
+    bool feedFound = false;
+    // get a list of the local feeds
+    resultSelect = await appState.db!.rawQuery('SELECT * FROM feeds');
+    if (resultSelect.isNotEmpty) {
+      existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
+    }
+
+    for (Feed feed in existingFeeds) {
+      feedFound = false;
+      for (Categorie categorie in categorieList.categories) {
+        // check if the local feed exists in the fetched list of feeds
+        if (categorie.feeds.any((item) => item.feedID == feed.feedID)) {
+          feedFound = true;
+        }
+      }
+      if (feedFound == false) {
+        // if the feed doesn't exists, delete the feed and all the news of the feed.
+        // this is because the feed seems to be deleted on the miniflux server.
+        result = await appState.db!
+            .rawDelete('DELETE FROM feeds WHERE feedID = ?', [feed.feedID]);
+        result = await appState.db!
+            .rawDelete('DELETE FROM news WHERE feedID = ?', [feed.feedID]);
+      }
+    }
+  }
+  return result;
+}
+
+// get the categories from the database and calculate the news count of this categories
+Future<Categories> queryCategoriesFromDB(
+    FluxNewsState appState, BuildContext context) async {
+  List<Categorie> categorieList = [];
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    // get the categories from the database
+    List<Map<String, Object?>> queryResult =
+        await appState.db!.rawQuery('SELECT * FROM categories');
+    categorieList = queryResult.map((e) => Categorie.fromMap(e)).toList();
+    for (Categorie categorie in categorieList) {
+      List<Feed> feedlist = [];
+      queryResult = await appState.db!.rawQuery(
+          'SELECT * FROM feeds WHERE categorieID = ?', [categorie.categorieID]);
+      feedlist = queryResult.map((e) => Feed.fromMap(e)).toList();
+      categorie.feeds = feedlist;
+    }
+  }
+  Categories categories = Categories(categories: categorieList);
+  // calculate the news count of the cagegories and feeds
+  categories.renewNewsCount(appState);
+  if (context.mounted) {
+    // calculate the news count of the "all news" section
+    renewAllNewsCount(appState, context);
+  }
+  return categories;
+}
+
+// calculate the news count of the "all news" section
+Future<void> renewAllNewsCount(
+    FluxNewsState appState, BuildContext context) async {
+  appState.db ??= await appState.initializeDB();
+  int? allNewsCount = 0;
+  if (appState.db != null) {
+    // decide if the news count should be calculated over all news
+    // or only over the unread news.
+    String status = '';
+    if (appState.newsStatus == FluxNewsState.allNewsString) {
+      status = FluxNewsState.databaseAllString;
+    } else {
+      status = appState.newsStatus;
+    }
+    allNewsCount = Sqflite.firstIntValue(await appState.db!
+        .rawQuery('SELECT COUNT(*) FROM news WHERE status LIKE ?', [status]));
+    allNewsCount ??= 0;
+  }
+
+  // assign the count of all news to the app state variable
+  appState.allNewsCount = allNewsCount;
+  if (context.mounted) {
+    if (appState.appBarText == AppLocalizations.of(context)!.allNews) {
+      // if "all news" are selected to display, assign the count
+      // also to the app bar counter variable.
+      appState.appBarNewsCount = allNewsCount;
+    }
+  }
+
+  // notify the app about the updated count of news
+  appState.refreshView();
+}
