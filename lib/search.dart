@@ -24,7 +24,6 @@ class _SearchState extends State<Search> {
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
   final TextEditingController _searchController = TextEditingController();
   late Offset _tapPosition;
-  bool searchProcessing = false;
 
   @override
   void initState() {
@@ -71,9 +70,6 @@ class _SearchState extends State<Search> {
             // on change of the search text field, fetch the news list
             onSubmitted: (value) async {
               if (value != '') {
-                setState(() {
-                  searchProcessing = true;
-                });
                 // fetch the news list from the backend with the search text
                 Future<List<News>> searchNewsListResult =
                     fetchSearchedNews(http.Client(), appState, value)
@@ -91,7 +87,6 @@ class _SearchState extends State<Search> {
                 // set the state with the fetched news list
                 setState(() {
                   searchNewsList = searchNewsListResult;
-                  searchProcessing = false;
                 });
               } else {
                 // if search text is empty, set the state with an empty list
@@ -103,9 +98,7 @@ class _SearchState extends State<Search> {
           ),
         ),
         // show the news list
-        body: searchProcessing
-            ? const Center(child: CircularProgressIndicator.adaptive())
-            : newsListWidget(context, appState));
+        body: newsListWidget(context, appState));
   }
 
   // the list view widget with search result
@@ -116,6 +109,7 @@ class _SearchState extends State<Search> {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
           case ConnectionState.waiting:
+            return const Center(child: CircularProgressIndicator.adaptive());
           default:
             if (snapshot.hasError) {
               return const SizedBox.shrink();
