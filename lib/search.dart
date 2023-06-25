@@ -69,7 +69,7 @@ class _SearchState extends State<Search> {
             ),
 
             // on change of the search text field, fetch the news list
-            onChanged: (value) async {
+            onSubmitted: (value) async {
               if (value != '') {
                 setState(() {
                   searchProcessing = true;
