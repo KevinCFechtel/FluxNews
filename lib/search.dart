@@ -51,7 +51,6 @@ class _SearchState extends State<Search> {
           title: TextField(
             controller: _searchController,
             style: Theme.of(context).textTheme.bodyLarge,
-            cursorColor: Colors.white,
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)!.searchHint,
               hintStyle: Theme.of(context).textTheme.bodyLarge,
