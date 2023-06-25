@@ -112,6 +112,7 @@ class FluxNews extends StatelessWidget {
               headlineMedium: TextStyle(color: Colors.black54),
               headlineSmall: TextStyle(color: Colors.black54),
               bodyMedium: TextStyle(color: Colors.black54),
+              bodyLarge: TextStyle(color: Colors.black54),
               titleLarge: TextStyle(
                   color: Colors.black54,
                   fontSize: 18,
@@ -159,6 +160,7 @@ class FluxNews extends StatelessWidget {
               headlineMedium: TextStyle(color: Colors.white70),
               headlineSmall: TextStyle(color: Colors.white70),
               bodyMedium: TextStyle(color: Colors.white70),
+              bodyLarge: TextStyle(color: Colors.white70),
               titleLarge: TextStyle(
                   color: Colors.white70,
                   fontSize: 18,

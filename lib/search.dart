@@ -50,11 +50,11 @@ class _SearchState extends State<Search> {
           // set the title of the search page to search text field
           title: TextField(
             controller: _searchController,
-            style: const TextStyle(color: Colors.white),
+            style: Theme.of(context).textTheme.bodyLarge,
             cursorColor: Colors.white,
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)!.searchHint,
-              hintStyle: const TextStyle(color: Colors.white54),
+              hintStyle: Theme.of(context).textTheme.bodyLarge,
               border: InputBorder.none,
             ),
             // on change of the search text field, fetch the news list
