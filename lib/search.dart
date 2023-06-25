@@ -24,6 +24,7 @@ class _SearchState extends State<Search> {
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
   final TextEditingController _searchController = TextEditingController();
   late Offset _tapPosition;
+  bool searchProcessing = false;
 
   @override
   void initState() {
@@ -54,32 +55,57 @@ class _SearchState extends State<Search> {
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)!.searchHint,
               hintStyle: Theme.of(context).textTheme.bodyLarge,
-              border: InputBorder.none,
+              border:
+                  UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _searchController.clear();
+                    searchNewsList = Future<List<News>>.value([]);
+                  });
+                },
+                icon: const Icon(Icons.clear),
+              ),
             ),
+
             // on change of the search text field, fetch the news list
             onChanged: (value) async {
-              // fetch the news list from the backend with the search text
-              Future<List<News>> searchNewsListResult =
-                  fetchSearchedNews(http.Client(), appState, value)
-                      .onError((error, stackTrace) {
-                if (appState.errorString !=
-                    AppLocalizations.of(context)!.communicateionMinifluxError) {
-                  appState.errorString =
-                      AppLocalizations.of(context)!.communicateionMinifluxError;
-                  appState.newError = true;
-                  appState.refreshView();
-                }
-                return [];
-              });
-              // set the state with the fetched news list
-              setState(() {
-                searchNewsList = searchNewsListResult;
-              });
+              if (value != '') {
+                setState(() {
+                  searchProcessing = true;
+                });
+                // fetch the news list from the backend with the search text
+                Future<List<News>> searchNewsListResult =
+                    fetchSearchedNews(http.Client(), appState, value)
+                        .onError((error, stackTrace) {
+                  if (appState.errorString !=
+                      AppLocalizations.of(context)!
+                          .communicateionMinifluxError) {
+                    appState.errorString = AppLocalizations.of(context)!
+                        .communicateionMinifluxError;
+                    appState.newError = true;
+                    appState.refreshView();
+                  }
+                  return [];
+                });
+                // set the state with the fetched news list
+                setState(() {
+                  searchNewsList = searchNewsListResult;
+                  searchProcessing = false;
+                });
+              } else {
+                // if search text is empty, set the state with an empty list
+                setState(() {
+                  searchNewsList = Future<List<News>>.value([]);
+                });
+              }
             },
           ),
         ),
         // show the news list
-        body: newsListWidget(context, appState));
+        body: searchProcessing
+            ? const Center(child: CircularProgressIndicator.adaptive())
+            : newsListWidget(context, appState));
   }
 
   // the list view widget with search result
