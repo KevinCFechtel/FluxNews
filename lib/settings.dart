@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:http/http.dart' as http;
 
-import 'database_backend.dart';
 import 'flux_news_state.dart';
 import 'miniflux_backend.dart';
 
@@ -175,56 +174,6 @@ class _SettingsState extends State<Settings> {
                       }
                     },
                     items: appState.recordTypesBrightnessMode!
-                        .map<DropdownMenuItem<KeyValueRecordType>>(
-                            (recordType) =>
-                                DropdownMenuItem<KeyValueRecordType>(
-                                    value: recordType,
-                                    child: Text(recordType.value)))
-                        .toList(),
-                  ),
-                ],
-              ),
-              const Divider(),
-              // this row contains the selection of the sort order of the news
-              // there are the choices of ascending and descending
-              Row(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 17.0),
-                    child: Icon(
-                      Icons.sort,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 30.0),
-                    child: Text(AppLocalizations.of(context)!.sortOrderOfNews,
-                        style: Theme.of(context).textTheme.titleMedium),
-                  ),
-                  const Spacer(),
-                  DropdownButton<KeyValueRecordType>(
-                    value: appState.sortOrderSelection,
-                    elevation: 16,
-                    underline: Container(
-                      height: 2,
-                    ),
-                    onChanged: (KeyValueRecordType? value) {
-                      if (value != null) {
-                        appState.sortOrder = value.key;
-                        appState.sortOrderSelection = value;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageSortOrderKey,
-                            value: value.key);
-                        appState.newsList =
-                            queryNewsFromDB(appState, appState.feedIDs)
-                                .onError((error, stackTrace) {
-                          appState.errorString =
-                              AppLocalizations.of(context)!.databaseError;
-                          return [];
-                        });
-                        appState.refreshView();
-                      }
-                    },
-                    items: appState.recordTypesSortOrderList!
                         .map<DropdownMenuItem<KeyValueRecordType>>(
                             (recordType) =>
                                 DropdownMenuItem<KeyValueRecordType>(

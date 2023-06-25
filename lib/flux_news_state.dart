@@ -7,7 +7,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;
 
 import 'package:path/path.dart' as path_package;
-import 'package:system_date_time_format/system_date_time_format.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 import 'news_model.dart';
@@ -36,6 +35,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String databasePathString = 'news_database.db';
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
+  static const String searchRouteString = '/search';
   static const int amountOfNewlyCatchedNews = 100;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
@@ -83,7 +83,7 @@ class FluxNewsState extends ChangeNotifier {
   List<int>? feedIDs;
 
   // var for formatting the date depending on locale settings
-  DateFormat dateFormat = DateFormat();
+  DateFormat dateFormat = DateFormat('M/d/yy HH:mm');
 
   // vars for error handling
   String errorString = '';
@@ -102,7 +102,6 @@ class FluxNewsState extends ChangeNotifier {
   String brightnessMode = FluxNewsState.brightnessModeSystemString;
   KeyValueRecordType? brightnessModeSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
-  KeyValueRecordType? sortOrderSelection;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
   int amountOfSavedStarredNews = 1000;
@@ -111,7 +110,6 @@ class FluxNewsState extends ChangeNotifier {
   bool multilineAppBarText = false;
   bool showFeedIcons = false;
   List<KeyValueRecordType>? recordTypesBrightnessMode;
-  List<KeyValueRecordType>? recordTypesSortOrderList;
 
   // vars for counter
   int starredCount = 0;
@@ -173,14 +171,15 @@ class FluxNewsState extends ChangeNotifier {
     );
   }
 
+  // read the persistant saved configuration
   Future<bool> readConfigValues(BuildContext context) async {
     storageValues = await storage.readAll();
     return true;
   }
 
-  // read the persistant saved configuration
+  // init the persistant saved configuration
   bool readConfig(BuildContext context) {
-    // init the maps for the brightness mode and the sort order of the news list
+    // init the maps for the brightness mode list
     // this maps use the key as the technical string and the value as the displey name
     if (context.mounted) {
       recordTypesBrightnessMode = <KeyValueRecordType>[
@@ -194,17 +193,8 @@ class FluxNewsState extends ChangeNotifier {
             key: FluxNewsState.brightnessModeLightString,
             value: AppLocalizations.of(context)!.light),
       ];
-      recordTypesSortOrderList = <KeyValueRecordType>[
-        KeyValueRecordType(
-            key: FluxNewsState.sortOrderNewestFirstString,
-            value: AppLocalizations.of(context)!.newestFirst),
-        KeyValueRecordType(
-            key: FluxNewsState.sortOrderOldestFirstString,
-            value: AppLocalizations.of(context)!.oldestFirst),
-      ];
     } else {
       recordTypesBrightnessMode = <KeyValueRecordType>[];
-      recordTypesSortOrderList = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -213,15 +203,6 @@ class FluxNewsState extends ChangeNotifier {
         brightnessModeSelection = recordTypesBrightnessMode![0];
       }
     }
-
-    // init the sort order selection with the first value of the above generated maps
-    if (recordTypesSortOrderList != null) {
-      if (recordTypesSortOrderList!.isNotEmpty) {
-        sortOrderSelection = recordTypesSortOrderList![0];
-      }
-    }
-
-    // read all persistant saved values from the flutter secure storage
 
     // init the miniflux server config with null
     minifluxURL = null;
@@ -255,11 +236,6 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageSortOrderKey) {
         if (value != '') {
           sortOrder = value;
-          for (KeyValueRecordType recordSet in recordTypesSortOrderList!) {
-            if (value == recordSet.key) {
-              sortOrderSelection = recordSet;
-            }
-          }
         }
       }
 
@@ -336,14 +312,6 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
     });
-    // read the dateformat of the system and assign it to the date format variable
-    //String dateFormatString = 'M/d/yy HH:mm';
-    final mediumDatePattern =
-        SystemDateTimeFormat.of(context).mediumDatePattern;
-    final timePattern = SystemDateTimeFormat.of(context).timePattern;
-    final dateFormatString = '$mediumDatePattern $timePattern';
-    dateFormat = DateFormat(dateFormatString);
-
     // return true if everything was read
     return true;
   }

@@ -4,12 +4,14 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
 
 import 'flux_news_body.dart';
 import 'flux_news_state.dart';
+import 'search.dart';
 import 'settings.dart';
 
 Future<void> main() async {
@@ -35,6 +37,13 @@ class FluxNews extends StatelessWidget {
 
   Widget getMaterialApp(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    // read the dateformat of the system and assign it to the date format variable
+    final mediumDatePattern =
+        SystemDateTimeFormat.of(context).mediumDatePattern;
+    final timePattern = SystemDateTimeFormat.of(context).timePattern;
+    final dateFormatString = '$mediumDatePattern $timePattern';
+    appState.dateFormat = DateFormat(dateFormatString);
+
     // init the dynamic color selection.
     // if the device is capable, we read the configured color scheme of the device
     // and add it as the seed of the app color scheme.
@@ -159,10 +168,11 @@ class FluxNews extends StatelessWidget {
               titleMedium: TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.normal),
             )),
-        // define routes for main view (FluxNewsBody) and settings view
+        // define routes for main view (FluxNewsBody), settings view and search view
         routes: {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),
           FluxNewsState.settingsRouteString: (context) => const Settings(),
+          FluxNewsState.searchRouteString: (context) => const Search(),
         },
         // define localization with english as fallback
         localizationsDelegates: AppLocalizations.localizationsDelegates,
