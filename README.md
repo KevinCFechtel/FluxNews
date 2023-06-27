@@ -38,6 +38,8 @@ moment, the following is supported:
 
 **Dark Mode:** Flux News has a material design inspired look in either light or dark themes.
 
+**Search for articles:** Search for articles at the miniflux backend.
+
 **Mark as read on scrollover:** Articles are marked as read when you scroll over them.
 
 **Open articles in an app:** Articles can be opened in an already installed app.
