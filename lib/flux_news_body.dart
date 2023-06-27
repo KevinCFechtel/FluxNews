@@ -63,7 +63,6 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
 
-    bool authCheck = true;
     if (completed) {
       if (context.mounted) {
         // set the app bar text to "All News"
@@ -72,13 +71,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         appState.readConfig(context);
       }
 
-      // check the miniflux credentials to enable the sync on startup
-      authCheck = await checkMinifluxCredentials(
-              http.Client(), appState.minifluxURL, appState.minifluxAPIKey)
-          .onError((error, stackTrace) => true);
-      appState.errorOnMicrofluxAuth = !authCheck;
-
-      if (appState.syncOnStart && authCheck) {
+      if (appState.syncOnStart) {
         // sync on startup
         if (context.mounted) {
           await syncNews(appState, context);
@@ -315,7 +308,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
 
   List<Widget> appBarButtons(FluxNewsState appState, BuildContext context) {
     // define the app bar buttons to sync with miniflux,
-    // switch between all and only unread news view
+    // search for news and switch between all and only unread news view
     // and the navigation to the settings
     return <Widget>[
       // here is the sync part
@@ -333,78 +326,207 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 Icons.refresh,
               ),
       ),
-      // here is the switch between all and only unread news view
-      IconButton(
-        onPressed: () {
-          if (appState.newsStatus == FluxNewsState.unreadNewsStatus) {
-            // switch the state to all news
-            appState.newsStatus = FluxNewsState.allNewsString;
+      // here is the popup menu where the user can search,
+      // choose between all and only unread news view
+      // and navigate to the settings
+      PopupMenuButton(
+          icon: const Icon(Icons.more_vert),
+          itemBuilder: (context) {
+            return [
+              // the search button
+              PopupMenuItem<int>(
+                value: 0,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.search,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: Text(AppLocalizations.of(context)!.search),
+                    )
+                  ],
+                ),
+              ),
+              // the switch between all and only unread news view
+              PopupMenuItem<int>(
+                value: 1,
+                child: Row(
+                  children: [
+                    Icon(
+                      appState.newsStatus == FluxNewsState.unreadNewsStatus
+                          ? Icons.remove_red_eye_outlined
+                          : Icons.fiber_new,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child:
+                          appState.newsStatus == FluxNewsState.unreadNewsStatus
+                              ? Text(AppLocalizations.of(context)!.showRead)
+                              : Text(AppLocalizations.of(context)!.showUnread),
+                    )
+                  ],
+                ),
+              ),
+              // the selection of the sort order of the news (newest first or oldest first)
+              PopupMenuItem<int>(
+                value: 2,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.sort,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: appState.sortOrder ==
+                              FluxNewsState.sortOrderNewestFirstString
+                          ? Text(AppLocalizations.of(context)!.oldestFirst)
+                          : Text(AppLocalizations.of(context)!.newestFirst),
+                    )
+                  ],
+                ),
+              ),
+              // the navigation to the settings
+              PopupMenuItem<int>(
+                value: 3,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.settings,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: Text(AppLocalizations.of(context)!.settings),
+                    )
+                  ],
+                ),
+              ),
+            ];
+          },
+          onSelected: (value) {
+            if (value == 0) {
+              // navigate to the search page
+              Navigator.pushNamed(context, FluxNewsState.searchRouteString);
+            } else if (value == 1) {
+              // switch between all and only unread news view
+              // if the current view is unread news change to all news
+              if (appState.newsStatus == FluxNewsState.unreadNewsStatus) {
+                // switch the state to all news
+                appState.newsStatus = FluxNewsState.allNewsString;
 
-            // save the state persistant
-            appState.storage.write(
-                key: FluxNewsState.secureStorageNewsStatusKey,
-                value: FluxNewsState.allNewsString);
+                // save the state persistant
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageNewsStatusKey,
+                    value: FluxNewsState.allNewsString);
 
-            // refresh news list with the all news state
-            appState.newsList =
-                queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-              waitUntilNewsListBuild().whenComplete(
-                () {
-                  setState(() {
-                    itemScrollController.jumpTo(index: 0);
-                  });
-                },
-              );
-            });
+                // refresh news list with the all news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
+                    .whenComplete(() {
+                  waitUntilNewsListBuild().whenComplete(
+                    () {
+                      setState(() {
+                        itemScrollController.jumpTo(index: 0);
+                      });
+                    },
+                  );
+                });
 
-            // notify the categoires to update the news count
-            setState(() {
-              listUpdated = true;
-            });
-            appState.refreshView();
-          } else {
-            // switch the state to show only unread news
-            appState.newsStatus = FluxNewsState.unreadNewsStatus;
+                // notify the categoires to update the news count
+                setState(() {
+                  listUpdated = true;
+                });
+                appState.refreshView();
+                // if the current view is all news change to only unread news
+              } else {
+                // switch the state to show only unread news
+                appState.newsStatus = FluxNewsState.unreadNewsStatus;
 
-            // save the state persistant
-            appState.storage.write(
-                key: FluxNewsState.secureStorageNewsStatusKey,
-                value: FluxNewsState.unreadNewsStatus);
+                // save the state persistant
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageNewsStatusKey,
+                    value: FluxNewsState.unreadNewsStatus);
 
-            // refresh news list with the only unread news state
-            appState.newsList =
-                queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-              waitUntilNewsListBuild().whenComplete(
-                () {
-                  setState(() {
-                    itemScrollController.jumpTo(index: 0);
-                  });
-                },
-              );
-            });
+                // refresh news list with the only unread news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
+                    .whenComplete(() {
+                  waitUntilNewsListBuild().whenComplete(
+                    () {
+                      setState(() {
+                        itemScrollController.jumpTo(index: 0);
+                      });
+                    },
+                  );
+                });
 
-            // notify the categoires to update the news count
-            setState(() {
-              listUpdated = true;
-            });
-            appState.refreshView();
-          }
-        },
-        icon: Icon(
-          appState.newsStatus == FluxNewsState.unreadNewsStatus
-              ? Icons.remove_red_eye
-              : Icons.remove_red_eye_outlined,
-        ),
-      ),
-      // this is the navigation to the settings
-      IconButton(
-        onPressed: () {
-          Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
-        },
-        icon: const Icon(
-          Icons.settings,
-        ),
-      ),
+                // notify the categoires to update the news count
+                setState(() {
+                  listUpdated = true;
+                });
+                appState.refreshView();
+              }
+            } else if (value == 2) {
+              // switch between newest first and oldest first
+              // if the current sort order is newest first change to oldest first
+              if (appState.sortOrder ==
+                  FluxNewsState.sortOrderNewestFirstString) {
+                // switch the state to all news
+                appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
+
+                // save the state persistant
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageSortOrderKey,
+                    value: FluxNewsState.sortOrderOldestFirstString);
+
+                // refresh news list with the all news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
+                    .whenComplete(() {
+                  waitUntilNewsListBuild().whenComplete(
+                    () {
+                      setState(() {
+                        itemScrollController.jumpTo(index: 0);
+                      });
+                    },
+                  );
+                });
+
+                // notify the categoires to update the news count
+                setState(() {
+                  listUpdated = true;
+                });
+                appState.refreshView();
+                // if the current sort order is oldest first change to newest first
+              } else {
+                // switch the state to show only unread news
+                appState.sortOrder = FluxNewsState.sortOrderNewestFirstString;
+
+                // save the state persistant
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageSortOrderKey,
+                    value: FluxNewsState.sortOrderNewestFirstString);
+
+                // refresh news list with the only unread news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
+                    .whenComplete(() {
+                  waitUntilNewsListBuild().whenComplete(
+                    () {
+                      setState(() {
+                        itemScrollController.jumpTo(index: 0);
+                      });
+                    },
+                  );
+                });
+
+                // notify the categoires to update the news count
+                setState(() {
+                  listUpdated = true;
+                });
+                appState.refreshView();
+              }
+            } else if (value == 3) {
+              // navigate to the settings page
+              Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
+            }
+          }),
     ];
   }
 
@@ -420,8 +542,29 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     });
     // also resetting the error string for new errors occuring within this sync
     appState.errorString = '';
+
+    // check the miniflux credentials to enable the sync
+    bool authCheck = await checkMinifluxCredentials(
+            http.Client(), appState.minifluxURL, appState.minifluxAPIKey)
+        .onError((error, stackTrace) {
+      logger.e("authCheck $error");
+      if (appState.errorString !=
+          AppLocalizations.of(context)!.communicateionMinifluxError) {
+        appState.errorString =
+            AppLocalizations.of(context)!.communicateionMinifluxError;
+        appState.newError = true;
+        appState.refreshView();
+      }
+      return false;
+    });
+
+    // if there is no new error (network error), set the errorOnMicrofluxAuth flag
+    if (!appState.newError) {
+      appState.errorOnMicrofluxAuth = !authCheck;
+    }
+
     // check if there are no authentication errors before start syncing
-    if (!appState.errorOnMicrofluxAuth) {
+    if (!appState.errorOnMicrofluxAuth && appState.errorString == '') {
       // at first toggle news as read so that this news don't show up in the next step
       await toggleNewsAsRead(http.Client(), appState)
           .onError((error, stackTrace) {
@@ -614,16 +757,18 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             itemScrollController.jumpTo(index: 0);
           }
         }
-        // end the sync process
-        setState(() {
-          syncProcess = false;
-        });
+      });
+      // end the sync process
+      setState(() {
+        syncProcess = false;
       });
     } else {
       // end the sync process
       setState(() {
         syncProcess = false;
       });
+      // remove the native spalsh after updating the list view
+      FlutterNativeSplash.remove();
     }
   }
 

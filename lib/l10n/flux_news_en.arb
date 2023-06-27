@@ -7,6 +7,8 @@
     "addBookmark": "Add Bookmark",
     "markAsRead": "Mark as read",
     "markAsUnread": "Mark as unread",
+    "showUnread": "Show unread news",
+    "showRead": "Show all news",
     "settingsNotSet": "Settings not set",
     "provideMinifluxCredentials": "Please provide miniflux URL and API-Key",
     "error": "Error",
@@ -40,5 +42,8 @@
     "multilineAppBarTextSetting": "Show newscount in Appbar",
     "showFeedIconsTextSettings": "Show feed icons",
     "descriptionMinifluxApp": "This is a simple Newsreader to work with miniflux.\nFor more information about miniflux, visit the projekt page:",
-    "descriptionMoreInformation": "For more information about this app, visit the project page:"
+    "descriptionMoreInformation": "For more information about this app, visit the project page:",
+    "search": "Search",
+    "searchHint": "Search...",
+    "emptySearch": "No News found"
 }

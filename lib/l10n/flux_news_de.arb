@@ -7,6 +7,8 @@
     "addBookmark": "Lesezeichen hinzufügen",
     "markAsRead": "Als gelesen markieren",
     "markAsUnread": "Als ungelesen markieren",
+    "showUnread": "Nur Ungelesene Nachrichten",
+    "showRead": "Alle Nachrichten",
     "settingsNotSet": "Einstellungen nicht korrekt",
     "provideMinifluxCredentials": "Bitte geben Sie die Miniflux URL und den API-Schlüssel an",
     "error": "Fehler",
@@ -40,5 +42,8 @@
     "multilineAppBarTextSetting": "Zeige die Anzahl\nder Nachrichten in der Appbar",
     "showFeedIconsTextSettings": "Zeige die Icons der Feeds an",
     "descriptionMinifluxApp": "Dies ist ein simpler Newsreader, der mit dem miniflux Server zusammenarbeitet\nFür mehr Informationen über das miniflux Projekt besuchen Sie bitte die Projektseite:",
-    "descriptionMoreInformation": "Für mehr Informationen über diese App besuchen Sie bitte die Projektseite:"
+    "descriptionMoreInformation": "Für mehr Informationen über diese App besuchen Sie bitte die Projektseite:",
+    "search": "Suchen",
+    "searchHint": "Suchen...",
+    "emptySearch": "Keine Nachrichten gefunden"
 }
