@@ -25,7 +25,8 @@ The unread articles should appear in the app.
 <img src="screenshots/AllNewsLight.png" width="300">
 <img src="screenshots/AllNewsDark.png" width="300">
 <img src="screenshots/DrawerWithFeeds.png" width="300">
-<img src="screenshots/PopUpMenu.png" width="300">
+<img src="screenshots/NavBarMenu.png" width="300">
+<img src="screenshots/Search.png" width="300">
 <img src="screenshots/Settings.png" width="300">
 </p>
 <br/><br/>
