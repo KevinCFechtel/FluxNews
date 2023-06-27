@@ -9,6 +9,10 @@ This newsreader sync with the miniflux server api.
 It supports light and dark mode, mark articles as read on scrollover and open articles preferred in an already installed app.
 <br/><br/>
 
+## Download
+
+[<img alt="Get it on Google Play" height="100" src="./screenshots/googleplay.png">](https://play.google.com/store/apps/details?id=de.circle_dev.flux_news)
+
 ## Getting Started
 
 Miniflutt requires Miniflux version >= [2.0.29](https://miniflux.app/releases/2.0.29.html).
