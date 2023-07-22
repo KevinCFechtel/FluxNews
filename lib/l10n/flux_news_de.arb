@@ -45,5 +45,7 @@
     "descriptionMoreInformation": "Für mehr Informationen über diese App besuchen Sie bitte die Projektseite:",
     "search": "Suchen",
     "searchHint": "Suchen...",
-    "emptySearch": "Keine Nachrichten gefunden"
+    "emptySearch": "Keine Nachrichten gefunden",
+    "exportLogs": "Export debug Logs",
+    "debugModeTextSettings": "Debug Modus aktivieren"
 }

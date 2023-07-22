@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -66,6 +67,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageMultilineAppBarTextKey =
       'multilineAppBarText';
   static const String secureStorageShowFeedIconsTextKey = 'showFeedIcons';
+  static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -76,6 +78,9 @@ class FluxNewsState extends ChangeNotifier {
   static const String noImageUrlString = 'NoImageUrl';
   static const String contextMenueBookmarkString = 'bookmark';
   static const String cancelContextString = 'Cancel';
+  static const String logTag = 'FluxNews';
+  static const String logsWriteDirectoryName = "FluxNewsLogs";
+  static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
 
   // vars for lists of main view
   late Future<List<News>> newsList;
@@ -89,6 +94,9 @@ class FluxNewsState extends ChangeNotifier {
   String errorString = '';
   bool newError = false;
   bool errorOnMicrofluxAuth = false;
+
+  // vars for debugging
+  bool debugMode = false;
 
   // the initial news status which should be fetched
   String newsStatus = FluxNewsState.unreadNewsStatus;
@@ -128,10 +136,25 @@ class FluxNewsState extends ChangeNotifier {
 
   // init the database connection
   Future<Database> initializeDB() async {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'initializeDB',
+        logMessage: 'Starting initializeDB',
+        level: LogLevel.INFO);
     String path = await getDatabasesPath();
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'initializeDB',
+        logMessage: 'Finished initializeDB',
+        level: LogLevel.INFO);
     return openDatabase(
       path_package.join(path, FluxNewsState.databasePathString),
       onCreate: (db, version) async {
+        FlutterLogs.logThis(
+            tag: FluxNewsState.logTag,
+            subTag: 'initializeDB',
+            logMessage: 'Starting creating DB',
+            level: LogLevel.INFO);
         // create the table news
         await db.execute('DROP TABLE IF EXISTS news');
         await db.execute(
@@ -166,6 +189,11 @@ class FluxNewsState extends ChangeNotifier {
                           newsCount INTEGER,
                           categorieID INTEGER)''',
         );
+        FlutterLogs.logThis(
+            tag: FluxNewsState.logTag,
+            subTag: 'initializeDB',
+            logMessage: 'Finished creating DB',
+            level: LogLevel.INFO);
       },
       version: 1,
     );
@@ -173,12 +201,30 @@ class FluxNewsState extends ChangeNotifier {
 
   // read the persistant saved configuration
   Future<bool> readConfigValues(BuildContext context) async {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'readConfigValues',
+        logMessage: 'Starting read config values',
+        level: LogLevel.INFO);
+
     storageValues = await storage.readAll();
+
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'readConfigValues',
+        logMessage: 'Finished read config values',
+        level: LogLevel.INFO);
+
     return true;
   }
 
   // init the persistant saved configuration
   bool readConfig(BuildContext context) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'readConfig',
+        logMessage: 'Starting read config',
+        level: LogLevel.INFO);
     // init the maps for the brightness mode list
     // this maps use the key as the technical string and the value as the displey name
     if (context.mounted) {
@@ -311,7 +357,23 @@ class FluxNewsState extends ChangeNotifier {
           amountOfSavedStarredNews = int.parse(value);
         }
       }
+
+      // assign the debug mode selection from persistant saved config
+      if (key == FluxNewsState.secureStorageDebugModeKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            debugMode = true;
+          } else {
+            debugMode = false;
+          }
+        }
+      }
     });
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'readConfig',
+        logMessage: 'Finished read config',
+        level: LogLevel.INFO);
     // return true if everything was read
     return true;
   }
