@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
@@ -93,6 +94,7 @@ class _SettingsState extends State<Settings> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 onTap: () {
+                  FlutterLogs.exportLogs(exportType: ExportType.ALL);
                   _showURLEditDialog(context, appState);
                 },
               ),
@@ -415,6 +417,54 @@ class _SettingsState extends State<Settings> {
                 ],
               ),
               const Divider(),
+              // this row contains the selection if the debug mode is turned on
+              Row(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 17.0),
+                    child: Icon(
+                      Icons.developer_mode,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 30.0),
+                    child: Text(
+                      AppLocalizations.of(context)!.debugModeTextSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const Spacer(),
+                  Switch.adaptive(
+                    value: appState.debugMode,
+                    onChanged: (bool value) {
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.debugMode = value;
+                      appState.storage.write(
+                          key: FluxNewsState.secureStorageDebugModeKey,
+                          value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(
+                  Icons.import_export,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!.exportLogs,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                onTap: () {
+                  FlutterLogs.exportLogs(exportType: ExportType.ALL);
+                },
+              ),
+              const Divider(),
               // this list tile contains the about dialog
               AboutListTile(
                 icon: const Icon(Icons.info),
@@ -501,7 +551,10 @@ class _SettingsState extends State<Settings> {
                         appState.minifluxAPIKey != '' &&
                         newText != null) {
                       bool authCheck = await checkMinifluxCredentials(
-                              http.Client(), newText, appState.minifluxAPIKey!)
+                              http.Client(),
+                              newText,
+                              appState.minifluxAPIKey!,
+                              appState)
                           .onError((error, stackTrace) => false);
 
                       appState.errorOnMicrofluxAuth = !authCheck;
@@ -556,7 +609,10 @@ class _SettingsState extends State<Settings> {
                       appState.minifluxURL != '' &&
                       newText != null) {
                     bool authCheck = await checkMinifluxCredentials(
-                            http.Client(), appState.minifluxURL!, newText)
+                            http.Client(),
+                            appState.minifluxURL!,
+                            newText,
+                            appState)
                         .onError((error, stackTrace) => false);
                     appState.errorOnMicrofluxAuth = !authCheck;
                     appState.refreshView();

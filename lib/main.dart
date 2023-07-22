@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
 
 import 'flux_news_body.dart';
@@ -18,6 +22,48 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // init the log system
+  await FlutterLogs.initLogs(
+      logLevelsEnabled: [
+        LogLevel.INFO,
+        LogLevel.WARNING,
+        LogLevel.ERROR,
+        LogLevel.SEVERE
+      ],
+      timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
+      directoryStructure: DirectoryStructure.FOR_DATE,
+      logFileExtension: LogFileExtension.LOG,
+      logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
+      logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
+      debugFileOperations: false,
+      isDebuggable: false);
+
+  // clear the logs on startup
+  FlutterLogs.clearLogs();
+
+  // init the log export channel to receive the exported log file name and share the file
+  FlutterLogs.channel.setMethodCallHandler((call) async {
+    if (call.method == 'logsExported') {
+      String zipName = call.arguments.toString();
+
+      Directory? externalDirectory;
+
+      if (Platform.isIOS) {
+        externalDirectory = await getApplicationDocumentsDirectory();
+      } else {
+        externalDirectory = await getExternalStorageDirectory();
+      }
+
+      File file = File("${externalDirectory!.path}/$zipName");
+      if (file.existsSync()) {
+        Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+      } else {
+        FlutterLogs.logError(
+            FluxNewsState.logTag, "existsSync", "File not found in storage.");
+      }
+    }
+  });
 
   runApp(const SDTFScope(child: FluxNews()));
 }

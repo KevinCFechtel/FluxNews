@@ -45,5 +45,7 @@
     "descriptionMoreInformation": "For more information about this app, visit the project page:",
     "search": "Search",
     "searchHint": "Search...",
-    "emptySearch": "No News found"
+    "emptySearch": "No News found",
+    "exportLogs": "Export debug logs",
+    "debugModeTextSettings": "Activate debug mode"
 }

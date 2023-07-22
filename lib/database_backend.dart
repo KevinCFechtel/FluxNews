@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,6 +11,13 @@ import 'news_model.dart';
 
 // function to insert news in database which are located in the newsList parameter
 Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'insertNewsInDB',
+        logMessage: 'Starting inserting news in DB',
+        level: LogLevel.INFO);
+  }
   // init the return value of the function
   int result = 0;
   // if not already initialized, init the database
@@ -26,11 +34,25 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
       // if the news is not present, insert the news
       if (resultSelect.isEmpty) {
         result = await appState.db!.insert('news', news.toMap());
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertNewsInDB',
+              logMessage: 'Inserted news with id ${news.newsID} in DB',
+              level: LogLevel.INFO);
+        }
       } else {
         // if the news is present, update the status of the news
         result = await appState.db!.rawUpdate(
             'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
             [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertNewsInDB',
+              logMessage: 'Updated news with id ${news.newsID} in DB',
+              level: LogLevel.INFO);
+        }
       }
       // check if the feed of the news already contains an icon
       resultSelect = await appState.db!
@@ -44,11 +66,25 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
           result = await appState.db!.rawInsert(
               'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
               [news.feedID, news.feedTitel, icon.getIcon(), icon.iconMimeType]);
+          if (appState.debugMode) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'insertNewsInDB',
+                logMessage:
+                    'Inserted Feed icon for feed with id ${news.feedID} in DB',
+                level: LogLevel.INFO);
+          }
         }
       }
     }
   }
-
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'insertNewsInDB',
+        logMessage: 'Finished inserting news in DB',
+        level: LogLevel.INFO);
+  }
   // return the result from the inserts into the database
   return result;
 }
@@ -56,6 +92,13 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
 // update the bookmarked news in the database which are located in the newsList parameter
 Future<int> updateStarredNewsInDB(
     NewsList newsList, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateStarredNewsInDB',
+        logMessage: 'Starting updating starred news in DB',
+        level: LogLevel.INFO);
+  }
   int result = 0;
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -69,9 +112,17 @@ Future<int> updateStarredNewsInDB(
         // if the news is not already marked, mark it as bookmarked
         result = await appState.db!.rawUpdate(
             'UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'updateStarredNewsInDB',
+              logMessage:
+                  'Marked news with id ${news.newsID} as bookmarked in DB',
+              level: LogLevel.INFO);
+        }
       }
     }
-    // check if the existing bookmakrs also exist in the given list.
+    // check if the existing bookmarks also exist in the given list.
     // if not, delete the bookmark flag at the news
     List<News> existingNotStarredNews = [];
     resultSelect = await appState.db!
@@ -84,8 +135,23 @@ Future<int> updateStarredNewsInDB(
       if (!newsList.news.any((item) => item.newsID == news.newsID)) {
         result = await appState.db!.rawUpdate(
             'UPDATE news SET starred = ? WHERE newsId = ?', [0, news.newsID]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'updateStarredNewsInDB',
+              logMessage:
+                  'Deleted starred status for news with id ${news.newsID} in DB',
+              level: LogLevel.INFO);
+        }
       }
     }
+  }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateStarredNewsInDB',
+        logMessage: 'Finished updating starred news in DB',
+        level: LogLevel.INFO);
   }
   return result;
 }
@@ -95,6 +161,13 @@ Future<int> updateStarredNewsInDB(
 // so we mark the news also as read.
 Future<int> markNotFetchedNewsAsRead(
     NewsList newNewsList, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'markNotFetchedNewsAsRead',
+        logMessage: 'Starting marking not fetched news as read',
+        level: LogLevel.INFO);
+  }
   int result = 0;
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -118,8 +191,23 @@ Future<int> markNotFetchedNewsAsRead(
           FluxNewsState.syncedSyncStatus,
           news.newsID
         ]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'markNotFetchedNewsAsRead',
+              logMessage:
+                  'Marked the news with id ${news.newsID} as read in DB',
+              level: LogLevel.INFO);
+        }
       }
     }
+  }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'markNotFetchedNewsAsRead',
+        logMessage: 'Finished marking not fetched news as read',
+        level: LogLevel.INFO);
   }
   return result;
 }
@@ -127,6 +215,13 @@ Future<int> markNotFetchedNewsAsRead(
 // get the local saved news from the database
 Future<List<News>> queryNewsFromDB(
     FluxNewsState appState, List<int>? feedIDs) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'queryNewsFromDB',
+        logMessage: 'Starting querying news from DB',
+        level: LogLevel.INFO);
+  }
   List<News> newList = [];
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -225,21 +320,50 @@ Future<List<News>> queryNewsFromDB(
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
     }
   }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'queryNewsFromDB',
+        logMessage: 'Finished querying news from DB',
+        level: LogLevel.INFO);
+  }
   return newList;
 }
 
 // update the status (read or unread) of the news in the database
 void updateNewsStatusInDB(
     int newsID, String status, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateNewsStatusInDB',
+        logMessage: 'Starting updating news status in DB',
+        level: LogLevel.INFO);
+  }
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawUpdate(
         'UPDATE news SET status = ? WHERE newsId = ?', [status, newsID]);
   }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateNewsStatusInDB',
+        logMessage: 'Finished updating news status in DB',
+        level: LogLevel.INFO);
+  }
 }
 
 // update the counter of the bookmarked news
 void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateNewsStatusInDB',
+        logMessage: 'Starting updating starred counter',
+        level: LogLevel.INFO);
+  }
+
   int? starredNewsCount;
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -256,12 +380,28 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
       appState.appBarNewsCount = starredNewsCount;
     }
   }
+
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateNewsStatusInDB',
+        logMessage: 'Finished updating starred counter',
+        level: LogLevel.INFO);
+  }
   appState.refreshView();
 }
 
 // update the bookmarked flag in the database
 void updateNewsStarredStatusInDB(
     int newsID, bool starred, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateNewsStarredStatusInDB',
+        logMessage: 'Starting updating news starred status in DB',
+        level: LogLevel.INFO);
+  }
+
   int starredStatus = 0;
   if (starred) {
     starredStatus = 1;
@@ -271,12 +411,28 @@ void updateNewsStarredStatusInDB(
     await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?',
         [starredStatus, newsID]);
   }
+
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'updateNewsStarredStatusInDB',
+        logMessage: 'Finished updating news starred status in DB',
+        level: LogLevel.INFO);
+  }
 }
 
 // delete the not bookmarked news, which are beyond the limit of news
 // which should be saved locally.
 // this limit can be changed in the settings.
 Future<void> cleanUnstarredNews(FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'cleanUnstarredNews',
+        logMessage: 'Starting cleaning unstarred news',
+        level: LogLevel.INFO);
+  }
+
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawDelete('''DELETE FROM news 
@@ -287,6 +443,14 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
                             ORDER BY publishedAt DESC
                             LIMIT ${appState.amountOfSavedNews})''');
   }
+
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'cleanUnstarredNews',
+        logMessage: 'Finished cleaning unstarred news',
+        level: LogLevel.INFO);
+  }
 }
 
 // delete the bookmarked news, which are beyond the limit of news
@@ -294,6 +458,14 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
 // this limit can be changed in the settings.
 // maybe the bookmarked news should have another limit as the not bookmarked news
 Future<void> cleanStarredNews(FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'cleanStarredNews',
+        logMessage: 'Starting cleaning starred news',
+        level: LogLevel.INFO);
+  }
+
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawDelete('''DELETE FROM news 
@@ -304,11 +476,27 @@ Future<void> cleanStarredNews(FluxNewsState appState) async {
                             ORDER BY publishedAt DESC
                             LIMIT ${appState.amountOfSavedStarredNews})''');
   }
+
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'cleanStarredNews',
+        logMessage: 'Finished cleaning starred news',
+        level: LogLevel.INFO);
+  }
 }
 
 // insert the fetched categories in the database
 Future<int> insertCategoriesInDB(
     Categories categorieList, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'insertCategoriesInDB',
+        logMessage: 'Starting inserting categories in DB',
+        level: LogLevel.INFO);
+  }
+
   int result = 0;
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -321,11 +509,27 @@ Future<int> insertCategoriesInDB(
       if (resultSelect.isEmpty) {
         // if they don't exists locally, insert the categorie
         result = await appState.db!.insert('categories', categorie.toMap());
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertCategoriesInDB',
+              logMessage:
+                  'Inserted categorie with id ${categorie.categorieID} in DB',
+              level: LogLevel.INFO);
+        }
       } else {
         // if they exists locally, update the categorie
         result = await appState.db!.rawUpdate(
             'UPDATE categories SET title = ? WHERE categorieID = ?',
             [categorie.title, categorie.categorieID]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertCategoriesInDB',
+              logMessage:
+                  'Updated categorie with id ${categorie.categorieID} in DB',
+              level: LogLevel.INFO);
+        }
       }
       for (Feed feed in categorie.feeds) {
         // iterate over the feeds of the categorie and check if they already exists locally
@@ -344,6 +548,13 @@ Future<int> insertCategoriesInDB(
                 feed.newsCount,
                 categorie.categorieID
               ]);
+          if (appState.debugMode) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'insertCategoriesInDB',
+                logMessage: 'Inserted feed with id ${feed.feedID} in DB',
+                level: LogLevel.INFO);
+          }
         } else {
           // if they exists locally, update the feed
           result = await appState.db!.rawUpdate(
@@ -357,6 +568,13 @@ Future<int> insertCategoriesInDB(
                 categorie.categorieID,
                 feed.feedID
               ]);
+          if (appState.debugMode) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'insertCategoriesInDB',
+                logMessage: 'Updated feed with id ${feed.feedID} in DB',
+                level: LogLevel.INFO);
+          }
         }
       }
     }
@@ -378,6 +596,14 @@ Future<int> insertCategoriesInDB(
         result = await appState.db!.rawDelete(
             'DELETE FROM categories WHERE categorieID = ?',
             [categorie.categorieID]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertCategoriesInDB',
+              logMessage:
+                  'Deleted categorie with id ${categorie.categorieID} in DB',
+              level: LogLevel.INFO);
+        }
       }
     }
 
@@ -406,8 +632,22 @@ Future<int> insertCategoriesInDB(
             .rawDelete('DELETE FROM feeds WHERE feedID = ?', [feed.feedID]);
         result = await appState.db!
             .rawDelete('DELETE FROM news WHERE feedID = ?', [feed.feedID]);
+        if (appState.debugMode) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertCategoriesInDB',
+              logMessage: 'Deleted news and feed with id ${feed.feedID} in DB',
+              level: LogLevel.INFO);
+        }
       }
     }
+  }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'insertCategoriesInDB',
+        logMessage: 'Finished inserting categories in DB',
+        level: LogLevel.INFO);
   }
   return result;
 }
@@ -415,6 +655,14 @@ Future<int> insertCategoriesInDB(
 // get the categories from the database and calculate the news count of this categories
 Future<Categories> queryCategoriesFromDB(
     FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'queryCategoriesFromDB',
+        logMessage: 'Starting querying categories from DB',
+        level: LogLevel.INFO);
+  }
+
   List<Categorie> categorieList = [];
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -437,12 +685,26 @@ Future<Categories> queryCategoriesFromDB(
     // calculate the news count of the "all news" section
     renewAllNewsCount(appState, context);
   }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'queryCategoriesFromDB',
+        logMessage: 'Finished querying categories from DB',
+        level: LogLevel.INFO);
+  }
   return categories;
 }
 
 // calculate the news count of the "all news" section
 Future<void> renewAllNewsCount(
     FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'renewAllNewsCount',
+        logMessage: 'Starting renewing all news count',
+        level: LogLevel.INFO);
+  }
   appState.db ??= await appState.initializeDB();
   int? allNewsCount = 0;
   if (appState.db != null) {
@@ -467,6 +729,13 @@ Future<void> renewAllNewsCount(
       // also to the app bar counter variable.
       appState.appBarNewsCount = allNewsCount;
     }
+  }
+  if (appState.debugMode) {
+    FlutterLogs.logThis(
+        tag: FluxNewsState.logTag,
+        subTag: 'renewAllNewsCount',
+        logMessage: 'Finished renewing all news count',
+        level: LogLevel.INFO);
   }
 
   // notify the app about the updated count of news
