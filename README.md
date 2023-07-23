@@ -15,7 +15,7 @@ It supports light and dark mode, mark articles as read on scrollover and open ar
 
 ## Getting Started
 
-Miniflutt requires Miniflux version >= [2.0.29](https://miniflux.app/releases/2.0.29.html).
+Flux News requires Miniflux version >= [2.0.29](https://miniflux.app/releases/2.0.29.html).
 
 1. In Miniflux, create an API key in Settings / API Keys.
 2. Open the app, go to the Settings page
