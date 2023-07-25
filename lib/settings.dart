@@ -94,7 +94,6 @@ class _SettingsState extends State<Settings> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 onTap: () {
-                  FlutterLogs.exportLogs(exportType: ExportType.ALL);
                   _showURLEditDialog(context, appState);
                 },
               ),

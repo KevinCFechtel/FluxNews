@@ -751,7 +751,13 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
         await client.get(Uri.parse('${miniFluxUrl}me'), headers: header);
     if (response.statusCode == 200) {
       if (appState.debugMode) {
-        response = await client.get(Uri.parse('${miniFluxUrl}version'),
+        // need to remove the "v1/" part from the url to request the version api endpoint
+        String minifluxBaseURL = "";
+        if (miniFluxUrl.length >= 3) {
+          minifluxBaseURL = miniFluxUrl.substring(0, miniFluxUrl.length - 3);
+        }
+
+        response = await client.get(Uri.parse('${minifluxBaseURL}version'),
             headers: header);
         if (response.statusCode == 200) {
           FlutterLogs.logThis(
