@@ -233,7 +233,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
         'A package for authoring build_runner compatible code generators.',
     repository: 'https://github.com/dart-lang/build/tree/master/build',
     authors: [],
-    version: '2.4.0',
+    version: '2.4.1',
     license: '''Copyright 2016, the Dart project authors. 
 
 Redistribution and use in source and binary forms, with or without
@@ -346,7 +346,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/dart-lang/build/tree/master/build_resolvers',
     authors: [],
-    version: '2.2.0',
+    version: '2.2.1',
     license: '''Copyright 2018, the Dart project authors. 
 
 Redistribution and use in source and binary forms, with or without
@@ -384,7 +384,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
         'A build system for Dart code generation and modular compilation.',
     repository: 'https://github.com/dart-lang/build/tree/master/build_runner',
     authors: [],
-    version: '2.4.5',
+    version: '2.4.6',
     license: '''Copyright 2016, the Dart project authors. 
 
 Redistribution and use in source and binary forms, with or without
@@ -1253,7 +1253,7 @@ SOFTWARE.''',
         'Opinionated, automatic Dart source code formatter. Provides an API and a CLI tool.',
     repository: 'https://github.com/dart-lang/dart_style',
     authors: [],
-    version: '2.3.1',
+    version: '2.3.2',
     license: '''Copyright 2014, the Dart project authors. 
 
 Redistribution and use in source and binary forms, with or without
@@ -1292,7 +1292,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/material-foundation/flutter-packages/tree/main/packages/dynamic_color',
     authors: [],
-    version: '1.6.5',
+    version: '1.6.6',
     license: '''Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -1787,7 +1787,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
         'A pluggable, mockable file system abstraction for Dart. Supports local file system access, as well as in-memory file systems, record-replay file systems, and chroot file systems.',
     repository: 'https://github.com/google/file.dart/tree/master/packages/file',
     authors: [],
-    version: '6.1.4',
+    version: '7.0.0',
     license: '''Copyright 2017, the Dart project authors. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -1861,7 +1861,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     description: 'A framework for writing Flutter applications',
     homepage: 'https://flutter.dev',
     authors: [],
-    version: '3.10.5',
+    version: '3.10.6',
     license: '''Copyright 2014 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -1928,9 +1928,9 @@ SOFTWARE.''',
     description:
         'Generic cache manager for flutter. Saves web files on the storages of the device and saves the cache info using sqflite.',
     homepage:
-        'https://github.com/Baseflow/flutter_cache_manager/tree/master/flutter_cache_manager',
+        'https://github.com/Baseflow/flutter_cache_manager/tree/develop/flutter_cache_manager',
     authors: [],
-    version: '3.3.0',
+    version: '3.3.1',
     license: '''The MIT License (MIT)
 
 Copyright (c) 2017 Rene Floor
@@ -1996,7 +1996,7 @@ SOFTWARE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/flutter_lints',
     authors: [],
-    version: '2.0.1',
+    version: '2.0.2',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -2581,7 +2581,7 @@ SOFTWARE.''',
         'The Font Awesome Icon pack available as Flutter Icons. Provides 1600 additional icons to use in your apps.',
     repository: 'https://github.com/fluttercommunity/font_awesome_flutter',
     authors: [],
-    version: '10.4.0',
+    version: '10.5.0',
     license: '''MIT License
 
 Copyright (c) 2017 Brian Egan
@@ -3095,39 +3095,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     isMarkdown: false,
     isSdk: false,
     isDirectDependency: false,
-  ),
-  Package(
-    name: 'logger',
-    description:
-        'Small, easy to use and extensible logger which prints beautiful logs.',
-    repository: 'https://github.com/Bungeefan/logger',
-    authors: [],
-    version: '1.4.0',
-    license: '''MIT License
-
-Copyright (c) 2019 Simon Leier
-Copyright (c) 2023 Severin Hamader
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.''',
-    isMarkdown: false,
-    isSdk: false,
-    isDirectDependency: true,
   ),
   Package(
     name: 'logging',
@@ -3956,7 +3923,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider_foundation',
     authors: [],
-    version: '2.2.3',
+    version: '2.2.4',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -4095,43 +4062,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     isDirectDependency: false,
   ),
   Package(
-    name: 'pedantic',
-    description:
-        'The Dart analyzer settings and best practices used internally at Google.',
-    homepage: 'https://github.com/google/pedantic',
-    authors: [],
-    version: '1.11.1',
-    license: '''Copyright 2017, the Dart project authors. All rights reserved.
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-    * Neither the name of Google Inc. nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
-    isMarkdown: false,
-    isSdk: false,
-    isDirectDependency: false,
-  ),
-  Package(
     name: 'petitparser',
     description:
         'A dynamic parser framework to build efficient grammars and parsers quickly.',
@@ -4208,7 +4138,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/plugin_platform_interface',
     authors: [],
-    version: '2.1.4',
+    version: '2.1.5',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -4288,43 +4218,6 @@ met:
       disclaimer in the documentation and/or other materials provided
       with the distribution.
     * Neither the name of Google LLC nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
-    isMarkdown: false,
-    isSdk: false,
-    isDirectDependency: false,
-  ),
-  Package(
-    name: 'process',
-    description:
-        'A pluggable, mockable process invocation abstraction for Dart.',
-    homepage: 'https://github.com/google/process.dart',
-    authors: [],
-    version: '4.2.4',
-    license: '''Copyright 2017, the Dart project authors. All rights reserved.
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-    * Neither the name of Google Inc. nor the names of its
       contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
 
@@ -4681,7 +4574,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/dart-lang/source_gen/tree/master/source_gen',
     authors: [],
-    version: '1.3.2',
+    version: '1.4.0',
     license: '''Copyright 2015, the Dart project authors.
 
 Redistribution and use in source and binary forms, with or without
@@ -4756,7 +4649,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
         'Flutter plugin for SQLite, a self-contained, high-reliability, embedded, SQL database engine.',
     repository: 'https://github.com/tekartik/sqflite/tree/master/sqflite',
     authors: [],
-    version: '2.2.8+4',
+    version: '2.3.0',
     license: '''BSD 2-Clause License
 
 Copyright (c) 2019, Alexandre Roux Tekartik
@@ -4792,7 +4685,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
         'Dart wrapper on SQLite, a self-contained, high-reliability, embedded, SQL database engine.',
     homepage: 'https://github.com/tekartik/sqflite/tree/master/sqflite_common',
     authors: [],
-    version: '2.4.5+1',
+    version: '2.5.0',
     license: '''BSD 2-Clause License
 
 Copyright (c) 2019, Alexandre Roux Tekartik
@@ -4829,7 +4722,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     homepage:
         'https://github.com/tekartik/sqflite/tree/master/sqflite_common_ffi',
     authors: [],
-    version: '2.2.5',
+    version: '2.3.0',
     license: '''BSD 2-Clause License
 
 Copyright (c) 2019, Alexandre Roux Tekartik
@@ -5452,7 +5345,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/url_launcher/url_launcher',
     authors: [],
-    version: '6.1.11',
+    version: '6.1.12',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -5488,7 +5381,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/url_launcher/url_launcher_android',
     authors: [],
-    version: '6.0.36',
+    version: '6.0.37',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -5596,7 +5489,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/url_launcher/url_launcher_macos',
     authors: [],
-    version: '3.0.5',
+    version: '3.0.6',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -5668,7 +5561,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/url_launcher/url_launcher_web',
     authors: [],
-    version: '2.0.17',
+    version: '2.0.18',
     license: '''url_launcher_web
 
 Copyright 2013 The Flutter Authors. All rights reserved.
@@ -5910,7 +5803,7 @@ platform_detect
     repository:
         'https://github.com/flutter/packages/tree/main/packages/url_launcher/url_launcher_windows',
     authors: [],
-    version: '3.0.6',
+    version: '3.0.7',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -6203,7 +6096,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     homepage: 'https://win32.pub',
     repository: 'https://github.com/dart-windows/win32',
     authors: [],
-    version: '5.0.4',
+    version: '5.0.6',
     license: '''Copyright 2019, Dart | Windows. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -6241,7 +6134,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     repository:
         'https://github.com/flutter/packages/tree/main/packages/xdg_directories',
     authors: [],
-    version: '1.0.0',
+    version: '1.0.1',
     license: '''Copyright 2013 The Flutter Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

@@ -7,7 +7,6 @@ import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
@@ -18,9 +17,6 @@ import 'miniflux_backend_test.mocks.dart';
 @GenerateMocks([http.Client])
 void main() {
   late Database database;
-  var logger = Logger(
-    printer: PrettyPrinter(methodCount: 0),
-  );
 
   setUpAll(() async {
     sqfliteFfiInit();
@@ -599,10 +595,7 @@ void main() {
       await tester.pumpWidget(const FluxNews());
       var fluxNewsApp = tester.firstState(find.byType(FluxNewsBody));
       FluxNewsState appState = fluxNewsApp.context.read<FluxNewsState>();
-      logger.d("Step 1");
-      logger.d("Step 2");
       appState.db = database;
-      logger.d("Step 3");
       appState.minifluxURL = 'https://circle-dev.local/v1/';
       appState.minifluxAPIKey = 'test';
       final client = MockClient();
@@ -616,7 +609,6 @@ void main() {
               headers: header))
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
-      logger.d("Step 4");
       try {
         await toggleNewsAsRead(client, appState);
         fail("exception not thrown");
@@ -624,7 +616,6 @@ void main() {
         expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString,
             isTrue);
       }
-      logger.d("Step 5");
       /*
       await database.close();
       expect(database.isOpen, false);

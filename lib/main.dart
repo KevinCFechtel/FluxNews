@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -37,7 +38,7 @@ Future<void> main() async {
       logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
       logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
       debugFileOperations: false,
-      isDebuggable: false);
+      isDebuggable: kDebugMode ? true : false);
 
   // clear the logs on startup
   FlutterLogs.clearLogs();

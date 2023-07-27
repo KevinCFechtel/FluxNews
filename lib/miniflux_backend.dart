@@ -101,12 +101,20 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
         // increment the offset counter for the next run
         offsetCounter++;
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchNews',
-              logMessage:
-                  '${tempNewsList.newsCount - tempNewsList.news.length} news remaining',
-              level: LogLevel.INFO);
+          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'fetchNews',
+                logMessage:
+                    '${tempNewsList.newsCount - listSize} news remaining',
+                level: LogLevel.INFO);
+          } else {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'fetchNews',
+                logMessage: '0 news remaining',
+                level: LogLevel.INFO);
+          }
         }
       } else {
         FlutterLogs.logThis(
@@ -188,12 +196,20 @@ Future<NewsList> fetchStarredNews(
         offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
         offsetCounter++;
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchStarredNews',
-              logMessage:
-                  '${tempNewsList.newsCount - tempNewsList.news.length} news remaining',
-              level: LogLevel.INFO);
+          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'fetchStarredNews',
+                logMessage:
+                    '${tempNewsList.newsCount - listSize} news remaining',
+                level: LogLevel.INFO);
+          } else {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'fetchStarredNews',
+                logMessage: '0 news remaining',
+                level: LogLevel.INFO);
+          }
         }
       } else {
         FlutterLogs.logThis(
@@ -299,12 +315,20 @@ Future<List<News>> fetchSearchedNews(
         // increment the offset counter for the next run
         offsetCounter++;
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchSearchedNews',
-              logMessage:
-                  '${tempNewsList.newsCount - tempNewsList.news.length} news remaining',
-              level: LogLevel.INFO);
+          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'fetchSearchedNews',
+                logMessage:
+                    '${tempNewsList.newsCount - listSize} news remaining',
+                level: LogLevel.INFO);
+          } else {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'fetchSearchedNews',
+                logMessage: '0 news remaining',
+                level: LogLevel.INFO);
+          }
         }
       } else {
         FlutterLogs.logThis(
@@ -632,27 +656,48 @@ Future<Categories> fetchCategorieInformation(
               // add the news count to the feed object
               feed.newsCount = count;
 
-              // if the feed icon id is not null, request the feed icon from the miniflux server
-              if (feed.feedIconID != null) {
+              // if the feed icon id is not null and not 0, request the feed icon from the miniflux server
+              if (feed.feedIconID != null && feed.feedIconID != 0) {
                 response = await client.get(
                   Uri.parse(
                       '${appState.minifluxURL!}feeds/${feed.feedID}/icon'),
                   headers: header,
                 );
                 if (response.statusCode != 200) {
-                  FlutterLogs.logThis(
-                      tag: FluxNewsState.logTag,
-                      subTag: 'fetchCategorieInformation',
-                      logMessage:
-                          'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
-                      level: LogLevel.ERROR);
-                  // if the response code is not 200, throw an error
-                  throw FluxNewsState.httpUnexpectedResponseErrorString;
+                  if (response.statusCode == 404) {
+                    if (appState.debugMode) {
+                      FlutterLogs.logThis(
+                          tag: FluxNewsState.logTag,
+                          subTag: 'fetchCategorieInformation',
+                          logMessage:
+                              'No feed icon for feed with id ${feed.feedID}',
+                          level: LogLevel.INFO);
+                    }
+                    // This feed has no feed icon, do nothing.
+                  } else {
+                    FlutterLogs.logThis(
+                        tag: FluxNewsState.logTag,
+                        subTag: 'fetchCategorieInformation',
+                        logMessage:
+                            'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
+                        level: LogLevel.ERROR);
+                    // if the response code is not 200, throw an error
+                    throw FluxNewsState.httpUnexpectedResponseErrorString;
+                  }
                 } else {
                   FeedIcon feedIcon = FeedIcon.fromJson(
                       jsonDecode(utf8.decode(response.bodyBytes)));
                   feed.icon = feedIcon.getIcon();
                   feed.iconMimeType = feedIcon.iconMimeType;
+                }
+              } else {
+                if (appState.debugMode) {
+                  FlutterLogs.logThis(
+                      tag: FluxNewsState.logTag,
+                      subTag: 'fetchCategorieInformation',
+                      logMessage:
+                          'No feed icon for feed with id ${feed.feedID}',
+                      level: LogLevel.INFO);
                 }
               }
             }
@@ -703,14 +748,25 @@ Future<FeedIcon?> getFeedIcon(
         headers: header,
       );
       if (response.statusCode != 200) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'getFeedIcon',
-            logMessage:
-                'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID',
-            level: LogLevel.ERROR);
-        // if the response code is not 200, throw an error
-        throw FluxNewsState.httpUnexpectedResponseErrorString;
+        if (response.statusCode == 404) {
+          if (appState.debugMode) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'getFeedIcon',
+                logMessage: 'No feed icon for feed with id $feedID',
+                level: LogLevel.INFO);
+          }
+          // This feed has no feed icon, do nothing
+        } else {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'getFeedIcon',
+              logMessage:
+                  'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID',
+              level: LogLevel.ERROR);
+          // if the response code is not 200, throw an error
+          throw FluxNewsState.httpUnexpectedResponseErrorString;
+        }
       } else {
         // if the response code is 200, decode the response body and create a new FeedIcon object
         feedIcon =
