@@ -130,7 +130,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     // detect if the device is a tablet
     double ratio =
         MediaQuery.of(context).size.width / MediaQuery.of(context).size.height;
-    if ((ratio >= 0.74) && (ratio < 1.5)) {
+    if ((ratio >= 0.70) && (ratio < 1.5)) {
       appState.isTablet = true;
     } else {
       appState.isTablet = false;
@@ -144,7 +144,11 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           return landscapeLayout(appState, context);
         } else {
           appState.orientation = Orientation.portrait;
-          return portraitLayout(appState, context);
+          if (appState.isTablet) {
+            return landscapeLayout(appState, context);
+          } else {
+            return portraitLayout(appState, context);
+          }
         }
       },
     );
@@ -192,7 +196,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             child: ListView(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 75.0),
+                  padding: const EdgeInsets.only(top: 20.0),
                   child: ListTile(
                     title: Text(
                       AppLocalizations.of(context)!.minifluxServer,
@@ -888,8 +892,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                 itemPositionsListener: itemPositionsListener,
                                 initialScrollIndex: scrollPosition,
                                 itemBuilder: (context, i) {
-                                  return showNewsCard(
-                                      snapshot.data![i], appState, context);
+                                  return appState.orientation ==
+                                          Orientation.landscape
+                                      ? appState.isTablet
+                                          ? showNewsRow(snapshot.data![i],
+                                              appState, context)
+                                          : showNewsCard(snapshot.data![i],
+                                              appState, context)
+                                      : showNewsCard(
+                                          snapshot.data![i], appState, context);
                                 }),
                             // on ScrollNotification set news as read on scrollover if activated
                             onNotification: (ScrollNotification scrollInfo) {
@@ -1091,7 +1102,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 ? SizedBox(
                     // for tablets we need to restrict the width,
                     // becaus the fit of the image is set to cover
-                    height: appState.isTablet ? 400 : 175,
+                    height: appState.isTablet ? 250 : 175,
                     width: double.infinity,
                     // the CachedNetworkImage is used to load the images
                     child: CachedNetworkImage(
@@ -1187,6 +1198,200 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 child: Text(
                   news.getText(),
                   style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // here we define the appearance of the news cards
+  Widget showNewsRow(News news, FluxNewsState appState, BuildContext context) {
+    return Card(
+      child: InkWell(
+        splashFactory: NoSplash.splashFactory,
+        onTap: () async {
+          // on tab we update the status of the news to read and open the news
+          try {
+            updateNewsStatusInDB(
+                news.newsID, FluxNewsState.readNewsStatus, appState);
+          } catch (e) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStatusInDB',
+                logMessage: 'Caught an error in updateNewsStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+            if (context.mounted) {
+              if (appState.errorString !=
+                  AppLocalizations.of(context)!.databaseError) {
+                appState.errorString =
+                    AppLocalizations.of(context)!.databaseError;
+                appState.newError = true;
+                appState.refreshView();
+              }
+            }
+          }
+          // update the status to read on the news list and notify the categories
+          // to recalculate the news count
+          setState(() {
+            news.status = FluxNewsState.readNewsStatus;
+            listUpdated = true;
+          });
+
+          // there are difference on launching the news url between the platforms
+          // on android and ios it's preferred to check first if the link can be opened
+          // by an installed app, if not then the link is opened in a webview within the app.
+          // on macos we open directly the webview within the app.
+          if (Platform.isAndroid) {
+            AndroidUrlLauncher.launchUrl(context, news.url);
+          } else if (Platform.isIOS) {
+            // catch exception if no app is installed to handle the url
+            final bool nativeAppLaunchSucceeded = await launchUrl(
+              Uri.parse(news.url),
+              mode: LaunchMode.externalNonBrowserApplication,
+            );
+            //if exception is catched, open the app in webview
+            if (!nativeAppLaunchSucceeded) {
+              await launchUrl(
+                Uri.parse(news.url),
+                mode: LaunchMode.inAppWebView,
+              );
+            }
+          } else if (Platform.isMacOS) {
+            await launchUrl(
+              Uri.parse(news.url),
+              mode: LaunchMode.externalApplication,
+            );
+          }
+        },
+        // on tap get the actual position of the list on tab
+        // to place the context menu on this position
+        onTapDown: (details) {
+          getTapPosition(details);
+        },
+        // after tab on longpress, open the context menu on the tab position
+        onLongPress: () {
+          showContextMenu(news);
+        },
+        child: Row(
+          children: [
+            news.getImageURL() != FluxNewsState.noImageUrlString
+                ? Expanded(
+                    flex: 4,
+                    child: SizedBox(
+                      // in the row view we have a fixed size of the image
+                      height: 250,
+                      width: 300,
+                      // the CachedNetworkImage is used to load the images
+                      child: CachedNetworkImage(
+                        imageUrl: news.getImageURL(),
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        errorWidget: (context, url, error) => const Icon(
+                          Icons.error,
+                        ),
+                      ),
+                    ),
+                  )
+                // if no image is available, shrink this widget
+                : const SizedBox.shrink(),
+            Expanded(
+              flex: 5,
+              child: ListTile(
+                title: Opacity(
+                  opacity:
+                      news.status == FluxNewsState.unreadNewsStatus ? 1.0 : 0.6,
+                  child: Text(
+                    news.title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                subtitle: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 2.0,
+                      ),
+                      child: Row(
+                        children: [
+                          news.status == FluxNewsState.unreadNewsStatus
+                              ? const Padding(
+                                  padding: EdgeInsets.only(right: 15.0),
+                                  child: SizedBox(
+                                      width: 15,
+                                      height: 35,
+                                      child: Icon(
+                                        Icons.fiber_new,
+                                      )))
+                              : const SizedBox.shrink(),
+                          appState.showFeedIcons
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 5.0),
+                                  child:
+                                      news.getFeedIcon(16.0, context, appState))
+                              : const SizedBox.shrink(),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 0.0),
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: Text(
+                                news.feedTitel,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: Text(
+                                appState.dateFormat
+                                    .format(news.getPublishingDate()),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            height: 35,
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: news.starred
+                                  ? const Icon(
+                                      Icons.star,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // here is the news text, the Opacity decide between read and unread
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 2, 16, 16),
+                      child: Opacity(
+                        opacity: news.status == FluxNewsState.unreadNewsStatus
+                            ? 1.0
+                            : 0.6,
+                        child: Text(
+                          news.getText(),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
