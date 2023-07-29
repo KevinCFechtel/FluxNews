@@ -138,7 +138,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     */
 
-    if (MediaQuery.of(context).size.width >= 1000) {
+    if (MediaQuery.of(context).size.shortestSide >= 550) {
       appState.isTablet = true;
     } else {
       appState.isTablet = false;
@@ -147,22 +147,18 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     // decide between landscape or portrait mode (the drawer doesn't exists in landscape mode f.e.)
     return OrientationBuilder(
       builder: (context, orientation) {
-        if (orientation == Orientation.landscape) {
-          appState.orientation = Orientation.landscape;
-          return landscapeLayout(appState, context);
+        appState.orientation = orientation;
+
+        if (appState.isTablet) {
+          return tabletLayout(appState, context);
         } else {
-          appState.orientation = Orientation.portrait;
-          if (appState.isTablet) {
-            return landscapeLayout(appState, context);
-          } else {
-            return portraitLayout(appState, context);
-          }
+          return smartphoneLayout(appState, context);
         }
       },
     );
   }
 
-  Scaffold portraitLayout(FluxNewsState appState, BuildContext context) {
+  Scaffold smartphoneLayout(FluxNewsState appState, BuildContext context) {
     // start the main view in portrait mode
     return Scaffold(
       appBar: AppBar(
@@ -190,7 +186,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     );
   }
 
-  Scaffold landscapeLayout(FluxNewsState appState, BuildContext context) {
+  Scaffold tabletLayout(FluxNewsState appState, BuildContext context) {
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       appBar: AppBar(
@@ -200,7 +196,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       body: Row(
         children: [
           Expanded(
-            flex: appState.isTablet ? 4 : 5,
+            flex: 4,
             child: ListView(
               children: [
                 Padding(
@@ -254,41 +250,43 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // return the drawer
     return Drawer(
-        child: Column(
-      children: [
-        Padding(
-            padding: const EdgeInsets.only(top: 75.0),
-            child: Row(children: [
-              const Padding(
-                  padding: EdgeInsets.only(left: 30.0),
-                  child: Icon(
-                    FontAwesomeIcons.bookOpen,
-                  )),
-              Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: Text(
-                    AppLocalizations.of(context)!.fluxNews,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ))
-            ])),
-        Padding(
-          padding: const EdgeInsets.only(top: 20.0),
-          child: ListTile(
-            title: Text(
-              AppLocalizations.of(context)!.minifluxServer,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            subtitle: appState.minifluxURL == null
-                ? const SizedBox.shrink()
-                : Text(
-                    appState.minifluxURL!,
-                    style: Theme.of(context).textTheme.bodyMedium,
+        child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              children: [
+                Padding(
+                    padding: const EdgeInsets.only(top: 75.0),
+                    child: Row(children: [
+                      const Padding(
+                          padding: EdgeInsets.only(left: 30.0),
+                          child: Icon(
+                            FontAwesomeIcons.bookOpen,
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.only(left: 20.0),
+                          child: Text(
+                            AppLocalizations.of(context)!.fluxNews,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ))
+                    ])),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: ListTile(
+                    title: Text(
+                      AppLocalizations.of(context)!.minifluxServer,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    subtitle: appState.minifluxURL == null
+                        ? const SizedBox.shrink()
+                        : Text(
+                            appState.minifluxURL!,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                   ),
-          ),
-        ),
-        categorieListWidget(context, appState),
-      ],
-    ));
+                ),
+                categorieListWidget(context, appState),
+              ],
+            )));
   }
 
   Widget appBarTitle(FluxNewsState appState) {
@@ -902,11 +900,8 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                 itemBuilder: (context, i) {
                                   return appState.orientation ==
                                           Orientation.landscape
-                                      ? appState.isTablet
-                                          ? showNewsRow(snapshot.data![i],
-                                              appState, context)
-                                          : showNewsCard(snapshot.data![i],
-                                              appState, context)
+                                      ? showNewsRow(
+                                          snapshot.data![i], appState, context)
                                       : showNewsCard(
                                           snapshot.data![i], appState, context);
                                 }),
@@ -1796,6 +1791,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     categories.renewNewsCount(appState);
     // update the view after changing the values
     appState.refreshView();
+    Navigator.pop(context);
   }
 
   // if the "All News" ListTile is clicked,
@@ -1822,6 +1818,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // update the view after changing the values
     appState.refreshView();
+    Navigator.pop(context);
   }
 
   // if the "Bokkmarked" ListTile is clicked,
@@ -1851,6 +1848,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // update the view after changing the values
     appState.refreshView();
+    Navigator.pop(context);
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
@@ -1898,6 +1896,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         categories.renewNewsCount(appState);
         // update the view after changing the values
         appState.refreshView();
+        Navigator.pop(context);
       },
     );
   }

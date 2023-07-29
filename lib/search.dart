@@ -6,6 +6,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'android_url_launcher.dart';
@@ -24,6 +25,9 @@ class Search extends StatefulWidget {
 class _SearchState extends State<Search> {
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
   final TextEditingController _searchController = TextEditingController();
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
   late Offset _tapPosition;
 
   @override
@@ -47,11 +51,7 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
     return OrientationBuilder(builder: (context, orientation) {
-      if (orientation == Orientation.landscape) {
-        appState.orientation = Orientation.landscape;
-      } else {
-        appState.orientation = Orientation.portrait;
-      }
+      appState.orientation = orientation;
       return searchLayout(context, appState);
     });
   }
@@ -117,7 +117,7 @@ class _SearchState extends State<Search> {
           ),
         ),
         // show the news list
-        body: newsListWidget(context, appState));
+        body: Container(child: newsListWidget(context, appState)));
   }
 
   // the list view widget with search result
@@ -148,16 +148,38 @@ class _SearchState extends State<Search> {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ))
                       // otherwise create list view with the news of the search result
-                      : ListView(
-                          children: snapshot.data!
-                              .map((news) => appState.orientation ==
-                                      Orientation.landscape
-                                  ? showNewsRow(news, appState, context)
-                                  : appState.isTablet
-                                      ? showNewsRow(news, appState, context)
-                                      : showNewsCard(news, appState, context))
-                              .toList(),
-                        );
+                      : Stack(children: [
+                          ScrollablePositionedList.builder(
+                              key: const PageStorageKey<String>(
+                                  'NewsSearchList'),
+                              itemCount: snapshot.data!.length,
+                              itemScrollController: itemScrollController,
+                              itemPositionsListener: itemPositionsListener,
+                              initialScrollIndex: 0,
+                              itemBuilder: (context, i) {
+                                return appState.orientation ==
+                                        Orientation.landscape
+                                    ? showNewsRow(
+                                        snapshot.data![i], appState, context)
+                                    : appState.isTablet
+                                        ? showNewsRow(snapshot.data![i],
+                                            appState, context)
+                                        : showNewsCard(snapshot.data![i],
+                                            appState, context);
+                              }),
+                          /*
+                          ListView(
+                            children: snapshot.data!
+                                .map((news) => appState.orientation ==
+                                        Orientation.landscape
+                                    ? showNewsRow(news, appState, context)
+                                    : appState.isTablet
+                                        ? showNewsRow(news, appState, context)
+                                        : showNewsCard(news, appState, context))
+                                .toList(),
+                          )
+                          */
+                        ]);
             }
         }
       },
@@ -214,7 +236,7 @@ class _SearchState extends State<Search> {
                 ? SizedBox(
                     // for tablets we need to restrict the width,
                     // becaus the fit of the image is set to cover
-                    height: appState.isTablet ? 400 : 175,
+                    height: appState.isTablet ? 250 : 175,
                     width: double.infinity,
                     // the CachedNetworkImage is used to load the images
                     child: CachedNetworkImage(
