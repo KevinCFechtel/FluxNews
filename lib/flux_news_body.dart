@@ -1791,7 +1791,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     categories.renewNewsCount(appState);
     // update the view after changing the values
     appState.refreshView();
-    Navigator.pop(context);
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // if the "All News" ListTile is clicked,
@@ -1818,7 +1823,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // update the view after changing the values
     appState.refreshView();
-    Navigator.pop(context);
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // if the "Bokkmarked" ListTile is clicked,
@@ -1848,7 +1858,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // update the view after changing the values
     appState.refreshView();
-    Navigator.pop(context);
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
@@ -1896,7 +1911,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         categories.renewNewsCount(appState);
         // update the view after changing the values
         appState.refreshView();
-        Navigator.pop(context);
+
+        // if the device is a smartphone, close the drawer after selecting a category or feed
+        // if the device is a tablet, no drawer is used.
+        if (!appState.isTablet) {
+          Navigator.pop(context);
+        }
       },
     );
   }
