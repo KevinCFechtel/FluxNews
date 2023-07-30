@@ -37,9 +37,9 @@ The unread articles should appear in the app.
 
 ### Tablet
 <p float="left">
-<img src="screenshots/Tablet_Light.png" width="300">
-<img src="screenshots/Tablet_Dark.png" width="300">
-<img src="screenshots/Tablet_Portrait.png" width="300">
+<img src="screenshots/Tablet_Light.png" width="600">
+<img src="screenshots/Tablet_Dark.png" width="600">
+<img src="screenshots/Tablet_Portrait.png" width="600">
 </p>
 <br/><br/>
 
