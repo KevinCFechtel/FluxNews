@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -136,25 +138,31 @@ class FluxNewsState extends ChangeNotifier {
 
   // init the database connection
   Future<Database> initializeDB() async {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'initializeDB',
-        logMessage: 'Starting initializeDB',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'initializeDB',
+          logMessage: 'Starting initializeDB',
+          level: LogLevel.INFO);
+    }
     String path = await getDatabasesPath();
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'initializeDB',
-        logMessage: 'Finished initializeDB',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'initializeDB',
+          logMessage: 'Finished initializeDB',
+          level: LogLevel.INFO);
+    }
     return openDatabase(
       path_package.join(path, FluxNewsState.databasePathString),
       onCreate: (db, version) async {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'initializeDB',
-            logMessage: 'Starting creating DB',
-            level: LogLevel.INFO);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'initializeDB',
+              logMessage: 'Starting creating DB',
+              level: LogLevel.INFO);
+        }
         // create the table news
         await db.execute('DROP TABLE IF EXISTS news');
         await db.execute(
@@ -189,11 +197,13 @@ class FluxNewsState extends ChangeNotifier {
                           newsCount INTEGER,
                           categorieID INTEGER)''',
         );
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'initializeDB',
-            logMessage: 'Finished creating DB',
-            level: LogLevel.INFO);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'initializeDB',
+              logMessage: 'Finished creating DB',
+              level: LogLevel.INFO);
+        }
       },
       version: 1,
     );
@@ -201,30 +211,35 @@ class FluxNewsState extends ChangeNotifier {
 
   // read the persistant saved configuration
   Future<bool> readConfigValues(BuildContext context) async {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfigValues',
-        logMessage: 'Starting read config values',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'readConfigValues',
+          logMessage: 'Starting read config values',
+          level: LogLevel.INFO);
+    }
 
     storageValues = await storage.readAll();
 
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfigValues',
-        logMessage: 'Finished read config values',
-        level: LogLevel.INFO);
-
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'readConfigValues',
+          logMessage: 'Finished read config values',
+          level: LogLevel.INFO);
+    }
     return true;
   }
 
   // init the persistant saved configuration
   bool readConfig(BuildContext context) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfig',
-        logMessage: 'Starting read config',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'readConfig',
+          logMessage: 'Starting read config',
+          level: LogLevel.INFO);
+    }
     // init the maps for the brightness mode list
     // this maps use the key as the technical string and the value as the displey name
     if (context.mounted) {
@@ -369,11 +384,13 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
     });
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfig',
-        logMessage: 'Finished read config',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'readConfig',
+          logMessage: 'Finished read config',
+          level: LogLevel.INFO);
+    }
     // return true if everything was read
     return true;
   }

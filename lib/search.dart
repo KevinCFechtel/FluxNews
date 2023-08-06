@@ -86,13 +86,15 @@ class _SearchState extends State<Search> {
                 Future<List<News>> searchNewsListResult =
                     fetchSearchedNews(http.Client(), appState, value)
                         .onError((error, stackTrace) {
-                  FlutterLogs.logThis(
-                      tag: FluxNewsState.logTag,
-                      subTag: 'fetchSearchedNews',
-                      logMessage:
-                          'Caught an error in fetchSearchedNews function!',
-                      errorMessage: error.toString(),
-                      level: LogLevel.ERROR);
+                  if (Platform.isAndroid || Platform.isIOS) {
+                    FlutterLogs.logThis(
+                        tag: FluxNewsState.logTag,
+                        subTag: 'fetchSearchedNews',
+                        logMessage:
+                            'Caught an error in fetchSearchedNews function!',
+                        errorMessage: error.toString(),
+                        level: LogLevel.ERROR);
+                  }
                   if (appState.errorString !=
                       AppLocalizations.of(context)!
                           .communicateionMinifluxError) {
@@ -397,16 +399,15 @@ class _SearchState extends State<Search> {
             // load the news image if present
             news.getImageURL() != FluxNewsState.noImageUrlString
                 ? Expanded(
-                    flex: 5,
+                    flex: 4,
                     child: SizedBox(
-                      // in the row view we have a fixed size of the image
-                      height: 200,
-                      width: 300,
+                      // Set the height of the image in the row view
+                      height: 250,
                       // the CachedNetworkImage is used to load the images
                       child: CachedNetworkImage(
                         imageUrl: news.getImageURL(),
                         fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
+                        alignment: Alignment.center,
                         errorWidget: (context, url, error) => const Icon(
                           Icons.error,
                         ),
@@ -418,7 +419,7 @@ class _SearchState extends State<Search> {
             // the title and additional infos are presented within a ListTile
             // the Opacity decide between read and unread news
             Expanded(
-              flex: 5,
+              flex: 7,
               child: ListTile(
                   title: Opacity(
                     opacity: news.status == FluxNewsState.unreadNewsStatus
@@ -601,12 +602,14 @@ class _SearchState extends State<Search> {
         // toggle the news as bookmarked or not bookmarked at the miniflux server
         await toggleBookmark(http.Client(), appState, news)
             .onError((error, stackTrace) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleBookmark',
-              logMessage: 'Caught an error in toggleBookmark function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'toggleBookmark',
+                logMessage: 'Caught an error in toggleBookmark function!',
+                errorMessage: error.toString(),
+                level: LogLevel.ERROR);
+          }
           if (appState.errorString !=
               AppLocalizations.of(context)!.communicateionMinifluxError) {
             appState.errorString =
@@ -623,13 +626,15 @@ class _SearchState extends State<Search> {
             updateStarredCounter(appState, context);
           }
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStarredStatusInDB',
-              logMessage:
-                  'Caught an error in updateNewsStarredStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStarredStatusInDB',
+                logMessage:
+                    'Caught an error in updateNewsStarredStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -643,12 +648,14 @@ class _SearchState extends State<Search> {
         // update the news list of the main view
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
             .onError((error, stackTrace) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'queryNewsFromDB',
-              logMessage: 'Caught an error in queryNewsFromDB function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'queryNewsFromDB',
+                logMessage: 'Caught an error in queryNewsFromDB function!',
+                errorMessage: error.toString(),
+                level: LogLevel.ERROR);
+          }
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });
@@ -659,12 +666,14 @@ class _SearchState extends State<Search> {
           updateNewsStatusInDB(
               news.newsID, FluxNewsState.unreadNewsStatus, appState);
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStatusInDB',
+                logMessage: 'Caught an error in updateNewsStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -684,22 +693,26 @@ class _SearchState extends State<Search> {
         try {
           toggleOneNewsAsRead(http.Client(), appState, news);
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleOneNewsAsRead',
-              logMessage: 'Caught an error in toggleOneNewsAsRead function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'toggleOneNewsAsRead',
+                logMessage: 'Caught an error in toggleOneNewsAsRead function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
         }
         // update the news list of the main view
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
             .onError((error, stackTrace) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'queryNewsFromDB',
-              logMessage: 'Caught an error in queryNewsFromDB function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'queryNewsFromDB',
+                logMessage: 'Caught an error in queryNewsFromDB function!',
+                errorMessage: error.toString(),
+                level: LogLevel.ERROR);
+          }
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });
@@ -710,12 +723,14 @@ class _SearchState extends State<Search> {
           updateNewsStatusInDB(
               news.newsID, FluxNewsState.readNewsStatus, appState);
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStatusInDB',
+                logMessage: 'Caught an error in updateNewsStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -735,23 +750,27 @@ class _SearchState extends State<Search> {
         try {
           toggleOneNewsAsRead(http.Client(), appState, news);
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleOneNewsAsRead',
-              logMessage: 'Caught an error in toggleOneNewsAsRead function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'toggleOneNewsAsRead',
+                logMessage: 'Caught an error in toggleOneNewsAsRead function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
         }
 
         // update the news list of the main view
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
             .onError((error, stackTrace) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'queryNewsFromDB',
-              logMessage: 'Caught an error in queryNewsFromDB function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'queryNewsFromDB',
+                logMessage: 'Caught an error in queryNewsFromDB function!',
+                errorMessage: error.toString(),
+                level: LogLevel.ERROR);
+          }
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });
