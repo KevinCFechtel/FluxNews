@@ -1145,18 +1145,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           children: [
             // load the news image if present
             news.getImageURL() != FluxNewsState.noImageUrlString
-                ? SizedBox(
-                    // for tablets we need to restrict the width,
-                    // becaus the fit of the image is set to cover
+                ?
+                // the CachedNetworkImage is used to load the images
+                CachedNetworkImage(
+                    imageUrl: news.getImageURL(),
                     height: appState.isTablet ? 250 : 175,
                     width: double.infinity,
-                    // the CachedNetworkImage is used to load the images
-                    child: CachedNetworkImage(
-                      imageUrl: news.getImageURL(),
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.error,
-                      ),
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.error,
                     ),
                   )
                 // if no image is available, shrink this widget
@@ -1340,17 +1337,13 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             news.getImageURL() != FluxNewsState.noImageUrlString
                 ? Expanded(
                     flex: 5,
-                    child: SizedBox(
-                      // Set the height of the image in the row view
+                    child: CachedNetworkImage(
+                      imageUrl: news.getImageURL(),
                       height: 230,
-                      // the CachedNetworkImage is used to load the images
-                      child: CachedNetworkImage(
-                        imageUrl: news.getImageURL(),
-                        fit: BoxFit.cover,
-                        alignment: Alignment.center,
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.error,
-                        ),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.error,
                       ),
                     ),
                   )
