@@ -34,6 +34,14 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
       // if the news is not present, insert the news
       if (resultSelect.isEmpty) {
         result = await appState.db!.insert('news', news.toMap());
+
+        // insert the first image attachment of the news in the attachments db
+        Attachment immageAttachment = news.getFirstImmageAttachment();
+        if (immageAttachment.attachmentID != -1) {
+          result = await appState.db!
+              .insert('attachments', immageAttachment.toMap());
+        }
+
         if (appState.debugMode) {
           FlutterLogs.logThis(
               tag: FluxNewsState.logTag,
@@ -262,9 +270,12 @@ Future<List<News>> queryNewsFromDB(
                       news.feedTitle, 
                       news.syncStatus,
                       feeds.icon,
-                      feeds.iconMimeType 
+                      feeds.iconMimeType,
+                      attachments.attachmentURL,
+                      attachments.attachmentMimeType
                 FROM news 
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+                LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
                 WHERE news.starred = ? 
                 ORDER BY news.publishedAt $sortOrder''', [1]);
         newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
@@ -286,9 +297,12 @@ Future<List<News>> queryNewsFromDB(
                       news.feedTitle, 
                       news.syncStatus,
                       feeds.icon,
-                      feeds.iconMimeType 
+                      feeds.iconMimeType,
+                      attachments.attachmentURL,
+                      attachments.attachmentMimeType 
                   FROM news 
                   LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+                  LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
                   WHERE (news.status LIKE ?) 
                     AND news.feedID LIKE ? 
                   ORDER BY news.publishedAt $sortOrder''', [status, feedID]);
@@ -312,9 +326,12 @@ Future<List<News>> queryNewsFromDB(
                       news.feedTitle, 
                       news.syncStatus,
                       feeds.icon,
-                      feeds.iconMimeType
+                      feeds.iconMimeType,
+                      attachments.attachmentURL,
+                      attachments.attachmentMimeType
               FROM news 
               LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+              LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
               WHERE (news.status LIKE ?) 
               ORDER BY news.publishedAt $sortOrder''', [status]);
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
