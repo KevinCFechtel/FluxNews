@@ -23,7 +23,10 @@ class News {
       required this.status,
       required this.readingTime,
       required this.starred,
-      required this.feedTitel});
+      required this.feedTitel,
+      this.attachments,
+      this.attachmentURL,
+      this.attachmentMimeType});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -40,10 +43,13 @@ class News {
   String? syncStatus = FluxNewsState.notSyncedSyncStatus;
   Uint8List? icon;
   String? iconMimeType = '';
+  List<Attachment>? attachments;
+  String? attachmentURL = '';
+  String? attachmentMimeType = '';
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
-    return News(
+    News news = News(
       newsID: json['id'],
       feedID: json['feed_id'],
       title: json['title'],
@@ -57,6 +63,13 @@ class News {
       starred: json['starred'],
       feedTitel: json['feed']?['title'],
     );
+
+    if (json['enclosures'] != null) {
+      news.attachments = List<Attachment>.from(
+          json['enclosures'].map((i) => Attachment.fromJson(i)));
+    }
+
+    return news;
   }
 
   // define the method to convert the model to the database
@@ -94,7 +107,9 @@ class News {
         feedTitel = res['feedTitle'],
         syncStatus = res['syncStatus'],
         icon = res['icon'],
-        iconMimeType = res['iconMimeType'];
+        iconMimeType = res['iconMimeType'],
+        attachmentURL = res['attachmentURL'],
+        attachmentMimeType = res['attachmentMimeType'];
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -124,6 +139,23 @@ class News {
     return text;
   }
 
+  Attachment getFirstImmageAttachment() {
+    Attachment imageAttachment = Attachment(
+        attachmentID: -1,
+        newsID: -1,
+        attachmentURL: "",
+        attachmentMimeType: "");
+
+    if (attachments != null) {
+      for (var attachment in attachments!) {
+        if (attachment.attachmentMimeType.startsWith("image")) {
+          imageAttachment = attachment;
+        }
+      }
+    }
+    return imageAttachment;
+  }
+
   // define the method to extract the image url from the html content
   // the image url is searched in the img tags
   // the image url is searched in the src attribute
@@ -139,6 +171,11 @@ class News {
         if (attrib.startsWith('http')) {
           imageUrl = attrib;
         }
+      }
+    }
+    if (imageUrl == FluxNewsState.noImageUrlString) {
+      if (attachmentURL != null) {
+        imageUrl = attachmentURL!;
       }
     }
     return imageUrl;
@@ -420,5 +457,81 @@ class Categories {
       }
       appState.refreshView();
     }
+  }
+}
+
+// define the model for a Attachment
+class Attachment {
+  Attachment(
+      {required this.attachmentID,
+      required this.newsID,
+      required this.attachmentURL,
+      required this.attachmentMimeType});
+
+  // define the properties
+  int attachmentID = 0;
+  int newsID = 0;
+  String attachmentURL = '';
+  String attachmentMimeType = '';
+
+  // define the method to convert the model from json
+  factory Attachment.fromJson(Map<String, dynamic> json) {
+    return Attachment(
+      attachmentID: json['id'],
+      newsID: json['entry_id'],
+      attachmentURL: json['url'],
+      attachmentMimeType: json['mime_type'],
+    );
+  }
+
+  // define the method to convert the model to database
+  Map<String, dynamic> toMap() {
+    return {
+      'attachmentID': attachmentID,
+      'newsID': newsID,
+      'attachmentURL': attachmentURL,
+      'attachmentMimeType': attachmentMimeType,
+    };
+  }
+
+  // define the method to convert the model from database
+  Attachment.fromMap(Map<String, dynamic> res)
+      : attachmentID = res['attachmentID'],
+        newsID = res['newsID'],
+        attachmentURL = res['attachmentURL'],
+        attachmentMimeType = res['attachmentMimeType'];
+}
+
+// define the model for Version response
+class Version {
+  Version(
+      {required this.version,
+      required this.commit,
+      required this.buildDate,
+      required this.goVersion,
+      required this.compiler,
+      required this.arch,
+      required this.os});
+
+  // define the properties
+  String version = '';
+  String commit = '';
+  String buildDate = '';
+  String goVersion = '';
+  String compiler = '';
+  String arch = '';
+  String os = '';
+
+  // define the method to convert the model from json
+  factory Version.fromJson(Map<String, dynamic> json) {
+    return Version(
+      version: json['version'],
+      commit: json['commit'],
+      buildDate: json['build_date'],
+      goVersion: json['go_version'],
+      compiler: json['compiler'],
+      arch: json['arch'],
+      os: json['os'],
+    );
   }
 }

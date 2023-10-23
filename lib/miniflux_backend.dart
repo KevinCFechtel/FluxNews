@@ -380,7 +380,7 @@ Future<List<News>> fetchSearchedNews(
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       }
     }
-    // Auslesen der Feed Icons
+    // read the feed icon
     // check if the database is initialized
     // if not, initialize the database
     appState.db ??= await appState.initializeDB();
@@ -898,30 +898,45 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
         await client.get(Uri.parse('${miniFluxUrl}me'), headers: header);
     if (response.statusCode == 200) {
       if (appState.debugMode) {
-        // need to remove the "v1/" part from the url to request the version api endpoint
-        String minifluxBaseURL = "";
-        if (miniFluxUrl.length >= 3) {
-          minifluxBaseURL = miniFluxUrl.substring(0, miniFluxUrl.length - 3);
-        }
-
-        response = await client.get(Uri.parse('${minifluxBaseURL}version'),
+        // request the Version of the miniflux server
+        response = await client.get(Uri.parse('${miniFluxUrl}version'),
             headers: header);
         if (response.statusCode == 200) {
+          Version minifluxVersion =
+              Version.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
           if (Platform.isAndroid || Platform.isIOS) {
             FlutterLogs.logThis(
                 tag: FluxNewsState.logTag,
                 subTag: 'checkMinifluxCredentials',
-                logMessage: 'Miniflux Version: ${response.body}',
+                logMessage: 'Miniflux v1 API Version: ${minifluxVersion.version}',
                 level: LogLevel.INFO);
           }
         } else {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'checkMinifluxCredentials',
-                logMessage:
+          // need to remove the "v1/" part from the url to request the version api endpoint
+          String minifluxBaseURL = "";
+          if (miniFluxUrl.length >= 3) {
+            minifluxBaseURL = miniFluxUrl.substring(0, miniFluxUrl.length - 3);
+          }
+
+          response = await client.get(Uri.parse('${minifluxBaseURL}version'),
+              headers: header);
+          if (response.statusCode == 200) {
+            if (Platform.isAndroid || Platform.isIOS) {
+              FlutterLogs.logThis(
+                  tag: FluxNewsState.logTag,
+                  subTag: 'checkMinifluxCredentials',
+                  logMessage: 'Miniflux Version: ${response.body}',
+                  level: LogLevel.INFO);
+            }
+          } else {
+            if (Platform.isAndroid || Platform.isIOS) {
+              FlutterLogs.logThis(
+                  tag: FluxNewsState.logTag,
+                  subTag: 'checkMinifluxCredentials',
+                  logMessage:
                     'Got unexpected response from miniflux server: ${response.statusCode} for version',
-                level: LogLevel.ERROR);
+                  level: LogLevel.ERROR);
+            }
           }
         }
         if (Platform.isAndroid || Platform.isIOS) {
