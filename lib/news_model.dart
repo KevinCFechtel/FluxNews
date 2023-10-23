@@ -148,7 +148,8 @@ class News {
 
     if (attachments != null) {
       for (var attachment in attachments!) {
-        if (attachment.attachmentMimeType.startsWith("image")) {
+        if (attachment.attachmentMimeType.startsWith("image") &&
+            imageAttachment.attachmentID == -1) {
           imageAttachment = attachment;
         }
       }
