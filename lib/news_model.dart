@@ -49,7 +49,7 @@ class News {
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
-    return News(
+    News news = News(
       newsID: json['id'],
       feedID: json['feed_id'],
       title: json['title'],
@@ -62,8 +62,14 @@ class News {
       readingTime: json['reading_time'],
       starred: json['starred'],
       feedTitel: json['feed']?['title'],
-      attachments: json['enclosures'],
     );
+
+    if (json['enclosures'] != null) {
+      news.attachments = List<Attachment>.from(
+          json['enclosures'].map((i) => Attachment.fromJson(i)));
+    }
+
+    return news;
   }
 
   // define the method to convert the model to the database
@@ -133,6 +139,23 @@ class News {
     return text;
   }
 
+  Attachment getFirstImmageAttachment() {
+    Attachment imageAttachment = Attachment(
+        attachmentID: -1,
+        newsID: -1,
+        attachmentURL: "",
+        attachmentMimeType: "");
+
+    if (attachments != null) {
+      for (var attachment in attachments!) {
+        if (attachment.attachmentMimeType.startsWith("image")) {
+          imageAttachment = attachment;
+        }
+      }
+    }
+    return imageAttachment;
+  }
+
   // define the method to extract the image url from the html content
   // the image url is searched in the img tags
   // the image url is searched in the src attribute
@@ -148,6 +171,11 @@ class News {
         if (attrib.startsWith('http')) {
           imageUrl = attrib;
         }
+      }
+    }
+    if (imageUrl == FluxNewsState.noImageUrlString) {
+      if (attachmentURL != null) {
+        imageUrl = attachmentURL!;
       }
     }
     return imageUrl;

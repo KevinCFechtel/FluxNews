@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.1.3';
+  static const String applicationVersion = '1.2.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';
@@ -190,6 +190,14 @@ class FluxNewsState extends ChangeNotifier {
                           iconMimeType TEXT,
                           newsCount INTEGER,
                           categorieID INTEGER)''',
+        );
+        // create the table attachments
+        await db.execute('DROP TABLE IF EXISTS attachments');
+        await db.execute(
+          '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
+                          newsID INTEGER, 
+                          attachmentURL TEXT, 
+                          attachmentMimeType TEXT)''',
         );
         FlutterLogs.logThis(
             tag: FluxNewsState.logTag,
