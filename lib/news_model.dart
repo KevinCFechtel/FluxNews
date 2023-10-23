@@ -460,7 +460,7 @@ class Categories {
   }
 }
 
-// define the model for a categorie
+// define the model for a Attachment
 class Attachment {
   Attachment(
       {required this.attachmentID,
@@ -500,4 +500,38 @@ class Attachment {
         newsID = res['newsID'],
         attachmentURL = res['attachmentURL'],
         attachmentMimeType = res['attachmentMimeType'];
+}
+
+// define the model for Version response
+class Version {
+  Version(
+      {required this.version,
+      required this.commit,
+      required this.buildDate,
+      required this.goVersion,
+      required this.compiler,
+      required this.arch,
+      required this.os});
+
+  // define the properties
+  String version = '';
+  String commit = '';
+  String buildDate = '';
+  String goVersion = '';
+  String compiler = '';
+  String arch = '';
+  String os = '';
+
+  // define the method to convert the model from json
+  factory Version.fromJson(Map<String, dynamic> json) {
+    return Version(
+      version: json['version'],
+      commit: json['commit'],
+      buildDate: json['build_date'],
+      goVersion: json['go_version'],
+      compiler: json['compiler'],
+      arch: json['arch'],
+      os: json['os'],
+    );
+  }
 }
