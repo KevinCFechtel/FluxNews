@@ -23,7 +23,10 @@ class News {
       required this.status,
       required this.readingTime,
       required this.starred,
-      required this.feedTitel});
+      required this.feedTitel,
+      this.attachments,
+      this.attachmentURL,
+      this.attachmentMimeType});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -40,6 +43,9 @@ class News {
   String? syncStatus = FluxNewsState.notSyncedSyncStatus;
   Uint8List? icon;
   String? iconMimeType = '';
+  List<Attachment>? attachments;
+  String? attachmentURL = '';
+  String? attachmentMimeType = '';
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -56,6 +62,7 @@ class News {
       readingTime: json['reading_time'],
       starred: json['starred'],
       feedTitel: json['feed']?['title'],
+      attachments: json['enclosures'],
     );
   }
 
@@ -94,7 +101,9 @@ class News {
         feedTitel = res['feedTitle'],
         syncStatus = res['syncStatus'],
         icon = res['icon'],
-        iconMimeType = res['iconMimeType'];
+        iconMimeType = res['iconMimeType'],
+        attachmentURL = res['attachmentURL'],
+        attachmentMimeType = res['attachmentMimeType'];
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -421,4 +430,46 @@ class Categories {
       appState.refreshView();
     }
   }
+}
+
+// define the model for a categorie
+class Attachment {
+  Attachment(
+      {required this.attachmentID,
+      required this.newsID,
+      required this.attachmentURL,
+      required this.attachmentMimeType});
+
+  // define the properties
+  int attachmentID = 0;
+  int newsID = 0;
+  String attachmentURL = '';
+  String attachmentMimeType = '';
+
+  // define the method to convert the model from json
+  factory Attachment.fromJson(Map<String, dynamic> json) {
+    return Attachment(
+      attachmentID: json['id'],
+      newsID: json['entry_id'],
+      attachmentURL: json['url'],
+      attachmentMimeType: json['mime_type'],
+    );
+  }
+
+  // define the method to convert the model to database
+  Map<String, dynamic> toMap() {
+    return {
+      'attachmentID': attachmentID,
+      'newsID': newsID,
+      'attachmentURL': attachmentURL,
+      'attachmentMimeType': attachmentMimeType,
+    };
+  }
+
+  // define the method to convert the model from database
+  Attachment.fromMap(Map<String, dynamic> res)
+      : attachmentID = res['attachmentID'],
+        newsID = res['newsID'],
+        attachmentURL = res['attachmentURL'],
+        attachmentMimeType = res['attachmentMimeType'];
 }

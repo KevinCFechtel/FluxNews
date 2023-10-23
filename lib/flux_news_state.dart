@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -195,7 +197,40 @@ class FluxNewsState extends ChangeNotifier {
             logMessage: 'Finished creating DB',
             level: LogLevel.INFO);
       },
-      version: 1,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'upgradeDB',
+              logMessage: 'Starting upgrading DB',
+              level: LogLevel.INFO);
+        }
+        if (oldVersion == 1) {
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'upgradeDB',
+                logMessage: 'Updgrading DB from version 1',
+                level: LogLevel.INFO);
+          }
+          // create the table attachments
+          await db.execute('DROP TABLE IF EXISTS attachments');
+          await db.execute(
+            '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
+                          newsID INTEGER, 
+                          attachmentURL TEXT, 
+                          attachmentMimeType TEXT)''',
+          );
+        }
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'upgradeDB',
+              logMessage: 'Finished upgrading DB',
+              level: LogLevel.INFO);
+        }
+      },
+      version: 2,
     );
   }
 
