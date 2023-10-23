@@ -82,12 +82,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             await renewAllNewsCount(appState, context);
           }
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'initConfig',
-              logMessage: 'Caught an error in initConfig function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'initConfig',
+                logMessage: 'Caught an error in initConfig function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -128,9 +130,17 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     FluxNewsState appState = context.watch<FluxNewsState>();
 
     // detect if the device is a tablet
+    /*
     double ratio =
         MediaQuery.of(context).size.width / MediaQuery.of(context).size.height;
-    if ((ratio >= 0.74) && (ratio < 1.5)) {
+    if ((ratio >= 0.70) && (ratio < 1.5)) {
+      appState.isTablet = true;
+    } else {
+      appState.isTablet = false;
+    }
+    */
+
+    if (MediaQuery.of(context).size.shortestSide >= 550) {
       appState.isTablet = true;
     } else {
       appState.isTablet = false;
@@ -139,18 +149,18 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     // decide between landscape or portrait mode (the drawer doesn't exists in landscape mode f.e.)
     return OrientationBuilder(
       builder: (context, orientation) {
-        if (orientation == Orientation.landscape) {
-          appState.orientation = Orientation.landscape;
-          return landscapeLayout(appState, context);
+        appState.orientation = orientation;
+
+        if (appState.isTablet) {
+          return tabletLayout(appState, context);
         } else {
-          appState.orientation = Orientation.portrait;
-          return portraitLayout(appState, context);
+          return smartphoneLayout(appState, context);
         }
       },
     );
   }
 
-  Scaffold portraitLayout(FluxNewsState appState, BuildContext context) {
+  Scaffold smartphoneLayout(FluxNewsState appState, BuildContext context) {
     // start the main view in portrait mode
     return Scaffold(
       appBar: AppBar(
@@ -178,7 +188,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     );
   }
 
-  Scaffold landscapeLayout(FluxNewsState appState, BuildContext context) {
+  Scaffold tabletLayout(FluxNewsState appState, BuildContext context) {
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       appBar: AppBar(
@@ -188,11 +198,11 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       body: Row(
         children: [
           Expanded(
-            flex: appState.isTablet ? 4 : 5,
+            flex: 4,
             child: ListView(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 75.0),
+                  padding: const EdgeInsets.only(top: 20.0),
                   child: ListTile(
                     title: Text(
                       AppLocalizations.of(context)!.minifluxServer,
@@ -242,41 +252,43 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // return the drawer
     return Drawer(
-        child: Column(
-      children: [
-        Padding(
-            padding: const EdgeInsets.only(top: 75.0),
-            child: Row(children: [
-              const Padding(
-                  padding: EdgeInsets.only(left: 30.0),
-                  child: Icon(
-                    FontAwesomeIcons.bookOpen,
-                  )),
-              Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: Text(
-                    AppLocalizations.of(context)!.fluxNews,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ))
-            ])),
-        Padding(
-          padding: const EdgeInsets.only(top: 20.0),
-          child: ListTile(
-            title: Text(
-              AppLocalizations.of(context)!.minifluxServer,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            subtitle: appState.minifluxURL == null
-                ? const SizedBox.shrink()
-                : Text(
-                    appState.minifluxURL!,
-                    style: Theme.of(context).textTheme.bodyMedium,
+        child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              children: [
+                Padding(
+                    padding: const EdgeInsets.only(top: 75.0),
+                    child: Row(children: [
+                      const Padding(
+                          padding: EdgeInsets.only(left: 30.0),
+                          child: Icon(
+                            FontAwesomeIcons.bookOpen,
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.only(left: 20.0),
+                          child: Text(
+                            AppLocalizations.of(context)!.fluxNews,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ))
+                    ])),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: ListTile(
+                    title: Text(
+                      AppLocalizations.of(context)!.minifluxServer,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    subtitle: appState.minifluxURL == null
+                        ? const SizedBox.shrink()
+                        : Text(
+                            appState.minifluxURL!,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                   ),
-          ),
-        ),
-        categorieListWidget(context, appState),
-      ],
-    ));
+                ),
+                categorieListWidget(context, appState),
+              ],
+            )));
   }
 
   Widget appBarTitle(FluxNewsState appState) {
@@ -534,11 +546,13 @@ class FluxNewsBodyState extends State<FluxNewsBody>
   }
 
   Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'syncNews',
-        logMessage: 'Start syncing with miniflux server.',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'syncNews',
+          logMessage: 'Start syncing with miniflux server.',
+          level: LogLevel.INFO);
+    }
     // this is the part where the app syncs with the miniflux server
     // to reduce the appearence of error pop ups,
     // the error handling in all steps is to only through new errors,
@@ -555,12 +569,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     bool authCheck = await checkMinifluxCredentials(http.Client(),
             appState.minifluxURL, appState.minifluxAPIKey, appState)
         .onError((error, stackTrace) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'authCheck',
-          logMessage: 'Caught an error in authCheck function!',
-          errorMessage: error.toString(),
-          level: LogLevel.ERROR);
+      if (Platform.isAndroid || Platform.isIOS) {
+        FlutterLogs.logThis(
+            tag: FluxNewsState.logTag,
+            subTag: 'authCheck',
+            logMessage: 'Caught an error in authCheck function!',
+            errorMessage: error.toString(),
+            level: LogLevel.ERROR);
+      }
       if (appState.errorString !=
           AppLocalizations.of(context)!.communicateionMinifluxError) {
         appState.errorString =
@@ -581,12 +597,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // at first toggle news as read so that this news don't show up in the next step
       await toggleNewsAsRead(http.Client(), appState)
           .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'toggleNewsAsRead',
-            logMessage: 'Caught an error in toggleNewsAsRead function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'toggleNewsAsRead',
+              logMessage: 'Caught an error in toggleNewsAsRead function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.communicateionMinifluxError) {
           appState.errorString =
@@ -599,12 +617,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // fetch only unread news from the miniflux server
       NewsList newNews =
           await fetchNews(http.Client(), appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchNews',
-            logMessage: 'Caught an error in fetchNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'fetchNews',
+              logMessage: 'Caught an error in fetchNews function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.communicateionMinifluxError) {
           appState.errorString =
@@ -620,12 +640,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // So this step mark news, which are not fetched privious as read in this app.
       await markNotFetchedNewsAsRead(newNews, appState)
           .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'markNotFetchedNewsAsRead',
-            logMessage: 'Caught an error in markNotFetchedNewsAsRead function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'markNotFetchedNewsAsRead',
+              logMessage:
+                  'Caught an error in markNotFetchedNewsAsRead function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
           appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -637,12 +660,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
 
       // insert or update the fetched news in the database
       await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'insertNewsInDB',
-            logMessage: 'Caught an error in insertNewsInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertNewsInDB',
+              logMessage: 'Caught an error in insertNewsInDB function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
           appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -672,13 +697,16 @@ class FluxNewsBodyState extends State<FluxNewsBody>
 
       // renew the news count of "All News"
       if (context.mounted) {
-        await renewAllNewsCount(appState, context).onError(
-            (error, stackTrace) => FlutterLogs.logThis(
+        await renewAllNewsCount(appState, context).onError((error, stackTrace) {
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
                 tag: FluxNewsState.logTag,
                 subTag: 'renewAllNewsCount',
                 logMessage: 'Caught an error in renewAllNewsCount function!',
                 errorMessage: error.toString(),
-                level: LogLevel.ERROR));
+                level: LogLevel.ERROR);
+          }
+        });
       }
 
       // remove the native spalsh after updating the list view
@@ -688,13 +716,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       Categories newCategories =
           await fetchCategorieInformation(http.Client(), appState)
               .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchCategorieInformation',
-            logMessage:
-                'Caught an error in fetchCategorieInformation function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'fetchCategorieInformation',
+              logMessage:
+                  'Caught an error in fetchCategorieInformation function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.communicateionMinifluxError) {
           appState.errorString =
@@ -708,12 +738,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // insert or update the fetched cateegories in the database
       await insertCategoriesInDB(newCategories, appState)
           .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'insertCategoriesInDB',
-            logMessage: 'Caught an error in insertCategoriesInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'insertCategoriesInDB',
+              logMessage: 'Caught an error in insertCategoriesInDB function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
           appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -726,12 +758,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // fetch the starred news (read or unread) from the miniflux server
       NewsList starredNews = await fetchStarredNews(http.Client(), appState)
           .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchStarredNews',
-            logMessage: 'Caught an error in fetchStarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'fetchStarredNews',
+              logMessage: 'Caught an error in fetchStarredNews function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.communicateionMinifluxError) {
           appState.errorString =
@@ -746,12 +780,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // maybe some other app has marked a news a starred
       await updateStarredNewsInDB(starredNews, appState)
           .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'updateStarredNewsInDB',
-            logMessage: 'Caught an error in updateStarredNewsInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'updateStarredNewsInDB',
+              logMessage: 'Caught an error in updateStarredNewsInDB function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
           appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -763,12 +799,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
 
       // delete all unstarred news depending the defined limit in the settings,
       await cleanUnstarredNews(appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'cleanUnstarredNews',
-            logMessage: 'Caught an error in cleanUnstarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'cleanUnstarredNews',
+              logMessage: 'Caught an error in cleanUnstarredNews function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
           appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -779,12 +817,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
 
       // delete all starred news depending the defines limit in the settings
       await cleanStarredNews(appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'cleanStarredNews',
-            logMessage: 'Caught an error in cleanStarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'cleanStarredNews',
+              logMessage: 'Caught an error in cleanStarredNews function!',
+              errorMessage: error.toString(),
+              level: LogLevel.ERROR);
+        }
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
           appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -799,12 +839,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           updateStarredCounter(appState, context);
         }
       } catch (e) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'updateStarredCounter',
-            logMessage: 'Caught an error in updateStarredCounter function!',
-            errorMessage: e.toString(),
-            level: LogLevel.ERROR);
+        if (Platform.isAndroid || Platform.isIOS) {
+          FlutterLogs.logThis(
+              tag: FluxNewsState.logTag,
+              subTag: 'updateStarredCounter',
+              logMessage: 'Caught an error in updateStarredCounter function!',
+              errorMessage: e.toString(),
+              level: LogLevel.ERROR);
+        }
         if (context.mounted) {
           if (appState.errorString !=
               AppLocalizations.of(context)!.databaseError) {
@@ -844,11 +886,13 @@ class FluxNewsBodyState extends State<FluxNewsBody>
       // remove the native spalsh after updating the list view
       FlutterNativeSplash.remove();
     }
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'syncNews',
-        logMessage: 'Finished syncing with miniflux server.',
-        level: LogLevel.INFO);
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'syncNews',
+          logMessage: 'Finished syncing with miniflux server.',
+          level: LogLevel.INFO);
+    }
   }
 
   // the list view widget with news (main view)
@@ -888,8 +932,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                 itemPositionsListener: itemPositionsListener,
                                 initialScrollIndex: scrollPosition,
                                 itemBuilder: (context, i) {
-                                  return showNewsCard(
-                                      snapshot.data![i], appState, context);
+                                  return appState.orientation ==
+                                          Orientation.landscape
+                                      ? showNewsRow(
+                                          snapshot.data![i], appState, context)
+                                      : showNewsCard(
+                                          snapshot.data![i], appState, context);
                                 }),
                             // on ScrollNotification set news as read on scrollover if activated
                             onNotification: (ScrollNotification scrollInfo) {
@@ -913,13 +961,16 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                               FluxNewsState.readNewsStatus,
                                               appState);
                                         } catch (e) {
-                                          FlutterLogs.logThis(
-                                              tag: FluxNewsState.logTag,
-                                              subTag: 'updateNewsStatusInDB',
-                                              logMessage:
-                                                  'Caught an error in updateNewsStatusInDB function!',
-                                              errorMessage: e.toString(),
-                                              level: LogLevel.ERROR);
+                                          if (Platform.isAndroid ||
+                                              Platform.isIOS) {
+                                            FlutterLogs.logThis(
+                                                tag: FluxNewsState.logTag,
+                                                subTag: 'updateNewsStatusInDB',
+                                                logMessage:
+                                                    'Caught an error in updateNewsStatusInDB function!',
+                                                errorMessage: e.toString(),
+                                                level: LogLevel.ERROR);
+                                          }
                                           if (appState.errorString !=
                                               AppLocalizations.of(context)!
                                                   .databaseError) {
@@ -952,13 +1003,16 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                             FluxNewsState.readNewsStatus,
                                             appState);
                                       } catch (e) {
-                                        FlutterLogs.logThis(
-                                            tag: FluxNewsState.logTag,
-                                            subTag: 'updateNewsStatusInDB',
-                                            logMessage:
-                                                'Caught an error in updateNewsStatusInDB function!',
-                                            errorMessage: e.toString(),
-                                            level: LogLevel.ERROR);
+                                        if (Platform.isAndroid ||
+                                            Platform.isIOS) {
+                                          FlutterLogs.logThis(
+                                              tag: FluxNewsState.logTag,
+                                              subTag: 'updateNewsStatusInDB',
+                                              logMessage:
+                                                  'Caught an error in updateNewsStatusInDB function!',
+                                              errorMessage: e.toString(),
+                                              level: LogLevel.ERROR);
+                                        }
                                         if (appState.errorString !=
                                             AppLocalizations.of(context)!
                                                 .databaseError) {
@@ -1026,12 +1080,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             updateNewsStatusInDB(
                 news.newsID, FluxNewsState.readNewsStatus, appState);
           } catch (e) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'updateNewsStatusInDB',
-                logMessage: 'Caught an error in updateNewsStatusInDB function!',
-                errorMessage: e.toString(),
-                level: LogLevel.ERROR);
+            if (Platform.isAndroid || Platform.isIOS) {
+              FlutterLogs.logThis(
+                  tag: FluxNewsState.logTag,
+                  subTag: 'updateNewsStatusInDB',
+                  logMessage:
+                      'Caught an error in updateNewsStatusInDB function!',
+                  errorMessage: e.toString(),
+                  level: LogLevel.ERROR);
+            }
             if (context.mounted) {
               if (appState.errorString !=
                   AppLocalizations.of(context)!.databaseError) {
@@ -1088,18 +1145,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           children: [
             // load the news image if present
             news.getImageURL() != FluxNewsState.noImageUrlString
-                ? SizedBox(
-                    // for tablets we need to restrict the width,
-                    // becaus the fit of the image is set to cover
-                    height: appState.isTablet ? 400 : 175,
+                ?
+                // the CachedNetworkImage is used to load the images
+                CachedNetworkImage(
+                    imageUrl: news.getImageURL(),
+                    height: appState.isTablet ? 250 : 175,
                     width: double.infinity,
-                    // the CachedNetworkImage is used to load the images
-                    child: CachedNetworkImage(
-                      imageUrl: news.getImageURL(),
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.error,
-                      ),
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.error,
                     ),
                   )
                 // if no image is available, shrink this widget
@@ -1115,78 +1169,280 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 2.0,
-                  ),
-                  child: Row(
-                    children: [
-                      news.status == FluxNewsState.unreadNewsStatus
-                          ? const Padding(
-                              padding: EdgeInsets.only(right: 15.0),
-                              child: SizedBox(
-                                  width: 15,
-                                  height: 35,
-                                  child: Icon(
-                                    Icons.fiber_new,
-                                  )))
-                          : const SizedBox.shrink(),
-                      appState.showFeedIcons
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 5.0),
-                              child: news.getFeedIcon(16.0, context, appState))
-                          : const SizedBox.shrink(),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 0.0),
-                        child: Opacity(
-                          opacity: news.status == FluxNewsState.unreadNewsStatus
-                              ? 1.0
-                              : 0.6,
-                          child: Text(
-                            news.feedTitel,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
+                subtitle: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 2.0,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Opacity(
-                          opacity: news.status == FluxNewsState.unreadNewsStatus
-                              ? 1.0
-                              : 0.6,
-                          child: Text(
-                            appState.dateFormat
-                                .format(news.getPublishingDate()),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 40,
-                        height: 35,
-                        child: Opacity(
-                          opacity: news.status == FluxNewsState.unreadNewsStatus
-                              ? 1.0
-                              : 0.6,
-                          child: news.starred
-                              ? const Icon(
-                                  Icons.star,
-                                )
+                      child: Row(
+                        children: [
+                          news.status == FluxNewsState.unreadNewsStatus
+                              ? const Padding(
+                                  padding: EdgeInsets.only(right: 15.0),
+                                  child: SizedBox(
+                                      width: 15,
+                                      height: 35,
+                                      child: Icon(
+                                        Icons.fiber_new,
+                                      )))
                               : const SizedBox.shrink(),
+                          appState.showFeedIcons
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 5.0),
+                                  child:
+                                      news.getFeedIcon(16.0, context, appState))
+                              : const SizedBox.shrink(),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 0.0),
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: Text(
+                                news.feedTitel,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: Text(
+                                appState.dateFormat
+                                    .format(news.getPublishingDate()),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            height: 35,
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: news.starred
+                                  ? const Icon(
+                                      Icons.star,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // here is the news text, the Opacity decide between read and unread
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0, bottom: 10),
+                      child: Opacity(
+                        opacity: news.status == FluxNewsState.unreadNewsStatus
+                            ? 1.0
+                            : 0.6,
+                        child: Text(
+                          news.getText(),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 )),
-            // here is the news text, the Opacity decide between read and unread
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
-              child: Opacity(
-                opacity:
-                    news.status == FluxNewsState.unreadNewsStatus ? 1.0 : 0.6,
-                child: Text(
-                  news.getText(),
-                  style: Theme.of(context).textTheme.bodyMedium,
+          ],
+        ),
+      ),
+    );
+  }
+
+  // here we define the appearance of the news cards
+  Widget showNewsRow(News news, FluxNewsState appState, BuildContext context) {
+    return Card(
+      child: InkWell(
+        splashFactory: NoSplash.splashFactory,
+        onTap: () async {
+          // on tab we update the status of the news to read and open the news
+          try {
+            updateNewsStatusInDB(
+                news.newsID, FluxNewsState.readNewsStatus, appState);
+          } catch (e) {
+            if (Platform.isAndroid || Platform.isIOS) {
+              FlutterLogs.logThis(
+                  tag: FluxNewsState.logTag,
+                  subTag: 'updateNewsStatusInDB',
+                  logMessage:
+                      'Caught an error in updateNewsStatusInDB function!',
+                  errorMessage: e.toString(),
+                  level: LogLevel.ERROR);
+            }
+            if (context.mounted) {
+              if (appState.errorString !=
+                  AppLocalizations.of(context)!.databaseError) {
+                appState.errorString =
+                    AppLocalizations.of(context)!.databaseError;
+                appState.newError = true;
+                appState.refreshView();
+              }
+            }
+          }
+          // update the status to read on the news list and notify the categories
+          // to recalculate the news count
+          setState(() {
+            news.status = FluxNewsState.readNewsStatus;
+            listUpdated = true;
+          });
+
+          // there are difference on launching the news url between the platforms
+          // on android and ios it's preferred to check first if the link can be opened
+          // by an installed app, if not then the link is opened in a webview within the app.
+          // on macos we open directly the webview within the app.
+          if (Platform.isAndroid) {
+            AndroidUrlLauncher.launchUrl(context, news.url);
+          } else if (Platform.isIOS) {
+            // catch exception if no app is installed to handle the url
+            final bool nativeAppLaunchSucceeded = await launchUrl(
+              Uri.parse(news.url),
+              mode: LaunchMode.externalNonBrowserApplication,
+            );
+            //if exception is catched, open the app in webview
+            if (!nativeAppLaunchSucceeded) {
+              await launchUrl(
+                Uri.parse(news.url),
+                mode: LaunchMode.inAppWebView,
+              );
+            }
+          } else if (Platform.isMacOS) {
+            await launchUrl(
+              Uri.parse(news.url),
+              mode: LaunchMode.externalApplication,
+            );
+          }
+        },
+        // on tap get the actual position of the list on tab
+        // to place the context menu on this position
+        onTapDown: (details) {
+          getTapPosition(details);
+        },
+        // after tab on longpress, open the context menu on the tab position
+        onLongPress: () {
+          showContextMenu(news);
+        },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            news.getImageURL() != FluxNewsState.noImageUrlString
+                ? Expanded(
+                    flex: 5,
+                    child: CachedNetworkImage(
+                      imageUrl: news.getImageURL(),
+                      height: 230,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.error,
+                      ),
+                    ),
+                  )
+                // if no image is available, shrink this widget
+                : const SizedBox.shrink(),
+            Expanded(
+              flex: 5,
+              child: ListTile(
+                title: Opacity(
+                  opacity:
+                      news.status == FluxNewsState.unreadNewsStatus ? 1.0 : 0.6,
+                  child: Text(
+                    news.title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                subtitle: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 2.0,
+                      ),
+                      child: Row(
+                        children: [
+                          news.status == FluxNewsState.unreadNewsStatus
+                              ? const Padding(
+                                  padding: EdgeInsets.only(right: 15.0),
+                                  child: SizedBox(
+                                      width: 15,
+                                      height: 35,
+                                      child: Icon(
+                                        Icons.fiber_new,
+                                      )))
+                              : const SizedBox.shrink(),
+                          appState.showFeedIcons
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 5.0),
+                                  child:
+                                      news.getFeedIcon(16.0, context, appState))
+                              : const SizedBox.shrink(),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 0.0),
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: Text(
+                                news.feedTitel,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: Text(
+                                appState.dateFormat
+                                    .format(news.getPublishingDate()),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            height: 35,
+                            child: Opacity(
+                              opacity:
+                                  news.status == FluxNewsState.unreadNewsStatus
+                                      ? 1.0
+                                      : 0.6,
+                              child: news.starred
+                                  ? const Icon(
+                                      Icons.star,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // here is the news text, the Opacity decide between read and unread
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0, bottom: 10),
+                      child: Opacity(
+                        opacity: news.status == FluxNewsState.unreadNewsStatus
+                            ? 1.0
+                            : 0.6,
+                        child: Text(
+                          news.getText(),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1225,7 +1481,17 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 key: FluxNewsState.secureStorageSavedScrollPositionKey,
                 value: firstItem.toString());
           }
-
+          /*
+          if (appState.debugMode) {
+            if (Platform.isAndroid || Platform.isIOS) {
+              FlutterLogs.logThis(
+                  tag: FluxNewsState.logTag,
+                  subTag: 'positionsView',
+                  logMessage: 'Actual Position is: $scrollPosition',
+                  level: LogLevel.INFO);
+            }
+          }
+          */
           return const SizedBox.shrink();
         },
       );
@@ -1311,12 +1577,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         // toggle the news as bookmarked or not bookmarked at the miniflux server
         await toggleBookmark(http.Client(), appState, news)
             .onError((error, stackTrace) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleBookmark',
-              logMessage: 'Caught an error in toggleBookmark function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'toggleBookmark',
+                logMessage: 'Caught an error in toggleBookmark function!',
+                errorMessage: error.toString(),
+                level: LogLevel.ERROR);
+          }
           if (appState.errorString !=
               AppLocalizations.of(context)!.communicateionMinifluxError) {
             appState.errorString =
@@ -1333,13 +1601,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             updateStarredCounter(appState, context);
           }
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStarredStatusInDB',
-              logMessage:
-                  'Caught an error in updateNewsStarredStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStarredStatusInDB',
+                logMessage:
+                    'Caught an error in updateNewsStarredStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -1378,12 +1648,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           updateNewsStatusInDB(
               news.newsID, FluxNewsState.unreadNewsStatus, appState);
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStatusInDB',
+                logMessage: 'Caught an error in updateNewsStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -1407,12 +1679,14 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           updateNewsStatusInDB(
               news.newsID, FluxNewsState.readNewsStatus, appState);
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'updateNewsStatusInDB',
+                logMessage: 'Caught an error in updateNewsStatusInDB function!',
+                errorMessage: e.toString(),
+                level: LogLevel.ERROR);
+          }
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -1573,6 +1847,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     categories.renewNewsCount(appState);
     // update the view after changing the values
     appState.refreshView();
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // if the "All News" ListTile is clicked,
@@ -1599,6 +1879,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // update the view after changing the values
     appState.refreshView();
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // if the "Bokkmarked" ListTile is clicked,
@@ -1628,6 +1914,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
     // update the view after changing the values
     appState.refreshView();
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
@@ -1675,6 +1967,12 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         categories.renewNewsCount(appState);
         // update the view after changing the values
         appState.refreshView();
+
+        // if the device is a smartphone, close the drawer after selecting a category or feed
+        // if the device is a tablet, no drawer is used.
+        if (!appState.isTablet) {
+          Navigator.pop(context);
+        }
       },
     );
   }

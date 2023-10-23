@@ -24,47 +24,51 @@ Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // init the log system
-  await FlutterLogs.initLogs(
-      logLevelsEnabled: [
-        LogLevel.INFO,
-        LogLevel.WARNING,
-        LogLevel.ERROR,
-        LogLevel.SEVERE
-      ],
-      timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
-      directoryStructure: DirectoryStructure.FOR_DATE,
-      logFileExtension: LogFileExtension.LOG,
-      logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
-      logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
-      debugFileOperations: false,
-      isDebuggable: kDebugMode ? true : false);
+  if (Platform.isAndroid || Platform.isIOS) {
+    // init the log system
+    await FlutterLogs.initLogs(
+        logLevelsEnabled: [
+          LogLevel.INFO,
+          LogLevel.WARNING,
+          LogLevel.ERROR,
+          LogLevel.SEVERE
+        ],
+        timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
+        directoryStructure: DirectoryStructure.FOR_DATE,
+        logFileExtension: LogFileExtension.LOG,
+        logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
+        logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
+        debugFileOperations: false,
+        isDebuggable: kDebugMode ? true : false);
 
-  // clear the logs on startup
-  FlutterLogs.clearLogs();
+    // clear the logs on startup
+    FlutterLogs.clearLogs();
 
-  // init the log export channel to receive the exported log file name and share the file
-  FlutterLogs.channel.setMethodCallHandler((call) async {
-    if (call.method == 'logsExported') {
-      String zipName = call.arguments.toString();
+    // init the log export channel to receive the exported log file name and share the file
+    FlutterLogs.channel.setMethodCallHandler((call) async {
+      if (call.method == 'logsExported') {
+        String zipName = call.arguments.toString();
 
-      Directory? externalDirectory;
+        Directory? externalDirectory;
 
-      if (Platform.isIOS) {
-        externalDirectory = await getApplicationDocumentsDirectory();
-      } else {
-        externalDirectory = await getExternalStorageDirectory();
+        if (Platform.isIOS) {
+          externalDirectory = await getApplicationDocumentsDirectory();
+        } else {
+          externalDirectory = await getExternalStorageDirectory();
+        }
+
+        File file = File("${externalDirectory!.path}/$zipName");
+        if (file.existsSync()) {
+          Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+        } else {
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logError(FluxNewsState.logTag, "existsSync",
+                "File not found in storage.");
+          }
+        }
       }
-
-      File file = File("${externalDirectory!.path}/$zipName");
-      if (file.existsSync()) {
-        Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
-      } else {
-        FlutterLogs.logError(
-            FluxNewsState.logTag, "existsSync", "File not found in storage.");
-      }
-    }
-  });
+    });
+  }
 
   runApp(const SDTFScope(child: FluxNews()));
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -460,7 +462,9 @@ class _SettingsState extends State<Settings> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 onTap: () {
-                  FlutterLogs.exportLogs(exportType: ExportType.ALL);
+                  if (Platform.isAndroid || Platform.isIOS) {
+                    FlutterLogs.exportLogs(exportType: ExportType.ALL);
+                  }
                 },
               ),
               const Divider(),
