@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:intl/intl.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
@@ -88,6 +89,23 @@ class FluxNewsState extends ChangeNotifier {
   late Future<List<News>> newsList;
   late Future<Categories> categorieList;
   List<int>? feedIDs;
+
+  // vars for main view
+  bool syncProcess = false;
+  bool listUpdated = false;
+  late Offset tapPosition;
+  int scrollPosition = 0;
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+
+  // vars for search view
+  Future<List<News>> searchNewsList = Future<List<News>>.value([]);
+  final TextEditingController searchController = TextEditingController();
+  final ItemScrollController searchItemScrollController =
+      ItemScrollController();
+  final ItemPositionsListener searchItemPositionsListener =
+      ItemPositionsListener.create();
 
   // var for formatting the date depending on locale settings
   DateFormat dateFormat = DateFormat('M/d/yy HH:mm');

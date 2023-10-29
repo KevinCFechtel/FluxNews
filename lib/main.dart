@@ -43,7 +43,16 @@ Future<void> main() async {
 
     // clear the logs on startup
     FlutterLogs.clearLogs();
+  }
 
+  runApp(const SDTFScope(child: FluxNews()));
+}
+
+class FluxNews extends StatelessWidget {
+  const FluxNews({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     // init the log export channel to receive the exported log file name and share the file
     FlutterLogs.channel.setMethodCallHandler((call) async {
       if (call.method == 'logsExported') {
@@ -59,7 +68,16 @@ Future<void> main() async {
 
         File file = File("${externalDirectory!.path}/$zipName");
         if (file.existsSync()) {
-          Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+          if (Platform.isAndroid) {
+            Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+          } else {
+            if (context.mounted) {
+              final box = context.findRenderObject() as RenderBox?;
+              Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")],
+                  sharePositionOrigin:
+                      box!.localToGlobal(Offset.zero) & const Size(100, 100));
+            }
+          }
         } else {
           if (Platform.isAndroid || Platform.isIOS) {
             FlutterLogs.logError(FluxNewsState.logTag, "existsSync",
@@ -68,16 +86,6 @@ Future<void> main() async {
         }
       }
     });
-  }
-
-  runApp(const SDTFScope(child: FluxNews()));
-}
-
-class FluxNews extends StatelessWidget {
-  const FluxNews({super.key});
-
-  @override
-  Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => FluxNewsState(),
       builder: (context, child) {
