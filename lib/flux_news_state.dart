@@ -92,7 +92,6 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for main view
   bool syncProcess = false;
-  bool listUpdated = false;
   late Offset tapPosition;
   int scrollPosition = 0;
   final ItemScrollController itemScrollController = ItemScrollController();
@@ -138,11 +137,6 @@ class FluxNewsState extends ChangeNotifier {
   bool multilineAppBarText = false;
   bool showFeedIcons = false;
   List<KeyValueRecordType>? recordTypesBrightnessMode;
-
-  // vars for counter
-  int starredCount = 0;
-  int allNewsCount = 0;
-  int appBarNewsCount = 0;
 
   // vars for app bar text
   String appBarText = '';

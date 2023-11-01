@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -89,7 +90,12 @@ class FluxNews extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => FluxNewsState(),
       builder: (context, child) {
-        return getMaterialApp(context);
+        return ChangeNotifierProvider(
+          create: (context) => FluxNewsCounterState(),
+          builder: (context, child) {
+            return getMaterialApp(context);
+          },
+        );
       },
     );
   }

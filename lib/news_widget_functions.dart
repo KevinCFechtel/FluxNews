@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/flux_news_state.dart';
 import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
@@ -25,6 +26,7 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
     bool searchView) async {
   final RenderObject? overlay = Overlay.of(context).context.findRenderObject();
   FluxNewsState appState = context.read<FluxNewsState>();
+  FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
 
   final result = await showMenu(
       context: context,
@@ -195,7 +197,7 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
       // of the news counter
       news.status = FluxNewsState.unreadNewsStatus;
       if (searchView) {
-// update the news status at the miniflux server
+        // update the news status at the miniflux server
         try {
           toggleOneNewsAsRead(http.Client(), appState, news);
         } catch (e) {
@@ -223,7 +225,8 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
           return [];
         });
       } else {
-        appState.listUpdated = true;
+        appCounterState.listUpdated = true;
+        appCounterState.refreshView();
         appState.refreshView();
       }
 
@@ -284,7 +287,8 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
           return [];
         });
       } else {
-        appState.listUpdated = true;
+        appCounterState.listUpdated = true;
+        appCounterState.refreshView();
         appState.refreshView();
       }
 

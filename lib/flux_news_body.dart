@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/news_list.dart';
 import 'package:flux_news/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -138,7 +139,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             );
           },
         ),
-        title: appBarTitle(appState, context),
+        title: AppBarTitle(
+          context: context,
+          appState: appState,
+        ),
         actions: appBarButtons(appState, context),
       ),
       drawer: getDrawer(context, appState),
@@ -152,7 +156,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       appBar: AppBar(
-        title: appBarTitle(appState, context),
+        title: AppBarTitle(
+          context: context,
+          appState: appState,
+        ),
         actions: appBarButtons(appState, context),
       ),
       body: Row(
@@ -173,7 +180,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                         : Text(appState.minifluxURL!),
                   ),
                 ),
-                categorieListWidget(context, appState),
+                CategorieList(
+                  context: context,
+                  appState: appState,
+                ),
               ],
             ),
           ),
@@ -196,23 +206,24 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     if (appState.minifluxURL == null ||
         appState.minifluxAPIKey == null ||
         appState.errorOnMicrofluxAuth == true) {
-      return noSettingsWidget(context, appState);
+      return NoSettings(context: context, appState: appState);
     } else if (appState.errorString != '' && appState.newError) {
-      return errorWidget(context, appState);
+      return ErrorWidget(context: context, appState: appState);
     } else {
       if (appState.orientation == Orientation.landscape) {
-        return landscapeNewsListWidget(context, appState);
+        return LandscapeNewsList(context: context, appState: appState);
       } else {
-        return portraitNewsListWidget(context, appState);
+        return PortraitNewsList(context: context, appState: appState);
       }
     }
   }
 
   Drawer getDrawer(BuildContext context, FluxNewsState appState) {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // update the categories, feeds and news counter, if there were updates to the list view
-    if (appState.listUpdated) {
+    if (appCounterState.listUpdated) {
       appState.categorieList = queryCategoriesFromDB(appState, context);
-      appState.listUpdated = false;
+      appCounterState.listUpdated = false;
     }
     // return the drawer
     return Drawer(
@@ -250,42 +261,16 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                           ),
                   ),
                 ),
-                categorieListWidget(context, appState),
+                CategorieList(
+                  context: context,
+                  appState: appState,
+                ),
               ],
             )));
   }
 
-  Widget appBarTitle(FluxNewsState appState, BuildContext context) {
-    // set the app bar title depending on the choosen categorie to show in list view
-
-    if (appState.multilineAppBarText) {
-      // this is the part where the news count is added as an extra line to the app bar title
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            appState.appBarText,
-            maxLines: 2,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          Text(
-            '${AppLocalizations.of(context)!.itemCount}: ${appState.appBarNewsCount}',
-            style: Theme.of(context).textTheme.labelMedium,
-          )
-        ],
-      );
-    } else {
-      // this is the part without the news count as an extra line
-      return Text(
-        appState.appBarText,
-        maxLines: 2,
-        textAlign: TextAlign.start,
-        style: Theme.of(context).textTheme.titleLarge,
-      );
-    }
-  }
-
   List<Widget> appBarButtons(FluxNewsState appState, BuildContext context) {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // define the app bar buttons to sync with miniflux,
     // search for news and switch between all and only unread news view
     // and the navigation to the settings
@@ -409,7 +394,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 });
 
                 // notify the categoires to update the news count
-                appState.listUpdated = true;
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
                 // if the current view is all news change to only unread news
               } else {
@@ -432,7 +418,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 });
 
                 // notify the categoires to update the news count
-                appState.listUpdated = true;
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
               }
             } else if (value == 2) {
@@ -459,7 +446,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 });
 
                 // notify the categoires to update the news count
-                appState.listUpdated = true;
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
                 // if the current sort order is oldest first change to newest first
               } else {
@@ -482,7 +470,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 });
 
                 // notify the categoires to update the news count
-                appState.listUpdated = true;
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
               }
             } else if (value == 3) {
@@ -492,15 +481,166 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
           }),
     ];
   }
+}
 
-  // this is the categorie list widget, it is shown in the drawer
-  // or on the left side in landscape or tablet mode.
-  Widget categorieListWidget(BuildContext context, FluxNewsState appState) {
+// this widget replace the normal news list widget, if a error occurs
+// it will pop up an error dialog and then show the normal news list in the background.
+class ErrorWidget extends StatelessWidget {
+  const ErrorWidget({
+    super.key,
+    required this.context,
+    required this.appState,
+  });
+
+  final BuildContext context;
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    Timer.run(() {
+      showErrorDialog(context, appState).then((value) {
+        appState.newError = false;
+        appState.refreshView();
+      });
+    });
+    if (appState.orientation == Orientation.landscape) {
+      return LandscapeNewsList(context: context, appState: appState);
+    } else {
+      return PortraitNewsList(context: context, appState: appState);
+    }
+  }
+
+  // this is the error dialog which is shown, if a error occours.
+  // to prevent the multi pop up (f.e. if the internet connection ist lost
+  // not every function which require the connection should raise a pop up)
+  // we check if the error which is shown is a new error.
+  Future showErrorDialog(BuildContext context, FluxNewsState appState) async {
+    if (appState.newError) {
+      AlertDialog alertDialog = AlertDialog(
+        title: Text(AppLocalizations.of(context)!.error),
+        content: Text(appState.errorString),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(AppLocalizations.of(context)!.ok),
+          ),
+        ],
+      );
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return alertDialog;
+          });
+    }
+  }
+}
+
+// this widget replace the news list view, if the miniflux server settings
+// are not set or not correct.
+class NoSettings extends StatelessWidget {
+  const NoSettings({
+    super.key,
+    required this.context,
+    required this.appState,
+  });
+
+  final BuildContext context;
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            AppLocalizations.of(context)!.settingsNotSet,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 40, top: 20.0, right: 30),
+            child: Text(
+              AppLocalizations.of(context)!.provideMinifluxCredentials,
+              style: const TextStyle(
+                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class AppBarTitle extends StatelessWidget {
+  const AppBarTitle({
+    super.key,
+    required this.context,
+    required this.appState,
+  });
+
+  final BuildContext context;
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
+
+    // set the app bar title depending on the choosen categorie to show in list view
+
+    if (appState.multilineAppBarText) {
+      // this is the part where the news count is added as an extra line to the app bar title
+      return Builder(builder: (BuildContext context) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              appState.appBarText,
+              maxLines: 2,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            Text(
+              '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
+              style: Theme.of(context).textTheme.labelMedium,
+            )
+          ],
+        );
+      });
+    } else {
+      // this is the part without the news count as an extra line
+      return Text(
+        appState.appBarText,
+        maxLines: 2,
+        textAlign: TextAlign.start,
+        style: Theme.of(context).textTheme.titleLarge,
+      );
+    }
+  }
+}
+
+class CategorieList extends StatelessWidget {
+  const CategorieList({
+    super.key,
+    required this.context,
+    required this.appState,
+  });
+
+  final BuildContext context;
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
     var getData = FutureBuilder<Categories>(
         future: appState.categorieList,
         builder: (context, snapshot) {
-          if (appState.listUpdated) {
-            snapshot.data?.renewNewsCount(appState);
+          if (appCounterState.listUpdated) {
+            appCounterState.listUpdated = false;
+            snapshot.data?.renewNewsCount(appState, context);
             renewAllNewsCount(appState, context);
           }
           switch (snapshot.connectionState) {
@@ -537,7 +677,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               trailing: Text(
-                                '${appState.allNewsCount}',
+                                '${appCounterState.allNewsCount}',
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               onTap: () {
@@ -559,7 +699,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               trailing: Text(
-                                '${appState.starredCount}',
+                                '${appCounterState.starredCount}',
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               onTap: () {
@@ -629,7 +769,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     // set the categorie title as app bar title
     // and update the newscount in the app bar, if the function is activated.
     appState.appBarText = categorie.title;
-    categories.renewNewsCount(appState);
+    categories.renewNewsCount(appState, context);
     // update the view after changing the values
     appState.refreshView();
 
@@ -746,7 +886,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         // set the feed title as app bar title
         // and update the newscount in the app bar, if the function is activated.
         appState.appBarText = feed.title;
-        categories.renewNewsCount(appState);
+        categories.renewNewsCount(appState, context);
         // update the view after changing the values
         appState.refreshView();
 
@@ -757,73 +897,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         }
       },
     );
-  }
-
-  // this widget replace the news list view, if the miniflux server settings
-  // are not set or not correct.
-  Widget noSettingsWidget(BuildContext context, FluxNewsState appState) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.settingsNotSet,
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 40, top: 20.0, right: 30),
-            child: Text(
-              AppLocalizations.of(context)!.provideMinifluxCredentials,
-              style: const TextStyle(
-                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  // this widget replace the normal news list widget, if a error occurs
-  // it will pop up an error dialog and then show the normal news list in the background.
-  Widget errorWidget(BuildContext context, FluxNewsState appState) {
-    Timer.run(() {
-      showErrorDialog(context, appState).then((value) {
-        appState.newError = false;
-        appState.refreshView();
-      });
-    });
-    if (appState.orientation == Orientation.landscape) {
-      return landscapeNewsListWidget(context, appState);
-    } else {
-      return portraitNewsListWidget(context, appState);
-    }
-  }
-
-  // this is the error dialog which is shown, if a error occours.
-  // to prevent the multi pop up (f.e. if the internet connection ist lost
-  // not every function which require the connection should raise a pop up)
-  // we check if the error which is shown is a new error.
-  Future showErrorDialog(BuildContext context, FluxNewsState appState) async {
-    if (appState.newError) {
-      AlertDialog alertDialog = AlertDialog(
-        title: Text(AppLocalizations.of(context)!.error),
-        content: Text(appState.errorString),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(AppLocalizations.of(context)!.ok),
-          ),
-        ],
-      );
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return alertDialog;
-          });
-    }
   }
 }
 

@@ -3,8 +3,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'flux_news_state.dart';
@@ -425,7 +427,9 @@ class Categories {
   // the news count of a categorie is the sum of the news count of each feed
   // the news count is stored in the appBarNewsCount variable if the categorie is currently displayed
   // the appState listener are notified to update the news count in the app bar
-  Future<void> renewNewsCount(FluxNewsState appState) async {
+  Future<void> renewNewsCount(
+      FluxNewsState appState, BuildContext context) async {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
       String status = '';
@@ -446,16 +450,16 @@ class Categories {
           categorieNewsCount = categorieNewsCount + feedNewsCount;
           feed.newsCount = feedNewsCount;
           if (appState.appBarText == feed.title) {
-            appState.appBarNewsCount = feedNewsCount;
+            appCounterState.appBarNewsCount = feedNewsCount;
           }
         }
         categorieNewsCount ??= 0;
         categorie.newsCount = categorieNewsCount;
         if (appState.appBarText == categorie.title) {
-          appState.appBarNewsCount = categorieNewsCount;
+          appCounterState.appBarNewsCount = categorieNewsCount;
         }
       }
-      appState.refreshView();
+      appCounterState.refreshView();
     }
   }
 }

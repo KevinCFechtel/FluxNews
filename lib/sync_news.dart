@@ -168,7 +168,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         }
       });
     }
-
+    appState.refreshView();
     // remove the native spalsh after updating the list view
     FlutterNativeSplash.remove();
 
@@ -321,7 +321,9 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       if (newNews.newsCount > 0 && appState.feedIDs == null) {
         // if new news exists and the "All News" categorie is selected,
         // set the list view position to the top
-        appState.itemScrollController.jumpTo(index: 0);
+        if (appState.itemScrollController.isAttached) {
+          appState.itemScrollController.jumpTo(index: 0);
+        }
       } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
         if (appState.feedIDs?.first == -1) {
           // if new news exists and the "Bookmarked" categorie is selected,

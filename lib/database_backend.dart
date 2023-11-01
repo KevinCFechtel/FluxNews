@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:http/http.dart' as http;
 
@@ -407,6 +409,7 @@ void updateNewsStatusInDB(
 
 // update the counter of the bookmarked news
 void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
+  FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
   if (appState.debugMode) {
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
@@ -425,12 +428,12 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   }
   starredNewsCount ??= 0;
   // assign the count of bookmarked news to the app state variable
-  appState.starredCount = starredNewsCount;
+  appCounterState.starredCount = starredNewsCount;
   if (context.mounted) {
     if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
       // if the bookmarked news are selected to display, assign the count
       // also to the app bar counter variable.
-      appState.appBarNewsCount = starredNewsCount;
+      appCounterState.appBarNewsCount = starredNewsCount;
     }
   }
 
@@ -443,7 +446,7 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
           level: LogLevel.INFO);
     }
   }
-  appState.refreshView();
+  appCounterState.refreshView();
 }
 
 // update the bookmarked flag in the database
@@ -766,8 +769,9 @@ Future<Categories> queryCategoriesFromDB(
   }
   Categories categories = Categories(categories: categorieList);
   // calculate the news count of the cagegories and feeds
-  categories.renewNewsCount(appState);
+
   if (context.mounted) {
+    categories.renewNewsCount(appState, context);
     // calculate the news count of the "all news" section
     renewAllNewsCount(appState, context);
   }
@@ -786,6 +790,7 @@ Future<Categories> queryCategoriesFromDB(
 // calculate the news count of the "all news" section
 Future<void> renewAllNewsCount(
     FluxNewsState appState, BuildContext context) async {
+  FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
   if (appState.debugMode) {
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
@@ -812,12 +817,12 @@ Future<void> renewAllNewsCount(
   }
 
   // assign the count of all news to the app state variable
-  appState.allNewsCount = allNewsCount;
+  appCounterState.allNewsCount = allNewsCount;
   if (context.mounted) {
     if (appState.appBarText == AppLocalizations.of(context)!.allNews) {
       // if "all news" are selected to display, assign the count
       // also to the app bar counter variable.
-      appState.appBarNewsCount = allNewsCount;
+      appCounterState.appBarNewsCount = allNewsCount;
     }
   }
   if (appState.debugMode) {
@@ -831,5 +836,5 @@ Future<void> renewAllNewsCount(
   }
 
   // notify the app about the updated count of news
-  appState.refreshView();
+  appCounterState.refreshView();
 }

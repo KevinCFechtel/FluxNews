@@ -45,8 +45,11 @@ Widget landscapeSearchNewsListWidget(
                                 appState.searchItemPositionsListener,
                             initialScrollIndex: 0,
                             itemBuilder: (context, i) {
-                              return showNewsRow(
-                                  snapshot.data![i], appState, context, true);
+                              return NewsRow(
+                                  news: snapshot.data![i],
+                                  appState: appState,
+                                  context: context,
+                                  searchView: false);
                             }),
                       ]);
           }
@@ -94,8 +97,11 @@ Widget landscapeTabletSearchNewsListWidget(
                                 appState.searchItemPositionsListener,
                             initialScrollIndex: 0,
                             itemBuilder: (context, i) {
-                              return showTabletSearchNewsRow(
-                                  snapshot.data![i], appState, context, true);
+                              return TabletSearchNewsRow(
+                                  news: snapshot.data![i],
+                                  appState: appState,
+                                  context: context,
+                                  searchView: true);
                             }),
                       ]);
           }
@@ -143,8 +149,11 @@ Widget portraitSearchNewsListWidget(
                                 appState.searchItemPositionsListener,
                             initialScrollIndex: 0,
                             itemBuilder: (context, i) {
-                              return showNewsCard(
-                                  snapshot.data![i], appState, context, true);
+                              return NewsCard(
+                                  news: snapshot.data![i],
+                                  appState: appState,
+                                  context: context,
+                                  searchView: true);
                             }),
                       ]);
           }
