@@ -23,6 +23,39 @@ Widget landscapeNewsListWidget(BuildContext context, FluxNewsState appState) {
           if (snapshot.hasError) {
             return const SizedBox.shrink();
           } else {
+            // TODO: Löst vielleicht ein Performance problem...
+            /*
+            appState.itemPositionsListener.itemPositions.addListener(() {
+              // if the list doesn't reached the bottom,
+              // mark the news which got scrolled over as read.
+              // Iterate through the news list from start
+              // to the actual position and mark them as read
+              for (int i = 0; i < appState.scrollPosition; i++) {
+                try {
+                  updateNewsStatusInDB(snapshot.data![i].newsID,
+                      FluxNewsState.readNewsStatus, appState);
+                } catch (e) {
+                  if (Platform.isAndroid || Platform.isIOS) {
+                    FlutterLogs.logThis(
+                        tag: FluxNewsState.logTag,
+                        subTag: 'updateNewsStatusInDB',
+                        logMessage:
+                            'Caught an error in updateNewsStatusInDB function!',
+                        errorMessage: e.toString(),
+                        level: LogLevel.ERROR);
+                  }
+                  if (appState.errorString !=
+                      AppLocalizations.of(context)!.databaseError) {
+                    appState.errorString =
+                        AppLocalizations.of(context)!.databaseError;
+                    appState.newError = true;
+                    appState.refreshView();
+                  }
+                }
+                snapshot.data![i].status = FluxNewsState.readNewsStatus;
+              }
+            });
+            */
             return snapshot.data == null
                 // show empty dialog if list is null
                 ? Center(
@@ -51,7 +84,7 @@ Widget landscapeNewsListWidget(BuildContext context, FluxNewsState appState) {
                               initialScrollIndex: appState.scrollPosition,
                               itemBuilder: (context, i) {
                                 return showNewsRow(snapshot.data![i], appState,
-                                    context, false, appState.isTablet);
+                                    context, false);
                               }),
                           // on ScrollNotification set news as read on scrollover if activated
                           onNotification: (ScrollNotification scrollInfo) {

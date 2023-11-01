@@ -45,8 +45,57 @@ Widget landscapeSearchNewsListWidget(
                                 appState.searchItemPositionsListener,
                             initialScrollIndex: 0,
                             itemBuilder: (context, i) {
-                              return showNewsRow(snapshot.data![i], appState,
-                                  context, true, appState.isTablet);
+                              return showNewsRow(
+                                  snapshot.data![i], appState, context, true);
+                            }),
+                      ]);
+          }
+      }
+    },
+  );
+  return getData;
+}
+
+Widget landscapeTabletSearchNewsListWidget(
+    BuildContext context, FluxNewsState appState) {
+  var getData = FutureBuilder<List<News>>(
+    future: appState.searchNewsList,
+    builder: (context, snapshot) {
+      switch (snapshot.connectionState) {
+        case ConnectionState.none:
+        case ConnectionState.waiting:
+          return const Center(child: CircularProgressIndicator.adaptive());
+        default:
+          if (snapshot.hasError) {
+            return const SizedBox.shrink();
+          } else {
+            return snapshot.data == null
+                // show empty dialog if list is null
+                ? Center(
+                    child: Text(
+                    AppLocalizations.of(context)!.emptySearch,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ))
+                // show empty dialog if list is empty
+                : snapshot.data!.isEmpty
+                    ? Center(
+                        child: Text(
+                        AppLocalizations.of(context)!.emptySearch,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ))
+                    // otherwise create list view with the news of the search result
+                    : Stack(children: [
+                        ScrollablePositionedList.builder(
+                            key: const PageStorageKey<String>('NewsSearchList'),
+                            itemCount: snapshot.data!.length,
+                            itemScrollController:
+                                appState.searchItemScrollController,
+                            itemPositionsListener:
+                                appState.searchItemPositionsListener,
+                            initialScrollIndex: 0,
+                            itemBuilder: (context, i) {
+                              return showTabletSearchNewsRow(
+                                  snapshot.data![i], appState, context, true);
                             }),
                       ]);
           }

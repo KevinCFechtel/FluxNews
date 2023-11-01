@@ -103,13 +103,14 @@ Widget showNewsCard(
           // the title and additional infos are presented within a ListTile
           // the Opacity decide between read and unread news
           ListTile(
-              title: Opacity(
-                opacity:
-                    news.status == FluxNewsState.unreadNewsStatus ? 1.0 : 0.6,
-                child: Text(
-                  news.title,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              title: Text(
+                news.title,
+                style: news.status == FluxNewsState.unreadNewsStatus
+                    ? Theme.of(context).textTheme.titleLarge
+                    : Theme.of(context)
+                        .textTheme
+                        .titleLarge!
+                        .copyWith(color: Theme.of(context).disabledColor),
               ),
               subtitle: Column(
                 children: [
@@ -137,45 +138,43 @@ Widget showNewsCard(
                             : const SizedBox.shrink(),
                         Padding(
                           padding: const EdgeInsets.only(left: 0.0),
-                          child: Opacity(
-                            opacity:
-                                news.status == FluxNewsState.unreadNewsStatus
-                                    ? 1.0
-                                    : 0.6,
-                            child: Text(
-                              news.feedTitel,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                          child: Text(
+                            news.feedTitel,
+                            style: news.status == FluxNewsState.unreadNewsStatus
+                                ? Theme.of(context).textTheme.bodyMedium
+                                : Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                        color: Theme.of(context).disabledColor),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0),
-                          child: Opacity(
-                            opacity:
-                                news.status == FluxNewsState.unreadNewsStatus
-                                    ? 1.0
-                                    : 0.6,
-                            child: Text(
-                              appState.dateFormat
-                                  .format(news.getPublishingDate()),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                          child: Text(
+                            appState.dateFormat
+                                .format(news.getPublishingDate()),
+                            style: news.status == FluxNewsState.unreadNewsStatus
+                                ? Theme.of(context).textTheme.bodyMedium
+                                : Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                        color: Theme.of(context).disabledColor),
                           ),
                         ),
                         SizedBox(
                           width: 40,
                           height: 35,
-                          child: Opacity(
-                            opacity:
-                                news.status == FluxNewsState.unreadNewsStatus
-                                    ? 1.0
-                                    : 0.6,
-                            child: news.starred
-                                ? const Icon(
-                                    Icons.star,
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
+                          child: news.starred
+                              ? Icon(
+                                  Icons.star,
+                                  color: news.status ==
+                                          FluxNewsState.unreadNewsStatus
+                                      ? Theme.of(context).primaryIconTheme.color
+                                      : Theme.of(context).disabledColor,
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -183,14 +182,14 @@ Widget showNewsCard(
                   // here is the news text, the Opacity decide between read and unread
                   Padding(
                     padding: const EdgeInsets.only(top: 2.0, bottom: 10),
-                    child: Opacity(
-                      opacity: news.status == FluxNewsState.unreadNewsStatus
-                          ? 1.0
-                          : 0.6,
-                      child: Text(
-                        news.getText(),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                    child: Text(
+                      news.getText(),
+                      style: news.status == FluxNewsState.unreadNewsStatus
+                          ? Theme.of(context).textTheme.bodyMedium
+                          : Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: Theme.of(context).disabledColor),
                     ),
                   ),
                 ],
