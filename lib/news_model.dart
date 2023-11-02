@@ -195,12 +195,12 @@ class News {
   // the icon is colored in white if the dark mode is enabled
   // the icon is colored in black if the dark mode is disabled
   // if the icon is a png image it is processed by the Image.memory widget
-  Widget getFeedIcon(
-      double size, BuildContext context, FluxNewsState appState) {
+  Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (appState.brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsState>().brightnessMode ==
+        FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (appState.brightnessMode ==
+    } else if (context.read<FluxNewsState>().brightnessMode ==
         FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled =
           MediaQuery.of(context).platformBrightness == Brightness.dark;
@@ -308,12 +308,12 @@ class Feed {
   // the icon is colored in white if the dark mode is enabled
   // the icon is colored in black if the dark mode is disabled
   // if the icon is a png image it is processed by the Image.memory widget
-  Widget getFeedIcon(
-      double size, BuildContext context, FluxNewsState appState) {
+  Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (appState.brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsState>().brightnessMode ==
+        FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (appState.brightnessMode ==
+    } else if (context.read<FluxNewsState>().brightnessMode ==
         FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled =
           MediaQuery.of(context).platformBrightness == Brightness.dark;

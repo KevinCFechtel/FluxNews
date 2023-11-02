@@ -493,7 +493,7 @@ class Settings extends StatelessWidget {
   // It also initializes the database connection.
   Future<void> initConfig(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
-    await appState.readConfigValues(context);
+    await appState.readConfigValues();
     if (context.mounted) {
       appState.readConfig(context);
     }

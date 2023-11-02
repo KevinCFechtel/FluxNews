@@ -18,18 +18,16 @@ class NewsCard extends StatelessWidget {
   const NewsCard({
     super.key,
     required this.news,
-    required this.appState,
     required this.context,
     required this.searchView,
   });
   final News news;
-  final FluxNewsState appState;
   final BuildContext context;
   final bool searchView;
 
   @override
   Widget build(BuildContext context) {
-    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+    FluxNewsState appState = context.watch<FluxNewsState>();
     return Card(
       // inkwell is used for the onTab and onLongPress functions
       child: InkWell(
@@ -62,8 +60,9 @@ class NewsCard extends StatelessWidget {
           // update the status to read on the news list and notify the categories
           // to recalculate the news count
           news.status = FluxNewsState.readNewsStatus;
-          appCounterState.listUpdated = true;
-          appCounterState.refreshView();
+          context.read<FluxNewsCounterState>().listUpdated = true;
+          context.read<FluxNewsCounterState>().refreshView();
+          appState.refreshView();
 
           // there are difference on launching the news url between the platforms
           // on android and ios it's preferred to check first if the link can be opened
@@ -96,9 +95,9 @@ class NewsCard extends StatelessWidget {
         onTapDown: (details) {
           getTapPosition(details, context, appState);
         },
-        // after tab on longpress, open the context menu on the tab position
         onLongPress: () {
-          showContextMenu(news, context, appState, searchView);
+          showContextMenu(news, context, searchView, appState,
+              context.read<FluxNewsCounterState>());
         },
         child: Column(
           children: [
@@ -150,8 +149,7 @@ class NewsCard extends StatelessWidget {
                           appState.showFeedIcons
                               ? Padding(
                                   padding: const EdgeInsets.only(right: 5.0),
-                                  child:
-                                      news.getFeedIcon(16.0, context, appState))
+                                  child: news.getFeedIcon(16.0, context))
                               : const SizedBox.shrink(),
                           Padding(
                             padding: const EdgeInsets.only(left: 0.0),
@@ -171,7 +169,9 @@ class NewsCard extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
-                              appState.dateFormat
+                              context
+                                  .read<FluxNewsState>()
+                                  .dateFormat
                                   .format(news.getPublishingDate()),
                               style: news.status ==
                                       FluxNewsState.unreadNewsStatus

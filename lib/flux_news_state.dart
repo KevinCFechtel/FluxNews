@@ -264,7 +264,7 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   // read the persistant saved configuration
-  Future<bool> readConfigValues(BuildContext context) async {
+  Future<bool> readConfigValues() async {
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
           tag: FluxNewsState.logTag,

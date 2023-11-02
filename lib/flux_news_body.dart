@@ -21,7 +21,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-
     if (MediaQuery.of(context).size.shortestSide >= 550) {
       appState.isTablet = true;
     } else {
@@ -29,8 +28,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     }
 
     return FluxNewsBodyStatefulWrapper(onInit: () {
-      FluxNewsState appState = context.read<FluxNewsState>();
-      initConfig(context);
+      initConfig(context, appState);
       appState.categorieList = queryCategoriesFromDB(appState, context);
       appState.newsList = Future<List<News>>.value([]);
       WidgetsBinding.instance.addObserver(this);
@@ -39,20 +37,18 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         appState.orientation = orientation;
 
         if (appState.isTablet) {
-          return tabletLayout(appState, context);
+          return tabletLayout(context, appState);
         } else {
-          return smartphoneLayout(appState, context);
+          return smartphoneLayout(context, appState);
         }
       },
     ));
   }
 
   // helper function for the initState() to use async function on init
-  Future<void> initConfig(BuildContext context) async {
-    FluxNewsState appState = context.read<FluxNewsState>();
-
+  Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
     // read persistant saved config
-    bool completed = await appState.readConfigValues(context);
+    bool completed = await appState.readConfigValues();
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
@@ -121,7 +117,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     });
   }
 
-  Scaffold smartphoneLayout(FluxNewsState appState, BuildContext context) {
+  Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     // start the main view in portrait mode
     return Scaffold(
       appBar: AppBar(
@@ -139,28 +135,20 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             );
           },
         ),
-        title: AppBarTitle(
-          context: context,
-          appState: appState,
-        ),
-        actions: appBarButtons(appState, context),
+        title: const AppBarTitle(),
+        actions: appBarButtons(context),
       ),
       drawer: getDrawer(context, appState),
-      body: Container(
-        child: getBody(context, appState),
-      ),
+      body: const FluxNewsBodyList(),
     );
   }
 
-  Scaffold tabletLayout(FluxNewsState appState, BuildContext context) {
+  Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       appBar: AppBar(
-        title: AppBarTitle(
-          context: context,
-          appState: appState,
-        ),
-        actions: appBarButtons(appState, context),
+        title: const AppBarTitle(),
+        actions: appBarButtons(context),
       ),
       body: Row(
         children: [
@@ -180,42 +168,17 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                         : Text(appState.minifluxURL!),
                   ),
                 ),
-                CategorieList(
-                  context: context,
-                  appState: appState,
-                ),
+                const CategorieList(),
               ],
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 10,
-            child: Container(
-              child: getBody(context, appState),
-            ),
+            child: FluxNewsBodyList(),
           ),
         ],
       ),
     );
-  }
-
-  Widget getBody(BuildContext context, FluxNewsState appState) {
-    // return the body of the main view
-    // if errors had occured, the error widget is returned
-    // if the miniflux settings are incorrect a corresponding message is shown
-    // otherwise the normal list view is returned
-    if (appState.minifluxURL == null ||
-        appState.minifluxAPIKey == null ||
-        appState.errorOnMicrofluxAuth == true) {
-      return NoSettings(context: context, appState: appState);
-    } else if (appState.errorString != '' && appState.newError) {
-      return ErrorWidget(context: context, appState: appState);
-    } else {
-      if (appState.orientation == Orientation.landscape) {
-        return LandscapeNewsList(context: context, appState: appState);
-      } else {
-        return PortraitNewsList(context: context, appState: appState);
-      }
-    }
   }
 
   Drawer getDrawer(BuildContext context, FluxNewsState appState) {
@@ -261,16 +224,14 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                           ),
                   ),
                 ),
-                CategorieList(
-                  context: context,
-                  appState: appState,
-                ),
+                const CategorieList(),
               ],
             )));
   }
 
-  List<Widget> appBarButtons(FluxNewsState appState, BuildContext context) {
+  List<Widget> appBarButtons(BuildContext context) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+    FluxNewsState appState = context.read<FluxNewsState>();
     // define the app bar buttons to sync with miniflux,
     // search for news and switch between all and only unread news view
     // and the navigation to the settings
@@ -388,7 +349,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     .whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      appState.itemScrollController.jumpTo(index: 0);
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
@@ -412,7 +376,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     .whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      appState.itemScrollController.jumpTo(index: 0);
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
@@ -440,7 +407,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     .whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      appState.itemScrollController.jumpTo(index: 0);
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
@@ -464,7 +434,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     .whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      appState.itemScrollController.jumpTo(index: 0);
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
@@ -483,38 +456,55 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   }
 }
 
+class FluxNewsBodyList extends StatelessWidget {
+  const FluxNewsBodyList({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    // return the body of the main view
+    // if errors had occured, the error widget is returned
+    // if the miniflux settings are incorrect a corresponding message is shown
+    // otherwise the normal list view is returned
+    if (appState.minifluxURL == null ||
+        appState.minifluxAPIKey == null ||
+        appState.errorOnMicrofluxAuth == true) {
+      return const NoSettings();
+    } else if (appState.errorString != '' && appState.newError) {
+      return const ErrorWidget();
+    } else {
+      return const BodyNewsList();
+    }
+  }
+}
+
 // this widget replace the normal news list widget, if a error occurs
 // it will pop up an error dialog and then show the normal news list in the background.
 class ErrorWidget extends StatelessWidget {
   const ErrorWidget({
     super.key,
-    required this.context,
-    required this.appState,
   });
-
-  final BuildContext context;
-  final FluxNewsState appState;
 
   @override
   Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
     Timer.run(() {
-      showErrorDialog(context, appState).then((value) {
+      showErrorDialog(context).then((value) {
         appState.newError = false;
         appState.refreshView();
       });
     });
-    if (appState.orientation == Orientation.landscape) {
-      return LandscapeNewsList(context: context, appState: appState);
-    } else {
-      return PortraitNewsList(context: context, appState: appState);
-    }
+    return const BodyNewsList();
   }
 
   // this is the error dialog which is shown, if a error occours.
   // to prevent the multi pop up (f.e. if the internet connection ist lost
   // not every function which require the connection should raise a pop up)
   // we check if the error which is shown is a new error.
-  Future showErrorDialog(BuildContext context, FluxNewsState appState) async {
+  Future showErrorDialog(BuildContext context) async {
+    FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.newError) {
       AlertDialog alertDialog = AlertDialog(
         title: Text(AppLocalizations.of(context)!.error),
@@ -542,12 +532,7 @@ class ErrorWidget extends StatelessWidget {
 class NoSettings extends StatelessWidget {
   const NoSettings({
     super.key,
-    required this.context,
-    required this.appState,
   });
-
-  final BuildContext context;
-  final FluxNewsState appState;
 
   @override
   Widget build(BuildContext context) {
@@ -577,17 +562,13 @@ class NoSettings extends StatelessWidget {
 class AppBarTitle extends StatelessWidget {
   const AppBarTitle({
     super.key,
-    required this.context,
-    required this.appState,
   });
-
-  final BuildContext context;
-  final FluxNewsState appState;
 
   @override
   Widget build(BuildContext context) {
     FluxNewsCounterState appCounterState =
         context.watch<FluxNewsCounterState>();
+    FluxNewsState appState = context.watch<FluxNewsState>();
 
     // set the app bar title depending on the choosen categorie to show in list view
 
@@ -624,17 +605,13 @@ class AppBarTitle extends StatelessWidget {
 class CategorieList extends StatelessWidget {
   const CategorieList({
     super.key,
-    required this.context,
-    required this.appState,
   });
-
-  final BuildContext context;
-  final FluxNewsState appState;
 
   @override
   Widget build(BuildContext context) {
     FluxNewsCounterState appCounterState =
         context.watch<FluxNewsCounterState>();
+    FluxNewsState appState = context.watch<FluxNewsState>();
     var getData = FutureBuilder<Categories>(
         future: appState.categorieList,
         builder: (context, snapshot) {
@@ -687,8 +664,7 @@ class CategorieList extends StatelessWidget {
                             // we iterate over the categorie list
                             for (Categorie categorie
                                 in snapshot.data!.categories)
-                              showCategorie(
-                                  categorie, appState, snapshot.data!, context),
+                              showCategorie(categorie, snapshot.data!, context),
                             // we add a static categorie of "Bookmarked" to the list of categories
                             ListTile(
                               leading: const Icon(
@@ -717,8 +693,9 @@ class CategorieList extends StatelessWidget {
   // here we style the categorie ExpansionTile
   // we use a ExpansionTile because we want to show the according feeds
   // of this categorie in the expanded state.
-  Widget showCategorie(Categorie categorie, FluxNewsState appState,
-      Categories categories, BuildContext context) {
+  Widget showCategorie(
+      Categorie categorie, Categories categories, BuildContext context) {
+    FluxNewsState appState = context.read<FluxNewsState>();
     return ExpansionTile(
       // we want the expansion arrow at the beginning,
       // because we want to show the news count at the end of this row.
@@ -746,7 +723,7 @@ class CategorieList extends StatelessWidget {
       // iterate over the according feeds of the categorie
       children: [
         for (Feed feed in categorie.feeds)
-          showFeed(feed, appState, categories, context)
+          FeedTile(feed: feed, categories: categories)
       ],
     );
   }
@@ -846,15 +823,28 @@ class CategorieList extends StatelessWidget {
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
-  Widget showFeed(Feed feed, FluxNewsState appState, Categories categories,
-      BuildContext context) {
+}
+
+class FeedTile extends StatelessWidget {
+  const FeedTile({
+    super.key,
+    required this.feed,
+    required this.categories,
+  });
+
+  final Feed feed;
+  final Categories categories;
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
     return ListTile(
       title: Padding(
         padding: const EdgeInsets.only(left: 8.0),
         child: Row(children: [
           // if the option is enabled, show the feed icon
           appState.showFeedIcons
-              ? feed.getFeedIcon(16.0, context, appState)
+              ? feed.getFeedIcon(16.0, context)
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.only(left: 10.0),
@@ -879,7 +869,10 @@ class CategorieList extends StatelessWidget {
             queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
           waitUntilNewsListBuild(appState).whenComplete(
             () {
-              appState.itemScrollController.jumpTo(index: 0);
+              context
+                  .read<FluxNewsState>()
+                  .itemScrollController
+                  .jumpTo(index: 0);
             },
           );
         });

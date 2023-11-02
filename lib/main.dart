@@ -101,7 +101,7 @@ class FluxNews extends StatelessWidget {
   }
 
   Widget getMaterialApp(BuildContext context) {
-    FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsState appState = context.read<FluxNewsState>();
     // read the dateformat of the system and assign it to the date format variable
     final mediumDatePattern =
         SystemDateTimeFormat.of(context).mediumDatePattern;

@@ -19,7 +19,7 @@ class Search extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
 
     return FluxNewsSearchStatefulWrapper(onInit: () {
-      initConfig(context);
+      initConfig(context, appState);
     }, child: OrientationBuilder(builder: (context, orientation) {
       appState.orientation = orientation;
       return searchLayout(context, appState);
@@ -29,9 +29,8 @@ class Search extends StatelessWidget {
   // initConfig reads the config values from the persistant storage and sets the state
   // accordingly.
   // It also initializes the database connection.
-  Future<void> initConfig(BuildContext context) async {
-    FluxNewsState appState = context.read<FluxNewsState>();
-    await appState.readConfigValues(context);
+  Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
+    await appState.readConfigValues();
     if (context.mounted) {
       appState.readConfig(context);
     }
@@ -97,12 +96,7 @@ class Search extends StatelessWidget {
           ),
         ),
         // show the news list
-        body: Container(
-            child: appState.orientation == Orientation.landscape
-                ? landscapeSearchNewsListWidget(context, appState)
-                : appState.isTablet
-                    ? landscapeSearchNewsListWidget(context, appState)
-                    : portraitSearchNewsListWidget(context, appState)));
+        body: const SearchewsList());
   }
 }
 

@@ -8,7 +8,6 @@ import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/flux_news_state.dart';
 import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
@@ -16,17 +15,15 @@ import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 // this position is used to open the context menue of the news card here
 void getTapPosition(
     TapDownDetails details, BuildContext context, FluxNewsState appState) {
-  final RenderBox referenceBox = context.findRenderObject() as RenderBox;
-  appState.tapPosition = referenceBox.globalToLocal(details.globalPosition);
+  appState.tapPosition = details.globalPosition;
 }
 
 // here is the function to show the context menu
 // this menu give the option to mark a news as read or unread and to bookmark a news
-void showContextMenu(News news, BuildContext context, FluxNewsState appState,
-    bool searchView) async {
-  final RenderObject? overlay = Overlay.of(context).context.findRenderObject();
-  FluxNewsState appState = context.read<FluxNewsState>();
-  FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+void showContextMenu(News news, BuildContext context, bool searchView,
+    FluxNewsState appState, FluxNewsCounterState appCounterState) async {
+  //Offset offset = details.globalPosition;
+  final RenderObject overlay = Overlay.of(context).context.findRenderObject()!;
 
   final result = await showMenu(
       context: context,
@@ -34,7 +31,7 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
       position: RelativeRect.fromRect(
           Rect.fromLTWH(
               appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
-          Rect.fromLTWH(0, 0, overlay!.paintBounds.size.width,
+          Rect.fromLTWH(0, 0, overlay.paintBounds.size.width,
               overlay.paintBounds.size.height)),
       items: [
         // bokmark the news
@@ -224,6 +221,9 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });
+        appState.refreshView();
+        appCounterState.listUpdated = true;
+        appCounterState.refreshView();
       } else {
         appCounterState.listUpdated = true;
         appCounterState.refreshView();
@@ -286,6 +286,9 @@ void showContextMenu(News news, BuildContext context, FluxNewsState appState,
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });
+        appState.refreshView();
+        appCounterState.listUpdated = true;
+        appCounterState.refreshView();
       } else {
         appCounterState.listUpdated = true;
         appCounterState.refreshView();
