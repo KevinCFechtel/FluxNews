@@ -74,6 +74,24 @@ void showContextMenu(News news, BuildContext context, bool searchView,
                     : Text(AppLocalizations.of(context)!.markAsRead)),
           ]),
         ),
+        // save the news to third party servicce
+        PopupMenuItem(
+            enabled: appState.minifluxVersionInt >=
+                FluxNewsState.minifluxSaveMinVersion,
+            value: FluxNewsState.contextMenueSaveString,
+            child: Row(children: [
+              const Icon(
+                Icons.save,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 5),
+                child: Text(
+                  AppLocalizations.of(context)!.contextSaveButton,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            ])),
       ]);
   switch (result) {
     case FluxNewsState.contextMenueBookmarkString:

@@ -1,7 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/database_backend.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:flux_news/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
@@ -92,6 +96,19 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     _showApiKeyEditDialog(context, appState);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(
+                    Icons.numbers,
+                  ),
+                  title: Text(
+                    '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  onTap: () {
+                    _showURLEditDialog(context, appState);
                   },
                 ),
                 // it there is an error on the authentication of the miniflux server
@@ -435,6 +452,7 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // this list tile containes the ability to export the collected logs
                 ListTile(
                   leading: const Icon(
                     Icons.import_export,
@@ -447,6 +465,24 @@ class Settings extends StatelessWidget {
                     if (Platform.isAndroid || Platform.isIOS) {
                       FlutterLogs.exportLogs(exportType: ExportType.ALL);
                     }
+                  },
+                ),
+                const Divider(),
+                // this list tile delete the local news database
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_forever,
+                    color: Colors.red,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.deleteLocalCache,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium!
+                        .copyWith(color: Colors.red),
+                  ),
+                  onTap: () {
+                    _showDeleteLocalCacheDialog(context, appState);
                   },
                 ),
                 const Divider(),
@@ -507,6 +543,7 @@ class Settings extends StatelessWidget {
   // if the api key is set, the connection is tested
   Future _showURLEditDialog(BuildContext context, FluxNewsState appState) {
     final formKey = GlobalKey<FormState>();
+    bool errorInForm = false;
     TextEditingController controller = TextEditingController();
     if (appState.minifluxURL != null) {
       controller.text = appState.minifluxURL!;
@@ -514,65 +551,117 @@ class Settings extends StatelessWidget {
     return showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(AppLocalizations.of(context)!.enterURL),
-            content: Form(
-              key: formKey,
-              child: TextFormField(
-                controller: controller,
-                decoration: const InputDecoration(errorMaxLines: 2),
-                validator: (value) {
-                  value ??= '';
-                  RegExp regex = RegExp(
-                      r'https:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/');
-                  if (!regex.hasMatch(value)) {
-                    return AppLocalizations.of(context)!.enterValidURL;
-                  } else {
-                    return null;
-                  }
-                },
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () =>
-                    Navigator.pop(context, FluxNewsState.cancelContextString),
-                child: Text(AppLocalizations.of(context)!.cancel),
-              ),
-              TextButton(
-                onPressed: () async {
-                  if (formKey.currentState!.validate()) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.titleURL),
+              content: Platform.isIOS
+                  ? Wrap(children: [
+                      Padding(
+                          padding: const EdgeInsets.only(top: 10, bottom: 5),
+                          child: Text(AppLocalizations.of(context)!.enterURL)),
+                      CupertinoTextField(
+                        controller: controller,
+                      ),
+                      errorInForm
+                          ? Text(
+                              AppLocalizations.of(context)!.enterValidURL,
+                              style: const TextStyle(color: Colors.red),
+                            )
+                          : const SizedBox.shrink()
+                    ])
+                  : Wrap(children: [
+                      Text(AppLocalizations.of(context)!.enterURL),
+                      Form(
+                        key: formKey,
+                        child: TextFormField(
+                          controller: controller,
+                          decoration: const InputDecoration(errorMaxLines: 2),
+                          validator: (value) {
+                            value ??= '';
+                            RegExp regex =
+                                RegExp(FluxNewsState.urlValidationRegex);
+                            if (!regex.hasMatch(value)) {
+                              return AppLocalizations.of(context)!
+                                  .enterValidURL;
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+                      ),
+                    ]),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, FluxNewsState.cancelContextString),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                TextButton(
+                  onPressed: () async {
                     String? newText;
-                    if (controller.text != '') {
-                      newText = controller.text;
-                    }
-                    if (appState.minifluxAPIKey != null &&
-                        appState.minifluxAPIKey != '' &&
-                        newText != null) {
-                      bool authCheck = await checkMinifluxCredentials(
-                              http.Client(),
-                              newText,
-                              appState.minifluxAPIKey!,
-                              appState)
-                          .onError((error, stackTrace) => false);
+                    if (Platform.isIOS) {
+                      RegExp regex = RegExp(FluxNewsState.urlValidationRegex);
+                      if (!regex.hasMatch(controller.text)) {
+                        setState(() {
+                          errorInForm = true;
+                        });
+                      } else {
+                        newText = controller.text;
+                        if (appState.minifluxAPIKey != null &&
+                            appState.minifluxAPIKey != '') {
+                          bool authCheck = await checkMinifluxCredentials(
+                                  http.Client(),
+                                  newText,
+                                  appState.minifluxAPIKey!,
+                                  appState)
+                              .onError((error, stackTrace) => false);
 
-                      appState.errorOnMicrofluxAuth = !authCheck;
-                      appState.refreshView();
+                          appState.errorOnMicrofluxAuth = !authCheck;
+                          appState.refreshView();
+                        }
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageMinifluxURLKey,
+                            value: newText);
+                        appState.minifluxURL = newText;
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          appState.refreshView();
+                        }
+                      }
+                    } else {
+                      if (formKey.currentState!.validate()) {
+                        if (controller.text != '') {
+                          newText = controller.text;
+                        }
+                        if (appState.minifluxAPIKey != null &&
+                            appState.minifluxAPIKey != '' &&
+                            newText != null) {
+                          bool authCheck = await checkMinifluxCredentials(
+                                  http.Client(),
+                                  newText,
+                                  appState.minifluxAPIKey!,
+                                  appState)
+                              .onError((error, stackTrace) => false);
+
+                          appState.errorOnMicrofluxAuth = !authCheck;
+                          appState.refreshView();
+                        }
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageMinifluxURLKey,
+                            value: newText);
+                        appState.minifluxURL = newText;
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          appState.refreshView();
+                        }
+                      }
                     }
-                    appState.storage.write(
-                        key: FluxNewsState.secureStorageMinifluxURLKey,
-                        value: newText);
-                    appState.minifluxURL = newText;
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      appState.refreshView();
-                    }
-                  }
-                },
-                child: Text(AppLocalizations.of(context)!.save),
-              ),
-            ],
-          );
+                  },
+                  child: Text(AppLocalizations.of(context)!.save),
+                ),
+              ],
+            );
+          });
         });
   }
 
@@ -587,11 +676,26 @@ class Settings extends StatelessWidget {
     return showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(AppLocalizations.of(context)!.enterAPIKey),
-            content: TextField(
-              controller: controller,
-            ),
+          return AlertDialog.adaptive(
+            title: Text(AppLocalizations.of(context)!.titleAPIKey),
+            content: Platform.isIOS
+                ? Wrap(
+                    children: [
+                      Padding(
+                          padding: const EdgeInsets.only(top: 10, bottom: 5),
+                          child:
+                              Text(AppLocalizations.of(context)!.enterAPIKey)),
+                      CupertinoTextField(
+                        controller: controller,
+                      ),
+                    ],
+                  )
+                : Wrap(children: [
+                    Text(AppLocalizations.of(context)!.enterAPIKey),
+                    TextField(
+                      controller: controller,
+                    )
+                  ]),
             actions: <Widget>[
               TextButton(
                 onPressed: () =>
@@ -629,6 +733,84 @@ class Settings extends StatelessWidget {
                 child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
+          );
+        });
+  }
+
+  // this method shows a dialog to enter the miniflux api key
+  // the api key is saved in the secure storage
+  // if the url is set, the connection is tested
+  Future _showDeleteLocalCacheDialog(
+      BuildContext context, FluxNewsState appState) {
+    TextEditingController controller = TextEditingController();
+    if (appState.minifluxAPIKey != null) {
+      controller.text = appState.minifluxAPIKey!;
+    }
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog.adaptive(
+            title:
+                Text(AppLocalizations.of(context)!.deleteLocalCacheDialogTitle),
+            content: Wrap(children: [
+              Text(AppLocalizations.of(context)!.deleteLocalCacheDialogContent),
+            ]),
+            actions: Platform.isIOS
+                ? <CupertinoDialogAction>[
+                    CupertinoDialogAction(
+                      isDefaultAction: true,
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    CupertinoDialogAction(
+                      /// This parameter indicates the action would perform
+                      /// a destructive action such as deletion, and turns
+                      /// the action's text color to red.
+                      isDestructiveAction: true,
+                      onPressed: () {
+                        deleteLocalNewsCache(appState, context);
+                        appState.newsList = Future<List<News>>.value([]);
+                        appState.categorieList = Future<Categories>.value(
+                            Categories(categories: []));
+                        context.read<FluxNewsCounterState>().allNewsCount = 0;
+                        context.read<FluxNewsCounterState>().appBarNewsCount =
+                            0;
+                        context.read<FluxNewsCounterState>().starredCount = 0;
+                        context.read<FluxNewsCounterState>().refreshView();
+                        appState.refreshView();
+                        Navigator.pop(context);
+                      },
+                      child: Text(AppLocalizations.of(context)!.ok),
+                    ),
+                  ]
+                : <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.pop(
+                          context, FluxNewsState.cancelContextString),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        deleteLocalNewsCache(appState, context);
+                        appState.newsList = Future<List<News>>.value([]);
+                        appState.categorieList = Future<Categories>.value(
+                            Categories(categories: []));
+                        context.read<FluxNewsCounterState>().allNewsCount = 0;
+                        context.read<FluxNewsCounterState>().appBarNewsCount =
+                            0;
+                        context.read<FluxNewsCounterState>().starredCount = 0;
+                        context.read<FluxNewsCounterState>().refreshView();
+                        appState.refreshView();
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        AppLocalizations.of(context)!.ok,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
           );
         });
   }

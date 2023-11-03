@@ -838,3 +838,71 @@ Future<void> renewAllNewsCount(
   // notify the app about the updated count of news
   appCounterState.refreshView();
 }
+
+// calculate the news count of the "all news" section
+Future<void> deleteLocalNewsCache(
+    FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'deleteLocalNewsCache',
+          logMessage: 'Starting deleting the local news cache',
+          level: LogLevel.INFO);
+    }
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    // create the table news
+    await appState.db!.execute('DROP TABLE IF EXISTS news');
+    await appState.db!.execute(
+      '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
+                          feedID INTEGER, 
+                          title TEXT, 
+                          url TEXT, 
+                          content TEXT, 
+                          hash TEXT, 
+                          publishedAt TEXT, 
+                          createdAt TEXT, 
+                          status TEXT, 
+                          readingTime INTEGER, 
+                          starred INTEGER, 
+                          feedTitle TEXT, 
+                          syncStatus TEXT)''',
+    );
+    // create the table categories
+    await appState.db!.execute('DROP TABLE IF EXISTS categories');
+    await appState.db!.execute(
+      '''CREATE TABLE categories(categorieID INTEGER PRIMARY KEY, 
+                          title TEXT)''',
+    );
+    // create the table feeds
+    await appState.db!.execute('DROP TABLE IF EXISTS feeds');
+    await appState.db!.execute(
+      '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          icon BLOB,
+                          iconMimeType TEXT,
+                          newsCount INTEGER,
+                          categorieID INTEGER)''',
+    );
+    // create the table attachments
+    await appState.db!.execute('DROP TABLE IF EXISTS attachments');
+    await appState.db!.execute(
+      '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
+                          newsID INTEGER, 
+                          attachmentURL TEXT, 
+                          attachmentMimeType TEXT)''',
+    );
+  }
+  if (appState.debugMode) {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logThis(
+          tag: FluxNewsState.logTag,
+          subTag: 'deleteLocalNewsCache',
+          logMessage: 'Finished deleting the local news cache',
+          level: LogLevel.INFO);
+    }
+  }
+}

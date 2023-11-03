@@ -56,6 +56,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String sortOrderOldestFirstString = 'Oldest first';
   static const String secureStorageMinifluxURLKey = 'minifluxURL';
   static const String secureStorageMinifluxAPIKey = 'minifluxAPIKey';
+  static const String secureStorageMinifluxVersionKey = 'minifluxVersionKey';
   static const String secureStorageBrightnessModeKey = 'brightnessMode';
   static const String secureStorageSortOrderKey = 'sortOrder';
   static const String secureStorageSavedScrollPositionKey =
@@ -80,10 +81,14 @@ class FluxNewsState extends ChangeNotifier {
   static const String httpMinifluxContentTypeHeaderString = 'Content-Type';
   static const String noImageUrlString = 'NoImageUrl';
   static const String contextMenueBookmarkString = 'bookmark';
+  static const String contextMenueSaveString = 'saveToThirdParty';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
+  static const int minifluxSaveMinVersion = 2047;
+  static const String urlValidationRegex =
+      r'https:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
 
   // vars for lists of main view
   late Future<List<News>> newsList;
@@ -123,6 +128,8 @@ class FluxNewsState extends ChangeNotifier {
   // vars for miniflux server connection
   String? minifluxURL;
   String? minifluxAPIKey;
+  String? minifluxVersionString;
+  int minifluxVersionInt = 0;
 
   // vars for settings
   Map<String, String> storageValues = {};
@@ -333,6 +340,14 @@ class FluxNewsState extends ChangeNotifier {
       // assign the miniflux server api key from persistant saved config
       if (key == FluxNewsState.secureStorageMinifluxAPIKey) {
         minifluxAPIKey = value;
+      }
+
+      // assign the miniflux server version from persistant saved config
+      if (key == FluxNewsState.secureStorageMinifluxVersionKey) {
+        if (value != '') {
+          minifluxVersionInt = int.parse(value.replaceAll(".", ""));
+          minifluxVersionString = value;
+        }
       }
 
       // assign the brightness mode selection from persistant saved config

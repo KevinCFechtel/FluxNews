@@ -506,22 +506,21 @@ class ErrorWidget extends StatelessWidget {
   Future showErrorDialog(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.newError) {
-      AlertDialog alertDialog = AlertDialog(
-        title: Text(AppLocalizations.of(context)!.error),
-        content: Text(appState.errorString),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(AppLocalizations.of(context)!.ok),
-          ),
-        ],
-      );
       showDialog(
           context: context,
           builder: (BuildContext context) {
-            return alertDialog;
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.error),
+              content: Text(appState.errorString),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.ok),
+                ),
+              ],
+            );
           });
     }
   }
