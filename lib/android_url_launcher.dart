@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 // the custom news launcher was created, because no package delivered the following feature:
 // if an url should be opened, check at first if another app is possible to handle this url
 // this is called App Links.
-// if there is an app installes, hand over the App Link.
+// if there is an app installs, hand over the App Link.
 // if there is no app installed, open the link within an in app browser window
 // using the chrome custom tabs feature.
 class AndroidUrlLauncher {

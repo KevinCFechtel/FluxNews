@@ -25,7 +25,7 @@ sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
     );
 
 class FluxNewsState extends ChangeNotifier {
-  // init the persistant flutter secure storage
+  // init the persistent flutter secure storage
   final storage =
       sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
 
@@ -40,7 +40,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
-  static const int amountOfNewlyCatchedNews = 100;
+  static const int amountOfNewlyCaughtNews = 100;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
   static const String syncedSyncStatus = 'synced';
@@ -80,8 +80,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String httpMinifluxAcceptHeaderString = 'Accept';
   static const String httpMinifluxContentTypeHeaderString = 'Content-Type';
   static const String noImageUrlString = 'NoImageUrl';
-  static const String contextMenueBookmarkString = 'bookmark';
-  static const String contextMenueSaveString = 'saveToThirdParty';
+  static const String contextMenuBookmarkString = 'bookmark';
+  static const String contextMenuSaveString = 'saveToThirdParty';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -92,7 +92,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for lists of main view
   late Future<List<News>> newsList;
-  late Future<Categories> categorieList;
+  late Future<Categories> categoryList;
   List<int>? feedIDs;
 
   // vars for main view
@@ -117,7 +117,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for error handling
   String errorString = '';
   bool newError = false;
-  bool errorOnMicrofluxAuth = false;
+  bool errorOnMinifluxAuth = false;
 
   // vars for debugging
   bool debugMode = false;
@@ -148,7 +148,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for app bar text
   String appBarText = '';
 
-  // vars for detectiing device orientation and device type
+  // vars for detecting device orientation and device type
   bool isTablet = false;
   Orientation orientation = Orientation.portrait;
 
@@ -202,7 +202,7 @@ class FluxNewsState extends ChangeNotifier {
         // create the table categories
         await db.execute('DROP TABLE IF EXISTS categories');
         await db.execute(
-          '''CREATE TABLE categories(categorieID INTEGER PRIMARY KEY, 
+          '''CREATE TABLE categories(categoryID INTEGER PRIMARY KEY, 
                           title TEXT)''',
         );
         // create the table feeds
@@ -214,7 +214,7 @@ class FluxNewsState extends ChangeNotifier {
                           icon BLOB,
                           iconMimeType TEXT,
                           newsCount INTEGER,
-                          categorieID INTEGER)''',
+                          categoryID INTEGER)''',
         );
         // create the table attachments
         await db.execute('DROP TABLE IF EXISTS attachments');
@@ -246,7 +246,7 @@ class FluxNewsState extends ChangeNotifier {
             FlutterLogs.logThis(
                 tag: FluxNewsState.logTag,
                 subTag: 'upgradeDB',
-                logMessage: 'Updgrading DB from version 1',
+                logMessage: 'Upgrading DB from version 1',
                 level: LogLevel.INFO);
           }
           // create the table attachments
@@ -257,6 +257,26 @@ class FluxNewsState extends ChangeNotifier {
                           attachmentURL TEXT, 
                           attachmentMimeType TEXT)''',
           );
+          await db.execute(
+            '''ALTER TABLE "categories" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+          await db.execute(
+            '''ALTER TABLE "feeds" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+        } else if (oldVersion == 2) {
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logThis(
+                tag: FluxNewsState.logTag,
+                subTag: 'upgradeDB',
+                logMessage: 'Upgrading DB from version 2',
+                level: LogLevel.INFO);
+          }
+          await db.execute(
+            '''ALTER TABLE "categories" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+          await db.execute(
+            '''ALTER TABLE "feeds" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',);
         }
         if (Platform.isAndroid || Platform.isIOS) {
           FlutterLogs.logThis(
@@ -266,11 +286,11 @@ class FluxNewsState extends ChangeNotifier {
               level: LogLevel.INFO);
         }
       },
-      version: 2,
+      version: 3,
     );
   }
 
-  // read the persistant saved configuration
+  // read the persistent saved configuration
   Future<bool> readConfigValues() async {
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
@@ -292,7 +312,7 @@ class FluxNewsState extends ChangeNotifier {
     return true;
   }
 
-  // init the persistant saved configuration
+  // init the persistent saved configuration
   bool readConfig(BuildContext context) {
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
@@ -302,7 +322,7 @@ class FluxNewsState extends ChangeNotifier {
           level: LogLevel.INFO);
     }
     // init the maps for the brightness mode list
-    // this maps use the key as the technical string and the value as the displey name
+    // this maps use the key as the technical string and the value as the display name
     if (context.mounted) {
       recordTypesBrightnessMode = <KeyValueRecordType>[
         KeyValueRecordType(
@@ -330,19 +350,19 @@ class FluxNewsState extends ChangeNotifier {
     minifluxURL = null;
     minifluxAPIKey = null;
 
-    // iterate through all persistant saved values to assign the saved config
+    // iterate through all persistent saved values to assign the saved config
     storageValues.forEach((key, value) {
-      // assign the miniflux server url from persistant saved config
+      // assign the miniflux server url from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxURLKey) {
         minifluxURL = value;
       }
 
-      // assign the miniflux server api key from persistant saved config
+      // assign the miniflux server api key from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxAPIKey) {
         minifluxAPIKey = value;
       }
 
-      // assign the miniflux server version from persistant saved config
+      // assign the miniflux server version from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxVersionKey) {
         if (value != '') {
           minifluxVersionInt = int.parse(value.replaceAll(".", ""));
@@ -350,7 +370,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the brightness mode selection from persistant saved config
+      // assign the brightness mode selection from persistent saved config
       if (key == FluxNewsState.secureStorageBrightnessModeKey) {
         if (value != '') {
           brightnessMode = value;
@@ -362,21 +382,21 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the sort order of the news list from persistant saved config
+      // assign the sort order of the news list from persistent saved config
       if (key == FluxNewsState.secureStorageSortOrderKey) {
         if (value != '') {
           sortOrder = value;
         }
       }
 
-      // assign the scroll position from persistant saved config
+      // assign the scroll position from persistent saved config
       if (key == FluxNewsState.secureStorageSavedScrollPositionKey) {
         if (value != '') {
           savedScrollPosition = int.parse(value);
         }
       }
 
-      // assign the mark as read on scrollover selection from persistant saved config
+      // assign the mark as read on scroll over selection from persistent saved config
       if (key == FluxNewsState.secureStorageMarkAsReadOnScrollOverKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -387,7 +407,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the sync on startup selection from persistant saved config
+      // assign the sync on startup selection from persistent saved config
       if (key == FluxNewsState.secureStorageSyncOnStartKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -398,7 +418,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the multiline app bar title selection from persistant saved config
+      // assign the multiline app bar title selection from persistent saved config
       if (key == FluxNewsState.secureStorageMultilineAppBarTextKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -409,7 +429,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the show feed icon selection from persistant saved config
+      // assign the show feed icon selection from persistent saved config
       if (key == FluxNewsState.secureStorageShowFeedIconsTextKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -421,28 +441,28 @@ class FluxNewsState extends ChangeNotifier {
       }
 
       // assign the shown news status selection (all news or only unread)
-      // from persistant saved config
+      // from persistent saved config
       if (key == FluxNewsState.secureStorageNewsStatusKey) {
         if (value != '') {
           newsStatus = value;
         }
       }
 
-      // assign the amount of saves news selection from persistant saved config
+      // assign the amount of saves news selection from persistent saved config
       if (key == FluxNewsState.secureStorageAmountOfSavedNewsKey) {
         if (value != '') {
           amountOfSavedNews = int.parse(value);
         }
       }
 
-      // assign the amount of saved bookmarked news selection from persistant saved config
+      // assign the amount of saved bookmarked news selection from persistent saved config
       if (key == FluxNewsState.secureStorageAmountOfSavedStarredNewsKey) {
         if (value != '') {
           amountOfSavedStarredNews = int.parse(value);
         }
       }
 
-      // assign the debug mode selection from persistant saved config
+      // assign the debug mode selection from persistent saved config
       if (key == FluxNewsState.secureStorageDebugModeKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {

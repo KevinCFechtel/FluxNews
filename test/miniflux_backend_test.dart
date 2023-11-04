@@ -47,7 +47,7 @@ void main() {
         status: "unread",
         readingTime: 2,
         starred: true,
-        feedTitel: "Test");
+        feedTitle: "Test");
     await database.insert('news', newNews.toMap());
   });
 
@@ -69,7 +69,7 @@ void main() {
 
       when(client.get(
               Uri.parse(
-                  '${appState.minifluxURL}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+                  '${appState.minifluxURL}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
               headers: header))
           .thenAnswer((_) async => http.Response('''{
         "total": 5,
@@ -399,7 +399,7 @@ void main() {
       };
       when(client.get(
               Uri.parse(
-                  '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+                  '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
               headers: header))
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
@@ -429,7 +429,7 @@ void main() {
 
       when(client.get(
               Uri.parse(
-                  '${appState.minifluxURL}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+                  '${appState.minifluxURL}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
               headers: header))
           .thenAnswer((_) async => http.Response('''{
         "total": 2,
@@ -579,7 +579,7 @@ void main() {
       };
       when(client.get(
               Uri.parse(
-                  '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+                  '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
               headers: header))
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 

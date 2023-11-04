@@ -12,7 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 // this is a helper function to get the actual tab position
-// this position is used to open the context menue of the news card here
+// this position is used to open the context menu of the news card here
 void getTapPosition(
     TapDownDetails details, BuildContext context, FluxNewsState appState) {
   appState.tapPosition = details.globalPosition;
@@ -27,16 +27,16 @@ void showContextMenu(News news, BuildContext context, bool searchView,
 
   final result = await showMenu(
       context: context,
-      // open the menu on the prevoius recognized position
+      // open the menu on the previous recognized position
       position: RelativeRect.fromRect(
           Rect.fromLTWH(
               appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
           Rect.fromLTWH(0, 0, overlay.paintBounds.size.width,
               overlay.paintBounds.size.height)),
       items: [
-        // bokmark the news
+        // bookmark the news
         PopupMenuItem(
-          value: FluxNewsState.contextMenueBookmarkString,
+          value: FluxNewsState.contextMenuBookmarkString,
           child: news.starred
               ? Row(children: [
                   const Icon(
@@ -74,11 +74,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
                     : Text(AppLocalizations.of(context)!.markAsRead)),
           ]),
         ),
-        // save the news to third party servicce
+        // save the news to third party service
         PopupMenuItem(
             enabled: appState.minifluxVersionInt >=
                 FluxNewsState.minifluxSaveMinVersion,
-            value: FluxNewsState.contextMenueSaveString,
+            value: FluxNewsState.contextMenuSaveString,
             child: Row(children: [
               const Icon(
                 Icons.save,
@@ -94,8 +94,8 @@ void showContextMenu(News news, BuildContext context, bool searchView,
             ])),
       ]);
   switch (result) {
-    case FluxNewsState.contextMenueBookmarkString:
-      // switch between bookmarked or not bookmarked depending on the prevoius status
+    case FluxNewsState.contextMenuBookmarkString:
+      // switch between bookmarked or not bookmarked depending on the previous status
       if (news.starred) {
         news.starred = false;
       } else {
@@ -148,8 +148,8 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         }
       }
 
-      // if we are in the bookmarked categorie, reload the list of bookmarked news
-      // after the prevoius change, because there happened changes to this list.
+      // if we are in the bookmarked category, reload the list of bookmarked news
+      // after the previous change, because there happened changes to this list.
       if (context.mounted) {
         if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
           appState.feedIDs = [-1];
@@ -322,8 +322,8 @@ void showContextMenu(News news, BuildContext context, bool searchView,
 // only after the list is generated, we can set the scroll position of the list
 // we can check that the list is generated if the scroll controller is attached to the list.
 // so the function checks the scroll controller and if it's not attached it waits 1 millisecond
-// and check then again if the scrol controller is attached.
-// With callaing this function as await, we can wait with the further processing
+// and check then again if the scroll controller is attached.
+// With calling this function as await, we can wait with the further processing
 // on finishing with the list build.
 Future<void> waitUntilNewsListBuild(FluxNewsState appState) async {
   final completer = Completer();

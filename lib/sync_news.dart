@@ -20,14 +20,14 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         level: LogLevel.INFO);
   }
   // this is the part where the app syncs with the miniflux server
-  // to reduce the appearence of error pop ups,
+  // to reduce the appearance of error pop ups,
   // the error handling in all steps is to only through new errors,
   // if the new error is not already thrown by a previous step.
   // set the state to sync
   // (needed for the processing cycle and the positioning of the list view)
   appState.syncProcess = true;
   appState.refreshView();
-  // also resetting the error string for new errors occuring within this sync
+  // also resetting the error string for new errors occurring within this sync
   appState.errorString = '';
 
   // check the miniflux credentials to enable the sync
@@ -52,13 +52,13 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     return false;
   });
 
-  // if there is no new error (network error), set the errorOnMicrofluxAuth flag
+  // if there is no new error (network error), set the errorOnMinifluxAuth flag
   if (!appState.newError) {
-    appState.errorOnMicrofluxAuth = !authCheck;
+    appState.errorOnMinifluxAuth = !authCheck;
   }
 
   // check if there are no authentication errors before start syncing
-  if (!appState.errorOnMicrofluxAuth && appState.errorString == '') {
+  if (!appState.errorOnMinifluxAuth && appState.errorString == '') {
     // at first toggle news as read so that this news don't show up in the next step
     await toggleNewsAsRead(http.Client(), appState)
         .onError((error, stackTrace) {
@@ -102,7 +102,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     // if news in this app are marked as unread, but don't exist in the list from
     // the previous step, this news must be marked as read by another app.
-    // So this step mark news, which are not fetched privious as read in this app.
+    // So this step mark news, which are not fetched previous as read in this app.
     await markNotFetchedNewsAsRead(newNews, appState)
         .onError((error, stackTrace) {
       if (Platform.isAndroid || Platform.isIOS) {
@@ -169,19 +169,19 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       });
     }
     appState.refreshView();
-    // remove the native spalsh after updating the list view
+    // remove the native splash after updating the list view
     FlutterNativeSplash.remove();
 
     // fetch the categories from the miniflux server
     Categories newCategories =
-        await fetchCategorieInformation(http.Client(), appState)
+        await fetchCategoryInformation(http.Client(), appState)
             .onError((error, stackTrace) {
       if (Platform.isAndroid || Platform.isIOS) {
         FlutterLogs.logThis(
             tag: FluxNewsState.logTag,
-            subTag: 'fetchCategorieInformation',
+            subTag: 'fetchCategoryInformation',
             logMessage:
-                'Caught an error in fetchCategorieInformation function!',
+                'Caught an error in fetchCategoryInformation function!',
             errorMessage: error.toString(),
             level: LogLevel.ERROR);
       }
@@ -195,7 +195,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       return Future<Categories>.value(Categories(categories: []));
     });
 
-    // insert or update the fetched cateegories in the database
+    // insert or update the fetched categories in the database
     await insertCategoriesInDB(newCategories, appState)
         .onError((error, stackTrace) {
       if (Platform.isAndroid || Platform.isIOS) {
@@ -313,20 +313,20 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       }
     }
 
-    // fetch the updated categories from the db and genereate the categorie view
+    // fetch the updated categories from the db and generate the category view
     if (context.mounted) {
-      appState.categorieList = queryCategoriesFromDB(appState, context);
+      appState.categoryList = queryCategoriesFromDB(appState, context);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (newNews.newsCount > 0 && appState.feedIDs == null) {
-        // if new news exists and the "All News" categorie is selected,
+        // if new news exists and the "All News" category is selected,
         // set the list view position to the top
         if (appState.itemScrollController.isAttached) {
           appState.itemScrollController.jumpTo(index: 0);
         }
       } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
         if (appState.feedIDs?.first == -1) {
-          // if new news exists and the "Bookmarked" categorie is selected,
+          // if new news exists and the "Bookmarked" category is selected,
           // set the list view position to the top
           appState.itemScrollController.jumpTo(index: 0);
         }
@@ -339,7 +339,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // end the sync process
     appState.syncProcess = false;
     appState.refreshView();
-    // remove the native spalsh after updating the list view
+    // remove the native splash after updating the list view
     FlutterNativeSplash.remove();
   }
   if (Platform.isAndroid || Platform.isIOS) {

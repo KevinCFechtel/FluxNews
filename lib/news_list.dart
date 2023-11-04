@@ -47,7 +47,7 @@ class BodyNewsList extends StatelessWidget {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ))
                       // otherwise create list view with ScrollablePositionedList
-                      // to save scroll position persistant
+                      // to save scroll position persistent
                       : Stack(children: [
                           NotificationListener<ScrollEndNotification>(
                             child: ScrollablePositionedList.builder(
@@ -72,10 +72,10 @@ class BodyNewsList extends StatelessWidget {
                                         searchView: searchView);
                                   }
                                 }),
-                            // on ScrollNotification set news as read on scrollover if activated
+                            // on ScrollNotification set news as read on scroll over if activated
                             onNotification: (ScrollNotification scrollInfo) {
                               final metrics = scrollInfo.metrics;
-                              // check if set read on scrollover is activated in settings
+                              // check if set read on scroll over is activated in settings
                               if (context
                                   .read<FluxNewsState>()
                                   .markAsReadOnScrollOver) {
@@ -86,7 +86,7 @@ class BodyNewsList extends StatelessWidget {
                                     // to ensure that the list is at the bottom edge and not at the top edge
                                     // the amount of scrolled pixels must be greater 0
                                     if (metrics.pixels > 0) {
-                                      // iterade through the whole news list and mark news as read
+                                      // iterate through the whole news list and mark news as read
                                       for (int i = 0;
                                           i < snapshot.data!.length;
                                           i++) {
@@ -207,8 +207,8 @@ class BodyNewsList extends StatelessWidget {
 }
 
 // here is a helper function to get the first visible widget in the list view
-// this widget is used as the limit on marking prevoius news as read.
-// so every item of the list, which is prevoius to the first visible
+// this widget is used as the limit on marking previous news as read.
+// so every item of the list, which is previous to the first visible
 // will be marked as read.
 Widget positionsView(BuildContext context, FluxNewsState appState) =>
     ValueListenableBuilder<Iterable<ItemPosition>>(

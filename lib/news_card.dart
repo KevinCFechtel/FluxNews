@@ -66,8 +66,8 @@ class NewsCard extends StatelessWidget {
 
           // there are difference on launching the news url between the platforms
           // on android and ios it's preferred to check first if the link can be opened
-          // by an installed app, if not then the link is opened in a webview within the app.
-          // on macos we open directly the webview within the app.
+          // by an installed app, if not then the link is opened in a web-view within the app.
+          // on macos we open directly the web-view within the app.
           if (Platform.isAndroid) {
             AndroidUrlLauncher.launchUrl(context, news.url);
           } else if (Platform.isIOS) {
@@ -76,7 +76,7 @@ class NewsCard extends StatelessWidget {
               Uri.parse(news.url),
               mode: LaunchMode.externalNonBrowserApplication,
             );
-            //if exception is catched, open the app in webview
+            //if exception is caught, open the app in web-view
             if (!nativeAppLaunchSucceeded) {
               await launchUrl(
                 Uri.parse(news.url),
@@ -116,7 +116,7 @@ class NewsCard extends StatelessWidget {
                   )
                 // if no image is available, shrink this widget
                 : const SizedBox.shrink(),
-            // the title and additional infos are presented within a ListTile
+            // the title and additional info's are presented within a ListTile
             // the Opacity decide between read and unread news
             ListTile(
                 title: Text(
@@ -154,7 +154,7 @@ class NewsCard extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.only(left: 0.0),
                             child: Text(
-                              news.feedTitel,
+                              news.feedTitle,
                               style: news.status ==
                                       FluxNewsState.unreadNewsStatus
                                   ? Theme.of(context).textTheme.bodyMedium

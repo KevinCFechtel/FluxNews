@@ -113,7 +113,7 @@ class Settings extends StatelessWidget {
                 ),
                 // it there is an error on the authentication of the miniflux server
                 // there is shown a error message
-                appState.errorOnMicrofluxAuth
+                appState.errorOnMinifluxAuth
                     ? appState.minifluxAPIKey != null
                         ? Padding(
                             padding: const EdgeInsets.only(top: 10, bottom: 10),
@@ -127,7 +127,7 @@ class Settings extends StatelessWidget {
                           )
                         : const SizedBox.shrink()
                     : const SizedBox.shrink(),
-                // this headline inidcate the general settings section
+                // this headline indicate the general settings section
                 Padding(
                   padding: const EdgeInsets.only(top: 50.0, bottom: 12),
                   child: Row(
@@ -142,7 +142,7 @@ class Settings extends StatelessWidget {
                   ),
                 ),
                 // this row contains the selection of brightness mode
-                // there are the chovices of light, dark and system
+                // there are the choices of light, dark and system
                 Row(
                   children: [
                     const Padding(
@@ -452,7 +452,7 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
-                // this list tile containes the ability to export the collected logs
+                // this list tile contains the ability to export the collected logs
                 ListTile(
                   leading: const Icon(
                     Icons.import_export,
@@ -524,7 +524,7 @@ class Settings extends StatelessWidget {
     }));
   }
 
-  // initConfig reads the config values from the persistant storage and sets the state
+  // initConfig reads the config values from the persistent storage and sets the state
   // accordingly.
   // It also initializes the database connection.
   Future<void> initConfig(BuildContext context) async {
@@ -616,7 +616,7 @@ class Settings extends StatelessWidget {
                                   appState)
                               .onError((error, stackTrace) => false);
 
-                          appState.errorOnMicrofluxAuth = !authCheck;
+                          appState.errorOnMinifluxAuth = !authCheck;
                           appState.refreshView();
                         }
                         appState.storage.write(
@@ -643,7 +643,7 @@ class Settings extends StatelessWidget {
                                   appState)
                               .onError((error, stackTrace) => false);
 
-                          appState.errorOnMicrofluxAuth = !authCheck;
+                          appState.errorOnMinifluxAuth = !authCheck;
                           appState.refreshView();
                         }
                         appState.storage.write(
@@ -717,7 +717,7 @@ class Settings extends StatelessWidget {
                             newText,
                             appState)
                         .onError((error, stackTrace) => false);
-                    appState.errorOnMicrofluxAuth = !authCheck;
+                    appState.errorOnMinifluxAuth = !authCheck;
                     appState.refreshView();
                   }
 
@@ -772,7 +772,7 @@ class Settings extends StatelessWidget {
                       onPressed: () {
                         deleteLocalNewsCache(appState, context);
                         appState.newsList = Future<List<News>>.value([]);
-                        appState.categorieList = Future<Categories>.value(
+                        appState.categoryList = Future<Categories>.value(
                             Categories(categories: []));
                         context.read<FluxNewsCounterState>().allNewsCount = 0;
                         context.read<FluxNewsCounterState>().appBarNewsCount =
@@ -795,7 +795,7 @@ class Settings extends StatelessWidget {
                       onPressed: () async {
                         deleteLocalNewsCache(appState, context);
                         appState.newsList = Future<List<News>>.value([]);
-                        appState.categorieList = Future<Categories>.value(
+                        appState.categoryList = Future<Categories>.value(
                             Categories(categories: []));
                         context.read<FluxNewsCounterState>().allNewsCount = 0;
                         context.read<FluxNewsCounterState>().appBarNewsCount =
@@ -825,7 +825,7 @@ class FluxNewsSettingsStatefulWrapper extends StatefulWidget {
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }
 
-// extend class to save acutal scroll state of the list view
+// extend class to save actual scroll state of the list view
 class FluxNewsBodyState extends State<FluxNewsSettingsStatefulWrapper> {
   // init the state of FluxNewsBody to load the config and the data on startup
   @override

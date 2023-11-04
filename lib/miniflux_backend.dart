@@ -50,7 +50,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   // set the size of the returned news initially to the maximum of news,
   // which will be provided by a response.
   // this size is set to 100.
-  int listSize = FluxNewsState.amountOfNewlyCatchedNews;
+  int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   // set the offset (the amount of news, which should be skipped in the next response)
   // to zero for the first request.
   int offset = 0;
@@ -59,7 +59,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     // define the header for the request.
-    // the header containes the api key and the accepted content type
+    // the header contains the api key and the accepted content type
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString:
@@ -68,17 +68,17 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
     // miniflux server.
-    // so we need to update the offset, to skip the already transfered amount of news
+    // so we need to update the offset, to skip the already transferred amount of news
     // and to request the unread news again until the list size is lower as the maximum
     // of news provided by a response.
     // this is a kind of pagination.
-    while (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+    while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       // request the unread news with the parameter, how many news should be provided by
       // one response (limit) and the amount of news which should be skipped, because
-      // they were already transfered (offset).
+      // they were already transferred (offset).
       final response = await client.get(
           Uri.parse(
-              '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+              '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
           headers: header);
       // only the response code 200 ist ok
       if (response.statusCode == 200) {
@@ -102,11 +102,11 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
         listSize = tempNewsList.news.length;
         // update the offset to the maximum of provided news for each request,
         // multiplied by a incrementing counter
-        offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
+        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
         // increment the offset counter for the next run
         offsetCounter++;
         if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
             if (Platform.isAndroid || Platform.isIOS) {
               FlutterLogs.logThis(
                   tag: FluxNewsState.logTag,
@@ -183,7 +183,7 @@ Future<NewsList> fetchStarredNews(
   List<News> emptyList = [];
   NewsList newsList = NewsList(news: emptyList, newsCount: 0);
   NewsList tempNewsList = NewsList(news: emptyList, newsCount: 0);
-  int listSize = FluxNewsState.amountOfNewlyCatchedNews;
+  int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   int offset = 0;
   int offsetCounter = 1;
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -192,10 +192,10 @@ Future<NewsList> fetchStarredNews(
       FluxNewsState.httpMinifluxAcceptHeaderString:
           FluxNewsState.httpContentTypeString,
     };
-    while (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+    while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       final response = await client.get(
           Uri.parse(
-              '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+              '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
           headers: header);
       if (response.statusCode == 200) {
         tempNewsList =
@@ -212,10 +212,10 @@ Future<NewsList> fetchStarredNews(
         newsList.news.addAll(tempNewsList.news);
         newsList.newsCount = tempNewsList.newsCount;
         listSize = tempNewsList.news.length;
-        offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
+        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
         offsetCounter++;
         if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
             if (Platform.isAndroid || Platform.isIOS) {
               FlutterLogs.logThis(
                   tag: FluxNewsState.logTag,
@@ -295,7 +295,7 @@ Future<List<News>> fetchSearchedNews(
   // set the size of the returned news initially to the maximum of news,
   // which will be provided by a response.
   // this size is set to 100.
-  int listSize = FluxNewsState.amountOfNewlyCatchedNews;
+  int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   // set the offset (the amount of news, which should be skipped in the next response)
   // to zero for the first request.
   int offset = 0;
@@ -304,7 +304,7 @@ Future<List<News>> fetchSearchedNews(
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     // define the header for the request.
-    // the header containes the api key and the accepted content type
+    // the header contains the api key and the accepted content type
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString:
@@ -313,17 +313,17 @@ Future<List<News>> fetchSearchedNews(
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
     // miniflux server.
-    // so we need to update the offset, to skip the already transfered amount of news
+    // so we need to update the offset, to skip the already transferred amount of news
     // and to request the unread news again until the list size is lower as the maximum
     // of news provided by a response.
     // this is a kind of pagination.
-    while (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+    while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       // request the unread news with the parameter, how many news should be provided by
       // one response (limit) and the amount of news which should be skipped, because
-      // they were already transfered (offset).
+      // they were already transferred (offset).
       final response = await client.get(
           Uri.parse(
-              '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+              '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
           headers: header);
       // only the response code 200 ist ok
       if (response.statusCode == 200) {
@@ -344,11 +344,11 @@ Future<List<News>> fetchSearchedNews(
         listSize = tempNewsList.news.length;
         // update the offset to the maximum of provided news for each request,
         // multiplied by a incrementing counter
-        offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
+        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
         // increment the offset counter for the next run
         offsetCounter++;
         if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
             if (Platform.isAndroid || Platform.isIOS) {
               FlutterLogs.logThis(
                   tag: FluxNewsState.logTag,
@@ -699,19 +699,19 @@ Future<void> saveNewsToThirdPartyService(
 }
 
 // fetch the information about the categories from the miniflux server
-Future<Categories> fetchCategorieInformation(
+Future<Categories> fetchCategoryInformation(
     http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
           tag: FluxNewsState.logTag,
-          subTag: 'fetchCategorieInformation',
+          subTag: 'fetchCategoryInformation',
           logMessage:
-              'Starting fetching categorie information from miniflux server',
+              'Starting fetching category information from miniflux server',
           level: LogLevel.INFO);
     }
   }
-  List<Categorie> newCategorieList = [];
+  List<Category> newCategoryList = [];
   http.Response response;
   // first check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -731,7 +731,7 @@ Future<Categories> fetchCategorieInformation(
         if (Platform.isAndroid || Platform.isIOS) {
           FlutterLogs.logThis(
               tag: FluxNewsState.logTag,
-              subTag: 'fetchCategorieInformation',
+              subTag: 'fetchCategoryInformation',
               logMessage:
                   'Got unexpected response from miniflux server: ${response.statusCode} while fetching categories',
               level: LogLevel.ERROR);
@@ -741,24 +741,24 @@ Future<Categories> fetchCategorieInformation(
       } else {
         // if the response code is 200, decode the response body and create a new Categories list
         Iterable l = json.decode(utf8.decode(response.bodyBytes));
-        newCategorieList =
-            List<Categorie>.from(l.map((model) => Categorie.fromJson(model)));
+        newCategoryList =
+            List<Category>.from(l.map((model) => Category.fromJson(model)));
 
         // iterate over the categories list and request the feeds for each category
-        for (Categorie categorie in newCategorieList) {
+        for (Category category in newCategoryList) {
           List<Feed> feedList = [];
           response = await client.get(
             Uri.parse(
-                '${appState.minifluxURL!}categories/${categorie.categorieID}/feeds'),
+                '${appState.minifluxURL!}categories/${category.categoryID}/feeds'),
             headers: header,
           );
           if (response.statusCode != 200) {
             if (Platform.isAndroid || Platform.isIOS) {
               FlutterLogs.logThis(
                   tag: FluxNewsState.logTag,
-                  subTag: 'fetchCategorieInformation',
+                  subTag: 'fetchCategoryInformation',
                   logMessage:
-                      'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds for categorie ${categorie.categorieID}',
+                      'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds for category ${category.categoryID}',
                   level: LogLevel.ERROR);
             }
             // if the response code is not 200, throw an error
@@ -791,7 +791,7 @@ Future<Categories> fetchCategorieInformation(
                       if (Platform.isAndroid || Platform.isIOS) {
                         FlutterLogs.logThis(
                             tag: FluxNewsState.logTag,
-                            subTag: 'fetchCategorieInformation',
+                            subTag: 'fetchCategoryInformation',
                             logMessage:
                                 'No feed icon for feed with id ${feed.feedID}',
                             level: LogLevel.INFO);
@@ -802,7 +802,7 @@ Future<Categories> fetchCategorieInformation(
                     if (Platform.isAndroid || Platform.isIOS) {
                       FlutterLogs.logThis(
                           tag: FluxNewsState.logTag,
-                          subTag: 'fetchCategorieInformation',
+                          subTag: 'fetchCategoryInformation',
                           logMessage:
                               'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
                           level: LogLevel.ERROR);
@@ -821,7 +821,7 @@ Future<Categories> fetchCategorieInformation(
                   if (Platform.isAndroid || Platform.isIOS) {
                     FlutterLogs.logThis(
                         tag: FluxNewsState.logTag,
-                        subTag: 'fetchCategorieInformation',
+                        subTag: 'fetchCategoryInformation',
                         logMessage:
                             'No feed icon for feed with id ${feed.feedID}',
                         level: LogLevel.INFO);
@@ -830,8 +830,8 @@ Future<Categories> fetchCategorieInformation(
               }
             }
           }
-          // add the feed list to the categorie object
-          categorie.feeds = feedList;
+          // add the feed list to the category object
+          category.feeds = feedList;
         }
       }
     }
@@ -840,14 +840,14 @@ Future<Categories> fetchCategorieInformation(
     if (Platform.isAndroid || Platform.isIOS) {
       FlutterLogs.logThis(
           tag: FluxNewsState.logTag,
-          subTag: 'fetchCategorieInformation',
+          subTag: 'fetchCategoryInformation',
           logMessage:
-              'Finished fetching categorie information from miniflux server',
+              'Finished fetching category information from miniflux server',
           level: LogLevel.INFO);
     }
   }
   // return the new categories list
-  Categories newCategories = Categories(categories: newCategorieList);
+  Categories newCategories = Categories(categories: newCategoryList);
   return newCategories;
 }
 

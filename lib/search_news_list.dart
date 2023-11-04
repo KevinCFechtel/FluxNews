@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
-class SearchewsList extends StatelessWidget {
-  const SearchewsList({
+class SearchNewsList extends StatelessWidget {
+  const SearchNewsList({
     super.key,
   });
 

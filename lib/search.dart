@@ -26,7 +26,7 @@ class Search extends StatelessWidget {
     }));
   }
 
-  // initConfig reads the config values from the persistant storage and sets the state
+  // initConfig reads the config values from the persistent storage and sets the state
   // accordingly.
   // It also initializes the database connection.
   Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
@@ -96,7 +96,7 @@ class Search extends StatelessWidget {
           ),
         ),
         // show the news list
-        body: const SearchewsList());
+        body: const SearchNewsList());
   }
 }
 
@@ -109,7 +109,7 @@ class FluxNewsSearchStatefulWrapper extends StatefulWidget {
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }
 
-// extend class to save acutal scroll state of the list view
+// extend class to save actual scroll state of the list view
 class FluxNewsBodyState extends State<FluxNewsSearchStatefulWrapper> {
   // init the state of FluxNewsBody to load the config and the data on startup
   @override

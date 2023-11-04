@@ -25,7 +25,7 @@ class News {
       required this.status,
       required this.readingTime,
       required this.starred,
-      required this.feedTitel,
+      required this.feedTitle,
       this.attachments,
       this.attachmentURL,
       this.attachmentMimeType});
@@ -41,7 +41,7 @@ class News {
   String status = '';
   int readingTime = 0;
   bool starred = false;
-  String feedTitel = '';
+  String feedTitle = '';
   String? syncStatus = FluxNewsState.notSyncedSyncStatus;
   Uint8List? icon;
   String? iconMimeType = '';
@@ -63,7 +63,7 @@ class News {
       status: json['status'],
       readingTime: json['reading_time'],
       starred: json['starred'],
-      feedTitel: json['feed']?['title'],
+      feedTitle: json['feed']?['title'],
     );
 
     if (json['enclosures'] != null) {
@@ -88,7 +88,7 @@ class News {
       'status': status,
       'readingTime': readingTime,
       'starred': starred ? 1 : 0,
-      'feedTitle': feedTitel,
+      'feedTitle': feedTitle,
       'syncStatus': syncStatus,
     };
   }
@@ -106,7 +106,7 @@ class News {
         status = res['status'],
         readingTime = res['readingTime'],
         starred = res['starred'] == 1 ? true : false,
-        feedTitel = res['feedTitle'],
+        feedTitle = res['feedTitle'],
         syncStatus = res['syncStatus'],
         icon = res['icon'],
         iconMimeType = res['iconMimeType'],
@@ -126,22 +126,22 @@ class News {
     if (text != null) {
       text = text.split('\n').first;
       if (text.length < 50) {
-        List<dom.Element> elemente = document.getElementsByTagName('p');
-        if (elemente.isNotEmpty) {
-          text = elemente.first.text;
+        List<dom.Element> elements = document.getElementsByTagName('p');
+        if (elements.isNotEmpty) {
+          text = elements.first.text;
         }
       }
     } else {
-      List<dom.Element> elemente = document.getElementsByTagName('p');
-      if (elemente.isNotEmpty) {
-        text = elemente.first.text;
+      List<dom.Element> elements = document.getElementsByTagName('p');
+      if (elements.isNotEmpty) {
+        text = elements.first.text;
       }
     }
     text ??= '';
     return text;
   }
 
-  Attachment getFirstImmageAttachment() {
+  Attachment getFirstImageAttachment() {
     Attachment imageAttachment = Attachment(
         attachmentID: -1,
         newsID: -1,
@@ -372,21 +372,21 @@ class FeedIcon {
   }
 }
 
-// define the model for a categorie
-class Categorie {
-  Categorie({required this.categorieID, required this.title, List<Feed>? feeds})
+// define the model for a category
+class Category {
+  Category({required this.categoryID, required this.title, List<Feed>? feeds})
       : feeds = feeds ?? [];
 
   // define the properties
-  int categorieID = 0;
+  int categoryID = 0;
   String title = '';
   List<Feed> feeds = [];
   int newsCount = 0;
 
   // define the method to convert the model from json
-  factory Categorie.fromJson(Map<String, dynamic> json) {
-    return Categorie(
-      categorieID: json['id'],
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      categoryID: json['id'],
       title: json['title'],
     );
   }
@@ -394,14 +394,14 @@ class Categorie {
   // define the method to convert the model to database
   Map<String, dynamic> toMap() {
     return {
-      'categorieID': categorieID,
+      'categoryID': categoryID,
       'title': title,
     };
   }
 
   // define the method to convert the model from database
-  Categorie.fromMap(Map<String, dynamic> res)
-      : categorieID = res['categorieID'],
+  Category.fromMap(Map<String, dynamic> res)
+      : categoryID = res['categoryID'],
         title = res['title'];
 
   // define the method to get the feed ids
@@ -419,13 +419,13 @@ class Categories {
   Categories({required this.categories});
 
   // define the properties
-  List<Categorie> categories = [];
+  List<Category> categories = [];
 
   // define the method to renew the news count
   // the news count is the number of news for each feed
   // the news count is stored in the appBarNewsCount variable if the feed is currently displayed
-  // the news count of a categorie is the sum of the news count of each feed
-  // the news count is stored in the appBarNewsCount variable if the categorie is currently displayed
+  // the news count of a category is the sum of the news count of each feed
+  // the news count is stored in the appBarNewsCount variable if the category is currently displayed
   // the appState listener are notified to update the news count in the app bar
   Future<void> renewNewsCount(
       FluxNewsState appState, BuildContext context) async {
@@ -438,25 +438,25 @@ class Categories {
       } else {
         status = appState.newsStatus;
       }
-      for (Categorie categorie in categories) {
-        int? categorieNewsCount = 0;
-        for (Feed feed in categorie.feeds) {
+      for (Category category in categories) {
+        int? categoryNewsCount = 0;
+        for (Feed feed in category.feeds) {
           int? feedNewsCount;
           feedNewsCount = Sqflite.firstIntValue(await appState.db!.rawQuery(
               'SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?',
               [feed.feedID, status]));
           feedNewsCount ??= 0;
-          categorieNewsCount ??= 0;
-          categorieNewsCount = categorieNewsCount + feedNewsCount;
+          categoryNewsCount ??= 0;
+          categoryNewsCount = categoryNewsCount + feedNewsCount;
           feed.newsCount = feedNewsCount;
           if (appState.appBarText == feed.title) {
             appCounterState.appBarNewsCount = feedNewsCount;
           }
         }
-        categorieNewsCount ??= 0;
-        categorie.newsCount = categorieNewsCount;
-        if (appState.appBarText == categorie.title) {
-          appCounterState.appBarNewsCount = categorieNewsCount;
+        categoryNewsCount ??= 0;
+        category.newsCount = categoryNewsCount;
+        if (appState.appBarText == category.title) {
+          appCounterState.appBarNewsCount = categoryNewsCount;
         }
       }
       appCounterState.refreshView();
