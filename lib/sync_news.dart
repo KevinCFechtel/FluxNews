@@ -1,24 +1,19 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_state.dart';
+import 'package:flux_news/logging.dart';
 import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
-  if (Platform.isAndroid || Platform.isIOS) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'syncNews',
-        logMessage: 'Start syncing with miniflux server.',
-        level: LogLevel.INFO);
-  }
+  logThis('syncNews', 'Start syncing with miniflux server.', LogLevel.INFO);
+
   // this is the part where the app syncs with the miniflux server
   // to reduce the appearance of error pop ups,
   // the error handling in all steps is to only through new errors,
@@ -34,14 +29,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
   bool authCheck = await checkMinifluxCredentials(http.Client(),
           appState.minifluxURL, appState.minifluxAPIKey, appState)
       .onError((error, stackTrace) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'authCheck',
-          logMessage: 'Caught an error in authCheck function!',
-          errorMessage: error.toString(),
-          level: LogLevel.ERROR);
-    }
+    logThis(
+        'authCheck',
+        'Caught an error in authCheck function! : ${error.toString()}',
+        LogLevel.ERROR);
+
     if (appState.errorString !=
         AppLocalizations.of(context)!.communicateionMinifluxError) {
       appState.errorString =
@@ -62,14 +54,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // at first toggle news as read so that this news don't show up in the next step
     await toggleNewsAsRead(http.Client(), appState)
         .onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'toggleNewsAsRead',
-            logMessage: 'Caught an error in toggleNewsAsRead function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'toggleNewsAsRead',
+          'Caught an error in toggleNewsAsRead function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString !=
           AppLocalizations.of(context)!.communicateionMinifluxError) {
         appState.errorString =
@@ -82,14 +71,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // fetch only unread news from the miniflux server
     NewsList newNews =
         await fetchNews(http.Client(), appState).onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchNews',
-            logMessage: 'Caught an error in fetchNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'fetchNews',
+          'Caught an error in fetchNews function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString !=
           AppLocalizations.of(context)!.communicateionMinifluxError) {
         appState.errorString =
@@ -105,14 +91,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // So this step mark news, which are not fetched previous as read in this app.
     await markNotFetchedNewsAsRead(newNews, appState)
         .onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'markNotFetchedNewsAsRead',
-            logMessage: 'Caught an error in markNotFetchedNewsAsRead function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'markNotFetchedNewsAsRead',
+          'Caught an error in markNotFetchedNewsAsRead function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
         appState.newError = true;
@@ -123,14 +106,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     // insert or update the fetched news in the database
     await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'insertNewsInDB',
-            logMessage: 'Caught an error in insertNewsInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'insertNewsInDB',
+          'Caught an error in insertNewsInDB function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
         appState.newError = true;
@@ -158,14 +138,10 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // renew the news count of "All News"
     if (context.mounted) {
       await renewAllNewsCount(appState, context).onError((error, stackTrace) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'renewAllNewsCount',
-              logMessage: 'Caught an error in renewAllNewsCount function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
-        }
+        logThis(
+            'renewAllNewsCount',
+            'Caught an error in renewAllNewsCount function! : ${error.toString()}',
+            LogLevel.ERROR);
       });
     }
     appState.refreshView();
@@ -176,15 +152,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     Categories newCategories =
         await fetchCategoryInformation(http.Client(), appState)
             .onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchCategoryInformation',
-            logMessage:
-                'Caught an error in fetchCategoryInformation function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'fetchCategoryInformation',
+          'Caught an error in fetchCategoryInformation function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString !=
           AppLocalizations.of(context)!.communicateionMinifluxError) {
         appState.errorString =
@@ -198,14 +170,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // insert or update the fetched categories in the database
     await insertCategoriesInDB(newCategories, appState)
         .onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'insertCategoriesInDB',
-            logMessage: 'Caught an error in insertCategoriesInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'insertCategoriesInDB',
+          'Caught an error in insertCategoriesInDB function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
         appState.newError = true;
@@ -217,14 +186,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // fetch the starred news (read or unread) from the miniflux server
     NewsList starredNews = await fetchStarredNews(http.Client(), appState)
         .onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchStarredNews',
-            logMessage: 'Caught an error in fetchStarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'fetchStarredNews',
+          'Caught an error in fetchStarredNews function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString !=
           AppLocalizations.of(context)!.communicateionMinifluxError) {
         appState.errorString =
@@ -239,14 +205,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // maybe some other app has marked a news a starred
     await updateStarredNewsInDB(starredNews, appState)
         .onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'updateStarredNewsInDB',
-            logMessage: 'Caught an error in updateStarredNewsInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'updateStarredNewsInDB',
+          'Caught an error in updateStarredNewsInDB function! ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
         appState.newError = true;
@@ -257,14 +220,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     // delete all unstarred news depending the defined limit in the settings,
     await cleanUnstarredNews(appState).onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'cleanUnstarredNews',
-            logMessage: 'Caught an error in cleanUnstarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'cleanUnstarredNews',
+          'Caught an error in cleanUnstarredNews function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
         appState.newError = true;
@@ -274,14 +234,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     // delete all starred news depending the defines limit in the settings
     await cleanStarredNews(appState).onError((error, stackTrace) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'cleanStarredNews',
-            logMessage: 'Caught an error in cleanStarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'cleanStarredNews',
+          'Caught an error in cleanStarredNews function! : ${error.toString()}',
+          LogLevel.ERROR);
+
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
         appState.newError = true;
@@ -295,14 +252,11 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         updateStarredCounter(appState, context);
       }
     } catch (e) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'updateStarredCounter',
-            logMessage: 'Caught an error in updateStarredCounter function!',
-            errorMessage: e.toString(),
-            level: LogLevel.ERROR);
-      }
+      logThis(
+          'updateStarredCounter',
+          'Caught an error in updateStarredCounter function! : ${e.toString()}',
+          LogLevel.ERROR);
+
       if (context.mounted) {
         if (appState.errorString !=
             AppLocalizations.of(context)!.databaseError) {
@@ -342,13 +296,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // remove the native splash after updating the list view
     FlutterNativeSplash.remove();
   }
-  if (Platform.isAndroid || Platform.isIOS) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'syncNews',
-        logMessage: 'Finished syncing with miniflux server.',
-        level: LogLevel.INFO);
-  }
+  logThis('syncNews', 'Finished syncing with miniflux server.', LogLevel.INFO);
 }
 
 Future<void> waitUntilNewsListBuild(FluxNewsState appState) async {

@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/logging.dart';
 import 'package:intl/intl.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
@@ -31,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.3.1';
+  static const String applicationVersion = '1.3.2';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';
@@ -157,31 +156,13 @@ class FluxNewsState extends ChangeNotifier {
 
   // init the database connection
   Future<Database> initializeDB() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'initializeDB',
-          logMessage: 'Starting initializeDB',
-          level: LogLevel.INFO);
-    }
+    logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
     String path = await getDatabasesPath();
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'initializeDB',
-          logMessage: 'Finished initializeDB',
-          level: LogLevel.INFO);
-    }
+    logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
       path_package.join(path, FluxNewsState.databasePathString),
       onCreate: (db, version) async {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'initializeDB',
-              logMessage: 'Starting creating DB',
-              level: LogLevel.INFO);
-        }
+        logThis('initializeDB', 'Starting creating DB', LogLevel.INFO);
         // create the table news
         await db.execute('DROP TABLE IF EXISTS news');
         await db.execute(
@@ -225,30 +206,13 @@ class FluxNewsState extends ChangeNotifier {
                           attachmentMimeType TEXT)''',
         );
 
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'initializeDB',
-              logMessage: 'Finished creating DB',
-              level: LogLevel.INFO);
-        }
+        logThis('initializeDB', 'Finished creating DB', LogLevel.INFO);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'upgradeDB',
-              logMessage: 'Starting upgrading DB',
-              level: LogLevel.INFO);
-        }
+        logThis('upgradeDB', 'Starting upgrading DB', LogLevel.INFO);
         if (oldVersion == 1) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'upgradeDB',
-                logMessage: 'Upgrading DB from version 1',
-                level: LogLevel.INFO);
-          }
+          logThis('upgradeDB', 'Upgrading DB from version 1', LogLevel.INFO);
+
           // create the table attachments
           await db.execute('DROP TABLE IF EXISTS attachments');
           await db.execute(
@@ -259,32 +223,25 @@ class FluxNewsState extends ChangeNotifier {
           );
           await db.execute(
             '''ALTER TABLE "categories" 
-                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
           await db.execute(
             '''ALTER TABLE "feeds" 
-                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
         } else if (oldVersion == 2) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'upgradeDB',
-                logMessage: 'Upgrading DB from version 2',
-                level: LogLevel.INFO);
-          }
+          logThis('upgradeDB', 'Upgrading DB from version 2', LogLevel.INFO);
+
           await db.execute(
             '''ALTER TABLE "categories" 
-                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
           await db.execute(
             '''ALTER TABLE "feeds" 
-                     RENAME COLUMN "categorieID" TO "categoryID";''',);
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
         }
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'upgradeDB',
-              logMessage: 'Finished upgrading DB',
-              level: LogLevel.INFO);
-        }
+        logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
       version: 3,
     );
@@ -292,35 +249,19 @@ class FluxNewsState extends ChangeNotifier {
 
   // read the persistent saved configuration
   Future<bool> readConfigValues() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'readConfigValues',
-          logMessage: 'Starting read config values',
-          level: LogLevel.INFO);
-    }
+    logThis('readConfigValues', 'Starting read config values', LogLevel.INFO);
 
     storageValues = await storage.readAll();
 
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'readConfigValues',
-          logMessage: 'Finished read config values',
-          level: LogLevel.INFO);
-    }
+    logThis('readConfigValues', 'Finished read config values', LogLevel.INFO);
+
     return true;
   }
 
   // init the persistent saved configuration
   bool readConfig(BuildContext context) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'readConfig',
-          logMessage: 'Starting read config',
-          level: LogLevel.INFO);
-    }
+    logThis('readConfig', 'Starting read config', LogLevel.INFO);
+
     // init the maps for the brightness mode list
     // this maps use the key as the technical string and the value as the display name
     if (context.mounted) {
@@ -473,13 +414,8 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
     });
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'readConfig',
-          logMessage: 'Finished read config',
-          level: LogLevel.INFO);
-    }
+    logThis('readConfig', 'Finished read config', LogLevel.INFO);
+
     // return true if everything was read
     return true;
   }

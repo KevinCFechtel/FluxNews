@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:flux_news/logging.dart';
 import 'package:flux_news/news_list.dart';
 import 'package:flux_news/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -75,14 +74,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             await renewAllNewsCount(appState, context);
           }
         } catch (e) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'initConfig',
-                logMessage: 'Caught an error in initConfig function!',
-                errorMessage: e.toString(),
-                level: LogLevel.ERROR);
-          }
+          logThis('initConfig', 'Caught an error in initConfig function!',
+              LogLevel.ERROR);
+
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -661,8 +655,7 @@ class CategoryList extends StatelessWidget {
                               },
                             ),
                             // we iterate over the category list
-                            for (Category category
-                                in snapshot.data!.categories)
+                            for (Category category in snapshot.data!.categories)
                               showCategory(category, snapshot.data!, context),
                             // we add a static category of "Bookmarked" to the list of categories
                             ListTile(

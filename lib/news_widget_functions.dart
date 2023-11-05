@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/flux_news_state.dart';
+import 'package:flux_news/logging.dart';
 import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:http/http.dart' as http;
@@ -105,14 +105,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
       // toggle the news as bookmarked or not bookmarked at the miniflux server
       await toggleBookmark(http.Client(), appState, news)
           .onError((error, stackTrace) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleBookmark',
-              logMessage: 'Caught an error in toggleBookmark function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
-        }
+        logThis(
+            'toggleBookmark',
+            'Caught an error in toggleBookmark function! : ${error.toString()}',
+            LogLevel.ERROR);
+
         if (appState.errorString !=
             AppLocalizations.of(context)!.communicateionMinifluxError) {
           appState.errorString =
@@ -129,15 +126,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
           updateStarredCounter(appState, context);
         }
       } catch (e) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStarredStatusInDB',
-              logMessage:
-                  'Caught an error in updateNewsStarredStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
-        }
+        logThis(
+            'updateNewsStarredStatusInDB',
+            'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}',
+            LogLevel.ERROR);
+
         if (context.mounted) {
           if (appState.errorString !=
               AppLocalizations.of(context)!.databaseError) {
@@ -167,14 +160,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
             // update the news list of the main view
             appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
                 .onError((error, stackTrace) {
-              if (Platform.isAndroid || Platform.isIOS) {
-                FlutterLogs.logThis(
-                    tag: FluxNewsState.logTag,
-                    subTag: 'queryNewsFromDB',
-                    logMessage: 'Caught an error in queryNewsFromDB function!',
-                    errorMessage: error.toString(),
-                    level: LogLevel.ERROR);
-              }
+              logThis(
+                  'queryNewsFromDB',
+                  'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+                  LogLevel.ERROR);
+
               appState.errorString =
                   AppLocalizations.of(context)!.databaseError;
               return [];
@@ -191,14 +181,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         updateNewsStatusInDB(
             news.newsID, FluxNewsState.unreadNewsStatus, appState);
       } catch (e) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
-        }
+        logThis(
+            'updateNewsStatusInDB',
+            'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+            LogLevel.ERROR);
+
         if (context.mounted) {
           if (appState.errorString !=
               AppLocalizations.of(context)!.databaseError) {
@@ -216,26 +203,19 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         try {
           toggleOneNewsAsRead(http.Client(), appState, news);
         } catch (e) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'toggleOneNewsAsRead',
-                logMessage: 'Caught an error in toggleOneNewsAsRead function!',
-                errorMessage: e.toString(),
-                level: LogLevel.ERROR);
-          }
+          logThis(
+              'toggleOneNewsAsRead',
+              'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
+              LogLevel.ERROR);
         }
         // update the news list of the main view
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
             .onError((error, stackTrace) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'queryNewsFromDB',
-                logMessage: 'Caught an error in queryNewsFromDB function!',
-                errorMessage: error.toString(),
-                level: LogLevel.ERROR);
-          }
+          logThis(
+              'queryNewsFromDB',
+              'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+              LogLevel.ERROR);
+
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });
@@ -255,14 +235,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         updateNewsStatusInDB(
             news.newsID, FluxNewsState.readNewsStatus, appState);
       } catch (e) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
-        }
+        logThis(
+            'updateNewsStatusInDB',
+            'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+            LogLevel.ERROR);
+
         if (context.mounted) {
           if (appState.errorString !=
               AppLocalizations.of(context)!.databaseError) {
@@ -281,26 +258,19 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         try {
           toggleOneNewsAsRead(http.Client(), appState, news);
         } catch (e) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'toggleOneNewsAsRead',
-                logMessage: 'Caught an error in toggleOneNewsAsRead function!',
-                errorMessage: e.toString(),
-                level: LogLevel.ERROR);
-          }
+          logThis(
+              'toggleOneNewsAsRead',
+              'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
+              LogLevel.ERROR);
         }
         // update the news list of the main view
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
             .onError((error, stackTrace) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'queryNewsFromDB',
-                logMessage: 'Caught an error in queryNewsFromDB function!',
-                errorMessage: error.toString(),
-                level: LogLevel.ERROR);
-          }
+          logThis(
+              'queryNewsFromDB',
+              'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+              LogLevel.ERROR);
+
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
         });

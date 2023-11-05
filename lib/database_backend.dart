@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:flux_news/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:http/http.dart' as http;
@@ -16,13 +15,7 @@ import 'news_model.dart';
 // function to insert news in database which are located in the newsList parameter
 Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'insertNewsInDB',
-          logMessage: 'Starting inserting news in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('insertNewsInDB', 'Starting inserting news in DB', LogLevel.INFO);
   }
   // init the return value of the function
   int result = 0;
@@ -44,18 +37,13 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
         // insert the first image attachment of the news in the attachments db
         Attachment imageAttachment = news.getFirstImageAttachment();
         if (imageAttachment.attachmentID != -1) {
-          result = await appState.db!
-              .insert('attachments', imageAttachment.toMap());
+          result =
+              await appState.db!.insert('attachments', imageAttachment.toMap());
         }
 
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'insertNewsInDB',
-                logMessage: 'Inserted news with id ${news.newsID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis('insertNewsInDB',
+              'Inserted news with id ${news.newsID} in DB', LogLevel.INFO);
         }
       } else {
         // if the news is present, update the status of the news
@@ -63,13 +51,8 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
             'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
             [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'insertNewsInDB',
-                logMessage: 'Updated news with id ${news.newsID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis('insertNewsInDB', 'Updated news with id ${news.newsID} in DB',
+              LogLevel.INFO);
         }
       }
       // check if the feed of the news already contains an icon
@@ -85,27 +68,17 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
               'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
               [news.feedID, news.feedTitle, icon.getIcon(), icon.iconMimeType]);
           if (appState.debugMode) {
-            if (Platform.isAndroid || Platform.isIOS) {
-              FlutterLogs.logThis(
-                  tag: FluxNewsState.logTag,
-                  subTag: 'insertNewsInDB',
-                  logMessage:
-                      'Inserted Feed icon for feed with id ${news.feedID} in DB',
-                  level: LogLevel.INFO);
-            }
+            logThis(
+                'insertNewsInDB',
+                'Inserted Feed icon for feed with id ${news.feedID} in DB',
+                LogLevel.INFO);
           }
         }
       }
     }
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'insertNewsInDB',
-          logMessage: 'Finished inserting news in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('insertNewsInDB', 'Finished inserting news in DB', LogLevel.INFO);
   }
   // return the result from the inserts into the database
   return result;
@@ -115,13 +88,8 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
 Future<int> updateStarredNewsInDB(
     NewsList newsList, FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateStarredNewsInDB',
-          logMessage: 'Starting updating starred news in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('updateStarredNewsInDB', 'Starting updating starred news in DB',
+        LogLevel.INFO);
   }
   int result = 0;
   appState.db ??= await appState.initializeDB();
@@ -137,14 +105,10 @@ Future<int> updateStarredNewsInDB(
         result = await appState.db!.rawUpdate(
             'UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'updateStarredNewsInDB',
-                logMessage:
-                    'Marked news with id ${news.newsID} as bookmarked in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'updateStarredNewsInDB',
+              'Marked news with id ${news.newsID} as bookmarked in DB',
+              LogLevel.INFO);
         }
       }
     }
@@ -162,26 +126,17 @@ Future<int> updateStarredNewsInDB(
         result = await appState.db!.rawUpdate(
             'UPDATE news SET starred = ? WHERE newsId = ?', [0, news.newsID]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'updateStarredNewsInDB',
-                logMessage:
-                    'Deleted starred status for news with id ${news.newsID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'updateStarredNewsInDB',
+              'Deleted starred status for news with id ${news.newsID} in DB',
+              LogLevel.INFO);
         }
       }
     }
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateStarredNewsInDB',
-          logMessage: 'Finished updating starred news in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('updateStarredNewsInDB', 'Finished updating starred news in DB',
+        LogLevel.INFO);
   }
   return result;
 }
@@ -192,13 +147,8 @@ Future<int> updateStarredNewsInDB(
 Future<int> markNotFetchedNewsAsRead(
     NewsList newNewsList, FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'markNotFetchedNewsAsRead',
-          logMessage: 'Starting marking not fetched news as read',
-          level: LogLevel.INFO);
-    }
+    logThis('markNotFetchedNewsAsRead',
+        'Starting marking not fetched news as read', LogLevel.INFO);
   }
   int result = 0;
   appState.db ??= await appState.initializeDB();
@@ -224,26 +174,17 @@ Future<int> markNotFetchedNewsAsRead(
           news.newsID
         ]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'markNotFetchedNewsAsRead',
-                logMessage:
-                    'Marked the news with id ${news.newsID} as read in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'markNotFetchedNewsAsRead',
+              'Marked the news with id ${news.newsID} as read in DB',
+              LogLevel.INFO);
         }
       }
     }
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'markNotFetchedNewsAsRead',
-          logMessage: 'Finished marking not fetched news as read',
-          level: LogLevel.INFO);
-    }
+    logThis('markNotFetchedNewsAsRead',
+        'Finished marking not fetched news as read', LogLevel.INFO);
   }
   return result;
 }
@@ -252,13 +193,7 @@ Future<int> markNotFetchedNewsAsRead(
 Future<List<News>> queryNewsFromDB(
     FluxNewsState appState, List<int>? feedIDs) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'queryNewsFromDB',
-          logMessage: 'Starting querying news from DB',
-          level: LogLevel.INFO);
-    }
+    logThis('queryNewsFromDB', 'Starting querying news from DB', LogLevel.INFO);
   }
   List<News> newList = [];
   appState.db ??= await appState.initializeDB();
@@ -368,13 +303,7 @@ Future<List<News>> queryNewsFromDB(
     }
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'queryNewsFromDB',
-          logMessage: 'Finished querying news from DB',
-          level: LogLevel.INFO);
-    }
+    logThis('queryNewsFromDB', 'Finished querying news from DB', LogLevel.INFO);
   }
   return newList;
 }
@@ -383,13 +312,8 @@ Future<List<News>> queryNewsFromDB(
 void updateNewsStatusInDB(
     int newsID, String status, FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateNewsStatusInDB',
-          logMessage: 'Starting updating news status in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('updateNewsStatusInDB', 'Starting updating news status in DB',
+        LogLevel.INFO);
   }
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -397,13 +321,8 @@ void updateNewsStatusInDB(
         'UPDATE news SET status = ? WHERE newsId = ?', [status, newsID]);
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateNewsStatusInDB',
-          logMessage: 'Finished updating news status in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('updateNewsStatusInDB', 'Finished updating news status in DB',
+        LogLevel.INFO);
   }
 }
 
@@ -411,13 +330,8 @@ void updateNewsStatusInDB(
 void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateNewsStatusInDB',
-          logMessage: 'Starting updating starred counter',
-          level: LogLevel.INFO);
-    }
+    logThis('updateNewsStatusInDB', 'Starting updating starred counter',
+        LogLevel.INFO);
   }
 
   int? starredNewsCount;
@@ -438,13 +352,8 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   }
 
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateNewsStatusInDB',
-          logMessage: 'Finished updating starred counter',
-          level: LogLevel.INFO);
-    }
+    logThis('updateNewsStatusInDB', 'Finished updating starred counter',
+        LogLevel.INFO);
   }
   appCounterState.refreshView();
 }
@@ -453,13 +362,8 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
 void updateNewsStarredStatusInDB(
     int newsID, bool starred, FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateNewsStarredStatusInDB',
-          logMessage: 'Starting updating news starred status in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('updateNewsStarredStatusInDB',
+        'Starting updating news starred status in DB', LogLevel.INFO);
   }
 
   int starredStatus = 0;
@@ -473,13 +377,8 @@ void updateNewsStarredStatusInDB(
   }
 
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'updateNewsStarredStatusInDB',
-          logMessage: 'Finished updating news starred status in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('updateNewsStarredStatusInDB',
+        'Finished updating news starred status in DB', LogLevel.INFO);
   }
 }
 
@@ -488,13 +387,8 @@ void updateNewsStarredStatusInDB(
 // this limit can be changed in the settings.
 Future<void> cleanUnstarredNews(FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'cleanUnstarredNews',
-          logMessage: 'Starting cleaning unstarred news',
-          level: LogLevel.INFO);
-    }
+    logThis('cleanUnstarredNews', 'Starting cleaning unstarred news',
+        LogLevel.INFO);
   }
 
   appState.db ??= await appState.initializeDB();
@@ -509,13 +403,8 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
   }
 
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'cleanUnstarredNews',
-          logMessage: 'Finished cleaning unstarred news',
-          level: LogLevel.INFO);
-    }
+    logThis('cleanUnstarredNews', 'Finished cleaning unstarred news',
+        LogLevel.INFO);
   }
 }
 
@@ -525,13 +414,8 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
 // maybe the bookmarked news should have another limit as the not bookmarked news
 Future<void> cleanStarredNews(FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'cleanStarredNews',
-          logMessage: 'Starting cleaning starred news',
-          level: LogLevel.INFO);
-    }
+    logThis(
+        'cleanStarredNews', 'Starting cleaning starred news', LogLevel.INFO);
   }
 
   appState.db ??= await appState.initializeDB();
@@ -546,13 +430,8 @@ Future<void> cleanStarredNews(FluxNewsState appState) async {
   }
 
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'cleanStarredNews',
-          logMessage: 'Finished cleaning starred news',
-          level: LogLevel.INFO);
-    }
+    logThis(
+        'cleanStarredNews', 'Finished cleaning starred news', LogLevel.INFO);
   }
 }
 
@@ -560,13 +439,8 @@ Future<void> cleanStarredNews(FluxNewsState appState) async {
 Future<int> insertCategoriesInDB(
     Categories categoryList, FluxNewsState appState) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'insertCategoriesInDB',
-          logMessage: 'Starting inserting categories in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('insertCategoriesInDB', 'Starting inserting categories in DB',
+        LogLevel.INFO);
   }
 
   int result = 0;
@@ -582,14 +456,10 @@ Future<int> insertCategoriesInDB(
         // if they don't exists locally, insert the category
         result = await appState.db!.insert('categories', category.toMap());
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'insertCategoriesInDB',
-                logMessage:
-                    'Inserted category with id ${category.categoryID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'insertCategoriesInDB',
+              'Inserted category with id ${category.categoryID} in DB',
+              LogLevel.INFO);
         }
       } else {
         // if they exists locally, update the category
@@ -597,14 +467,10 @@ Future<int> insertCategoriesInDB(
             'UPDATE categories SET title = ? WHERE categoryID = ?',
             [category.title, category.categoryID]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'insertCategoriesInDB',
-                logMessage:
-                    'Updated category with id ${category.categoryID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'insertCategoriesInDB',
+              'Updated category with id ${category.categoryID} in DB',
+              LogLevel.INFO);
         }
       }
       for (Feed feed in category.feeds) {
@@ -625,13 +491,8 @@ Future<int> insertCategoriesInDB(
                 category.categoryID
               ]);
           if (appState.debugMode) {
-            if (Platform.isAndroid || Platform.isIOS) {
-              FlutterLogs.logThis(
-                  tag: FluxNewsState.logTag,
-                  subTag: 'insertCategoriesInDB',
-                  logMessage: 'Inserted feed with id ${feed.feedID} in DB',
-                  level: LogLevel.INFO);
-            }
+            logThis('insertCategoriesInDB',
+                'Inserted feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
         } else {
           // if they exists locally, update the feed
@@ -647,13 +508,8 @@ Future<int> insertCategoriesInDB(
                 feed.feedID
               ]);
           if (appState.debugMode) {
-            if (Platform.isAndroid || Platform.isIOS) {
-              FlutterLogs.logThis(
-                  tag: FluxNewsState.logTag,
-                  subTag: 'insertCategoriesInDB',
-                  logMessage: 'Updated feed with id ${feed.feedID} in DB',
-                  level: LogLevel.INFO);
-            }
+            logThis('insertCategoriesInDB',
+                'Updated feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
         }
       }
@@ -677,14 +533,10 @@ Future<int> insertCategoriesInDB(
             'DELETE FROM categories WHERE categoryID = ?',
             [category.categoryID]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'insertCategoriesInDB',
-                logMessage:
-                    'Deleted category with id ${category.categoryID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'insertCategoriesInDB',
+              'Deleted category with id ${category.categoryID} in DB',
+              LogLevel.INFO);
         }
       }
     }
@@ -715,26 +567,17 @@ Future<int> insertCategoriesInDB(
         result = await appState.db!
             .rawDelete('DELETE FROM news WHERE feedID = ?', [feed.feedID]);
         if (appState.debugMode) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'insertCategoriesInDB',
-                logMessage:
-                    'Deleted news and feed with id ${feed.feedID} in DB',
-                level: LogLevel.INFO);
-          }
+          logThis(
+              'insertCategoriesInDB',
+              'Deleted news and feed with id ${feed.feedID} in DB',
+              LogLevel.INFO);
         }
       }
     }
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'insertCategoriesInDB',
-          logMessage: 'Finished inserting categories in DB',
-          level: LogLevel.INFO);
-    }
+    logThis('insertCategoriesInDB', 'Finished inserting categories in DB',
+        LogLevel.INFO);
   }
   return result;
 }
@@ -743,13 +586,8 @@ Future<int> insertCategoriesInDB(
 Future<Categories> queryCategoriesFromDB(
     FluxNewsState appState, BuildContext context) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'queryCategoriesFromDB',
-          logMessage: 'Starting querying categories from DB',
-          level: LogLevel.INFO);
-    }
+    logThis('queryCategoriesFromDB', 'Starting querying categories from DB',
+        LogLevel.INFO);
   }
 
   List<Category> categoryList = [];
@@ -776,13 +614,8 @@ Future<Categories> queryCategoriesFromDB(
     renewAllNewsCount(appState, context);
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'queryCategoriesFromDB',
-          logMessage: 'Finished querying categories from DB',
-          level: LogLevel.INFO);
-    }
+    logThis('queryCategoriesFromDB', 'Finished querying categories from DB',
+        LogLevel.INFO);
   }
   return categories;
 }
@@ -792,13 +625,8 @@ Future<void> renewAllNewsCount(
     FluxNewsState appState, BuildContext context) async {
   FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'renewAllNewsCount',
-          logMessage: 'Starting renewing all news count',
-          level: LogLevel.INFO);
-    }
+    logThis(
+        'renewAllNewsCount', 'Starting renewing all news count', LogLevel.INFO);
   }
   appState.db ??= await appState.initializeDB();
   int? allNewsCount = 0;
@@ -826,13 +654,8 @@ Future<void> renewAllNewsCount(
     }
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'renewAllNewsCount',
-          logMessage: 'Finished renewing all news count',
-          level: LogLevel.INFO);
-    }
+    logThis(
+        'renewAllNewsCount', 'Finished renewing all news count', LogLevel.INFO);
   }
 
   // notify the app about the updated count of news
@@ -843,13 +666,8 @@ Future<void> renewAllNewsCount(
 Future<void> deleteLocalNewsCache(
     FluxNewsState appState, BuildContext context) async {
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'deleteLocalNewsCache',
-          logMessage: 'Starting deleting the local news cache',
-          level: LogLevel.INFO);
-    }
+    logThis('deleteLocalNewsCache', 'Starting deleting the local news cache',
+        LogLevel.INFO);
   }
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
@@ -897,12 +715,7 @@ Future<void> deleteLocalNewsCache(
     );
   }
   if (appState.debugMode) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'deleteLocalNewsCache',
-          logMessage: 'Finished deleting the local news cache',
-          level: LogLevel.INFO);
-    }
+    logThis('deleteLocalNewsCache', 'Finished deleting the local news cache',
+        LogLevel.INFO);
   }
 }

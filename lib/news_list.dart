@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/flux_news_state.dart';
+import 'package:flux_news/logging.dart';
 import 'package:flux_news/news_card.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:flux_news/news_row.dart';
@@ -96,16 +95,11 @@ class BodyNewsList extends StatelessWidget {
                                               FluxNewsState.readNewsStatus,
                                               appState);
                                         } catch (e) {
-                                          if (Platform.isAndroid ||
-                                              Platform.isIOS) {
-                                            FlutterLogs.logThis(
-                                                tag: FluxNewsState.logTag,
-                                                subTag: 'updateNewsStatusInDB',
-                                                logMessage:
-                                                    'Caught an error in updateNewsStatusInDB function!',
-                                                errorMessage: e.toString(),
-                                                level: LogLevel.ERROR);
-                                          }
+                                          logThis(
+                                              'updateNewsStatusInDB',
+                                              'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+                                              LogLevel.ERROR);
+
                                           if (context
                                                   .read<FluxNewsState>()
                                                   .errorString !=
@@ -149,16 +143,11 @@ class BodyNewsList extends StatelessWidget {
                                             FluxNewsState.readNewsStatus,
                                             appState);
                                       } catch (e) {
-                                        if (Platform.isAndroid ||
-                                            Platform.isIOS) {
-                                          FlutterLogs.logThis(
-                                              tag: FluxNewsState.logTag,
-                                              subTag: 'updateNewsStatusInDB',
-                                              logMessage:
-                                                  'Caught an error in updateNewsStatusInDB function!',
-                                              errorMessage: e.toString(),
-                                              level: LogLevel.ERROR);
-                                        }
+                                        logThis(
+                                            'updateNewsStatusInDB',
+                                            'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+                                            LogLevel.ERROR);
+
                                         if (context
                                                 .read<FluxNewsState>()
                                                 .errorString !=

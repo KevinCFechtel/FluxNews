@@ -7,6 +7,7 @@ import 'package:flux_news/android_url_launcher.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/flux_news_state.dart';
+import 'package:flux_news/logging.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:flux_news/news_widget_functions.dart';
 import 'package:provider/provider.dart';
@@ -38,15 +39,11 @@ class NewsCard extends StatelessWidget {
             updateNewsStatusInDB(
                 news.newsID, FluxNewsState.readNewsStatus, appState);
           } catch (e) {
-            if (Platform.isAndroid || Platform.isIOS) {
-              FlutterLogs.logThis(
-                  tag: FluxNewsState.logTag,
-                  subTag: 'updateNewsStatusInDB',
-                  logMessage:
-                      'Caught an error in updateNewsStatusInDB function!',
-                  errorMessage: e.toString(),
-                  level: LogLevel.ERROR);
-            }
+            logThis(
+                'updateNewsStatusInDB',
+                'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+                LogLevel.ERROR);
+
             if (context.mounted) {
               if (appState.errorString !=
                   AppLocalizations.of(context)!.databaseError) {

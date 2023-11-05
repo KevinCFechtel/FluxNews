@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/logging.dart';
 import 'package:flux_news/search_news_list.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -65,15 +64,10 @@ class Search extends StatelessWidget {
                 Future<List<News>> searchNewsListResult =
                     fetchSearchedNews(http.Client(), appState, value)
                         .onError((error, stackTrace) {
-                  if (Platform.isAndroid || Platform.isIOS) {
-                    FlutterLogs.logThis(
-                        tag: FluxNewsState.logTag,
-                        subTag: 'fetchSearchedNews',
-                        logMessage:
-                            'Caught an error in fetchSearchedNews function!',
-                        errorMessage: error.toString(),
-                        level: LogLevel.ERROR);
-                  }
+                  logThis(
+                      'fetchSearchedNews',
+                      'Caught an error in fetchSearchedNews function! : ${error.toString()}',
+                      LogLevel.ERROR);
                   if (appState.errorString !=
                       AppLocalizations.of(context)!
                           .communicateionMinifluxError) {
