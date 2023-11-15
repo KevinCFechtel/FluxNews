@@ -284,6 +284,22 @@ void showContextMenu(News news, BuildContext context, bool searchView,
       }
 
       break;
+    case FluxNewsState.contextMenuSaveString:
+      await saveNewsToThirdPartyService(http.Client(), appState, news).onError((error, stackTrace) {
+        logThis(
+            'saveNewsToThirdPartyService',
+            'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}',
+            LogLevel.ERROR);
+
+        if (appState.errorString !=
+            AppLocalizations.of(context)!.communicateionMinifluxError) {
+          appState.errorString =
+              AppLocalizations.of(context)!.communicateionMinifluxError;
+          appState.newError = true;
+          appState.refreshView();
+        }
+      });
+      break;
   }
 }
 

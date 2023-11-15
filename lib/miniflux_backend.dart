@@ -506,7 +506,7 @@ Future<void> toggleBookmark(
 Future<void> saveNewsToThirdPartyService(
     http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
-    logThis('toggleBookmark', 'Starting toggle bookmark at miniflux server',
+    logThis('saveNewsToThirdPartyService', 'Starting saving news to third party service at miniflux server',
         LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
@@ -516,23 +516,40 @@ Future<void> saveNewsToThirdPartyService(
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       };
-      // toggle the bookmark status of the news at the miniflux server
-      final response = await client.put(
+      // saving news to third party service on miniflux server
+      final response = await client.post(
         Uri.parse('${appState.minifluxURL!}entries/${news.newsID}/save'),
         headers: header,
       );
       if (response.statusCode != 202) {
-        logThis(
-            'toggleBookmark',
-            'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
-            LogLevel.ERROR);
-        // if the response code is not 204, throw an error
-        throw FluxNewsState.httpUnexpectedResponseErrorString;
+        if(response.statusCode == 400) {
+          final errorMessage = jsonDecode(response.body) as Map<String, dynamic>;
+          if(errorMessage['error_message'] == 'no third-party integration enabled') {
+            if (appState.debugMode) {
+              logThis('saveNewsToThirdPartyService', 'no third-party integration enabled',
+                  LogLevel.INFO);
+            }
+          } else {
+            logThis(
+                'saveNewsToThirdPartyService',
+                'Got unexpected response from miniflux server: ${response.body} for news ${news.newsID}',
+                LogLevel.ERROR);
+            // if the response body is not 'no third-party integration enabled', throw an error
+            throw FluxNewsState.httpUnexpectedResponseErrorString;
+          }
+        } else {
+          logThis(
+              'saveNewsToThirdPartyService',
+              'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
+              LogLevel.ERROR);
+          // if the response code is not 202, throw an error
+          throw FluxNewsState.httpUnexpectedResponseErrorString;
+        }
       }
     }
   }
   if (appState.debugMode) {
-    logThis('toggleBookmark', 'Finished toggle bookmark at miniflux server',
+    logThis('saveNewsToThirdPartyService', 'Finished saving news to third party service at miniflux server',
         LogLevel.INFO);
   }
 }
