@@ -25,6 +25,7 @@ Flux News requires Miniflux version >= [2.0.29](https://miniflux.app/releases/2.
 The unread articles should appear in the app.
 
 ## Screenshots
+### Phone
 <p float="left">
 <img src="screenshots/AllNewsLight.png" width="300">
 <img src="screenshots/AllNewsDark.png" width="300">
@@ -32,6 +33,13 @@ The unread articles should appear in the app.
 <img src="screenshots/NavBarMenu.png" width="300">
 <img src="screenshots/Search.png" width="300">
 <img src="screenshots/Settings.png" width="300">
+</p>
+
+### Tablet
+<p float="left">
+<img src="screenshots/Tablet_Light.png" width="600">
+<img src="screenshots/Tablet_Dark.png" width="600">
+<img src="screenshots/Tablet_Portrait.png" width="600">
 </p>
 <br/><br/>
 

@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'flux_news_state.dart';
 import 'news_model.dart';
+import 'package:flux_news/logging.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -30,11 +31,8 @@ class ReadNewsList {
 // fetch all unread news from the miniflux backend
 Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'fetchNews',
-        logMessage: 'Starting fetching news from miniflux server',
-        level: LogLevel.INFO);
+    logThis('fetchNews', 'Starting fetching news from miniflux server',
+        LogLevel.INFO);
   }
 
   List<News> emptyList = [];
@@ -47,7 +45,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   // set the size of the returned news initially to the maximum of news,
   // which will be provided by a response.
   // this size is set to 100.
-  int listSize = FluxNewsState.amountOfNewlyCatchedNews;
+  int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   // set the offset (the amount of news, which should be skipped in the next response)
   // to zero for the first request.
   int offset = 0;
@@ -56,7 +54,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     // define the header for the request.
-    // the header containes the api key and the accepted content type
+    // the header contains the api key and the accepted content type
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString:
@@ -65,17 +63,17 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
     // miniflux server.
-    // so we need to update the offset, to skip the already transfered amount of news
+    // so we need to update the offset, to skip the already transferred amount of news
     // and to request the unread news again until the list size is lower as the maximum
     // of news provided by a response.
     // this is a kind of pagination.
-    while (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+    while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       // request the unread news with the parameter, how many news should be provided by
       // one response (limit) and the amount of news which should be skipped, because
-      // they were already transfered (offset).
+      // they were already transferred (offset).
       final response = await client.get(
           Uri.parse(
-              '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+              '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
           headers: header);
       // only the response code 200 ist ok
       if (response.statusCode == 200) {
@@ -83,11 +81,8 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
         tempNewsList =
             NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchNews',
-              logMessage: '${tempNewsList.news.length} news fetched',
-              level: LogLevel.INFO);
+          logThis('fetchNews', '${tempNewsList.news.length} news fetched',
+              LogLevel.INFO);
         }
         // add the temp news list to the returning news list
         newsList.news.addAll(tempNewsList.news);
@@ -97,52 +92,39 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
         listSize = tempNewsList.news.length;
         // update the offset to the maximum of provided news for each request,
         // multiplied by a incrementing counter
-        offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
+        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
         // increment the offset counter for the next run
         offsetCounter++;
         if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchNews',
-                logMessage:
-                    '${tempNewsList.newsCount - listSize} news remaining',
-                level: LogLevel.INFO);
+          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
+            logThis(
+                'fetchNews',
+                '${tempNewsList.newsCount - listSize} news remaining',
+                LogLevel.INFO);
           } else {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchNews',
-                logMessage: '0 news remaining',
-                level: LogLevel.INFO);
+            logThis('fetchNews', '0 news remaining', LogLevel.INFO);
           }
         }
       } else {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchNews',
-            logMessage:
-                'Got unexpected response from miniflux server: ${response.statusCode} for unread news',
-            level: LogLevel.ERROR);
+        logThis(
+            'fetchNews',
+            'Got unexpected response from miniflux server: ${response.statusCode} for unread news',
+            LogLevel.ERROR);
+
         // if the status is not 200, throw a exception
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       }
     }
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'fetchNews',
-          logMessage: 'Finished fetching news from miniflux server',
-          level: LogLevel.INFO);
+      logThis('fetchNews', 'Finished fetching news from miniflux server',
+          LogLevel.INFO);
     }
     // return the news list
     return newsList;
   } else {
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'fetchNews',
-          logMessage: 'Finished fetching no new news from miniflux server',
-          level: LogLevel.INFO);
+      logThis('fetchNews', 'Finished fetching no new news from miniflux server',
+          LogLevel.INFO);
     }
     // return an empty news list
     return newsList;
@@ -157,16 +139,13 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
 Future<NewsList> fetchStarredNews(
     http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'fetchStarredNews',
-        logMessage: 'Starting fetching starred news from miniflux server',
-        level: LogLevel.INFO);
+    logThis('fetchStarredNews',
+        'Starting fetching starred news from miniflux server', LogLevel.INFO);
   }
   List<News> emptyList = [];
   NewsList newsList = NewsList(news: emptyList, newsCount: 0);
   NewsList tempNewsList = NewsList(news: emptyList, newsCount: 0);
-  int listSize = FluxNewsState.amountOfNewlyCatchedNews;
+  int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   int offset = 0;
   int offsetCounter = 1;
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -175,67 +154,51 @@ Future<NewsList> fetchStarredNews(
       FluxNewsState.httpMinifluxAcceptHeaderString:
           FluxNewsState.httpContentTypeString,
     };
-    while (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+    while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       final response = await client.get(
           Uri.parse(
-              '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+              '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
           headers: header);
       if (response.statusCode == 200) {
         tempNewsList =
             NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchStarredNews',
-              logMessage: '${tempNewsList.news.length} news fetched',
-              level: LogLevel.INFO);
+          logThis('fetchStarredNews',
+              '${tempNewsList.news.length} news fetched', LogLevel.INFO);
         }
         newsList.news.addAll(tempNewsList.news);
         newsList.newsCount = tempNewsList.newsCount;
         listSize = tempNewsList.news.length;
-        offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
+        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
         offsetCounter++;
         if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchStarredNews',
-                logMessage:
-                    '${tempNewsList.newsCount - listSize} news remaining',
-                level: LogLevel.INFO);
+          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
+            logThis(
+                'fetchStarredNews',
+                '${tempNewsList.newsCount - listSize} news remaining',
+                LogLevel.INFO);
           } else {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchStarredNews',
-                logMessage: '0 news remaining',
-                level: LogLevel.INFO);
+            logThis('fetchStarredNews', '0 news remaining', LogLevel.INFO);
           }
         }
       } else {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchStarredNews',
-            logMessage:
-                'Got unexpected response from miniflux server: ${response.statusCode} for starred news',
-            level: LogLevel.ERROR);
+        logThis(
+            'fetchStarredNews',
+            'Got unexpected response from miniflux server: ${response.statusCode} for starred news',
+            LogLevel.ERROR);
+
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       }
     }
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'fetchStarredNews',
-          logMessage: 'Finished fetching starred news from miniflux server',
-          level: LogLevel.INFO);
+      logThis('fetchStarredNews',
+          'Finished fetching starred news from miniflux server', LogLevel.INFO);
     }
     return newsList;
   } else {
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'fetchStarredNews',
-          logMessage: 'Finished fetching starred news from miniflux server',
-          level: LogLevel.INFO);
+      logThis('fetchStarredNews',
+          'Finished fetching starred news from miniflux server', LogLevel.INFO);
     }
     return newsList;
   }
@@ -249,11 +212,8 @@ Future<NewsList> fetchStarredNews(
 Future<List<News>> fetchSearchedNews(
     http.Client client, FluxNewsState appState, String searchString) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'fetchSearchedNews',
-        logMessage: 'Starting fetching searched news from miniflux server',
-        level: LogLevel.INFO);
+    logThis('fetchSearchedNews',
+        'Starting fetching searched news from miniflux server', LogLevel.INFO);
   }
   // init a empty news list
   List<News> newList = [];
@@ -264,7 +224,7 @@ Future<List<News>> fetchSearchedNews(
   // set the size of the returned news initially to the maximum of news,
   // which will be provided by a response.
   // this size is set to 100.
-  int listSize = FluxNewsState.amountOfNewlyCatchedNews;
+  int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   // set the offset (the amount of news, which should be skipped in the next response)
   // to zero for the first request.
   int offset = 0;
@@ -273,7 +233,7 @@ Future<List<News>> fetchSearchedNews(
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     // define the header for the request.
-    // the header containes the api key and the accepted content type
+    // the header contains the api key and the accepted content type
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString:
@@ -282,28 +242,25 @@ Future<List<News>> fetchSearchedNews(
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
     // miniflux server.
-    // so we need to update the offset, to skip the already transfered amount of news
+    // so we need to update the offset, to skip the already transferred amount of news
     // and to request the unread news again until the list size is lower as the maximum
     // of news provided by a response.
     // this is a kind of pagination.
-    while (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
+    while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       // request the unread news with the parameter, how many news should be provided by
       // one response (limit) and the amount of news which should be skipped, because
-      // they were already transfered (offset).
+      // they were already transferred (offset).
       final response = await client.get(
           Uri.parse(
-              '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCatchedNews}&offset=$offset'),
+              '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
           headers: header);
       // only the response code 200 ist ok
       if (response.statusCode == 200) {
         tempNewsList =
             NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchSearchedNews',
-              logMessage: '${tempNewsList.news.length} news fetched',
-              level: LogLevel.INFO);
+          logThis('fetchSearchedNews',
+              '${tempNewsList.news.length} news fetched', LogLevel.INFO);
         }
         // add the news of the response to the news list
         newList.addAll(tempNewsList.news);
@@ -311,32 +268,24 @@ Future<List<News>> fetchSearchedNews(
         listSize = tempNewsList.news.length;
         // update the offset to the maximum of provided news for each request,
         // multiplied by a incrementing counter
-        offset = FluxNewsState.amountOfNewlyCatchedNews * offsetCounter;
+        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
         // increment the offset counter for the next run
         offsetCounter++;
         if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCatchedNews) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchSearchedNews',
-                logMessage:
-                    '${tempNewsList.newsCount - listSize} news remaining',
-                level: LogLevel.INFO);
+          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
+            logThis(
+                'fetchSearchedNews',
+                '${tempNewsList.newsCount - listSize} news remaining',
+                LogLevel.INFO);
           } else {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchSearchedNews',
-                logMessage: '0 news remaining',
-                level: LogLevel.INFO);
+            logThis('fetchSearchedNews', '0 news remaining', LogLevel.INFO);
           }
         }
       } else {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchSearchedNews',
-            logMessage:
-                'Got unexpected response from miniflux server: ${response.statusCode} for search string $searchString',
-            level: LogLevel.ERROR);
+        logThis(
+            'fetchSearchedNews',
+            'Got unexpected response from miniflux server: ${response.statusCode} for search string $searchString',
+            LogLevel.ERROR);
         // if the status is not 200, throw a exception
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       }
@@ -369,31 +318,27 @@ Future<List<News>> fetchSearchedNews(
           }
         }).first;
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'fetchSearchedNews',
-              logMessage:
-                  'Got the feed icon from the database for feed ${news.feedID}',
-              level: LogLevel.INFO);
+          logThis(
+              'fetchSearchedNews',
+              'Got the feed icon from the database for feed ${news.feedID}',
+              LogLevel.INFO);
         }
       }
     }
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'fetchSearchedNews',
-          logMessage: 'Finished fetching searched news from miniflux server',
-          level: LogLevel.INFO);
+      logThis(
+          'fetchSearchedNews',
+          'Finished fetching searched news from miniflux server',
+          LogLevel.INFO);
     }
     // return the news list
     return newList;
   } else {
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'fetchSearchedNews',
-          logMessage: 'Finished fetching searched news from miniflux server',
-          level: LogLevel.INFO);
+      logThis(
+          'fetchSearchedNews',
+          'Finished fetching searched news from miniflux server',
+          LogLevel.INFO);
     }
     // if the miniflux url or api key is not set, return the empty news list
     return newList;
@@ -404,11 +349,8 @@ Future<List<News>> fetchSearchedNews(
 Future<void> toggleNewsAsRead(
     http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'toggleNewsAsRead',
-        logMessage: 'Starting toggle news as read at miniflux server',
-        level: LogLevel.INFO);
+    logThis('toggleNewsAsRead',
+        'Starting toggle news as read at miniflux server', LogLevel.INFO);
   }
   // check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -443,12 +385,11 @@ Future<void> toggleNewsAsRead(
             headers: header,
             body: jsonEncode(newReadNewsList));
         if (response.statusCode != 204) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleNewsAsRead',
-              logMessage:
-                  'Got unexpected response from miniflux server: ${response.statusCode} for news ${newsIds.toString()}',
-              level: LogLevel.ERROR);
+          logThis(
+              'toggleNewsAsRead',
+              'Got unexpected response from miniflux server: ${response.statusCode} for news ${newsIds.toString()}',
+              LogLevel.ERROR);
+
           // if the response code is not 204, throw a error
           throw FluxNewsState.httpUnexpectedResponseErrorString;
         } else {
@@ -458,12 +399,10 @@ Future<void> toggleNewsAsRead(
                 'UPDATE news SET syncStatus = ? WHERE newsId = ?',
                 [FluxNewsState.syncedSyncStatus, news.newsID]);
             if (appState.debugMode) {
-              FlutterLogs.logThis(
-                  tag: FluxNewsState.logTag,
-                  subTag: 'toggleNewsAsRead',
-                  logMessage:
-                      'Updated sync status of news ${news.newsID} in database',
-                  level: LogLevel.INFO);
+              logThis(
+                  'toggleNewsAsRead',
+                  'Updated sync status of news ${news.newsID} in database',
+                  LogLevel.INFO);
             }
           }
         }
@@ -471,11 +410,8 @@ Future<void> toggleNewsAsRead(
     }
   }
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'toggleNewsAsRead',
-        logMessage: 'Finished toggle news as read at miniflux server',
-        level: LogLevel.INFO);
+    logThis('toggleNewsAsRead',
+        'Finished toggle news as read at miniflux server', LogLevel.INFO);
   }
 }
 
@@ -483,11 +419,8 @@ Future<void> toggleNewsAsRead(
 Future<void> toggleOneNewsAsRead(
     http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'toggleOneNewsAsRead',
-        logMessage: 'Starting toggle one news as read at miniflux server',
-        level: LogLevel.INFO);
+    logThis('toggleOneNewsAsRead',
+        'Starting toggle one news as read at miniflux server', LogLevel.INFO);
   }
   // check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -507,22 +440,18 @@ Future<void> toggleOneNewsAsRead(
         headers: header,
         body: jsonEncode(newReadNewsList));
     if (response.statusCode != 204) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'toggleOneNewsAsRead',
-          logMessage:
-              'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
-          level: LogLevel.ERROR);
+      logThis(
+          'toggleOneNewsAsRead',
+          'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
+          LogLevel.ERROR);
+
       // if the response code is not 204, throw a error
       throw FluxNewsState.httpUnexpectedResponseErrorString;
     }
   }
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'toggleOneNewsAsRead',
-        logMessage: 'Finished toggle one news as read at miniflux server',
-        level: LogLevel.INFO);
+    logThis('toggleOneNewsAsRead',
+        'Finished toggle one news as read at miniflux server', LogLevel.INFO);
   }
 }
 
@@ -530,11 +459,8 @@ Future<void> toggleOneNewsAsRead(
 Future<void> toggleBookmark(
     http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'toggleBookmark',
-        logMessage: 'Starting toggle bookmark at miniflux server',
-        level: LogLevel.INFO);
+    logThis('toggleBookmark', 'Starting toggle bookmark at miniflux server',
+        LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -549,12 +475,11 @@ Future<void> toggleBookmark(
         headers: header,
       );
       if (response.statusCode != 204) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'toggleBookmark',
-            logMessage:
-                'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
-            level: LogLevel.ERROR);
+        logThis(
+            'toggleBookmark',
+            'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
+            LogLevel.ERROR);
+
         // if the response code is not 204, throw an error
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       } else {
@@ -563,37 +488,82 @@ Future<void> toggleBookmark(
             'UPDATE news SET starred = ? WHERE newsId = ?',
             [news.starred ? 1 : 0, news.newsID]);
         if (appState.debugMode) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleBookmark',
-              logMessage:
-                  'Updated bookmark status of news ${news.newsID} in database',
-              level: LogLevel.INFO);
+          logThis(
+              'toggleBookmark',
+              'Updated bookmark status of news ${news.newsID} in database',
+              LogLevel.INFO);
         }
       }
     }
   }
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'toggleBookmark',
-        logMessage: 'Finished toggle bookmark at miniflux server',
-        level: LogLevel.INFO);
+    logThis('toggleBookmark', 'Finished toggle bookmark at miniflux server',
+        LogLevel.INFO);
+  }
+}
+
+// mark a news as bookmarked at the miniflux server
+Future<void> saveNewsToThirdPartyService(
+    http.Client client, FluxNewsState appState, News news) async {
+  if (appState.debugMode) {
+    logThis('saveNewsToThirdPartyService', 'Starting saving news to third party service at miniflux server',
+        LogLevel.INFO);
+  }
+  // first check if the miniflux url and api key is set
+  if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
+    appState.db ??= await appState.initializeDB();
+    if (appState.db != null) {
+      final header = {
+        FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+      };
+      // saving news to third party service on miniflux server
+      final response = await client.post(
+        Uri.parse('${appState.minifluxURL!}entries/${news.newsID}/save'),
+        headers: header,
+      );
+      if (response.statusCode != 202) {
+        if(response.statusCode == 400) {
+          final errorMessage = jsonDecode(response.body) as Map<String, dynamic>;
+          if(errorMessage['error_message'] == 'no third-party integration enabled') {
+            if (appState.debugMode) {
+              logThis('saveNewsToThirdPartyService', 'no third-party integration enabled',
+                  LogLevel.INFO);
+            }
+          } else {
+            logThis(
+                'saveNewsToThirdPartyService',
+                'Got unexpected response from miniflux server: ${response.body} for news ${news.newsID}',
+                LogLevel.ERROR);
+            // if the response body is not 'no third-party integration enabled', throw an error
+            throw FluxNewsState.httpUnexpectedResponseErrorString;
+          }
+        } else {
+          logThis(
+              'saveNewsToThirdPartyService',
+              'Got unexpected response from miniflux server: ${response.statusCode} for news ${news.newsID}',
+              LogLevel.ERROR);
+          // if the response code is not 202, throw an error
+          throw FluxNewsState.httpUnexpectedResponseErrorString;
+        }
+      }
+    }
+  }
+  if (appState.debugMode) {
+    logThis('saveNewsToThirdPartyService', 'Finished saving news to third party service at miniflux server',
+        LogLevel.INFO);
   }
 }
 
 // fetch the information about the categories from the miniflux server
-Future<Categories> fetchCategorieInformation(
+Future<Categories> fetchCategoryInformation(
     http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'fetchCategorieInformation',
-        logMessage:
-            'Starting fetching categorie information from miniflux server',
-        level: LogLevel.INFO);
+    logThis(
+        'fetchCategoryInformation',
+        'Starting fetching category information from miniflux server',
+        LogLevel.INFO);
   }
-  List<Categorie> newCategorieList = [];
+  List<Category> newCategoryList = [];
   http.Response response;
   // first check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -610,35 +580,33 @@ Future<Categories> fetchCategorieInformation(
         headers: header,
       );
       if (response.statusCode != 200) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchCategorieInformation',
-            logMessage:
-                'Got unexpected response from miniflux server: ${response.statusCode} while fetching categories',
-            level: LogLevel.ERROR);
+        logThis(
+            'fetchCategoryInformation',
+            'Got unexpected response from miniflux server: ${response.statusCode} while fetching categories',
+            LogLevel.ERROR);
+
         // if the response code is not 200, throw an error
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       } else {
         // if the response code is 200, decode the response body and create a new Categories list
         Iterable l = json.decode(utf8.decode(response.bodyBytes));
-        newCategorieList =
-            List<Categorie>.from(l.map((model) => Categorie.fromJson(model)));
+        newCategoryList =
+            List<Category>.from(l.map((model) => Category.fromJson(model)));
 
         // iterate over the categories list and request the feeds for each category
-        for (Categorie categorie in newCategorieList) {
+        for (Category category in newCategoryList) {
           List<Feed> feedList = [];
           response = await client.get(
             Uri.parse(
-                '${appState.minifluxURL!}categories/${categorie.categorieID}/feeds'),
+                '${appState.minifluxURL!}categories/${category.categoryID}/feeds'),
             headers: header,
           );
           if (response.statusCode != 200) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'fetchCategorieInformation',
-                logMessage:
-                    'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds for categorie ${categorie.categorieID}',
-                level: LogLevel.ERROR);
+            logThis(
+                'fetchCategoryInformation',
+                'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds for category ${category.categoryID}',
+                LogLevel.ERROR);
+
             // if the response code is not 200, throw an error
             throw FluxNewsState.httpUnexpectedResponseErrorString;
           } else {
@@ -666,21 +634,17 @@ Future<Categories> fetchCategorieInformation(
                 if (response.statusCode != 200) {
                   if (response.statusCode == 404) {
                     if (appState.debugMode) {
-                      FlutterLogs.logThis(
-                          tag: FluxNewsState.logTag,
-                          subTag: 'fetchCategorieInformation',
-                          logMessage:
-                              'No feed icon for feed with id ${feed.feedID}',
-                          level: LogLevel.INFO);
+                      logThis(
+                          'fetchCategoryInformation',
+                          'No feed icon for feed with id ${feed.feedID}',
+                          LogLevel.INFO);
                     }
                     // This feed has no feed icon, do nothing.
                   } else {
-                    FlutterLogs.logThis(
-                        tag: FluxNewsState.logTag,
-                        subTag: 'fetchCategorieInformation',
-                        logMessage:
-                            'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
-                        level: LogLevel.ERROR);
+                    logThis(
+                        'fetchCategoryInformation',
+                        'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
+                        LogLevel.ERROR);
                     // if the response code is not 200, throw an error
                     throw FluxNewsState.httpUnexpectedResponseErrorString;
                   }
@@ -692,32 +656,28 @@ Future<Categories> fetchCategorieInformation(
                 }
               } else {
                 if (appState.debugMode) {
-                  FlutterLogs.logThis(
-                      tag: FluxNewsState.logTag,
-                      subTag: 'fetchCategorieInformation',
-                      logMessage:
-                          'No feed icon for feed with id ${feed.feedID}',
-                      level: LogLevel.INFO);
+                  logThis(
+                      'fetchCategoryInformation',
+                      'No feed icon for feed with id ${feed.feedID}',
+                      LogLevel.INFO);
                 }
               }
             }
           }
-          // add the feed list to the categorie object
-          categorie.feeds = feedList;
+          // add the feed list to the category object
+          category.feeds = feedList;
         }
       }
     }
   }
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'fetchCategorieInformation',
-        logMessage:
-            'Finished fetching categorie information from miniflux server',
-        level: LogLevel.INFO);
+    logThis(
+        'fetchCategoryInformation',
+        'Finished fetching category information from miniflux server',
+        LogLevel.INFO);
   }
   // return the new categories list
-  Categories newCategories = Categories(categories: newCategorieList);
+  Categories newCategories = Categories(categories: newCategoryList);
   return newCategories;
 }
 
@@ -725,11 +685,8 @@ Future<Categories> fetchCategorieInformation(
 Future<FeedIcon?> getFeedIcon(
     http.Client client, FluxNewsState appState, int feedID) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'getFeedIcon',
-        logMessage: 'Starting getting feed icon from miniflux server',
-        level: LogLevel.INFO);
+    logThis('getFeedIcon', 'Starting getting feed icon from miniflux server',
+        LogLevel.INFO);
   }
   http.Response response;
   FeedIcon? feedIcon;
@@ -750,20 +707,16 @@ Future<FeedIcon?> getFeedIcon(
       if (response.statusCode != 200) {
         if (response.statusCode == 404) {
           if (appState.debugMode) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'getFeedIcon',
-                logMessage: 'No feed icon for feed with id $feedID',
-                level: LogLevel.INFO);
+            logThis('getFeedIcon', 'No feed icon for feed with id $feedID',
+                LogLevel.INFO);
           }
           // This feed has no feed icon, do nothing
         } else {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'getFeedIcon',
-              logMessage:
-                  'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID',
-              level: LogLevel.ERROR);
+          logThis(
+              'getFeedIcon',
+              'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID',
+              LogLevel.ERROR);
+
           // if the response code is not 200, throw an error
           throw FluxNewsState.httpUnexpectedResponseErrorString;
         }
@@ -775,11 +728,8 @@ Future<FeedIcon?> getFeedIcon(
     }
   }
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'getFeedIcon',
-        logMessage: 'Finished getting feed icon from miniflux server',
-        level: LogLevel.INFO);
+    logThis('getFeedIcon', 'Finished getting feed icon from miniflux server',
+        LogLevel.INFO);
   }
   // return the feed icon
   return feedIcon;
@@ -789,11 +739,8 @@ Future<FeedIcon?> getFeedIcon(
 Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
     String? miniFluxApiKey, FluxNewsState appState) async {
   if (appState.debugMode) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'checkMinifluxCredentials',
-        logMessage: 'Starting checking miniflux credentials',
-        level: LogLevel.INFO);
+    logThis('checkMinifluxCredentials',
+        'Starting checking miniflux credentials', LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
   if (miniFluxApiKey != null && miniFluxUrl != null) {
@@ -806,74 +753,76 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
     Response response =
         await client.get(Uri.parse('${miniFluxUrl}me'), headers: header);
     if (response.statusCode == 200) {
-      if (appState.debugMode) {
-        // request the Version of the miniflux server
-        response = await client.get(Uri.parse('${miniFluxUrl}version'),
+      // request the Version of the miniflux server
+      response =
+          await client.get(Uri.parse('${miniFluxUrl}version'), headers: header);
+      if (response.statusCode == 200) {
+        Version minifluxVersion =
+            Version.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+        appState.minifluxVersionInt =
+            int.parse(minifluxVersion.version.replaceAll(".", ""));
+        appState.minifluxVersionString = minifluxVersion.version;
+        appState.storage.write(
+            key: FluxNewsState.secureStorageMinifluxVersionKey,
+            value: minifluxVersion.version);
+        appState.refreshView();
+        if (appState.debugMode) {
+          logThis(
+              'checkMinifluxCredentials',
+              'Miniflux v1 API Version: ${minifluxVersion.version}',
+              LogLevel.INFO);
+        }
+      } else {
+        // need to remove the "v1/" part from the url to request the version api endpoint
+        String minifluxBaseURL = "";
+        if (miniFluxUrl.length >= 3) {
+          minifluxBaseURL = miniFluxUrl.substring(0, miniFluxUrl.length - 3);
+        }
+
+        response = await client.get(Uri.parse('${minifluxBaseURL}version'),
             headers: header);
         if (response.statusCode == 200) {
-          Version minifluxVersion =
-              Version.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'checkMinifluxCredentials',
-              logMessage: 'Miniflux v1 API Version: ${minifluxVersion.version}',
-              level: LogLevel.INFO);
+          appState.minifluxVersionInt =
+              int.parse(response.body.replaceAll(".", ""));
+          appState.minifluxVersionString = response.body;
+          appState.storage.write(
+              key: FluxNewsState.secureStorageMinifluxVersionKey,
+              value: response.body);
+          appState.refreshView();
+          if (appState.debugMode) {
+            logThis('checkMinifluxCredentials',
+                'Miniflux Version: ${response.body}', LogLevel.INFO);
+          }
         } else {
-          // need to remove the "v1/" part from the url to request the version api endpoint
-          String minifluxBaseURL = "";
-          if (miniFluxUrl.length >= 3) {
-            minifluxBaseURL = miniFluxUrl.substring(0, miniFluxUrl.length - 3);
-          }
-
-          response = await client.get(Uri.parse('${minifluxBaseURL}version'),
-              headers: header);
-          if (response.statusCode == 200) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'checkMinifluxCredentials',
-                logMessage: 'Miniflux Version: ${response.body}',
-                level: LogLevel.INFO);
-          } else {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'checkMinifluxCredentials',
-                logMessage:
-                    'Got unexpected response from miniflux server: ${response.statusCode} for version',
-                level: LogLevel.ERROR);
-          }
+          logThis(
+              'checkMinifluxCredentials',
+              'Got unexpected response from miniflux server: ${response.statusCode} for version',
+              LogLevel.ERROR);
         }
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'checkMinifluxCredentials',
-            logMessage: 'Finished checking miniflux credentials',
-            level: LogLevel.INFO);
+      }
+      if (appState.debugMode) {
+        logThis('checkMinifluxCredentials',
+            'Finished checking miniflux credentials', LogLevel.INFO);
       }
       // if the response code is 200, the credentials are valid
       return true;
     } else {
       if (appState.debugMode) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'checkMinifluxCredentials',
-            logMessage: 'Finished checking miniflux credentials',
-            level: LogLevel.INFO);
+        logThis('checkMinifluxCredentials',
+            'Finished checking miniflux credentials', LogLevel.INFO);
       }
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'checkMinifluxCredentials',
-          logMessage:
-              'Got unexpected response from miniflux server: ${response.statusCode} for checking credentials',
-          level: LogLevel.ERROR);
+      logThis(
+          'checkMinifluxCredentials',
+          'Got unexpected response from miniflux server: ${response.statusCode} for checking credentials',
+          LogLevel.ERROR);
+
       // if the response code is not 200, the credentials are invalid
       return false;
     }
   } else {
     if (appState.debugMode) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'checkMinifluxCredentials',
-          logMessage: 'Finished checking miniflux credentials',
-          level: LogLevel.INFO);
+      logThis('checkMinifluxCredentials',
+          'Finished checking miniflux credentials', LogLevel.INFO);
     }
     // if the miniflux url or api key is not set, the credentials are invalid
     return false;

@@ -1,61 +1,53 @@
 import 'dart:async';
-import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:flux_news/logging.dart';
+import 'package:flux_news/news_list.dart';
+import 'package:flux_news/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 import 'database_backend.dart';
 import 'flux_news_state.dart';
-import 'miniflux_backend.dart';
 import 'news_model.dart';
-import 'android_url_launcher.dart';
 
-class FluxNewsBody extends StatefulWidget {
-  const FluxNewsBody({Key? key}) : super(key: key);
+class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
+  const FluxNewsBody({super.key});
 
   @override
-  State<FluxNewsBody> createState() => FluxNewsBodyState();
-}
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    if (MediaQuery.of(context).size.shortestSide >= 550) {
+      appState.isTablet = true;
+    } else {
+      appState.isTablet = false;
+    }
 
-// extend class to save acutal scroll state of the list view
-class FluxNewsBodyState extends State<FluxNewsBody>
-    with AutomaticKeepAliveClientMixin<FluxNewsBody>, WidgetsBindingObserver {
-  // init the persistant scroll state controller
-  final ItemScrollController itemScrollController = ItemScrollController();
-  final ItemPositionsListener itemPositionsListener =
-      ItemPositionsListener.create();
+    return FluxNewsBodyStatefulWrapper(onInit: () {
+      initConfig(context, appState);
+      appState.categoryList = queryCategoriesFromDB(appState, context);
+      appState.newsList = Future<List<News>>.value([]);
+      WidgetsBinding.instance.addObserver(this);
+    }, child: OrientationBuilder(
+      builder: (context, orientation) {
+        appState.orientation = orientation;
 
-  // init variables used locally in this class
-  bool syncProcess = false;
-  bool listUpdated = false;
-  late Offset _tapPosition;
-  int scrollPosition = 0;
-
-  // init the state of FluxNewsBody to load the config and the data on startup
-  @override
-  void initState() {
-    super.initState();
-    FluxNewsState appState = context.read<FluxNewsState>();
-    initConfig();
-    appState.categorieList = queryCategoriesFromDB(appState, context);
-    appState.newsList = Future<List<News>>.value([]);
-    WidgetsBinding.instance.addObserver(this);
+        if (appState.isTablet) {
+          return tabletLayout(context, appState);
+        } else {
+          return smartphoneLayout(context, appState);
+        }
+      },
+    ));
   }
 
   // helper function for the initState() to use async function on init
-  Future<void> initConfig() async {
-    FluxNewsState appState = context.read<FluxNewsState>();
-
-    // read persistant saved config
-    bool completed = await appState.readConfigValues(context);
+  Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
+    // read persistent saved config
+    bool completed = await appState.readConfigValues();
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
@@ -82,12 +74,9 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             await renewAllNewsCount(appState, context);
           }
         } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'initConfig',
-              logMessage: 'Caught an error in initConfig function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
+          logThis('initConfig', 'Caught an error in initConfig function!',
+              LogLevel.ERROR);
+
           if (context.mounted) {
             if (appState.errorString !=
                 AppLocalizations.of(context)!.databaseError) {
@@ -103,15 +92,15 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // set the scroll position to the persistant saved scroll position on normal startup
+      // set the scroll position to the persistent saved scroll position on normal startup
       // if sync on startup is enabled, the scroll position is set to the top of the list
       if (!appState.syncOnStart) {
-        scrollPosition = appState.savedScrollPosition;
+        appState.scrollPosition = appState.savedScrollPosition;
       }
 
       if (appState.minifluxURL == null ||
           appState.minifluxAPIKey == null ||
-          appState.errorOnMicrofluxAuth) {
+          appState.errorOnMinifluxAuth) {
         // navigate to settings screen if there are problems with the miniflux config
         appState.refreshView();
         Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
@@ -122,35 +111,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    FluxNewsState appState = context.watch<FluxNewsState>();
-
-    // detect if the device is a tablet
-    double ratio =
-        MediaQuery.of(context).size.width / MediaQuery.of(context).size.height;
-    if ((ratio >= 0.74) && (ratio < 1.5)) {
-      appState.isTablet = true;
-    } else {
-      appState.isTablet = false;
-    }
-
-    // decide between landscape or portrait mode (the drawer doesn't exists in landscape mode f.e.)
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        if (orientation == Orientation.landscape) {
-          appState.orientation = Orientation.landscape;
-          return landscapeLayout(appState, context);
-        } else {
-          appState.orientation = Orientation.portrait;
-          return portraitLayout(appState, context);
-        }
-      },
-    );
-  }
-
-  Scaffold portraitLayout(FluxNewsState appState, BuildContext context) {
+  Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     // start the main view in portrait mode
     return Scaffold(
       appBar: AppBar(
@@ -168,31 +129,29 @@ class FluxNewsBodyState extends State<FluxNewsBody>
             );
           },
         ),
-        title: appBarTitle(appState),
-        actions: appBarButtons(appState, context),
+        title: const AppBarTitle(),
+        actions: appBarButtons(context),
       ),
       drawer: getDrawer(context, appState),
-      body: Container(
-        child: getBody(context, appState),
-      ),
+      body: const FluxNewsBodyList(),
     );
   }
 
-  Scaffold landscapeLayout(FluxNewsState appState, BuildContext context) {
+  Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       appBar: AppBar(
-        title: appBarTitle(appState),
-        actions: appBarButtons(appState, context),
+        title: const AppBarTitle(),
+        actions: appBarButtons(context),
       ),
       body: Row(
         children: [
           Expanded(
-            flex: appState.isTablet ? 4 : 5,
+            flex: 4,
             child: ListView(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 75.0),
+                  padding: const EdgeInsets.only(top: 20.0),
                   child: ListTile(
                     title: Text(
                       AppLocalizations.of(context)!.minifluxServer,
@@ -203,113 +162,70 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                         : Text(appState.minifluxURL!),
                   ),
                 ),
-                categorieListWidget(context, appState),
+                const CategoryList(),
               ],
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 10,
-            child: Container(
-              child: getBody(context, appState),
-            ),
+            child: FluxNewsBodyList(),
           ),
         ],
       ),
     );
   }
 
-  Widget getBody(BuildContext context, FluxNewsState appState) {
-    // return the body of the main view
-    // if errors had occured, the error widget is returned
-    // if the miniflux settings are incorrect a corresponding message is shown
-    // otherwise the normal list view is returned
-    if (appState.minifluxURL == null ||
-        appState.minifluxAPIKey == null ||
-        appState.errorOnMicrofluxAuth == true) {
-      return noSettingsWidget(context, appState);
-    } else if (appState.errorString != '' && appState.newError) {
-      return errorWidget(context, appState);
-    } else {
-      return newsListWidget(context, appState);
-    }
-  }
-
   Drawer getDrawer(BuildContext context, FluxNewsState appState) {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // update the categories, feeds and news counter, if there were updates to the list view
-    if (listUpdated) {
-      appState.categorieList = queryCategoriesFromDB(appState, context);
-      listUpdated = false;
+    if (appCounterState.listUpdated) {
+      appState.categoryList = queryCategoriesFromDB(appState, context);
+      appCounterState.listUpdated = false;
     }
     // return the drawer
     return Drawer(
-        child: Column(
-      children: [
-        Padding(
-            padding: const EdgeInsets.only(top: 75.0),
-            child: Row(children: [
-              const Padding(
-                  padding: EdgeInsets.only(left: 30.0),
-                  child: Icon(
-                    FontAwesomeIcons.bookOpen,
-                  )),
-              Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: Text(
-                    AppLocalizations.of(context)!.fluxNews,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ))
-            ])),
-        Padding(
-          padding: const EdgeInsets.only(top: 20.0),
-          child: ListTile(
-            title: Text(
-              AppLocalizations.of(context)!.minifluxServer,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            subtitle: appState.minifluxURL == null
-                ? const SizedBox.shrink()
-                : Text(
-                    appState.minifluxURL!,
-                    style: Theme.of(context).textTheme.bodyMedium,
+        child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              children: [
+                Padding(
+                    padding: const EdgeInsets.only(top: 75.0),
+                    child: Row(children: [
+                      const Padding(
+                          padding: EdgeInsets.only(left: 30.0),
+                          child: Icon(
+                            FontAwesomeIcons.bookOpen,
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.only(left: 20.0),
+                          child: Text(
+                            AppLocalizations.of(context)!.fluxNews,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ))
+                    ])),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: ListTile(
+                    title: Text(
+                      AppLocalizations.of(context)!.minifluxServer,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    subtitle: appState.minifluxURL == null
+                        ? const SizedBox.shrink()
+                        : Text(
+                            appState.minifluxURL!,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                   ),
-          ),
-        ),
-        categorieListWidget(context, appState),
-      ],
-    ));
+                ),
+                const CategoryList(),
+              ],
+            )));
   }
 
-  Widget appBarTitle(FluxNewsState appState) {
-    // set the app bar title depending on the choosen categorie to show in list view
-
-    if (appState.multilineAppBarText) {
-      // this is the part where the news count is added as an extra line to the app bar title
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            appState.appBarText,
-            maxLines: 2,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          Text(
-            '${AppLocalizations.of(context)!.itemCount}: ${appState.appBarNewsCount}',
-            style: Theme.of(context).textTheme.labelMedium,
-          )
-        ],
-      );
-    } else {
-      // this is the part without the news count as an extra line
-      return Text(
-        appState.appBarText,
-        maxLines: 2,
-        textAlign: TextAlign.start,
-        style: Theme.of(context).textTheme.titleLarge,
-      );
-    }
-  }
-
-  List<Widget> appBarButtons(FluxNewsState appState, BuildContext context) {
+  List<Widget> appBarButtons(BuildContext context) {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+    FluxNewsState appState = context.read<FluxNewsState>();
     // define the app bar buttons to sync with miniflux,
     // search for news and switch between all and only unread news view
     // and the navigation to the settings
@@ -319,7 +235,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         onPressed: () async {
           await syncNews(appState, context);
         },
-        icon: syncProcess
+        icon: appState.syncProcess
             ? const SizedBox(
                 height: 15.0,
                 width: 15.0,
@@ -417,7 +333,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 // switch the state to all news
                 appState.newsStatus = FluxNewsState.allNewsString;
 
-                // save the state persistant
+                // save the state persistent
                 appState.storage.write(
                     key: FluxNewsState.secureStorageNewsStatusKey,
                     value: FluxNewsState.allNewsString);
@@ -425,26 +341,26 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 // refresh news list with the all news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
                     .whenComplete(() {
-                  waitUntilNewsListBuild().whenComplete(
+                  waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      setState(() {
-                        itemScrollController.jumpTo(index: 0);
-                      });
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
 
-                // notify the categoires to update the news count
-                setState(() {
-                  listUpdated = true;
-                });
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
                 // if the current view is all news change to only unread news
               } else {
                 // switch the state to show only unread news
                 appState.newsStatus = FluxNewsState.unreadNewsStatus;
 
-                // save the state persistant
+                // save the state persistent
                 appState.storage.write(
                     key: FluxNewsState.secureStorageNewsStatusKey,
                     value: FluxNewsState.unreadNewsStatus);
@@ -452,19 +368,19 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 // refresh news list with the only unread news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
                     .whenComplete(() {
-                  waitUntilNewsListBuild().whenComplete(
+                  waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      setState(() {
-                        itemScrollController.jumpTo(index: 0);
-                      });
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
 
-                // notify the categoires to update the news count
-                setState(() {
-                  listUpdated = true;
-                });
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
               }
             } else if (value == 2) {
@@ -475,7 +391,7 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 // switch the state to all news
                 appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 
-                // save the state persistant
+                // save the state persistent
                 appState.storage.write(
                     key: FluxNewsState.secureStorageSortOrderKey,
                     value: FluxNewsState.sortOrderOldestFirstString);
@@ -483,26 +399,26 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 // refresh news list with the all news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
                     .whenComplete(() {
-                  waitUntilNewsListBuild().whenComplete(
+                  waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      setState(() {
-                        itemScrollController.jumpTo(index: 0);
-                      });
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
 
-                // notify the categoires to update the news count
-                setState(() {
-                  listUpdated = true;
-                });
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
                 // if the current sort order is oldest first change to newest first
               } else {
                 // switch the state to show only unread news
                 appState.sortOrder = FluxNewsState.sortOrderNewestFirstString;
 
-                // save the state persistant
+                // save the state persistent
                 appState.storage.write(
                     key: FluxNewsState.secureStorageSortOrderKey,
                     value: FluxNewsState.sortOrderNewestFirstString);
@@ -510,19 +426,19 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 // refresh news list with the only unread news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
                     .whenComplete(() {
-                  waitUntilNewsListBuild().whenComplete(
+                  waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      setState(() {
-                        itemScrollController.jumpTo(index: 0);
-                      });
+                      context
+                          .read<FluxNewsState>()
+                          .itemScrollController
+                          .jumpTo(index: 0);
                     },
                   );
                 });
 
-                // notify the categoires to update the news count
-                setState(() {
-                  listUpdated = true;
-                });
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
                 appState.refreshView();
               }
             } else if (value == 3) {
@@ -532,922 +448,176 @@ class FluxNewsBodyState extends State<FluxNewsBody>
           }),
     ];
   }
+}
 
-  Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'syncNews',
-        logMessage: 'Start syncing with miniflux server.',
-        level: LogLevel.INFO);
-    // this is the part where the app syncs with the miniflux server
-    // to reduce the appearence of error pop ups,
-    // the error handling in all steps is to only through new errors,
-    // if the new error is not already thrown by a previous step.
-    setState(() {
-      // set the state to sync
-      // (needed for the processing cycle and the positioning of the list view)
-      syncProcess = true;
-    });
-    // also resetting the error string for new errors occuring within this sync
-    appState.errorString = '';
+class FluxNewsBodyList extends StatelessWidget {
+  const FluxNewsBodyList({
+    super.key,
+  });
 
-    // check the miniflux credentials to enable the sync
-    bool authCheck = await checkMinifluxCredentials(http.Client(),
-            appState.minifluxURL, appState.minifluxAPIKey, appState)
-        .onError((error, stackTrace) {
-      FlutterLogs.logThis(
-          tag: FluxNewsState.logTag,
-          subTag: 'authCheck',
-          logMessage: 'Caught an error in authCheck function!',
-          errorMessage: error.toString(),
-          level: LogLevel.ERROR);
-      if (appState.errorString !=
-          AppLocalizations.of(context)!.communicateionMinifluxError) {
-        appState.errorString =
-            AppLocalizations.of(context)!.communicateionMinifluxError;
-        appState.newError = true;
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    // return the body of the main view
+    // if errors had occurred, the error widget is returned
+    // if the miniflux settings are incorrect a corresponding message is shown
+    // otherwise the normal list view is returned
+    if (appState.minifluxURL == null ||
+        appState.minifluxAPIKey == null ||
+        appState.errorOnMinifluxAuth == true) {
+      return const NoSettings();
+    } else if (appState.errorString != '' && appState.newError) {
+      return const ErrorWidget();
+    } else {
+      return const BodyNewsList();
+    }
+  }
+}
+
+// this widget replace the normal news list widget, if a error occurs
+// it will pop up an error dialog and then show the normal news list in the background.
+class ErrorWidget extends StatelessWidget {
+  const ErrorWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    Timer.run(() {
+      showErrorDialog(context).then((value) {
+        appState.newError = false;
         appState.refreshView();
-      }
-      return false;
+      });
     });
-
-    // if there is no new error (network error), set the errorOnMicrofluxAuth flag
-    if (!appState.newError) {
-      appState.errorOnMicrofluxAuth = !authCheck;
-    }
-
-    // check if there are no authentication errors before start syncing
-    if (!appState.errorOnMicrofluxAuth && appState.errorString == '') {
-      // at first toggle news as read so that this news don't show up in the next step
-      await toggleNewsAsRead(http.Client(), appState)
-          .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'toggleNewsAsRead',
-            logMessage: 'Caught an error in toggleNewsAsRead function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-      });
-
-      // fetch only unread news from the miniflux server
-      NewsList newNews =
-          await fetchNews(http.Client(), appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchNews',
-            logMessage: 'Caught an error in fetchNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return NewsList(news: [], newsCount: 0);
-      });
-
-      // if news in this app are marked as unread, but don't exist in the list from
-      // the previous step, this news must be marked as read by another app.
-      // So this step mark news, which are not fetched privious as read in this app.
-      await markNotFetchedNewsAsRead(newNews, appState)
-          .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'markNotFetchedNewsAsRead',
-            logMessage: 'Caught an error in markNotFetchedNewsAsRead function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return 0;
-      });
-
-      // insert or update the fetched news in the database
-      await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'insertNewsInDB',
-            logMessage: 'Caught an error in insertNewsInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return 0;
-      });
-
-      // after inserting the news, renew the list view with the new news
-      setState(() {
-        scrollPosition = 0;
-      });
-      appState.storage.write(
-          key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
-      appState.newsList =
-          queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-        waitUntilNewsListBuild().whenComplete(
-          () {
-            // set the view position to the top of the new list
-            setState(() {
-              itemScrollController.jumpTo(index: 0);
-            });
-          },
-        );
-      });
-
-      // renew the news count of "All News"
-      if (context.mounted) {
-        await renewAllNewsCount(appState, context).onError(
-            (error, stackTrace) => FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'renewAllNewsCount',
-                logMessage: 'Caught an error in renewAllNewsCount function!',
-                errorMessage: error.toString(),
-                level: LogLevel.ERROR));
-      }
-
-      // remove the native spalsh after updating the list view
-      FlutterNativeSplash.remove();
-
-      // fetch the categories from the miniflux server
-      Categories newCategories =
-          await fetchCategorieInformation(http.Client(), appState)
-              .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchCategorieInformation',
-            logMessage:
-                'Caught an error in fetchCategorieInformation function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return Future<Categories>.value(Categories(categories: []));
-      });
-
-      // insert or update the fetched cateegories in the database
-      await insertCategoriesInDB(newCategories, appState)
-          .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'insertCategoriesInDB',
-            logMessage: 'Caught an error in insertCategoriesInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return 0;
-      });
-
-      // fetch the starred news (read or unread) from the miniflux server
-      NewsList starredNews = await fetchStarredNews(http.Client(), appState)
-          .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'fetchStarredNews',
-            logMessage: 'Caught an error in fetchStarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return NewsList(news: [], newsCount: 0);
-      });
-
-      // update the previous fetched starred news in the database
-      // maybe some other app has marked a news a starred
-      await updateStarredNewsInDB(starredNews, appState)
-          .onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'updateStarredNewsInDB',
-            logMessage: 'Caught an error in updateStarredNewsInDB function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return 0;
-      });
-
-      // delete all unstarred news depending the defined limit in the settings,
-      await cleanUnstarredNews(appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'cleanUnstarredNews',
-            logMessage: 'Caught an error in cleanUnstarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-      });
-
-      // delete all starred news depending the defines limit in the settings
-      await cleanStarredNews(appState).onError((error, stackTrace) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'cleanStarredNews',
-            logMessage: 'Caught an error in cleanStarredNews function!',
-            errorMessage: error.toString(),
-            level: LogLevel.ERROR);
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-      });
-
-      // update the starred (bookmarked) counter of news
-      try {
-        if (context.mounted) {
-          updateStarredCounter(appState, context);
-        }
-      } catch (e) {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'updateStarredCounter',
-            logMessage: 'Caught an error in updateStarredCounter function!',
-            errorMessage: e.toString(),
-            level: LogLevel.ERROR);
-        if (context.mounted) {
-          if (appState.errorString !=
-              AppLocalizations.of(context)!.databaseError) {
-            appState.errorString = AppLocalizations.of(context)!.databaseError;
-            appState.newError = true;
-            appState.refreshView();
-          }
-        }
-      }
-
-      // fetch the updated categories from the db and genereate the categorie view
-      if (context.mounted) {
-        appState.categorieList = queryCategoriesFromDB(appState, context);
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (newNews.newsCount > 0 && appState.feedIDs == null) {
-          // if new news exists and the "All News" categorie is selected,
-          // set the list view position to the top
-          itemScrollController.jumpTo(index: 0);
-        } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
-          if (appState.feedIDs?.first == -1) {
-            // if new news exists and the "Bookmarked" categorie is selected,
-            // set the list view position to the top
-            itemScrollController.jumpTo(index: 0);
-          }
-        }
-      });
-      // end the sync process
-      setState(() {
-        syncProcess = false;
-      });
-    } else {
-      // end the sync process
-      setState(() {
-        syncProcess = false;
-      });
-      // remove the native spalsh after updating the list view
-      FlutterNativeSplash.remove();
-    }
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'syncNews',
-        logMessage: 'Finished syncing with miniflux server.',
-        level: LogLevel.INFO);
+    return const BodyNewsList();
   }
 
-  // the list view widget with news (main view)
-  Widget newsListWidget(BuildContext context, FluxNewsState appState) {
-    var getData = FutureBuilder<List<News>>(
-      future: appState.newsList,
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-          case ConnectionState.waiting:
-          default:
-            if (snapshot.hasError) {
-              return const SizedBox.shrink();
-            } else {
-              return snapshot.data == null
-                  // show empty dialog if list is null
-                  ? Center(
-                      child: Text(
-                      AppLocalizations.of(context)!.noNewEntries,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ))
-                  // show empty dialog if list is empty
-                  : snapshot.data!.isEmpty
-                      ? Center(
-                          child: Text(
-                          AppLocalizations.of(context)!.noNewEntries,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ))
-                      // otherwise create list view with ScrollablePositionedList
-                      // to save scroll position persistant
-                      : Stack(children: [
-                          NotificationListener<ScrollEndNotification>(
-                            child: ScrollablePositionedList.builder(
-                                key: const PageStorageKey<String>('NewsList'),
-                                itemCount: snapshot.data!.length,
-                                itemScrollController: itemScrollController,
-                                itemPositionsListener: itemPositionsListener,
-                                initialScrollIndex: scrollPosition,
-                                itemBuilder: (context, i) {
-                                  return showNewsCard(
-                                      snapshot.data![i], appState, context);
-                                }),
-                            // on ScrollNotification set news as read on scrollover if activated
-                            onNotification: (ScrollNotification scrollInfo) {
-                              final metrics = scrollInfo.metrics;
-                              // check if set read on scrollover is activated in settings
-                              if (appState.markAsReadOnScrollOver) {
-                                // if the sync is in progress, no news should marked as read
-                                if (syncProcess == false) {
-                                  // set all news as read if the list reached the bottom (the edge)
-                                  if (metrics.atEdge) {
-                                    // to ensure that the list is at the bottom edge and not at the top edge
-                                    // the amount of scrolled pixels must be greater 0
-                                    if (metrics.pixels > 0) {
-                                      // iterade through the whole news list and mark news as read
-                                      for (int i = 0;
-                                          i < snapshot.data!.length;
-                                          i++) {
-                                        try {
-                                          updateNewsStatusInDB(
-                                              snapshot.data![i].newsID,
-                                              FluxNewsState.readNewsStatus,
-                                              appState);
-                                        } catch (e) {
-                                          FlutterLogs.logThis(
-                                              tag: FluxNewsState.logTag,
-                                              subTag: 'updateNewsStatusInDB',
-                                              logMessage:
-                                                  'Caught an error in updateNewsStatusInDB function!',
-                                              errorMessage: e.toString(),
-                                              level: LogLevel.ERROR);
-                                          if (appState.errorString !=
-                                              AppLocalizations.of(context)!
-                                                  .databaseError) {
-                                            appState.errorString =
-                                                AppLocalizations.of(context)!
-                                                    .databaseError;
-                                            appState.newError = true;
-                                            appState.refreshView();
-                                          }
-                                        }
-                                        setState(() {
-                                          snapshot.data![i].status =
-                                              FluxNewsState.readNewsStatus;
-                                        });
-                                      }
-                                      // set the scroll position back to the top of the list
-                                      setState(() {
-                                        scrollPosition = 0;
-                                      });
-                                    }
-                                  } else {
-                                    // if the list doesn't reached the bottom,
-                                    // mark the news which got scrolled over as read.
-                                    // Iterate through the news list from start
-                                    // to the actual position and mark them as read
-                                    for (int i = 0; i < scrollPosition; i++) {
-                                      try {
-                                        updateNewsStatusInDB(
-                                            snapshot.data![i].newsID,
-                                            FluxNewsState.readNewsStatus,
-                                            appState);
-                                      } catch (e) {
-                                        FlutterLogs.logThis(
-                                            tag: FluxNewsState.logTag,
-                                            subTag: 'updateNewsStatusInDB',
-                                            logMessage:
-                                                'Caught an error in updateNewsStatusInDB function!',
-                                            errorMessage: e.toString(),
-                                            level: LogLevel.ERROR);
-                                        if (appState.errorString !=
-                                            AppLocalizations.of(context)!
-                                                .databaseError) {
-                                          appState.errorString =
-                                              AppLocalizations.of(context)!
-                                                  .databaseError;
-                                          appState.newError = true;
-                                          appState.refreshView();
-                                        }
-                                      }
-                                      setState(() {
-                                        snapshot.data![i].status =
-                                            FluxNewsState.readNewsStatus;
-                                      });
-                                    }
-                                  }
-                                }
-                                // mark the list as updated to recalculate the news count
-                                setState(() {
-                                  listUpdated = true;
-                                });
-                              }
-                              // return always false to ensure the processing of the notification
-                              return false;
-                            },
-                          ),
-                          // get the actual scroll position on stop scrolling
-                          positionsView,
-                        ]);
-            }
-        }
-      },
-    );
-    return getData;
-  }
-
-  // this function is needed because after the news are fetched from the database,
-  // the list of news need some time to be generated.
-  // only after the list is generated, we can set the scroll position of the list
-  // we can check that the list is generated if the scroll controller is attached to the list.
-  // so the function checks the scroll controller and if it's not attached it waits 1 millisecond
-  // and check then again if the scrol controller is attached.
-  // With callaing this function as await, we can wait with the further processing
-  // on finishing with the list build.
-  Future<void> waitUntilNewsListBuild() async {
-    final completer = Completer();
-    if (!itemScrollController.isAttached) {
-      await Future.delayed(const Duration(milliseconds: 1));
-      return waitUntilNewsListBuild();
-    } else {
-      completer.complete();
-    }
-    return completer.future;
-  }
-
-  // here we define the appearance of the news cards
-  Widget showNewsCard(News news, FluxNewsState appState, BuildContext context) {
-    return Card(
-      // inkwell is used for the onTab and onLongPress functions
-      child: InkWell(
-        splashFactory: NoSplash.splashFactory,
-        onTap: () async {
-          // on tab we update the status of the news to read and open the news
-          try {
-            updateNewsStatusInDB(
-                news.newsID, FluxNewsState.readNewsStatus, appState);
-          } catch (e) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'updateNewsStatusInDB',
-                logMessage: 'Caught an error in updateNewsStatusInDB function!',
-                errorMessage: e.toString(),
-                level: LogLevel.ERROR);
-            if (context.mounted) {
-              if (appState.errorString !=
-                  AppLocalizations.of(context)!.databaseError) {
-                appState.errorString =
-                    AppLocalizations.of(context)!.databaseError;
-                appState.newError = true;
-                appState.refreshView();
-              }
-            }
-          }
-          // update the status to read on the news list and notify the categories
-          // to recalculate the news count
-          setState(() {
-            news.status = FluxNewsState.readNewsStatus;
-            listUpdated = true;
+  // this is the error dialog which is shown, if a error occurs.
+  // to prevent the multi pop up (f.e. if the internet connection ist lost
+  // not every function which require the connection should raise a pop up)
+  // we check if the error which is shown is a new error.
+  Future showErrorDialog(BuildContext context) async {
+    FluxNewsState appState = context.read<FluxNewsState>();
+    if (appState.newError) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.error),
+              content: Text(appState.errorString),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.ok),
+                ),
+              ],
+            );
           });
+    }
+  }
+}
 
-          // there are difference on launching the news url between the platforms
-          // on android and ios it's preferred to check first if the link can be opened
-          // by an installed app, if not then the link is opened in a webview within the app.
-          // on macos we open directly the webview within the app.
-          if (Platform.isAndroid) {
-            AndroidUrlLauncher.launchUrl(context, news.url);
-          } else if (Platform.isIOS) {
-            // catch exception if no app is installed to handle the url
-            final bool nativeAppLaunchSucceeded = await launchUrl(
-              Uri.parse(news.url),
-              mode: LaunchMode.externalNonBrowserApplication,
-            );
-            //if exception is catched, open the app in webview
-            if (!nativeAppLaunchSucceeded) {
-              await launchUrl(
-                Uri.parse(news.url),
-                mode: LaunchMode.inAppWebView,
-              );
-            }
-          } else if (Platform.isMacOS) {
-            await launchUrl(
-              Uri.parse(news.url),
-              mode: LaunchMode.externalApplication,
-            );
-          }
-        },
-        // on tap get the actual position of the list on tab
-        // to place the context menu on this position
-        onTapDown: (details) {
-          getTapPosition(details);
-        },
-        // after tab on longpress, open the context menu on the tab position
-        onLongPress: () {
-          showContextMenu(news);
-        },
-        child: Column(
-          children: [
-            // load the news image if present
-            news.getImageURL() != FluxNewsState.noImageUrlString
-                ? SizedBox(
-                    // for tablets we need to restrict the width,
-                    // becaus the fit of the image is set to cover
-                    height: appState.isTablet ? 400 : 175,
-                    width: double.infinity,
-                    // the CachedNetworkImage is used to load the images
-                    child: CachedNetworkImage(
-                      imageUrl: news.getImageURL(),
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.error,
-                      ),
-                    ),
-                  )
-                // if no image is available, shrink this widget
-                : const SizedBox.shrink(),
-            // the title and additional infos are presented within a ListTile
-            // the Opacity decide between read and unread news
-            ListTile(
-                title: Opacity(
-                  opacity:
-                      news.status == FluxNewsState.unreadNewsStatus ? 1.0 : 0.6,
-                  child: Text(
-                    news.title,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 2.0,
-                  ),
-                  child: Row(
-                    children: [
-                      news.status == FluxNewsState.unreadNewsStatus
-                          ? const Padding(
-                              padding: EdgeInsets.only(right: 15.0),
-                              child: SizedBox(
-                                  width: 15,
-                                  height: 35,
-                                  child: Icon(
-                                    Icons.fiber_new,
-                                  )))
-                          : const SizedBox.shrink(),
-                      appState.showFeedIcons
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 5.0),
-                              child: news.getFeedIcon(16.0, context, appState))
-                          : const SizedBox.shrink(),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 0.0),
-                        child: Opacity(
-                          opacity: news.status == FluxNewsState.unreadNewsStatus
-                              ? 1.0
-                              : 0.6,
-                          child: Text(
-                            news.feedTitel,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Opacity(
-                          opacity: news.status == FluxNewsState.unreadNewsStatus
-                              ? 1.0
-                              : 0.6,
-                          child: Text(
-                            appState.dateFormat
-                                .format(news.getPublishingDate()),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 40,
-                        height: 35,
-                        child: Opacity(
-                          opacity: news.status == FluxNewsState.unreadNewsStatus
-                              ? 1.0
-                              : 0.6,
-                          child: news.starred
-                              ? const Icon(
-                                  Icons.star,
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            // here is the news text, the Opacity decide between read and unread
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
-              child: Opacity(
-                opacity:
-                    news.status == FluxNewsState.unreadNewsStatus ? 1.0 : 0.6,
-                child: Text(
-                  news.getText(),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
+// this widget replace the news list view, if the miniflux server settings
+// are not set or not correct.
+class NoSettings extends StatelessWidget {
+  const NoSettings({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            AppLocalizations.of(context)!.settingsNotSet,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 40, top: 20.0, right: 30),
+            child: Text(
+              AppLocalizations.of(context)!.provideMinifluxCredentials,
+              style: const TextStyle(
+                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
+}
 
-  // here is a helper function to get the first visible widget in the list view
-  // this widget is used as the limit on marking prevoius news as read.
-  // so every item of the list, which is prevoius to the first visible
-  // will be marked as read.
-  Widget get positionsView => ValueListenableBuilder<Iterable<ItemPosition>>(
-        valueListenable: itemPositionsListener.itemPositions,
-        builder: (context, positions, child) {
-          FluxNewsState appState = context.watch<FluxNewsState>();
-          int? firstItem;
-          if (positions.isNotEmpty) {
-            firstItem = positions
-                .where((ItemPosition position) => position.itemTrailingEdge > 0)
-                .reduce((ItemPosition first, ItemPosition position) =>
-                    position.itemTrailingEdge < first.itemTrailingEdge
-                        ? position
-                        : first)
-                .index;
-          }
-          if (firstItem == null) {
-            scrollPosition = 0;
-            appState.storage.write(
-                key: FluxNewsState.secureStorageSavedScrollPositionKey,
-                value: '0');
-          } else {
-            scrollPosition = firstItem;
-            appState.storage.write(
-                key: FluxNewsState.secureStorageSavedScrollPositionKey,
-                value: firstItem.toString());
-          }
+class AppBarTitle extends StatelessWidget {
+  const AppBarTitle({
+    super.key,
+  });
 
-          return const SizedBox.shrink();
-        },
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
+    FluxNewsState appState = context.watch<FluxNewsState>();
+
+    // set the app bar title depending on the chosen category to show in list view
+
+    if (appState.multilineAppBarText) {
+      // this is the part where the news count is added as an extra line to the app bar title
+      return Builder(builder: (BuildContext context) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              appState.appBarText,
+              maxLines: 2,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            Text(
+              '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
+              style: Theme.of(context).textTheme.labelMedium,
+            )
+          ],
+        );
+      });
+    } else {
+      // this is the part without the news count as an extra line
+      return Text(
+        appState.appBarText,
+        maxLines: 2,
+        textAlign: TextAlign.start,
+        style: Theme.of(context).textTheme.titleLarge,
       );
-
-  // this is a helper function to get the actual tab position
-  // this position is used to open the context menue of the news card here
-  void getTapPosition(TapDownDetails details) {
-    final RenderBox referenceBox = context.findRenderObject() as RenderBox;
-    setState(() {
-      _tapPosition = referenceBox.globalToLocal(details.globalPosition);
-    });
-  }
-
-  // here is the function to show the context menu
-  // this menu give the option to mark a news as read or unread and to bookmark a news
-  void showContextMenu(News news) async {
-    final RenderObject? overlay =
-        Overlay.of(context).context.findRenderObject();
-    FluxNewsState appState = context.read<FluxNewsState>();
-
-    final result = await showMenu(
-        context: context,
-        // open the menu on the prevoius recognized position
-        position: RelativeRect.fromRect(
-            Rect.fromLTWH(_tapPosition.dx, _tapPosition.dy, 100, 100),
-            Rect.fromLTWH(0, 0, overlay!.paintBounds.size.width,
-                overlay.paintBounds.size.height)),
-        items: [
-          // bokmark the news
-          PopupMenuItem(
-            value: FluxNewsState.contextMenueBookmarkString,
-            child: news.starred
-                ? Row(children: [
-                    const Icon(
-                      Icons.star_outline,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5),
-                      child: Text(AppLocalizations.of(context)!.deleteBookmark),
-                    )
-                  ])
-                : Row(children: [
-                    const Icon(
-                      Icons.star,
-                    ),
-                    Padding(
-                        padding: const EdgeInsets.only(left: 5),
-                        child: Text(AppLocalizations.of(context)!.addBookmark)),
-                  ]),
-          ),
-          // mark the news as unread or read
-          PopupMenuItem(
-            value: news.status == FluxNewsState.readNewsStatus
-                ? FluxNewsState.unreadNewsStatus
-                : FluxNewsState.readNewsStatus,
-            child: Row(children: [
-              Icon(
-                news.status == FluxNewsState.readNewsStatus
-                    ? Icons.fiber_new
-                    : Icons.remove_red_eye_outlined,
-              ),
-              Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: news.status == FluxNewsState.readNewsStatus
-                      ? Text(AppLocalizations.of(context)!.markAsUnread)
-                      : Text(AppLocalizations.of(context)!.markAsRead)),
-            ]),
-          ),
-        ]);
-    switch (result) {
-      case FluxNewsState.contextMenueBookmarkString:
-        // switch between bookmarked or not bookmarked depending on the prevoius status
-        if (news.starred) {
-          setState(() {
-            news.starred = false;
-          });
-        } else {
-          setState(() {
-            news.starred = true;
-          });
-        }
-
-        // toggle the news as bookmarked or not bookmarked at the miniflux server
-        await toggleBookmark(http.Client(), appState, news)
-            .onError((error, stackTrace) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'toggleBookmark',
-              logMessage: 'Caught an error in toggleBookmark function!',
-              errorMessage: error.toString(),
-              level: LogLevel.ERROR);
-          if (appState.errorString !=
-              AppLocalizations.of(context)!.communicateionMinifluxError) {
-            appState.errorString =
-                AppLocalizations.of(context)!.communicateionMinifluxError;
-            appState.newError = true;
-            appState.refreshView();
-          }
-        });
-
-        // update the bookmarked status in the database
-        try {
-          updateNewsStarredStatusInDB(news.newsID, news.starred, appState);
-          if (context.mounted) {
-            updateStarredCounter(appState, context);
-          }
-        } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStarredStatusInDB',
-              logMessage:
-                  'Caught an error in updateNewsStarredStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.databaseError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-        }
-
-        // if we are in the bookmarked categorie, reload the list of bookmarked news
-        // after the prevoius change, because there happened changes to this list.
-        if (context.mounted) {
-          if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
-            appState.feedIDs = [-1];
-            appState.newsList =
-                queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-              waitUntilNewsListBuild().whenComplete(
-                () {
-                  setState(() {
-                    itemScrollController.jumpTo(index: 0);
-                  });
-                },
-              );
-            });
-            appState.refreshView();
-          } else {
-            appState.refreshView();
-          }
-        }
-        break;
-      case FluxNewsState.unreadNewsStatus:
-        // mark a news as unread, update the news unread status in database
-        try {
-          updateNewsStatusInDB(
-              news.newsID, FluxNewsState.unreadNewsStatus, appState);
-        } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.databaseError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-        }
-        // set the new unread status to the news object and toggle the recalculation
-        // of the news counter
-        setState(() {
-          news.status = FluxNewsState.unreadNewsStatus;
-          listUpdated = true;
-        });
-        break;
-      case FluxNewsState.readNewsStatus:
-        // mark a news as read, update the news read status in database
-        try {
-          updateNewsStatusInDB(
-              news.newsID, FluxNewsState.readNewsStatus, appState);
-        } catch (e) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'updateNewsStatusInDB',
-              logMessage: 'Caught an error in updateNewsStatusInDB function!',
-              errorMessage: e.toString(),
-              level: LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.databaseError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-        }
-        // set the new read status to the news object and toggle the recalculation
-        // of the news counter
-        setState(() {
-          news.status = FluxNewsState.readNewsStatus;
-          listUpdated = true;
-        });
-        break;
     }
   }
+}
 
-  // this is the categorie list widget, it is shown in the drawer
-  // or on the left side in landscape or tablet mode.
-  Widget categorieListWidget(BuildContext context, FluxNewsState appState) {
+class CategoryList extends StatelessWidget {
+  const CategoryList({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
+    FluxNewsState appState = context.watch<FluxNewsState>();
     var getData = FutureBuilder<Categories>(
-        future: appState.categorieList,
+        future: appState.categoryList,
         builder: (context, snapshot) {
-          if (listUpdated) {
-            snapshot.data?.renewNewsCount(appState);
+          if (appCounterState.listUpdated) {
+            appCounterState.listUpdated = false;
+            snapshot.data?.renewNewsCount(appState, context);
             renewAllNewsCount(appState, context);
           }
           switch (snapshot.connectionState) {
             case ConnectionState.none:
             case ConnectionState.waiting:
-              // we add a static categorie of "All News" to the list of categories
-              // while wating on the news list from the miniflux server
+              // we add a static category of "All News" to the list of categories
+              // while waiting on the news list from the miniflux server
               return ListTile(
                 leading: const Icon(
                   Icons.home,
@@ -1464,10 +634,10 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                 return snapshot.data != null
                     ? snapshot.data!.categories.isEmpty
                         ? const SizedBox.shrink()
-                        // if the categorie list from the miniflux server is not null
-                        // and not empty, we show the categorie list
+                        // if the category list from the miniflux server is not null
+                        // and not empty, we show the category list
                         : Column(children: [
-                            // we add a static categorie of "All News" to the list of categories
+                            // we add a static category of "All News" to the list of categories
                             ListTile(
                               leading: const Icon(
                                 Icons.home,
@@ -1477,19 +647,17 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               trailing: Text(
-                                '${appState.allNewsCount}',
+                                '${appCounterState.allNewsCount}',
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               onTap: () {
-                                allNewsOnClick(appState);
+                                allNewsOnClick(appState, context);
                               },
                             ),
-                            // we iterate over the categorie list
-                            for (Categorie categorie
-                                in snapshot.data!.categories)
-                              showCategorie(
-                                  categorie, appState, snapshot.data!),
-                            // we add a static categorie of "Bookmarked" to the list of categories
+                            // we iterate over the category list
+                            for (Category category in snapshot.data!.categories)
+                              showCategory(category, snapshot.data!, context),
+                            // we add a static category of "Bookmarked" to the list of categories
                             ListTile(
                               leading: const Icon(
                                 Icons.star,
@@ -1499,11 +667,11 @@ class FluxNewsBodyState extends State<FluxNewsBody>
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               trailing: Text(
-                                '${appState.starredCount}',
+                                '${appCounterState.starredCount}',
                                 style: Theme.of(context).textTheme.labelLarge,
                               ),
                               onTap: () {
-                                bookmarkedOnClick(appState);
+                                bookmarkedOnClick(appState, context);
                               },
                             ),
                           ])
@@ -1514,96 +682,108 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     return getData;
   }
 
-  // here we style the categorie ExpansionTile
+  // here we style the category ExpansionTile
   // we use a ExpansionTile because we want to show the according feeds
-  // of this categorie in the expanded state.
-  Widget showCategorie(
-      Categorie categorie, FluxNewsState appState, Categories categories) {
+  // of this category in the expanded state.
+  Widget showCategory(
+      Category category, Categories categories, BuildContext context) {
+    FluxNewsState appState = context.read<FluxNewsState>();
     return ExpansionTile(
       // we want the expansion arrow at the beginning,
       // because we want to show the news count at the end of this row.
       controlAffinity: ListTileControlAffinity.leading,
-      // make the title clickable to select this categorie as the news view
+      // make the title clickable to select this category as the news view
       title: InkWell(
         child: Text(
-          categorie.title,
+          category.title,
           style: Theme.of(context).textTheme.labelLarge,
         ),
         onTap: () {
-          categorieOnClick(categorie, appState, categories);
+          categoryOnClick(category, appState, categories, context);
         },
       ),
-      // show the news count of this categorie
+      // show the news count of this category
       trailing: InkWell(
         child: Text(
-          '${categorie.newsCount}',
+          '${category.newsCount}',
           style: Theme.of(context).textTheme.labelLarge,
         ),
         onTap: () {
-          categorieOnClick(categorie, appState, categories);
+          categoryOnClick(category, appState, categories, context);
         },
       ),
-      // iterate over the according feeds of the categorie
+      // iterate over the according feeds of the category
       children: [
-        for (Feed feed in categorie.feeds) showFeed(feed, appState, categories)
+        for (Feed feed in category.feeds)
+          FeedTile(feed: feed, categories: categories)
       ],
     );
   }
 
-  // if the title of the categorie is clicked,
-  // we want all the news of this categorie in the news view.
-  Future<void> categorieOnClick(Categorie categorie, FluxNewsState appState,
-      Categories categories) async {
-    // add the according feeds of this categorie as a filter
-    appState.feedIDs = categorie.getFeedIDs();
+  // if the title of the category is clicked,
+  // we want all the news of this category in the news view.
+  Future<void> categoryOnClick(Category category, FluxNewsState appState,
+      Categories categories, BuildContext context) async {
+    // add the according feeds of this category as a filter
+    appState.feedIDs = category.getFeedIDs();
     // reload the news list with the new filter
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-      waitUntilNewsListBuild().whenComplete(
+      waitUntilNewsListBuild(appState).whenComplete(
         () {
-          setState(() {
-            itemScrollController.jumpTo(index: 0);
-          });
+          appState.itemScrollController.jumpTo(index: 0);
         },
       );
     });
-    // set the categorie title as app bar title
-    // and update the newscount in the app bar, if the function is activated.
-    appState.appBarText = categorie.title;
-    categories.renewNewsCount(appState);
+    // set the category title as app bar title
+    // and update the news count in the app bar, if the function is activated.
+    appState.appBarText = category.title;
+    categories.renewNewsCount(appState, context);
     // update the view after changing the values
     appState.refreshView();
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // if the "All News" ListTile is clicked,
   // we want all the news in the news view.
-  Future<void> allNewsOnClick(FluxNewsState appState) async {
-    // empty the feedIds which are used as a filter if a specific categorie is selected
+  Future<void> allNewsOnClick(
+      FluxNewsState appState, BuildContext context) async {
+    // empty the feedIds which are used as a filter if a specific category is selected
     appState.feedIDs = null;
     // reload the news list with the new filter (empty)
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-      waitUntilNewsListBuild().whenComplete(
+      waitUntilNewsListBuild(appState).whenComplete(
         () {
-          setState(() {
-            itemScrollController.jumpTo(index: 0);
-          });
+          appState.itemScrollController.jumpTo(index: 0);
         },
       );
     });
     // set the "All News" title as app bar title
-    // and update the newscount in the app bar, if the function is activated.
+    // and update the news count in the app bar, if the function is activated.
     appState.appBarText = AppLocalizations.of(context)!.allNews;
     if (context.mounted) {
       renewAllNewsCount(appState, context);
     }
     // update the view after changing the values
     appState.refreshView();
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
-  // if the "Bokkmarked" ListTile is clicked,
-  // we want all the bokkmakred news in the news view.
-  Future<void> bookmarkedOnClick(FluxNewsState appState) async {
+  // if the "Bookmarked" ListTile is clicked,
+  // we want all the bookmarked news in the news view.
+  Future<void> bookmarkedOnClick(
+      FluxNewsState appState, BuildContext context) async {
     // set the feedIDs filter to -1 to only load bookmarked news
     // -1 is a impossible feed id of a regular miniflux feed,
     // so we use it to decide between all news (feedIds = null)
@@ -1612,33 +792,51 @@ class FluxNewsBodyState extends State<FluxNewsBody>
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-      waitUntilNewsListBuild().whenComplete(
+      waitUntilNewsListBuild(appState).whenComplete(
         () {
-          setState(() {
-            itemScrollController.jumpTo(index: 0);
-          });
+          appState.itemScrollController.jumpTo(index: 0);
         },
       );
     });
     // set the "Bookmarked" title as app bar title
-    // and update the newscount in the app bar, if the function is activated.
+    // and update the news count in the app bar, if the function is activated.
     appState.appBarText = AppLocalizations.of(context)!.bookmarked;
     if (context.mounted) {
       updateStarredCounter(appState, context);
     }
     // update the view after changing the values
     appState.refreshView();
+
+    // if the device is a smartphone, close the drawer after selecting a category or feed
+    // if the device is a tablet, no drawer is used.
+    if (!appState.isTablet) {
+      Navigator.pop(context);
+    }
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
-  Widget showFeed(Feed feed, FluxNewsState appState, Categories categories) {
+}
+
+class FeedTile extends StatelessWidget {
+  const FeedTile({
+    super.key,
+    required this.feed,
+    required this.categories,
+  });
+
+  final Feed feed;
+  final Categories categories;
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
     return ListTile(
       title: Padding(
         padding: const EdgeInsets.only(left: 8.0),
         child: Row(children: [
           // if the option is enabled, show the feed icon
           appState.showFeedIcons
-              ? feed.getFeedIcon(16.0, context, appState)
+              ? feed.getFeedIcon(16.0, context)
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.only(left: 10.0),
@@ -1661,85 +859,55 @@ class FluxNewsBodyState extends State<FluxNewsBody>
         // reload the news list with the new filter
         appState.newsList =
             queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-          waitUntilNewsListBuild().whenComplete(
+          waitUntilNewsListBuild(appState).whenComplete(
             () {
-              setState(() {
-                itemScrollController.jumpTo(index: 0);
-              });
+              context
+                  .read<FluxNewsState>()
+                  .itemScrollController
+                  .jumpTo(index: 0);
             },
           );
         });
         // set the feed title as app bar title
-        // and update the newscount in the app bar, if the function is activated.
+        // and update the news count in the app bar, if the function is activated.
         appState.appBarText = feed.title;
-        categories.renewNewsCount(appState);
+        categories.renewNewsCount(appState, context);
         // update the view after changing the values
         appState.refreshView();
+
+        // if the device is a smartphone, close the drawer after selecting a category or feed
+        // if the device is a tablet, no drawer is used.
+        if (!appState.isTablet) {
+          Navigator.pop(context);
+        }
       },
     );
   }
+}
 
-  // this widget replace the news list view, if the miniflux server settings
-  // are not set or not correct.
-  Widget noSettingsWidget(BuildContext context, FluxNewsState appState) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.settingsNotSet,
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 40, top: 20.0, right: 30),
-            child: Text(
-              AppLocalizations.of(context)!.provideMinifluxCredentials,
-              style: const TextStyle(
-                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          )
-        ],
-      ),
-    );
+class FluxNewsBodyStatefulWrapper extends StatefulWidget {
+  final Function onInit;
+  final Widget child;
+  const FluxNewsBodyStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
+  @override
+  FluxNewsBodyState createState() => FluxNewsBodyState();
+}
+
+// extend class to save actual scroll state of the list view
+class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
+    with AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper> {
+  // init the state of FluxNewsBody to load the config and the data on startup
+  @override
+  void initState() {
+    widget.onInit();
+    super.initState();
   }
 
-  // this widget replace the normal news list widget, if a error occurs
-  // it will pop up an error dialog and then show the normal news list in the background.
-  Widget errorWidget(BuildContext context, FluxNewsState appState) {
-    Timer.run(() {
-      showErrorDialog(context, appState).then((value) {
-        appState.newError = false;
-        appState.refreshView();
-      });
-    });
-    return newsListWidget(context, appState);
-  }
-
-  // this is the error dialog which is shown, if a error occours.
-  // to prevent the multi pop up (f.e. if the internet connection ist lost
-  // not every function which require the connection should raise a pop up)
-  // we check if the error which is shown is a new error.
-  Future showErrorDialog(BuildContext context, FluxNewsState appState) async {
-    if (appState.newError) {
-      AlertDialog alertDialog = AlertDialog(
-        title: Text(AppLocalizations.of(context)!.error),
-        content: Text(appState.errorString),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(AppLocalizations.of(context)!.ok),
-          ),
-        ],
-      );
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return alertDialog;
-          });
-    }
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 
   @override

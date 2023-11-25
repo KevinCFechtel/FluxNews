@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -24,47 +25,26 @@ Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // init the log system
-  await FlutterLogs.initLogs(
-      logLevelsEnabled: [
-        LogLevel.INFO,
-        LogLevel.WARNING,
-        LogLevel.ERROR,
-        LogLevel.SEVERE
-      ],
-      timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
-      directoryStructure: DirectoryStructure.FOR_DATE,
-      logFileExtension: LogFileExtension.LOG,
-      logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
-      logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
-      debugFileOperations: false,
-      isDebuggable: kDebugMode ? true : false);
+  if (Platform.isAndroid || Platform.isIOS) {
+    // init the log system
+    await FlutterLogs.initLogs(
+        logLevelsEnabled: [
+          LogLevel.INFO,
+          LogLevel.WARNING,
+          LogLevel.ERROR,
+          LogLevel.SEVERE
+        ],
+        timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
+        directoryStructure: DirectoryStructure.FOR_DATE,
+        logFileExtension: LogFileExtension.LOG,
+        logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
+        logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
+        debugFileOperations: false,
+        isDebuggable: kDebugMode ? true : false);
 
-  // clear the logs on startup
-  FlutterLogs.clearLogs();
-
-  // init the log export channel to receive the exported log file name and share the file
-  FlutterLogs.channel.setMethodCallHandler((call) async {
-    if (call.method == 'logsExported') {
-      String zipName = call.arguments.toString();
-
-      Directory? externalDirectory;
-
-      if (Platform.isIOS) {
-        externalDirectory = await getApplicationDocumentsDirectory();
-      } else {
-        externalDirectory = await getExternalStorageDirectory();
-      }
-
-      File file = File("${externalDirectory!.path}/$zipName");
-      if (file.existsSync()) {
-        Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
-      } else {
-        FlutterLogs.logError(
-            FluxNewsState.logTag, "existsSync", "File not found in storage.");
-      }
-    }
-  });
+    // clear the logs on startup
+    FlutterLogs.clearLogs();
+  }
 
   runApp(const SDTFScope(child: FluxNews()));
 }
@@ -74,17 +54,55 @@ class FluxNews extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // init the log export channel to receive the exported log file name and share the file
+    FlutterLogs.channel.setMethodCallHandler((call) async {
+      if (call.method == 'logsExported') {
+        String zipName = call.arguments.toString();
+
+        Directory? externalDirectory;
+
+        if (Platform.isIOS) {
+          externalDirectory = await getApplicationDocumentsDirectory();
+        } else {
+          externalDirectory = await getExternalStorageDirectory();
+        }
+
+        File file = File("${externalDirectory!.path}/$zipName");
+        if (file.existsSync()) {
+          if (Platform.isAndroid) {
+            Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+          } else {
+            if (context.mounted) {
+              final box = context.findRenderObject() as RenderBox?;
+              Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")],
+                  sharePositionOrigin:
+                      box!.localToGlobal(Offset.zero) & const Size(100, 100));
+            }
+          }
+        } else {
+          if (Platform.isAndroid || Platform.isIOS) {
+            FlutterLogs.logError(FluxNewsState.logTag, "existsSync",
+                "File not found in storage.");
+          }
+        }
+      }
+    });
     return ChangeNotifierProvider(
       create: (context) => FluxNewsState(),
       builder: (context, child) {
-        return getMaterialApp(context);
+        return ChangeNotifierProvider(
+          create: (context) => FluxNewsCounterState(),
+          builder: (context, child) {
+            return getMaterialApp(context);
+          },
+        );
       },
     );
   }
 
   Widget getMaterialApp(BuildContext context) {
-    FluxNewsState appState = context.watch<FluxNewsState>();
-    // read the dateformat of the system and assign it to the date format variable
+    FluxNewsState appState = context.read<FluxNewsState>();
+    // read the date format of the system and assign it to the date format variable
     final mediumDatePattern =
         SystemDateTimeFormat.of(context).mediumDatePattern;
     final timePattern = SystemDateTimeFormat.of(context).timePattern;
@@ -170,7 +188,8 @@ class FluxNews extends StatelessWidget {
               labelMedium: TextStyle(color: Colors.black54),
               titleMedium: TextStyle(
                   color: Colors.black54, fontWeight: FontWeight.normal),
-            )),
+            ),
+            disabledColor: Colors.black26),
         // define the theme for the dark theme
         darkTheme: ThemeData(
             useMaterial3: true,
@@ -220,7 +239,8 @@ class FluxNews extends StatelessWidget {
               labelMedium: TextStyle(color: Colors.white70),
               titleMedium: TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.normal),
-            )),
+            ),
+            disabledColor: Colors.white30),
         // define routes for main view (FluxNewsBody), settings view and search view
         routes: {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),

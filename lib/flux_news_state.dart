@@ -1,9 +1,9 @@
-import 'dart:io';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/logging.dart';
 import 'package:intl/intl.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
@@ -24,13 +24,13 @@ sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
     );
 
 class FluxNewsState extends ChangeNotifier {
-  // init the persistant flutter secure storage
+  // init the persistent flutter secure storage
   final storage =
       sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.2.1';
+  static const String applicationVersion = '1.3.2';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';
@@ -39,7 +39,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
-  static const int amountOfNewlyCatchedNews = 100;
+  static const int amountOfNewlyCaughtNews = 100;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
   static const String syncedSyncStatus = 'synced';
@@ -55,6 +55,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String sortOrderOldestFirstString = 'Oldest first';
   static const String secureStorageMinifluxURLKey = 'minifluxURL';
   static const String secureStorageMinifluxAPIKey = 'minifluxAPIKey';
+  static const String secureStorageMinifluxVersionKey = 'minifluxVersionKey';
   static const String secureStorageBrightnessModeKey = 'brightnessMode';
   static const String secureStorageSortOrderKey = 'sortOrder';
   static const String secureStorageSavedScrollPositionKey =
@@ -78,16 +79,36 @@ class FluxNewsState extends ChangeNotifier {
   static const String httpMinifluxAcceptHeaderString = 'Accept';
   static const String httpMinifluxContentTypeHeaderString = 'Content-Type';
   static const String noImageUrlString = 'NoImageUrl';
-  static const String contextMenueBookmarkString = 'bookmark';
+  static const String contextMenuBookmarkString = 'bookmark';
+  static const String contextMenuSaveString = 'saveToThirdParty';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
+  static const int minifluxSaveMinVersion = 2047;
+  static const String urlValidationRegex =
+      r'https:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
 
   // vars for lists of main view
   late Future<List<News>> newsList;
-  late Future<Categories> categorieList;
+  late Future<Categories> categoryList;
   List<int>? feedIDs;
+
+  // vars for main view
+  bool syncProcess = false;
+  late Offset tapPosition;
+  int scrollPosition = 0;
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+
+  // vars for search view
+  Future<List<News>> searchNewsList = Future<List<News>>.value([]);
+  final TextEditingController searchController = TextEditingController();
+  final ItemScrollController searchItemScrollController =
+      ItemScrollController();
+  final ItemPositionsListener searchItemPositionsListener =
+      ItemPositionsListener.create();
 
   // var for formatting the date depending on locale settings
   DateFormat dateFormat = DateFormat('M/d/yy HH:mm');
@@ -95,7 +116,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for error handling
   String errorString = '';
   bool newError = false;
-  bool errorOnMicrofluxAuth = false;
+  bool errorOnMinifluxAuth = false;
 
   // vars for debugging
   bool debugMode = false;
@@ -106,6 +127,8 @@ class FluxNewsState extends ChangeNotifier {
   // vars for miniflux server connection
   String? minifluxURL;
   String? minifluxAPIKey;
+  String? minifluxVersionString;
+  int minifluxVersionInt = 0;
 
   // vars for settings
   Map<String, String> storageValues = {};
@@ -121,15 +144,10 @@ class FluxNewsState extends ChangeNotifier {
   bool showFeedIcons = false;
   List<KeyValueRecordType>? recordTypesBrightnessMode;
 
-  // vars for counter
-  int starredCount = 0;
-  int allNewsCount = 0;
-  int appBarNewsCount = 0;
-
   // vars for app bar text
   String appBarText = '';
 
-  // vars for detectiing device orientation and device type
+  // vars for detecting device orientation and device type
   bool isTablet = false;
   Orientation orientation = Orientation.portrait;
 
@@ -138,25 +156,13 @@ class FluxNewsState extends ChangeNotifier {
 
   // init the database connection
   Future<Database> initializeDB() async {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'initializeDB',
-        logMessage: 'Starting initializeDB',
-        level: LogLevel.INFO);
+    logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
     String path = await getDatabasesPath();
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'initializeDB',
-        logMessage: 'Finished initializeDB',
-        level: LogLevel.INFO);
+    logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
       path_package.join(path, FluxNewsState.databasePathString),
       onCreate: (db, version) async {
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'initializeDB',
-            logMessage: 'Starting creating DB',
-            level: LogLevel.INFO);
+        logThis('initializeDB', 'Starting creating DB', LogLevel.INFO);
         // create the table news
         await db.execute('DROP TABLE IF EXISTS news');
         await db.execute(
@@ -177,7 +183,7 @@ class FluxNewsState extends ChangeNotifier {
         // create the table categories
         await db.execute('DROP TABLE IF EXISTS categories');
         await db.execute(
-          '''CREATE TABLE categories(categorieID INTEGER PRIMARY KEY, 
+          '''CREATE TABLE categories(categoryID INTEGER PRIMARY KEY, 
                           title TEXT)''',
         );
         // create the table feeds
@@ -189,7 +195,7 @@ class FluxNewsState extends ChangeNotifier {
                           icon BLOB,
                           iconMimeType TEXT,
                           newsCount INTEGER,
-                          categorieID INTEGER)''',
+                          categoryID INTEGER)''',
         );
         // create the table attachments
         await db.execute('DROP TABLE IF EXISTS attachments');
@@ -199,28 +205,14 @@ class FluxNewsState extends ChangeNotifier {
                           attachmentURL TEXT, 
                           attachmentMimeType TEXT)''',
         );
-        FlutterLogs.logThis(
-            tag: FluxNewsState.logTag,
-            subTag: 'initializeDB',
-            logMessage: 'Finished creating DB',
-            level: LogLevel.INFO);
+
+        logThis('initializeDB', 'Finished creating DB', LogLevel.INFO);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'upgradeDB',
-              logMessage: 'Starting upgrading DB',
-              level: LogLevel.INFO);
-        }
+        logThis('upgradeDB', 'Starting upgrading DB', LogLevel.INFO);
         if (oldVersion == 1) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logThis(
-                tag: FluxNewsState.logTag,
-                subTag: 'upgradeDB',
-                logMessage: 'Updgrading DB from version 1',
-                level: LogLevel.INFO);
-          }
+          logThis('upgradeDB', 'Upgrading DB from version 1', LogLevel.INFO);
+
           // create the table attachments
           await db.execute('DROP TABLE IF EXISTS attachments');
           await db.execute(
@@ -229,47 +221,49 @@ class FluxNewsState extends ChangeNotifier {
                           attachmentURL TEXT, 
                           attachmentMimeType TEXT)''',
           );
+          await db.execute(
+            '''ALTER TABLE "categories" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
+          await db.execute(
+            '''ALTER TABLE "feeds" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
+        } else if (oldVersion == 2) {
+          logThis('upgradeDB', 'Upgrading DB from version 2', LogLevel.INFO);
+
+          await db.execute(
+            '''ALTER TABLE "categories" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
+          await db.execute(
+            '''ALTER TABLE "feeds" 
+                     RENAME COLUMN "categorieID" TO "categoryID";''',
+          );
         }
-        if (Platform.isAndroid || Platform.isIOS) {
-          FlutterLogs.logThis(
-              tag: FluxNewsState.logTag,
-              subTag: 'upgradeDB',
-              logMessage: 'Finished upgrading DB',
-              level: LogLevel.INFO);
-        }
+        logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 2,
+      version: 3,
     );
   }
 
-  // read the persistant saved configuration
-  Future<bool> readConfigValues(BuildContext context) async {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfigValues',
-        logMessage: 'Starting read config values',
-        level: LogLevel.INFO);
+  // read the persistent saved configuration
+  Future<bool> readConfigValues() async {
+    logThis('readConfigValues', 'Starting read config values', LogLevel.INFO);
 
     storageValues = await storage.readAll();
 
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfigValues',
-        logMessage: 'Finished read config values',
-        level: LogLevel.INFO);
+    logThis('readConfigValues', 'Finished read config values', LogLevel.INFO);
 
     return true;
   }
 
-  // init the persistant saved configuration
+  // init the persistent saved configuration
   bool readConfig(BuildContext context) {
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfig',
-        logMessage: 'Starting read config',
-        level: LogLevel.INFO);
+    logThis('readConfig', 'Starting read config', LogLevel.INFO);
+
     // init the maps for the brightness mode list
-    // this maps use the key as the technical string and the value as the displey name
+    // this maps use the key as the technical string and the value as the display name
     if (context.mounted) {
       recordTypesBrightnessMode = <KeyValueRecordType>[
         KeyValueRecordType(
@@ -297,19 +291,27 @@ class FluxNewsState extends ChangeNotifier {
     minifluxURL = null;
     minifluxAPIKey = null;
 
-    // iterate through all persistant saved values to assign the saved config
+    // iterate through all persistent saved values to assign the saved config
     storageValues.forEach((key, value) {
-      // assign the miniflux server url from persistant saved config
+      // assign the miniflux server url from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxURLKey) {
         minifluxURL = value;
       }
 
-      // assign the miniflux server api key from persistant saved config
+      // assign the miniflux server api key from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxAPIKey) {
         minifluxAPIKey = value;
       }
 
-      // assign the brightness mode selection from persistant saved config
+      // assign the miniflux server version from persistent saved config
+      if (key == FluxNewsState.secureStorageMinifluxVersionKey) {
+        if (value != '') {
+          minifluxVersionInt = int.parse(value.replaceAll(".", ""));
+          minifluxVersionString = value;
+        }
+      }
+
+      // assign the brightness mode selection from persistent saved config
       if (key == FluxNewsState.secureStorageBrightnessModeKey) {
         if (value != '') {
           brightnessMode = value;
@@ -321,21 +323,21 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the sort order of the news list from persistant saved config
+      // assign the sort order of the news list from persistent saved config
       if (key == FluxNewsState.secureStorageSortOrderKey) {
         if (value != '') {
           sortOrder = value;
         }
       }
 
-      // assign the scroll position from persistant saved config
+      // assign the scroll position from persistent saved config
       if (key == FluxNewsState.secureStorageSavedScrollPositionKey) {
         if (value != '') {
           savedScrollPosition = int.parse(value);
         }
       }
 
-      // assign the mark as read on scrollover selection from persistant saved config
+      // assign the mark as read on scroll over selection from persistent saved config
       if (key == FluxNewsState.secureStorageMarkAsReadOnScrollOverKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -346,7 +348,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the sync on startup selection from persistant saved config
+      // assign the sync on startup selection from persistent saved config
       if (key == FluxNewsState.secureStorageSyncOnStartKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -357,7 +359,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the multiline app bar title selection from persistant saved config
+      // assign the multiline app bar title selection from persistent saved config
       if (key == FluxNewsState.secureStorageMultilineAppBarTextKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -368,7 +370,7 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
-      // assign the show feed icon selection from persistant saved config
+      // assign the show feed icon selection from persistent saved config
       if (key == FluxNewsState.secureStorageShowFeedIconsTextKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -380,28 +382,28 @@ class FluxNewsState extends ChangeNotifier {
       }
 
       // assign the shown news status selection (all news or only unread)
-      // from persistant saved config
+      // from persistent saved config
       if (key == FluxNewsState.secureStorageNewsStatusKey) {
         if (value != '') {
           newsStatus = value;
         }
       }
 
-      // assign the amount of saves news selection from persistant saved config
+      // assign the amount of saves news selection from persistent saved config
       if (key == FluxNewsState.secureStorageAmountOfSavedNewsKey) {
         if (value != '') {
           amountOfSavedNews = int.parse(value);
         }
       }
 
-      // assign the amount of saved bookmarked news selection from persistant saved config
+      // assign the amount of saved bookmarked news selection from persistent saved config
       if (key == FluxNewsState.secureStorageAmountOfSavedStarredNewsKey) {
         if (value != '') {
           amountOfSavedStarredNews = int.parse(value);
         }
       }
 
-      // assign the debug mode selection from persistant saved config
+      // assign the debug mode selection from persistent saved config
       if (key == FluxNewsState.secureStorageDebugModeKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
@@ -412,11 +414,8 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
     });
-    FlutterLogs.logThis(
-        tag: FluxNewsState.logTag,
-        subTag: 'readConfig',
-        logMessage: 'Finished read config',
-        level: LogLevel.INFO);
+    logThis('readConfig', 'Finished read config', LogLevel.INFO);
+
     // return true if everything was read
     return true;
   }
