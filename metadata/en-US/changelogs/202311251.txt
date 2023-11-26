@@ -1,0 +1,2 @@
+Added a new tablet layout
+Added save to third party service function

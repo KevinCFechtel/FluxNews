@@ -1,0 +1,3 @@
+A simple Newsreader for the miniflux backend (https://miniflux.app).
+This newsreader sync with the miniflux server api.
+It supports light and dark mode, mark articles as read on scrollover and open articles preferred in an already installed app.
