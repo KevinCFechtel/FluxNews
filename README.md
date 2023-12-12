@@ -11,6 +11,9 @@ It supports light and dark mode, mark articles as read on scrollover and open ar
 
 ## Download
 
+
+[<img alt="Get it on F-Droid" height="100" src="./screenshots/fdroid.png">](https://f-droid.org/packages/de.circle_dev.flux_news/)
+
 [<img alt="Get it on Google Play" height="100" src="./screenshots/googleplay.png">](https://play.google.com/store/apps/details?id=de.circle_dev.flux_news)
 
 ## Getting Started
