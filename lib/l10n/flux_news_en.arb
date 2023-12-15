@@ -54,5 +54,6 @@
     "deleteLocalCache": "Clear local news storage",
     "deleteLocalCacheDialogTitle": "Delete local cache",
     "deleteLocalCacheDialogContent": "Do you really want to delete the local news storage?",
-    "contextSaveButton" : "Save news to third party"
+    "contextSaveButton" : "Save news to third party",
+    "insecureMinifluxURL" : "An insecure connection to miniflux is used!"
 }

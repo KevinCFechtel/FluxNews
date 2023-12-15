@@ -127,6 +127,16 @@ class Settings extends StatelessWidget {
                           )
                         : const SizedBox.shrink()
                     : const SizedBox.shrink(),
+                appState.insecureMinifluxURL ? Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                  child: Text(
+                    AppLocalizations.of(context)!.insecureMinifluxURL,
+                    style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ) : const SizedBox.shrink(),
                 // this headline indicate the general settings section
                 Padding(
                   padding: const EdgeInsets.only(top: 50.0, bottom: 12),
@@ -617,6 +627,7 @@ class Settings extends StatelessWidget {
                               .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
+                          appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
                           appState.refreshView();
                         }
                         appState.storage.write(
@@ -644,6 +655,7 @@ class Settings extends StatelessWidget {
                               .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
+                          appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
                           appState.refreshView();
                         }
                         appState.storage.write(

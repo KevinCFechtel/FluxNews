@@ -87,7 +87,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
   static const int minifluxSaveMinVersion = 2047;
   static const String urlValidationRegex =
-      r'https:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
+      r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
 
   // vars for lists of main view
   late Future<List<News>> newsList;
@@ -129,6 +129,7 @@ class FluxNewsState extends ChangeNotifier {
   String? minifluxAPIKey;
   String? minifluxVersionString;
   int minifluxVersionInt = 0;
+  bool insecureMinifluxURL = false;
 
   // vars for settings
   Map<String, String> storageValues = {};
@@ -296,6 +297,9 @@ class FluxNewsState extends ChangeNotifier {
       // assign the miniflux server url from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxURLKey) {
         minifluxURL = value;
+        if(minifluxURL != null) {
+          insecureMinifluxURL = !minifluxURL!.toLowerCase().startsWith('https');
+        }
       }
 
       // assign the miniflux server api key from persistent saved config
