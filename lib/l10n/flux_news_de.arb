@@ -54,5 +54,6 @@
     "deleteLocalCache": "Lösche den lokalen Nachrichtenspeicher",
     "deleteLocalCacheDialogTitle": "Nachrichtenspeicher löschen",
     "deleteLocalCacheDialogContent": "Möchten Sie wirklich den lokalen Nachrichtenspeicher löschen?",
-    "contextSaveButton" : "Nachricht in\nDrittsystem speichern"
+    "contextSaveButton" : "Nachricht in\nDrittsystem speichern",
+    "insecureMinifluxURL" : "Es wird eine unsichere Verbindung zu miniflux benutzt!"
 }
