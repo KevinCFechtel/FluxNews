@@ -760,7 +760,7 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
         Version minifluxVersion =
             Version.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
         appState.minifluxVersionInt =
-            int.parse(minifluxVersion.version.replaceAll(".", ""));
+            int.parse(minifluxVersion.version.replaceAll(RegExp(r'\D'), ''));
         appState.minifluxVersionString = minifluxVersion.version;
         appState.storage.write(
             key: FluxNewsState.secureStorageMinifluxVersionKey,
@@ -783,7 +783,7 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
             headers: header);
         if (response.statusCode == 200) {
           appState.minifluxVersionInt =
-              int.parse(response.body.replaceAll(".", ""));
+              int.parse(response.body.replaceAll(RegExp(r'\D'), ''));
           appState.minifluxVersionString = response.body;
           appState.storage.write(
               key: FluxNewsState.secureStorageMinifluxVersionKey,
