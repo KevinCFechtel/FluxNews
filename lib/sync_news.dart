@@ -302,10 +302,10 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 Future<void> waitUntilNewsListBuild(FluxNewsState appState) async {
   final completer = Completer();
   if (appState.itemScrollController.isAttached) {
+    completer.complete();
+  } else {
     await Future.delayed(const Duration(milliseconds: 1));
     return waitUntilNewsListBuild(appState);
-  } else {
-    completer.complete();
   }
   return completer.future;
 }
