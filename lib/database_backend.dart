@@ -37,8 +37,13 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
         // insert the first image attachment of the news in the attachments db
         Attachment imageAttachment = news.getFirstImageAttachment();
         if (imageAttachment.attachmentID != -1) {
-          result =
-              await appState.db!.insert('attachments', imageAttachment.toMap());
+          resultSelect = await appState.db!
+              .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?', [imageAttachment.attachmentID]);
+          // if the attachment is not present, insert the attachment
+          if (resultSelect.isEmpty) {
+            result =
+            await appState.db!.insert('attachments', imageAttachment.toMap());
+          }
         }
 
         if (appState.debugMode) {

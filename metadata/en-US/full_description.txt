@@ -1,3 +1,13 @@
-A simple Newsreader for the miniflux backend (https://miniflux.app).
+A simple Newsreader for the miniflux backend (https://miniflux.app) 2.0.29+.
 This newsreader sync with the miniflux server api.
-It supports light and dark mode, mark articles as read on scrollover and open articles preferred in an already installed app.
+
+Features:
+Dark Mode: Flux News has a material design inspired look in either light or dark themes.
+Search for articles: Search for articles at the miniflux backend
+Mark as read on scroll over: Articles are marked as read when you scroll over them.
+Open articles in an app: Articles can be opened in an already installed app.
+Order articles by date: Articles can be ordered by date ascending or descanding.
+Filter articles by status: Articles can be filtered by status (unread, read, starred).
+Filter articles by category: Articles can be filtered by category.
+Filter articles by feed: Articles can be filtered by feed.
+Send an article to third-party services if enabled.
