@@ -67,6 +67,8 @@ moment, the following is supported:
 **Filter articles by category:** Articles can be filtered by category.
 
 **Filter articles by feed:** Articles can be filtered by feed.
+
+**Send an article:** Articles can be send to third-party services if enabled.
 <br/><br/>
 
 ## Limitations:
