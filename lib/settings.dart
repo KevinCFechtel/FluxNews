@@ -24,7 +24,11 @@ class Settings extends StatelessWidget {
     200,
     500,
     1000,
-    2000
+    2000,
+    5000,
+    10000,
+    50000,
+    100000
   ];
   static const List<int> amountOfSavedStarredNewsList = <int>[
     50,
@@ -32,7 +36,11 @@ class Settings extends StatelessWidget {
     200,
     500,
     1000,
-    2000
+    2000,
+    5000,
+    10000,
+    50000,
+    100000
   ];
 
   @override

@@ -13,6 +13,9 @@ import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
   logThis('syncNews', 'Start syncing with miniflux server.', LogLevel.INFO);
+  // Debugging execution time with many news
+  //final stopwatch = Stopwatch()..start();
+
 
   // this is the part where the app syncs with the miniflux server
   // to reduce the appearance of error pop ups,
@@ -296,6 +299,8 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // remove the native splash after updating the list view
     FlutterNativeSplash.remove();
   }
+  // Debugging execution time with many news
+  //print('doSomething() executed in ${stopwatch.elapsed}');
   logThis('syncNews', 'Finished syncing with miniflux server.', LogLevel.INFO);
 }
 

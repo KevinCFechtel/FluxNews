@@ -39,7 +39,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
-  static const int amountOfNewlyCaughtNews = 100;
+  static const int amountOfNewlyCaughtNews = 10000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
   static const String syncedSyncStatus = 'synced';

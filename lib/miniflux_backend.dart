@@ -99,7 +99,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
           if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
             logThis(
                 'fetchNews',
-                '${tempNewsList.newsCount - listSize} news remaining',
+                '${tempNewsList.newsCount - offset} news remaining',
                 LogLevel.INFO);
           } else {
             logThis('fetchNews', '0 news remaining', LogLevel.INFO);
