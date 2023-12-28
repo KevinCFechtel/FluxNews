@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:http/http.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -68,51 +69,71 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
     // of news provided by a response.
     // this is a kind of pagination.
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-      // request the unread news with the parameter, how many news should be provided by
-      // one response (limit) and the amount of news which should be skipped, because
-      // they were already transferred (offset).
-      final response = await client.get(
-          Uri.parse(
-              '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
-          headers: header);
-      // only the response code 200 ist ok
-      if (response.statusCode == 200) {
-        // parse the body to the temp news list
-        tempNewsList =
-            NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-        if (appState.debugMode) {
-          logThis('fetchNews', '${tempNewsList.news.length} news fetched',
-              LogLevel.INFO);
-        }
-        // add the temp news list to the returning news list
-        newsList.news.addAll(tempNewsList.news);
-        // add the news count to the returning news list (this is the same count for every iteration)
-        newsList.newsCount = tempNewsList.newsCount;
-        // update the list size to the count of the provided news
-        listSize = tempNewsList.news.length;
-        // update the offset to the maximum of provided news for each request,
-        // multiplied by a incrementing counter
-        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
-        // increment the offset counter for the next run
-        offsetCounter++;
-        if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-            logThis(
-                'fetchNews',
-                '${tempNewsList.newsCount - offset} news remaining',
+      if(!appState.longSyncAborted) {
+        // request the unread news with the parameter, how many news should be provided by
+        // one response (limit) and the amount of news which should be skipped, because
+        // they were already transferred (offset).
+        final response = await client.get(
+            Uri.parse(
+                '${appState
+                    .minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState
+                    .amountOfNewlyCaughtNews}&offset=$offset'),
+            headers: header);
+        // only the response code 200 ist ok
+        if (response.statusCode == 200) {
+          // parse the body to the temp news list
+          tempNewsList =
+              NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+          if (appState.debugMode) {
+            logThis('fetchNews', '${tempNewsList.news.length} news fetched',
                 LogLevel.INFO);
-          } else {
-            logThis('fetchNews', '0 news remaining', LogLevel.INFO);
           }
+          // add the temp news list to the returning news list
+          newsList.news.addAll(tempNewsList.news);
+          // check if the execution time will took very long
+          if (tempNewsList.newsCount > 30000) {
+            if (!appState.longSync && !appState.longSyncAlerted) {
+              // remove the native splash after updating the list view
+              FlutterNativeSplash.remove();
+              appState.longSync = true;
+              appState.refreshView();
+            }
+          }
+          // add the news count to the returning news list (this is the same count for every iteration)
+          newsList.newsCount = tempNewsList.newsCount;
+          // update the list size to the count of the provided news
+          listSize = tempNewsList.news.length;
+          // update the offset to the maximum of provided news for each request,
+          // multiplied by a incrementing counter
+          offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
+          // increment the offset counter for the next run
+          offsetCounter++;
+          if (appState.debugMode) {
+            if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
+              logThis(
+                  'fetchNews',
+                  '${tempNewsList.newsCount - offset} news remaining',
+                  LogLevel.INFO);
+            } else {
+              logThis('fetchNews', '0 news remaining', LogLevel.INFO);
+            }
+          }
+        } else {
+          logThis(
+              'fetchNews',
+              'Got unexpected response from miniflux server: ${response
+                  .statusCode} for unread news',
+              LogLevel.ERROR);
+
+          // if the status is not 200, throw a exception
+          throw FluxNewsState.httpUnexpectedResponseErrorString;
         }
       } else {
-        logThis(
-            'fetchNews',
-            'Got unexpected response from miniflux server: ${response.statusCode} for unread news',
-            LogLevel.ERROR);
-
-        // if the status is not 200, throw a exception
-        throw FluxNewsState.httpUnexpectedResponseErrorString;
+        listSize = 0;
+        if (appState.debugMode) {
+          logThis('fetchNews', 'Aborted fetching news from miniflux server',
+              LogLevel.INFO);
+        }
       }
     }
     if (appState.debugMode) {

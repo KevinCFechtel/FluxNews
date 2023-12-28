@@ -115,9 +115,7 @@ class Settings extends StatelessWidget {
                     '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  onTap: () {
-                    _showURLEditDialog(context, appState);
-                  },
+
                 ),
                 // it there is an error on the authentication of the miniflux server
                 // there is shown a error message
@@ -738,6 +736,7 @@ class Settings extends StatelessWidget {
                             appState)
                         .onError((error, stackTrace) => false);
                     appState.errorOnMinifluxAuth = !authCheck;
+                    appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
                     appState.refreshView();
                   }
 

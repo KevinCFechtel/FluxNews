@@ -221,6 +221,8 @@ class News {
             String.fromCharCodes(icon!),
             width: size,
             height: size,
+            colorFilter:
+                const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
           );
         }
       } else {
