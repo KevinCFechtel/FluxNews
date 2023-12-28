@@ -27,58 +27,73 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
   if (appState.db != null) {
     // iterate over the new news
     for (News news in newsList.news) {
-      // check if news already present in the database
-      resultSelect = await appState.db!
-          .rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
-      // if the news is not present, insert the news
-      if (resultSelect.isEmpty) {
-        result = await appState.db!.insert('news', news.toMap());
+      if (!appState.longSyncAborted) {
+        // check if news already present in the database
+        resultSelect = await appState.db!
+            .rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
+        // if the news is not present, insert the news
+        if (resultSelect.isEmpty) {
+          result = await appState.db!.insert('news', news.toMap());
 
-        // insert the first image attachment of the news in the attachments db
-        Attachment imageAttachment = news.getFirstImageAttachment();
-        if (imageAttachment.attachmentID != -1) {
-          resultSelect = await appState.db!
-              .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?', [imageAttachment.attachmentID]);
-          // if the attachment is not present, insert the attachment
-          if (resultSelect.isEmpty) {
-            result =
-            await appState.db!.insert('attachments', imageAttachment.toMap());
+          // insert the first image attachment of the news in the attachments db
+          Attachment imageAttachment = news.getFirstImageAttachment();
+          if (imageAttachment.attachmentID != -1) {
+            resultSelect = await appState.db!
+                .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?',
+                [imageAttachment.attachmentID]);
+            // if the attachment is not present, insert the attachment
+            if (resultSelect.isEmpty) {
+              result =
+              await appState.db!.insert('attachments', imageAttachment.toMap());
+            }
           }
-        }
 
-        if (appState.debugMode) {
-          logThis('insertNewsInDB',
-              'Inserted news with id ${news.newsID} in DB', LogLevel.INFO);
-        }
-      } else {
-        // if the news is present, update the status of the news
-        result = await appState.db!.rawUpdate(
-            'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
-            [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
-        if (appState.debugMode) {
-          logThis('insertNewsInDB', 'Updated news with id ${news.newsID} in DB',
-              LogLevel.INFO);
-        }
-      }
-      // check if the feed of the news already contains an icon
-      resultSelect = await appState.db!
-          .rawQuery('SELECT icon FROM feeds WHERE feedID = ?', [news.feedID]);
-      if (resultSelect.isEmpty) {
-        // if the feed doesn't contain a icon, fetch the icon from the miniflux server
-        FeedIcon? icon =
-            await getFeedIcon(http.Client(), appState, news.feedID);
-        if (icon != null) {
-          // if the icon is successfully fetched, insert the icon into the database
-          result = await appState.db!.rawInsert(
-              'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
-              [news.feedID, news.feedTitle, icon.getIcon(), icon.iconMimeType]);
+          if (appState.debugMode) {
+            logThis('insertNewsInDB',
+                'Inserted news with id ${news.newsID} in DB', LogLevel.INFO);
+          }
+        } else {
+          // if the news is present, update the status of the news
+          result = await appState.db!.rawUpdate(
+              'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
+              [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
           if (appState.debugMode) {
             logThis(
-                'insertNewsInDB',
-                'Inserted Feed icon for feed with id ${news.feedID} in DB',
+                'insertNewsInDB', 'Updated news with id ${news.newsID} in DB',
                 LogLevel.INFO);
           }
         }
+        // check if the feed of the news already contains an icon
+        resultSelect = await appState.db!
+            .rawQuery('SELECT icon FROM feeds WHERE feedID = ?', [news.feedID]);
+        if (resultSelect.isEmpty) {
+          // if the feed doesn't contain a icon, fetch the icon from the miniflux server
+          FeedIcon? icon =
+          await getFeedIcon(http.Client(), appState, news.feedID);
+          if (icon != null) {
+            // if the icon is successfully fetched, insert the icon into the database
+            result = await appState.db!.rawInsert(
+                'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
+                [
+                  news.feedID,
+                  news.feedTitle,
+                  icon.getIcon(),
+                  icon.iconMimeType
+                ]);
+            if (appState.debugMode) {
+              logThis(
+                  'insertNewsInDB',
+                  'Inserted Feed icon for feed with id ${news.feedID} in DB',
+                  LogLevel.INFO);
+            }
+          }
+        }
+      } else {
+        if (appState.debugMode) {
+          logThis('insertNewsInDB', 'Aborted inserting news in DB',
+              LogLevel.INFO);
+        }
+        break;
       }
     }
   }
@@ -169,21 +184,29 @@ Future<int> markNotFetchedNewsAsRead(
     }
 
     for (News news in existingNews) {
-      // check if the news exists in the unread news list which was fetched.
-      if (!newNewsList.news.any((item) => item.newsID == news.newsID)) {
-        // if not, mark the news as read
-        result = await appState.db!.rawUpdate(
-            'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?', [
-          FluxNewsState.readNewsStatus,
-          FluxNewsState.syncedSyncStatus,
-          news.newsID
-        ]);
+      if (!appState.longSyncAborted) {
+        // check if the news exists in the unread news list which was fetched.
+        if (!newNewsList.news.any((item) => item.newsID == news.newsID)) {
+          // if not, mark the news as read
+          result = await appState.db!.rawUpdate(
+              'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?', [
+            FluxNewsState.readNewsStatus,
+            FluxNewsState.syncedSyncStatus,
+            news.newsID
+          ]);
+          if (appState.debugMode) {
+            logThis(
+                'markNotFetchedNewsAsRead',
+                'Marked the news with id ${news.newsID} as read in DB',
+                LogLevel.INFO);
+          }
+        }
+      } else {
         if (appState.debugMode) {
-          logThis(
-              'markNotFetchedNewsAsRead',
-              'Marked the news with id ${news.newsID} as read in DB',
+          logThis('markNotFetchedNewsAsRead', 'Aborted marking not fetched news as read',
               LogLevel.INFO);
         }
+        break;
       }
     }
   }

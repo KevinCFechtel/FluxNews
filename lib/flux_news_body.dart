@@ -553,8 +553,8 @@ class LongSyncWidget extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(
-              title: Text(AppLocalizations.of(context)!.error),
-              content: const Text("This will took very Long...."),
+              title: Text(AppLocalizations.of(context)!.longSyncHeader),
+              content: Text(AppLocalizations.of(context)!.longSyncWarning),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
