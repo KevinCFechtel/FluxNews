@@ -147,6 +147,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
             );
           });
     }
+
     if(!appState.longSyncAborted) {
       // renew the news count of "All News"
       if (context.mounted) {
@@ -329,6 +330,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         }
       });
     }
+
     // end the sync process
     appState.syncProcess = false;
     appState.refreshView();

@@ -39,7 +39,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
-  static const int amountOfNewlyCaughtNews = 10000;
+  static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
   static const String syncedSyncStatus = 'synced';
@@ -86,6 +86,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String logsWriteDirectoryName = "FluxNewsLogs";
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
   static const int minifluxSaveMinVersion = 2047;
+  static const int amountForTooManyNews = 10000;
+  static const int amountForLongNewsSync = 1000;
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
 
@@ -117,6 +119,7 @@ class FluxNewsState extends ChangeNotifier {
   String errorString = '';
   bool newError = false;
   bool errorOnMinifluxAuth = false;
+  bool tooManyNews = false;
   bool longSync = false;
   bool longSyncAlerted = false;
   bool longSyncAborted = false;

@@ -470,6 +470,8 @@ class FluxNewsBodyList extends StatelessWidget {
       return const ErrorWidget();
     } else if (appState.longSync) {
       return const LongSyncWidget();
+    } else if (appState.tooManyNews) {
+      return const TooManyNewsWidget();
     } else {
       return const BodyNewsList();
     }
@@ -522,8 +524,8 @@ class ErrorWidget extends StatelessWidget {
   }
 }
 
-// this widget replace the normal news list widget, if a error occurs
-// it will pop up an error dialog and then show the normal news list in the background.
+// this widget replace the normal news list widget, if a long sync is detected
+// it will pop up an long sync warning dialog and then show the normal news list in the background.
 class LongSyncWidget extends StatelessWidget {
   const LongSyncWidget({
     super.key,
@@ -564,6 +566,53 @@ class LongSyncWidget extends StatelessWidget {
                   },
                   child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.red),),
                 ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.ok),
+                ),
+
+              ],
+            );
+          });
+    }
+  }
+}
+
+// this widget replace the normal news list widget, if a long sync is detected
+// it will pop up an long sync warning dialog and then show the normal news list in the background.
+class TooManyNewsWidget extends StatelessWidget {
+  const TooManyNewsWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    Timer.run(() {
+      showTooManyNewsWidget(context).then((value) {
+        appState.tooManyNews = false;
+        appState.refreshView();
+      });
+    });
+    return const BodyNewsList();
+  }
+
+  // this is the error dialog which is shown, if a error occurs.
+  // to prevent the multi pop up (f.e. if the internet connection ist lost
+  // not every function which require the connection should raise a pop up)
+  // we check if the error which is shown is a new error.
+  Future showTooManyNewsWidget(BuildContext context) async {
+    FluxNewsState appState = context.read<FluxNewsState>();
+    if (appState.tooManyNews) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.error),
+              content: Text(AppLocalizations.of(context)!.tooManyNews),
+              actions: <Widget>[
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context, FluxNewsState.cancelContextString);

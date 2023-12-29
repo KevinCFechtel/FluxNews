@@ -91,13 +91,22 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
           // add the temp news list to the returning news list
           newsList.news.addAll(tempNewsList.news);
           // check if the execution time will took very long
-          if (tempNewsList.newsCount > 30000) {
-            if (!appState.longSync && !appState.longSyncAlerted) {
+          if (tempNewsList.newsCount > FluxNewsState.amountForLongNewsSync) {
+            if(tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
               // remove the native splash after updating the list view
               FlutterNativeSplash.remove();
-              appState.longSync = true;
+              appState.tooManyNews = true;
+              appState.longSyncAborted = true;
               appState.refreshView();
+            } else {
+              if (!appState.longSync && !appState.longSyncAlerted) {
+                // remove the native splash after updating the list view
+                FlutterNativeSplash.remove();
+                appState.longSync = true;
+                appState.refreshView();
+              }
             }
+
           }
           // add the news count to the returning news list (this is the same count for every iteration)
           newsList.newsCount = tempNewsList.newsCount;

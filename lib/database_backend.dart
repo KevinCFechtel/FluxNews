@@ -25,77 +25,77 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
   List<Map<String, Object?>> resultSelect = [];
   // prevent a uninitialized database
   if (appState.db != null) {
-    // iterate over the new news
-    for (News news in newsList.news) {
-      if (!appState.longSyncAborted) {
-        // check if news already present in the database
-        resultSelect = await appState.db!
-            .rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
-        // if the news is not present, insert the news
-        if (resultSelect.isEmpty) {
-          result = await appState.db!.insert('news', news.toMap());
+      Batch batch = appState.db!.batch();
+      // iterate over the new news
+      for (News news in newsList.news) {
+        if (!appState.longSyncAborted) {
+          // check if news already present in the database
+          resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
+          // if the news is not present, insert the news
+          if (resultSelect.isEmpty) {
+            batch.insert('news', news.toMap());
 
-          // insert the first image attachment of the news in the attachments db
-          Attachment imageAttachment = news.getFirstImageAttachment();
-          if (imageAttachment.attachmentID != -1) {
-            resultSelect = await appState.db!
-                .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?',
-                [imageAttachment.attachmentID]);
-            // if the attachment is not present, insert the attachment
-            if (resultSelect.isEmpty) {
-              result =
-              await appState.db!.insert('attachments', imageAttachment.toMap());
+            // insert the first image attachment of the news in the attachments db
+            Attachment imageAttachment = news.getFirstImageAttachment();
+            if (imageAttachment.attachmentID != -1) {
+              resultSelect = await appState.db!.rawQuery('SELECT * FROM attachments WHERE attachmentID = ?',
+                  [imageAttachment.attachmentID]);
+              // if the attachment is not present, insert the attachment
+              if (resultSelect.isEmpty) {
+                batch.insert('attachments', imageAttachment.toMap());
+              }
             }
-          }
 
-          if (appState.debugMode) {
-            logThis('insertNewsInDB',
-                'Inserted news with id ${news.newsID} in DB', LogLevel.INFO);
-          }
-        } else {
-          // if the news is present, update the status of the news
-          result = await appState.db!.rawUpdate(
-              'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
-              [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
-          if (appState.debugMode) {
-            logThis(
-                'insertNewsInDB', 'Updated news with id ${news.newsID} in DB',
-                LogLevel.INFO);
-          }
-        }
-        // check if the feed of the news already contains an icon
-        resultSelect = await appState.db!
-            .rawQuery('SELECT icon FROM feeds WHERE feedID = ?', [news.feedID]);
-        if (resultSelect.isEmpty) {
-          // if the feed doesn't contain a icon, fetch the icon from the miniflux server
-          FeedIcon? icon =
-          await getFeedIcon(http.Client(), appState, news.feedID);
-          if (icon != null) {
-            // if the icon is successfully fetched, insert the icon into the database
-            result = await appState.db!.rawInsert(
-                'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
-                [
-                  news.feedID,
-                  news.feedTitle,
-                  icon.getIcon(),
-                  icon.iconMimeType
-                ]);
+            if (appState.debugMode) {
+              logThis('insertNewsInDB',
+                  'Inserted news with id ${news.newsID} in DB', LogLevel.INFO);
+            }
+          } else {
+            // if the news is present, update the status of the news
+            batch.rawUpdate(
+                'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
+                [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
             if (appState.debugMode) {
               logThis(
-                  'insertNewsInDB',
-                  'Inserted Feed icon for feed with id ${news.feedID} in DB',
+                  'insertNewsInDB', 'Updated news with id ${news.newsID} in DB',
                   LogLevel.INFO);
             }
           }
+          // check if the feed of the news already contains an icon
+          resultSelect = await appState.db!.rawQuery(
+              'SELECT icon FROM feeds WHERE feedID = ?', [news.feedID]);
+          if (resultSelect.isEmpty) {
+            // if the feed doesn't contain a icon, fetch the icon from the miniflux server
+            FeedIcon? icon =
+            await getFeedIcon(http.Client(), appState, news.feedID);
+            if (icon != null) {
+              // if the icon is successfully fetched, insert the icon into the database
+              batch.rawInsert(
+                  'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
+                  [
+                    news.feedID,
+                    news.feedTitle,
+                    icon.getIcon(),
+                    icon.iconMimeType
+                  ]);
+              if (appState.debugMode) {
+                logThis(
+                    'insertNewsInDB',
+                    'Inserted Feed icon for feed with id ${news.feedID} in DB',
+                    LogLevel.INFO);
+              }
+            }
+          }
+        } else {
+          if (appState.debugMode) {
+            logThis('insertNewsInDB', 'Aborted inserting news in DB',
+                LogLevel.INFO);
+          }
+          break;
         }
-      } else {
-        if (appState.debugMode) {
-          logThis('insertNewsInDB', 'Aborted inserting news in DB',
-              LogLevel.INFO);
-        }
-        break;
       }
-    }
+      await batch.commit(
+          noResult: true, continueOnError: true, exclusive: true);
   }
   if (appState.debugMode) {
     logThis('insertNewsInDB', 'Finished inserting news in DB', LogLevel.INFO);
@@ -226,110 +226,112 @@ Future<List<News>> queryNewsFromDB(
   List<News> newList = [];
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
-    String status = '';
-    // decide if the news status is set to display all news or only the unread
-    if (appState.newsStatus == FluxNewsState.allNewsString) {
-      status = FluxNewsState.databaseAllString;
-    } else {
-      status = appState.newsStatus;
-    }
-
-    // decide if the sort order is ascending or descending
-    String sortOrder = FluxNewsState.databaseDescString;
-    if (appState.sortOrder != null) {
-      if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
-        sortOrder = FluxNewsState.databaseDescString;
+    await appState.db!.transaction((txn) async {
+      String status = '';
+      // decide if the news status is set to display all news or only the unread
+      if (appState.newsStatus == FluxNewsState.allNewsString) {
+        status = FluxNewsState.databaseAllString;
       } else {
-        sortOrder = FluxNewsState.databaseAscString;
+        status = appState.newsStatus;
       }
-    }
 
-    if (feedIDs != null) {
-      // if the feed id is not null a category, a feed or the bookmarked news ar selected
-      if (appState.feedIDs?.first == -1) {
-        // if the feed id is -1 the bookmarked news are selected
-        List<Map<String, Object?>> queryResult =
-            await appState.db!.rawQuery('''SELECT news.newsID, 
-                      news.feedID, 
-                      news.title, 
-                      news.url, 
-                      news.content, 
-                      news.hash, 
-                      news.publishedAt, 
-                      news.createdAt, 
-                      news.status, 
-                      news.readingTime, 
-                      news.starred, 
-                      news.feedTitle, 
-                      news.syncStatus,
-                      feeds.icon,
-                      feeds.iconMimeType,
-                      attachments.attachmentURL,
-                      attachments.attachmentMimeType
-                FROM news 
-                LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-                LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
-                WHERE news.starred = ? 
-                ORDER BY news.publishedAt $sortOrder''', [1]);
-        newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
-      } else {
-        // if the feed id is not -1 a feed or a category with multiple feeds is selected
-        for (int feedID in feedIDs) {
+      // decide if the sort order is ascending or descending
+      String sortOrder = FluxNewsState.databaseDescString;
+      if (appState.sortOrder != null) {
+        if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+          sortOrder = FluxNewsState.databaseDescString;
+        } else {
+          sortOrder = FluxNewsState.databaseAscString;
+        }
+      }
+
+      if (feedIDs != null) {
+        // if the feed id is not null a category, a feed or the bookmarked news ar selected
+        if (appState.feedIDs?.first == -1) {
+          // if the feed id is -1 the bookmarked news are selected
           List<Map<String, Object?>> queryResult =
-              await appState.db!.rawQuery('''SELECT news.newsID, 
-                      news.feedID, 
-                      news.title, 
-                      news.url, 
-                      news.content, 
-                      news.hash, 
-                      news.publishedAt, 
-                      news.createdAt, 
-                      news.status, 
-                      news.readingTime, 
-                      news.starred, 
-                      news.feedTitle, 
-                      news.syncStatus,
-                      feeds.icon,
-                      feeds.iconMimeType,
-                      attachments.attachmentURL,
-                      attachments.attachmentMimeType 
+              await txn.rawQuery('''SELECT news.newsID, 
+                        news.feedID, 
+                        news.title, 
+                        news.url, 
+                        news.content, 
+                        news.hash, 
+                        news.publishedAt, 
+                        news.createdAt, 
+                        news.status, 
+                        news.readingTime, 
+                        news.starred, 
+                        news.feedTitle, 
+                        news.syncStatus,
+                        feeds.icon,
+                        feeds.iconMimeType,
+                        attachments.attachmentURL,
+                        attachments.attachmentMimeType
                   FROM news 
                   LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                   LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
-                  WHERE (news.status LIKE ?) 
-                    AND news.feedID LIKE ? 
-                  ORDER BY news.publishedAt $sortOrder''', [status, feedID]);
+                  WHERE news.starred = ? 
+                  ORDER BY news.publishedAt $sortOrder''', [1]);
           newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+        } else {
+          // if the feed id is not -1 a feed or a category with multiple feeds is selected
+          for (int feedID in feedIDs) {
+            List<Map<String, Object?>> queryResult =
+                await txn.rawQuery('''SELECT news.newsID, 
+                        news.feedID, 
+                        news.title, 
+                        news.url, 
+                        news.content, 
+                        news.hash, 
+                        news.publishedAt, 
+                        news.createdAt, 
+                        news.status, 
+                        news.readingTime, 
+                        news.starred, 
+                        news.feedTitle, 
+                        news.syncStatus,
+                        feeds.icon,
+                        feeds.iconMimeType,
+                        attachments.attachmentURL,
+                        attachments.attachmentMimeType 
+                    FROM news 
+                    LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+                    LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
+                    WHERE (news.status LIKE ?) 
+                      AND news.feedID LIKE ? 
+                    ORDER BY news.publishedAt $sortOrder''', [status, feedID]);
+            newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+          }
         }
-      }
-    } else {
-      // if the feed id is null, "all news" are selected
-      List<Map<String, Object?>> queryResult =
-          await appState.db!.rawQuery('''SELECT news.newsID, 
-                      news.feedID, 
-                      news.title, 
-                      news.url, 
-                      news.content, 
-                      news.hash, 
-                      news.publishedAt, 
-                      news.createdAt, 
-                      news.status, 
-                      news.readingTime, 
-                      news.starred, 
-                      news.feedTitle, 
-                      news.syncStatus,
-                      feeds.icon,
-                      feeds.iconMimeType,
-                      attachments.attachmentURL,
-                      attachments.attachmentMimeType
-              FROM news 
-              LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-              LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
-              WHERE (news.status LIKE ?) 
-              ORDER BY news.publishedAt $sortOrder''', [status]);
+      } else {
+        // if the feed id is null, "all news" are selected
+        List<Map<String, Object?>> queryResult =
+            await txn.rawQuery('''SELECT news.newsID, 
+                        news.feedID, 
+                        news.title, 
+                        news.url, 
+                        news.content, 
+                        news.hash, 
+                        news.publishedAt, 
+                        news.createdAt, 
+                        news.status, 
+                        news.readingTime, 
+                        news.starred, 
+                        news.feedTitle, 
+                        news.syncStatus,
+                        feeds.icon,
+                        feeds.iconMimeType,
+                        attachments.attachmentURL,
+                        attachments.attachmentMimeType
+                FROM news 
+                LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+                LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
+                WHERE (news.status LIKE ?) 
+                ORDER BY news.publishedAt $sortOrder''', [status]);
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
     }
-  }
+  });
+        }
   if (appState.debugMode) {
     logThis('queryNewsFromDB', 'Finished querying news from DB', LogLevel.INFO);
   }
