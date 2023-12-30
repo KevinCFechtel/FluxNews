@@ -159,7 +159,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     ),
                     subtitle: appState.minifluxURL == null
                         ? const SizedBox.shrink()
-                        : Text(appState.minifluxURL!),
+                        : Text(appState.minifluxURL!,softWrap: true, overflow: TextOverflow.ellipsis,),
                   ),
                 ),
                 const CategoryList(),
@@ -809,6 +809,7 @@ class CategoryList extends StatelessWidget {
         child: Text(
           category.title,
           style: Theme.of(context).textTheme.labelLarge,
+          overflow: TextOverflow.ellipsis,
         ),
         onTap: () {
           categoryOnClick(category, appState, categories, context);
@@ -950,12 +951,14 @@ class FeedTile extends StatelessWidget {
           appState.showFeedIcons
               ? feed.getFeedIcon(16.0, context)
               : const SizedBox.shrink(),
-          Padding(
+          Expanded(
+              child: Padding(
             padding: const EdgeInsets.only(left: 10.0),
             child: Text(
               feed.title,
               style: Theme.of(context).textTheme.labelLarge,
-            ),
+              overflow: TextOverflow.ellipsis,
+            ),)
           )
         ]),
       ),

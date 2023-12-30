@@ -148,10 +148,12 @@ class NewsCard extends StatelessWidget {
                                   padding: const EdgeInsets.only(right: 5.0),
                                   child: news.getFeedIcon(16.0, context))
                               : const SizedBox.shrink(),
-                          Padding(
+                        Expanded(
+                          child: Padding(
                             padding: const EdgeInsets.only(left: 0.0),
                             child: Text(
                               news.feedTitle,
+                              overflow: TextOverflow.ellipsis,
                               style: news.status ==
                                       FluxNewsState.unreadNewsStatus
                                   ? Theme.of(context).textTheme.bodyMedium
@@ -162,7 +164,7 @@ class NewsCard extends StatelessWidget {
                                           color:
                                               Theme.of(context).disabledColor),
                             ),
-                          ),
+                          ),),
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
