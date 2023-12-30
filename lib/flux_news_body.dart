@@ -585,8 +585,8 @@ class LongSyncWidget extends StatelessWidget {
   }
 }
 
-// this widget replace the normal news list widget, if a long sync is detected
-// it will pop up an long sync warning dialog and then show the normal news list in the background.
+// this widget replace the normal news list widget, if too many news are detected
+// it will pop up an too many news warning dialog and then show the normal news list in the background.
 class TooManyNewsWidget extends StatelessWidget {
   const TooManyNewsWidget({
     super.key,

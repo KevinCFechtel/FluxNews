@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -106,7 +105,6 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
                 appState.refreshView();
               }
             }
-
           }
           // add the news count to the returning news list (this is the same count for every iteration)
           newsList.newsCount = tempNewsList.newsCount;
@@ -277,47 +275,66 @@ Future<List<News>> fetchSearchedNews(
     // of news provided by a response.
     // this is a kind of pagination.
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-      // request the unread news with the parameter, how many news should be provided by
-      // one response (limit) and the amount of news which should be skipped, because
-      // they were already transferred (offset).
-      final response = await client.get(
-          Uri.parse(
-              '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
-          headers: header);
-      // only the response code 200 ist ok
-      if (response.statusCode == 200) {
-        tempNewsList =
-            NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-        if (appState.debugMode) {
-          logThis('fetchSearchedNews',
-              '${tempNewsList.news.length} news fetched', LogLevel.INFO);
-        }
-        // add the news of the response to the news list
-        newList.addAll(tempNewsList.news);
-        // update the list size to the count of the provided news
-        listSize = tempNewsList.news.length;
-        // update the offset to the maximum of provided news for each request,
-        // multiplied by a incrementing counter
-        offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
-        // increment the offset counter for the next run
-        offsetCounter++;
-        if (appState.debugMode) {
-          if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-            logThis(
-                'fetchSearchedNews',
-                '${tempNewsList.newsCount - listSize} news remaining',
-                LogLevel.INFO);
-          } else {
-            logThis('fetchSearchedNews', '0 news remaining', LogLevel.INFO);
+      if(!appState.longSyncAborted) {
+        // request the unread news with the parameter, how many news should be provided by
+        // one response (limit) and the amount of news which should be skipped, because
+        // they were already transferred (offset).
+        final response = await client.get(
+            Uri.parse(
+                '${appState
+                    .minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState
+                    .amountOfNewlyCaughtNews}&offset=$offset'),
+            headers: header);
+        // only the response code 200 ist ok
+        if (response.statusCode == 200) {
+          tempNewsList =
+              NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+          if (appState.debugMode) {
+            logThis('fetchSearchedNews',
+                '${tempNewsList.news.length} news fetched', LogLevel.INFO);
           }
+          // add the news of the response to the news list
+          newList.addAll(tempNewsList.news);
+          // check if the execution time will took very long
+          if (tempNewsList.newsCount > FluxNewsState.amountForLongNewsSync) {
+            if(tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
+              appState.tooManyNews = true;
+              appState.longSyncAborted = true;
+              appState.refreshView();
+            }
+          }
+          // update the list size to the count of the provided news
+          listSize = tempNewsList.news.length;
+          // update the offset to the maximum of provided news for each request,
+          // multiplied by a incrementing counter
+          offset = FluxNewsState.amountOfNewlyCaughtNews * offsetCounter;
+          // increment the offset counter for the next run
+          offsetCounter++;
+          if (appState.debugMode) {
+            if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
+              logThis(
+                  'fetchSearchedNews',
+                  '${tempNewsList.newsCount - offset} news remaining',
+                  LogLevel.INFO);
+            } else {
+              logThis('fetchSearchedNews', '0 news remaining', LogLevel.INFO);
+            }
+          }
+        } else {
+          logThis(
+              'fetchSearchedNews',
+              'Got unexpected response from miniflux server: ${response
+                  .statusCode} for search string $searchString',
+              LogLevel.ERROR);
+          // if the status is not 200, throw a exception
+          throw FluxNewsState.httpUnexpectedResponseErrorString;
         }
       } else {
-        logThis(
-            'fetchSearchedNews',
-            'Got unexpected response from miniflux server: ${response.statusCode} for search string $searchString',
-            LogLevel.ERROR);
-        // if the status is not 200, throw a exception
-        throw FluxNewsState.httpUnexpectedResponseErrorString;
+        listSize = 0;
+        if (appState.debugMode) {
+          logThis('fetchSearchedNews', 'Aborted fetching searched news from miniflux server',
+              LogLevel.INFO);
+        }
       }
     }
     // read the feed icon
@@ -325,28 +342,18 @@ Future<List<News>> fetchSearchedNews(
     // if not, initialize the database
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
+      List<Feed> feedList = [];
+      List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
+          'SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+      for(Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+        feed.icon = appState.readFeedIconFile(feed.feedID);
+        feedList.add(feed);
+      }
       // for each news in the list, get the feed icon from the database
       for (News news in newList) {
-        // get the feed icon from the database
-        List<Map<String, Object?>> queryResult = await appState.db!
-            .rawQuery('SELECT * FROM feeds WHERE feedID = ?', [news.feedID]);
-        // if the query result is not empty, set the icon and the icon mime type
-        news.icon = queryResult.map((e) {
-          if (e['icon'] != null) {
-            return e['icon'] as Uint8List;
-          } else {
-            return null;
-          }
-        }).first;
+        // get the feed icon and the feed icon mime type
+        news.getFeedInfo(feedList);
 
-        // get the feed icon mime type from the database
-        news.iconMimeType = queryResult.map((e) {
-          if (e['iconMimeType'] != null) {
-            return e['iconMimeType'] as String;
-          } else {
-            return null;
-          }
-        }).first;
         if (appState.debugMode) {
           logThis(
               'fetchSearchedNews',
