@@ -63,7 +63,7 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
           }
           // check if the feed of the news already contains an icon
           resultSelect = await appState.db!.rawQuery(
-              'SELECT icon FROM feeds WHERE feedID = ?', [news.feedID]);
+              'SELECT iconMimeType FROM feeds WHERE feedID = ?', [news.feedID]);
           if (resultSelect.isEmpty) {
             // if the feed doesn't contain a icon, fetch the icon from the miniflux server
             FeedIcon? icon =
@@ -71,13 +71,14 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
             if (icon != null) {
               // if the icon is successfully fetched, insert the icon into the database
               batch.rawInsert(
-                  'INSERT INTO feeds (feedID, title, icon, iconMimeType) VALUES(?,?,?,?)',
+                  'INSERT INTO feeds (feedID, title, iconMimeType) VALUES(?,?,?)',
                   [
                     news.feedID,
                     news.feedTitle,
                     icon.getIcon(),
                     icon.iconMimeType
                   ]);
+              await appState.saveFeedIconFile(news.feedID, icon.getIcon());
               if (appState.debugMode) {
                 logThis(
                     'insertNewsInDB',
@@ -94,8 +95,10 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
           break;
         }
       }
-      await batch.commit(
-          noResult: true, continueOnError: true, exclusive: true);
+      if (!appState.longSyncAborted) {
+        await batch.commit(
+            noResult: true, continueOnError: true);
+      }
   }
   if (appState.debugMode) {
     logThis('insertNewsInDB', 'Finished inserting news in DB', LogLevel.INFO);
@@ -226,7 +229,6 @@ Future<List<News>> queryNewsFromDB(
   List<News> newList = [];
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
-    await appState.db!.transaction((txn) async {
       String status = '';
       // decide if the news status is set to display all news or only the unread
       if (appState.newsStatus == FluxNewsState.allNewsString) {
@@ -250,7 +252,7 @@ Future<List<News>> queryNewsFromDB(
         if (appState.feedIDs?.first == -1) {
           // if the feed id is -1 the bookmarked news are selected
           List<Map<String, Object?>> queryResult =
-              await txn.rawQuery('''SELECT news.newsID, 
+              await appState.db!.rawQuery('''SELECT news.newsID, 
                         news.feedID, 
                         news.title, 
                         news.url, 
@@ -263,7 +265,7 @@ Future<List<News>> queryNewsFromDB(
                         news.starred, 
                         news.feedTitle, 
                         news.syncStatus,
-                        feeds.icon,
+                        --feeds.icon,
                         feeds.iconMimeType,
                         attachments.attachmentURL,
                         attachments.attachmentMimeType
@@ -277,7 +279,7 @@ Future<List<News>> queryNewsFromDB(
           // if the feed id is not -1 a feed or a category with multiple feeds is selected
           for (int feedID in feedIDs) {
             List<Map<String, Object?>> queryResult =
-                await txn.rawQuery('''SELECT news.newsID, 
+                await appState.db!.rawQuery('''SELECT news.newsID, 
                         news.feedID, 
                         news.title, 
                         news.url, 
@@ -290,7 +292,7 @@ Future<List<News>> queryNewsFromDB(
                         news.starred, 
                         news.feedTitle, 
                         news.syncStatus,
-                        feeds.icon,
+                        --feeds.icon,
                         feeds.iconMimeType,
                         attachments.attachmentURL,
                         attachments.attachmentMimeType 
@@ -306,7 +308,7 @@ Future<List<News>> queryNewsFromDB(
       } else {
         // if the feed id is null, "all news" are selected
         List<Map<String, Object?>> queryResult =
-            await txn.rawQuery('''SELECT news.newsID, 
+        await appState.db!.rawQuery('''SELECT news.newsID, 
                         news.feedID, 
                         news.title, 
                         news.url, 
@@ -319,7 +321,7 @@ Future<List<News>> queryNewsFromDB(
                         news.starred, 
                         news.feedTitle, 
                         news.syncStatus,
-                        feeds.icon,
+                        --feeds.icon,
                         feeds.iconMimeType,
                         attachments.attachmentURL,
                         attachments.attachmentMimeType
@@ -327,11 +329,21 @@ Future<List<News>> queryNewsFromDB(
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                 LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
                 WHERE (news.status LIKE ?) 
-                ORDER BY news.publishedAt $sortOrder''', [status]);
-      newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
-    }
-  });
-        }
+                ORDER BY news.publishedAt $sortOrder
+                ''', [status]);
+        newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+      }
+      List<Feed> feedList = [];
+      List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
+          'SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+      for(Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+        feed.icon = appState.readFeedIconFile(feed.feedID);
+        feedList.add(feed);
+      }
+      for(News news in newList) {
+        news.saveFeedIcon(feedList);
+      }
+  }
   if (appState.debugMode) {
     logThis('queryNewsFromDB', 'Finished querying news from DB', LogLevel.INFO);
   }
@@ -506,16 +518,15 @@ Future<int> insertCategoriesInDB(
       for (Feed feed in category.feeds) {
         // iterate over the feeds of the category and check if they already exists locally
         resultSelect = await appState.db!
-            .rawQuery('SELECT * FROM feeds WHERE feedID = ?', [feed.feedID]);
+            .rawQuery('SELECT feedID FROM feeds WHERE feedID = ?', [feed.feedID]);
         if (resultSelect.isEmpty) {
           // if they don't exists locally, insert the feed
           result = await appState.db!.rawInsert(
-              'INSERT INTO feeds (feedID, title, site_url, icon, iconMimeType, newsCount, categoryID) VALUES(?,?,?,?,?,?,?)',
+              'INSERT INTO feeds (feedID, title, site_url, iconMimeType, newsCount, categoryID) VALUES(?,?,?,?,?,?)',
               [
                 feed.feedID,
                 feed.title,
                 feed.siteUrl,
-                feed.icon,
                 feed.iconMimeType,
                 feed.newsCount,
                 category.categoryID
@@ -527,11 +538,10 @@ Future<int> insertCategoriesInDB(
         } else {
           // if they exists locally, update the feed
           result = await appState.db!.rawUpdate(
-              'UPDATE feeds SET title = ?, site_url = ?, icon = ?, iconMimeType = ?, newsCount = ?, categoryID = ? WHERE feedID = ?',
+              'UPDATE feeds SET title = ?, site_url = ?, iconMimeType = ?, newsCount = ?, categoryID = ? WHERE feedID = ?',
               [
                 feed.title,
                 feed.siteUrl,
-                feed.icon,
                 feed.iconMimeType,
                 feed.newsCount,
                 category.categoryID,
@@ -542,6 +552,7 @@ Future<int> insertCategoriesInDB(
                 'Updated feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
         }
+        await appState.saveFeedIconFile(feed.feedID, feed.icon);
       }
     }
 
@@ -576,7 +587,7 @@ Future<int> insertCategoriesInDB(
     List<Feed> existingFeeds = [];
     bool feedFound = false;
     // get a list of the local feeds
-    resultSelect = await appState.db!.rawQuery('SELECT * FROM feeds');
+    resultSelect = await appState.db!.rawQuery('SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
     if (resultSelect.isNotEmpty) {
       existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
     }
@@ -596,6 +607,7 @@ Future<int> insertCategoriesInDB(
             .rawDelete('DELETE FROM feeds WHERE feedID = ?', [feed.feedID]);
         result = await appState.db!
             .rawDelete('DELETE FROM news WHERE feedID = ?', [feed.feedID]);
+        appState.deleteFeedIconFile(feed.feedID);
         if (appState.debugMode) {
           logThis(
               'insertCategoriesInDB',
@@ -630,8 +642,11 @@ Future<Categories> queryCategoriesFromDB(
     for (Category category in categoryList) {
       List<Feed> feedList = [];
       queryResult = await appState.db!.rawQuery(
-          'SELECT * FROM feeds WHERE categoryID = ?', [category.categoryID]);
-      feedList = queryResult.map((e) => Feed.fromMap(e)).toList();
+          'SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds WHERE categoryID = ?', [category.categoryID]);
+      for(Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+        feed.icon = appState.readFeedIconFile(feed.feedID);
+        feedList.add(feed);
+      }
       category.feeds = feedList;
     }
   }

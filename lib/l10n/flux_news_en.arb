@@ -56,7 +56,7 @@
     "deleteLocalCacheDialogContent": "Do you really want to delete the local news storage?",
     "contextSaveButton" : "Save news to third party",
     "insecureMinifluxURL" : "An insecure connection to miniflux is used!",
-    "longSyncWarning" : "The number of messages leads to very slow synchronization!",
+    "longSyncWarning" : "The number of messages leads to slow synchronization!",
     "longSyncHeader" : "Slow synchronization",
     "tooManyNews" : "The number of messages is too large for synchronization"
 }

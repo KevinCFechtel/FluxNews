@@ -113,6 +113,50 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         return 0;
       });
     }
+
+    Categories newCategories = Categories(categories: []);
+    if(!appState.longSyncAborted) {
+      // fetch the categories from the miniflux server
+      newCategories =
+      await fetchCategoryInformation(http.Client(), appState)
+          .onError((error, stackTrace) {
+        logThis(
+            'fetchCategoryInformation',
+            'Caught an error in fetchCategoryInformation function! : ${error
+                .toString()}',
+            LogLevel.ERROR);
+
+        if (appState.errorString !=
+            AppLocalizations.of(context)!.communicateionMinifluxError) {
+          appState.errorString =
+              AppLocalizations.of(context)!.communicateionMinifluxError;
+          appState.newError = true;
+          appState.refreshView();
+        }
+        return Future<Categories>.value(Categories(categories: []));
+      });
+    }
+
+    if(!appState.longSyncAborted) {
+      // insert or update the fetched categories in the database
+      await insertCategoriesInDB(newCategories, appState)
+          .onError((error, stackTrace) {
+        logThis(
+            'insertCategoriesInDB',
+            'Caught an error in insertCategoriesInDB function! : ${error
+                .toString()}',
+            LogLevel.ERROR);
+
+        if (appState.errorString !=
+            AppLocalizations.of(context)!.databaseError) {
+          appState.errorString = AppLocalizations.of(context)!.databaseError;
+          appState.newError = true;
+          appState.refreshView();
+        }
+        return 0;
+      });
+    }
+
     if(!appState.longSyncAborted) {
       // insert or update the fetched news in the database
       await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
@@ -164,48 +208,6 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // remove the native splash after updating the list view
     FlutterNativeSplash.remove();
 
-    Categories newCategories = Categories(categories: []);
-    if(!appState.longSyncAborted) {
-      // fetch the categories from the miniflux server
-      newCategories =
-      await fetchCategoryInformation(http.Client(), appState)
-          .onError((error, stackTrace) {
-        logThis(
-            'fetchCategoryInformation',
-            'Caught an error in fetchCategoryInformation function! : ${error
-                .toString()}',
-            LogLevel.ERROR);
-
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return Future<Categories>.value(Categories(categories: []));
-      });
-    }
-
-    if(!appState.longSyncAborted) {
-      // insert or update the fetched categories in the database
-      await insertCategoriesInDB(newCategories, appState)
-          .onError((error, stackTrace) {
-        logThis(
-            'insertCategoriesInDB',
-            'Caught an error in insertCategoriesInDB function! : ${error
-                .toString()}',
-            LogLevel.ERROR);
-
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.databaseError) {
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
-          appState.newError = true;
-          appState.refreshView();
-        }
-        return 0;
-      });
-    }
     NewsList starredNews = NewsList(news: [], newsCount: 0);
     if(!appState.longSyncAborted) {
       // fetch the starred news (read or unread) from the miniflux server

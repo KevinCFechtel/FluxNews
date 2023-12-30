@@ -236,6 +236,14 @@ class News {
       return SizedBox.fromSize(size: Size(size, size));
     }
   }
+
+  void saveFeedIcon(List<Feed> feeds) {
+    for(Feed feed in feeds) {
+      if(feed.feedID == feedID) {
+        icon = feed.icon;
+      }
+    }
+  }
 }
 
 // define the model for the news list

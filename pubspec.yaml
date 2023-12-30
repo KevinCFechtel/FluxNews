@@ -58,7 +58,6 @@ dependencies:
   flutter_logs: ^2.1.10
   share_plus: ^7.0.2
   path_provider: ^2.0.15
-  drift: ^2.14.1
   
 
 dev_dependencies:

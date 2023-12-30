@@ -233,7 +233,12 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       // here is the sync part
       IconButton(
         onPressed: () async {
-          await syncNews(appState, context);
+          if(appState.syncProcess) {
+            appState.longSyncAborted = true;
+            appState.refreshView();
+          } else {
+            await syncNews(appState, context);
+          }
         },
         icon: appState.syncProcess
             ? const SizedBox(
