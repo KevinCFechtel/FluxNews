@@ -221,6 +221,8 @@ class News {
             String.fromCharCodes(icon!),
             width: size,
             height: size,
+            colorFilter:
+                const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
           );
         }
       } else {
@@ -232,6 +234,23 @@ class News {
       }
     } else {
       return SizedBox.fromSize(size: Size(size, size));
+    }
+  }
+
+  void saveFeedIcon(List<Feed> feeds) {
+    for(Feed feed in feeds) {
+      if(feed.feedID == feedID) {
+        icon = feed.icon;
+      }
+    }
+  }
+
+  void getFeedInfo(List<Feed> feeds) {
+    for(Feed feed in feeds) {
+      if(feed.feedID == feedID) {
+        icon = feed.icon;
+        iconMimeType = feed.iconMimeType;
+      }
     }
   }
 }

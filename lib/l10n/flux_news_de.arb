@@ -55,5 +55,8 @@
     "deleteLocalCacheDialogTitle": "Nachrichtenspeicher löschen",
     "deleteLocalCacheDialogContent": "Möchten Sie wirklich den lokalen Nachrichtenspeicher löschen?",
     "contextSaveButton" : "Nachricht in\nDrittsystem speichern",
-    "insecureMinifluxURL" : "Es wird eine unsichere Verbindung zu miniflux benutzt!"
+    "insecureMinifluxURL" : "Es wird eine unsichere Verbindung zu miniflux benutzt!",
+    "longSyncWarning" : "Die Anzahl der Nachrichten führt zu einer langsamen Synchronisation!",
+    "longSyncHeader" : "Langsame Synchronisation",
+    "tooManyNews" : "Die Anzahl der Nachrichten überschreitet die Grenze von 10.000, daher ist eine Synchronisation nicht möglich."
 }

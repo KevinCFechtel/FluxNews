@@ -1,0 +1,3 @@
+The processing of a large number of news has been improved
+The behavior of too long text as feed title or category title has been improved
+The storage of feed icons has been revised

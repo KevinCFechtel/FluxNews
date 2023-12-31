@@ -1,8 +1,12 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/logging.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -30,7 +34,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.3.3';
+  static const String applicationVersion = '1.3.4';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';
@@ -39,7 +43,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
-  static const int amountOfNewlyCaughtNews = 100;
+  static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
   static const String syncedSyncStatus = 'synced';
@@ -85,7 +89,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
+  static const String feedIconFilePath = "/FeedIcons/";
   static const int minifluxSaveMinVersion = 2047;
+  static const int amountForTooManyNews = 10000;
+  static const int amountForLongNewsSync = 2000;
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
 
@@ -117,6 +124,10 @@ class FluxNewsState extends ChangeNotifier {
   String errorString = '';
   bool newError = false;
   bool errorOnMinifluxAuth = false;
+  bool tooManyNews = false;
+  bool longSync = false;
+  bool longSyncAlerted = false;
+  bool longSyncAborted = false;
 
   // vars for debugging
   bool debugMode = false;
@@ -152,17 +163,25 @@ class FluxNewsState extends ChangeNotifier {
   bool isTablet = false;
   Orientation orientation = Orientation.portrait;
 
+  // the directory for Saving pictures
+  Directory? externalDirectory;
+
   // the database connection as a variable
   Database? db;
 
   // init the database connection
   Future<Database> initializeDB() async {
+    if (Platform.isIOS) {
+      externalDirectory = await getApplicationDocumentsDirectory();
+    } else {
+      externalDirectory = await getExternalStorageDirectory();
+    }
     logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
     String path = await getDatabasesPath();
     logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
       path_package.join(path, FluxNewsState.databasePathString),
-      onCreate: (db, version) async {
+        onCreate: (db, version) async {
         logThis('initializeDB', 'Starting creating DB', LogLevel.INFO);
         // create the table news
         await db.execute('DROP TABLE IF EXISTS news');
@@ -245,7 +264,7 @@ class FluxNewsState extends ChangeNotifier {
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
       version: 3,
-    );
+        );
   }
 
   // read the persistent saved configuration
@@ -422,6 +441,63 @@ class FluxNewsState extends ChangeNotifier {
 
     // return true if everything was read
     return true;
+  }
+
+  Future<void> saveFeedIconFile(int feedID, Uint8List? bytes) async {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+    await saveFile(filename, bytes);
+  }
+
+  Uint8List? readFeedIconFile(int feedID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+    return readFile(filename);
+  }
+
+  void deleteFeedIconFile(int feedID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+    deleteFile(filename);
+  }
+
+  Future<void> saveFile(String filename, Uint8List? bytes) async {
+    if(externalDirectory != null && bytes != null) {
+      // Create an image name
+      var filePath = externalDirectory!.path + filename;
+
+      // Save to filesystem
+      final file = File(filePath);
+      await file.create(recursive: true);
+      await file.writeAsBytes(bytes);
+    }
+  }
+
+  Uint8List? readFile(String filename) {
+    if(externalDirectory != null) {
+      // Create an image name
+      var filePath = externalDirectory!.path + filename;
+
+      // Save to filesystem
+      final file = File(filePath);
+      if(file.existsSync()) {
+        return file.readAsBytesSync();
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  void deleteFile(String filename) {
+    if(externalDirectory != null) {
+      // Create an image name
+      var filePath = externalDirectory!.path + filename;
+
+      // Save to filesystem
+      final file = File(filePath);
+      if(file.existsSync()) {
+        file.deleteSync();
+      }
+    }
   }
 
   // notify the listeners of FluxNewsState to refresh views

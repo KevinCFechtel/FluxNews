@@ -24,7 +24,9 @@ class Settings extends StatelessWidget {
     200,
     500,
     1000,
-    2000
+    2000,
+    5000,
+    10000
   ];
   static const List<int> amountOfSavedStarredNewsList = <int>[
     50,
@@ -32,7 +34,9 @@ class Settings extends StatelessWidget {
     200,
     500,
     1000,
-    2000
+    2000,
+    5000,
+    10000
   ];
 
   @override
@@ -107,9 +111,7 @@ class Settings extends StatelessWidget {
                     '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  onTap: () {
-                    _showURLEditDialog(context, appState);
-                  },
+
                 ),
                 // it there is an error on the authentication of the miniflux server
                 // there is shown a error message
@@ -730,6 +732,7 @@ class Settings extends StatelessWidget {
                             appState)
                         .onError((error, stackTrace) => false);
                     appState.errorOnMinifluxAuth = !authCheck;
+                    appState.insecureMinifluxURL = !appState.minifluxURL!.toLowerCase().startsWith('https');
                     appState.refreshView();
                   }
 

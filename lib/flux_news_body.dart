@@ -159,7 +159,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     ),
                     subtitle: appState.minifluxURL == null
                         ? const SizedBox.shrink()
-                        : Text(appState.minifluxURL!),
+                        : Text(appState.minifluxURL!,softWrap: true, overflow: TextOverflow.ellipsis,),
                   ),
                 ),
                 const CategoryList(),
@@ -233,7 +233,12 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       // here is the sync part
       IconButton(
         onPressed: () async {
-          await syncNews(appState, context);
+          if(appState.syncProcess) {
+            appState.longSyncAborted = true;
+            appState.refreshView();
+          } else {
+            await syncNews(appState, context);
+          }
         },
         icon: appState.syncProcess
             ? const SizedBox(
@@ -468,6 +473,10 @@ class FluxNewsBodyList extends StatelessWidget {
       return const NoSettings();
     } else if (appState.errorString != '' && appState.newError) {
       return const ErrorWidget();
+    } else if (appState.longSync) {
+      return const LongSyncWidget();
+    } else if (appState.tooManyNews) {
+      return const TooManyNewsWidget();
     } else {
       return const BodyNewsList();
     }
@@ -513,6 +522,109 @@ class ErrorWidget extends StatelessWidget {
                   },
                   child: Text(AppLocalizations.of(context)!.ok),
                 ),
+              ],
+            );
+          });
+    }
+  }
+}
+
+// this widget replace the normal news list widget, if a long sync is detected
+// it will pop up an long sync warning dialog and then show the normal news list in the background.
+class LongSyncWidget extends StatelessWidget {
+  const LongSyncWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    Timer.run(() {
+      showLongSyncDialog(context).then((value) {
+        appState.longSync = false;
+        appState.longSyncAlerted = true;
+        appState.refreshView();
+      });
+    });
+    return const BodyNewsList();
+  }
+
+  // this is the error dialog which is shown, if a error occurs.
+  // to prevent the multi pop up (f.e. if the internet connection ist lost
+  // not every function which require the connection should raise a pop up)
+  // we check if the error which is shown is a new error.
+  Future showLongSyncDialog(BuildContext context) async {
+    FluxNewsState appState = context.read<FluxNewsState>();
+    if (appState.longSync) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.longSyncHeader),
+              content: Text(AppLocalizations.of(context)!.longSyncWarning),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    appState.longSyncAborted = true;
+                    appState.refreshView();
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.red),),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.ok),
+                ),
+
+              ],
+            );
+          });
+    }
+  }
+}
+
+// this widget replace the normal news list widget, if too many news are detected
+// it will pop up an too many news warning dialog and then show the normal news list in the background.
+class TooManyNewsWidget extends StatelessWidget {
+  const TooManyNewsWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    Timer.run(() {
+      showTooManyNewsWidget(context).then((value) {
+        appState.tooManyNews = false;
+        appState.refreshView();
+      });
+    });
+    return const BodyNewsList();
+  }
+
+  // this is the error dialog which is shown, if a error occurs.
+  // to prevent the multi pop up (f.e. if the internet connection ist lost
+  // not every function which require the connection should raise a pop up)
+  // we check if the error which is shown is a new error.
+  Future showTooManyNewsWidget(BuildContext context) async {
+    FluxNewsState appState = context.read<FluxNewsState>();
+    if (appState.tooManyNews) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.error),
+              content: Text(AppLocalizations.of(context)!.tooManyNews),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.ok),
+                ),
+
               ],
             );
           });
@@ -697,6 +809,7 @@ class CategoryList extends StatelessWidget {
         child: Text(
           category.title,
           style: Theme.of(context).textTheme.labelLarge,
+          overflow: TextOverflow.ellipsis,
         ),
         onTap: () {
           categoryOnClick(category, appState, categories, context);
@@ -838,12 +951,14 @@ class FeedTile extends StatelessWidget {
           appState.showFeedIcons
               ? feed.getFeedIcon(16.0, context)
               : const SizedBox.shrink(),
-          Padding(
+          Expanded(
+              child: Padding(
             padding: const EdgeInsets.only(left: 10.0),
             child: Text(
               feed.title,
               style: Theme.of(context).textTheme.labelLarge,
-            ),
+              overflow: TextOverflow.ellipsis,
+            ),)
           )
         ]),
       ),

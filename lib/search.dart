@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/logging.dart';
@@ -90,7 +92,73 @@ class Search extends StatelessWidget {
           ),
         ),
         // show the news list
-        body: const SearchNewsList());
+        body: const FluxNewsSearchBody());
+  }
+}
+
+class FluxNewsSearchBody extends StatelessWidget {
+  const FluxNewsSearchBody({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    // return the body of the search view
+    // if there are too many news detected, an error message is shown
+    // otherwise the normal list view is returned
+    if (appState.tooManyNews) {
+      return const TooManyNewsWidget();
+    } else {
+      return const SearchNewsList();
+    }
+  }
+}
+
+// this widget replace the normal news list widget, if too many news are detected
+// it will pop up an too many news warning dialog and then show the normal news list in the background.
+class TooManyNewsWidget extends StatelessWidget {
+  const TooManyNewsWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    Timer.run(() {
+      showTooManyNewsWidget(context).then((value) {
+        appState.tooManyNews = false;
+        appState.refreshView();
+      });
+    });
+    return const SearchNewsList();
+  }
+
+  // this is the error dialog which is shown, if a error occurs.
+  // to prevent the multi pop up (f.e. if the internet connection ist lost
+  // not every function which require the connection should raise a pop up)
+  // we check if the error which is shown is a new error.
+  Future showTooManyNewsWidget(BuildContext context) async {
+    FluxNewsState appState = context.read<FluxNewsState>();
+    if (appState.tooManyNews) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog.adaptive(
+              title: Text(AppLocalizations.of(context)!.error),
+              content: Text(AppLocalizations.of(context)!.tooManyNews),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, FluxNewsState.cancelContextString);
+                  },
+                  child: Text(AppLocalizations.of(context)!.ok),
+                ),
+
+              ],
+            );
+          });
+    }
   }
 }
 
