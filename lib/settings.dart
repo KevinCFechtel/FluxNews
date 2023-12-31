@@ -732,7 +732,7 @@ class Settings extends StatelessWidget {
                             appState)
                         .onError((error, stackTrace) => false);
                     appState.errorOnMinifluxAuth = !authCheck;
-                    appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
+                    appState.insecureMinifluxURL = !appState.minifluxURL!.toLowerCase().startsWith('https');
                     appState.refreshView();
                   }
 

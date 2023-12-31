@@ -58,5 +58,5 @@
     "insecureMinifluxURL" : "Es wird eine unsichere Verbindung zu miniflux benutzt!",
     "longSyncWarning" : "Die Anzahl der Nachrichten führt zu einer langsamen Synchronisation!",
     "longSyncHeader" : "Langsame Synchronisation",
-    "tooManyNews" : "Die Anzahl der Nachrichten ist zu groß für eine Synchronisation"
+    "tooManyNews" : "Die Anzahl der Nachrichten überschreitet die Grenze von 10.000, daher ist eine Synchronisation nicht möglich."
 }
