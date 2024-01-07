@@ -34,7 +34,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.3.4';
+  static const String applicationVersion = '1.3.5';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';
@@ -94,7 +94,7 @@ class FluxNewsState extends ChangeNotifier {
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
   static const String urlValidationRegex =
-      r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
+      r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)\/v1\/';
 
   // vars for lists of main view
   late Future<List<News>> newsList;
