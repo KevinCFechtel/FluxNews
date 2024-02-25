@@ -76,8 +76,7 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         ),
         // save the news to third party service
         PopupMenuItem(
-            enabled: appState.minifluxVersionInt >=
-                FluxNewsState.minifluxSaveMinVersion,
+            enabled: appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0')) ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion : true,
             value: FluxNewsState.contextMenuSaveString,
             child: Row(children: [
               const Icon(
