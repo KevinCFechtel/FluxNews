@@ -34,7 +34,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.3.5';
+  static const String applicationVersion = '1.3.6';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';
@@ -181,7 +181,7 @@ class FluxNewsState extends ChangeNotifier {
     logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
       path_package.join(path, FluxNewsState.databasePathString),
-        onCreate: (db, version) async {
+      onCreate: (db, version) async {
         logThis('initializeDB', 'Starting creating DB', LogLevel.INFO);
         // create the table news
         await db.execute('DROP TABLE IF EXISTS news');
@@ -264,7 +264,7 @@ class FluxNewsState extends ChangeNotifier {
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
       version: 3,
-        );
+    );
   }
 
   // read the persistent saved configuration
@@ -316,7 +316,7 @@ class FluxNewsState extends ChangeNotifier {
       // assign the miniflux server url from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxURLKey) {
         minifluxURL = value;
-        if(minifluxURL != null) {
+        if (minifluxURL != null) {
           insecureMinifluxURL = !minifluxURL!.toLowerCase().startsWith('https');
         }
       }
@@ -459,7 +459,7 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   Future<void> saveFile(String filename, Uint8List? bytes) async {
-    if(externalDirectory != null && bytes != null) {
+    if (externalDirectory != null && bytes != null) {
       // Create an image name
       var filePath = externalDirectory!.path + filename;
 
@@ -471,13 +471,13 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   Uint8List? readFile(String filename) {
-    if(externalDirectory != null) {
+    if (externalDirectory != null) {
       // Create an image name
       var filePath = externalDirectory!.path + filename;
 
       // Save to filesystem
       final file = File(filePath);
-      if(file.existsSync()) {
+      if (file.existsSync()) {
         return file.readAsBytesSync();
       } else {
         return null;
@@ -488,13 +488,13 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   void deleteFile(String filename) {
-    if(externalDirectory != null) {
+    if (externalDirectory != null) {
       // Create an image name
       var filePath = externalDirectory!.path + filename;
 
       // Save to filesystem
       final file = File(filePath);
-      if(file.existsSync()) {
+      if (file.existsSync()) {
         file.deleteSync();
       }
     }
