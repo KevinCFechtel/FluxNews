@@ -1,0 +1,2 @@
+Added a button that marks all news, all news of a category or a feed as read, depending on the selection.
+Simplified the input of the server URL

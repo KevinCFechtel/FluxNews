@@ -368,6 +368,46 @@ void updateNewsStatusInDB(
   }
 }
 
+// update the status (read or unread) of the news in the database
+void markNewsAsReadInDB(FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('markNewsAsReadInDB', 'Starting marking news as read in DB',
+        LogLevel.INFO);
+  }
+
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    if(appState.selectedCategoryElementType == FluxNewsState.allNewsElementType) {
+      await appState.db!.rawUpdate(
+          'UPDATE news SET status = ? WHERE status = ?', [FluxNewsState.readNewsStatus, FluxNewsState.unreadNewsStatus]);
+    } else if(appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType) {
+      await appState.db!.rawUpdate(
+          'UPDATE news SET status = ? WHERE starred = ?', [FluxNewsState.readNewsStatus, 1]);
+    } else if(appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+      if(appState.feedIDs != null) {
+        for (int feedID in appState.feedIDs!) {
+          await appState.db!.rawUpdate(
+              'UPDATE news SET status = ? WHERE feedID = ?',
+              [FluxNewsState.readNewsStatus, feedID]);
+        }
+      }
+    } else if(appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+      if(appState.feedIDs != null) {
+        for (int feedID in appState.feedIDs!) {
+          await appState.db!.rawUpdate(
+              'UPDATE news SET status = ? WHERE feedID = ?',
+              [FluxNewsState.readNewsStatus, feedID]);
+        }
+      }
+    }
+  }
+
+  if (appState.debugMode) {
+    logThis('markNewsAsReadInDB', 'Finished marking news as read in DB',
+        LogLevel.INFO);
+  }
+}
+
 // update the counter of the bookmarked news
 void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();

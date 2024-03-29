@@ -619,6 +619,17 @@ class Settings extends StatelessWidget {
                         });
                       } else {
                         newText = controller.text;
+                        if(!newText.endsWith('/v1/')) {
+                          if(!newText.endsWith('/v1')) {
+                            if(newText.endsWith('/')) {
+                              newText = newText + FluxNewsState.apiVersionPath;
+                            } else {
+                              newText = "$newText/${FluxNewsState.apiVersionPath}";
+                            }
+                          } else {
+                            newText = "$newText/";
+                          }
+                        }
                         if (appState.minifluxAPIKey != null &&
                             appState.minifluxAPIKey != '') {
                           bool authCheck = await checkMinifluxCredentials(
@@ -645,6 +656,17 @@ class Settings extends StatelessWidget {
                       if (formKey.currentState!.validate()) {
                         if (controller.text != '') {
                           newText = controller.text;
+                          if(!newText.endsWith('/v1/')) {
+                            if(!newText.endsWith('/v1')) {
+                              if(newText.endsWith('/')) {
+                                newText = newText + FluxNewsState.apiVersionPath;
+                              } else {
+                                newText = "$newText/${FluxNewsState.apiVersionPath}";
+                              }
+                            } else {
+                              newText = "$newText/";
+                            }
+                          }
                         }
                         if (appState.minifluxAPIKey != null &&
                             appState.minifluxAPIKey != '' &&
