@@ -310,9 +310,23 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              // the navigation to the settings
               PopupMenuItem<int>(
                 value: 3,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: appState.selectedCategoryElementType == FluxNewsState.feedElementType ? Text(AppLocalizations.of(context)!.markFeedAsRead) : appState.selectedCategoryElementType == FluxNewsState.categoryElementType ? Text(AppLocalizations.of(context)!.markCategoryAsRead) : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType ? Text(AppLocalizations.of(context)!.markBookmarkedAsRead) : Text(AppLocalizations.of(context)!.markAllAsRead),
+                    )
+                  ],
+                ),
+              ),
+              // the navigation to the settings
+              PopupMenuItem<int>(
+                value: 4,
                 child: Row(
                   children: [
                     const Icon(
@@ -447,6 +461,26 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appState.refreshView();
               }
             } else if (value == 3) {
+              // mark news as read
+              markNewsAsReadInDB(appState);
+              // refresh news list with the all news state
+              appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
+                  .whenComplete(() {
+                waitUntilNewsListBuild(appState).whenComplete(
+                      () {
+                    context
+                        .read<FluxNewsState>()
+                        .itemScrollController
+                        .jumpTo(index: 0);
+                  },
+                );
+              });
+
+              // notify the categories to update the news count
+              appCounterState.listUpdated = true;
+              appCounterState.refreshView();
+              appState.refreshView();
+            } else if (value == 4) {
               // navigate to the settings page
               Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
             }
@@ -839,6 +873,7 @@ class CategoryList extends StatelessWidget {
       Categories categories, BuildContext context) async {
     // add the according feeds of this category as a filter
     appState.feedIDs = category.getFeedIDs();
+    appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
     // reload the news list with the new filter
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
@@ -868,6 +903,7 @@ class CategoryList extends StatelessWidget {
       FluxNewsState appState, BuildContext context) async {
     // empty the feedIds which are used as a filter if a specific category is selected
     appState.feedIDs = null;
+    appState.selectedCategoryElementType = FluxNewsState.allNewsElementType;
     // reload the news list with the new filter (empty)
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
@@ -902,6 +938,7 @@ class CategoryList extends StatelessWidget {
     // so we use it to decide between all news (feedIds = null)
     // and bookmarked news (feedIds = -1).
     appState.feedIDs = [-1];
+    appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
@@ -971,6 +1008,7 @@ class FeedTile extends StatelessWidget {
         // on tab we want to show only the news of this feed in the news list.
         // set the feed id of the selected feed in the feedIDs filter
         appState.feedIDs = [feed.feedID];
+        appState.selectedCategoryElementType = FluxNewsState.feedElementType;
         // reload the news list with the new filter
         appState.newsList =
             queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
