@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 import 'flux_news_state.dart';
 import 'miniflux_backend.dart';
@@ -111,7 +111,6 @@ class Settings extends StatelessWidget {
                     '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-
                 ),
                 // it there is an error on the authentication of the miniflux server
                 // there is shown a error message
@@ -129,16 +128,18 @@ class Settings extends StatelessWidget {
                           )
                         : const SizedBox.shrink()
                     : const SizedBox.shrink(),
-                appState.insecureMinifluxURL ? Padding(
-                  padding: const EdgeInsets.only(top: 10, bottom: 10),
-                  child: Text(
-                    AppLocalizations.of(context)!.insecureMinifluxURL,
-                    style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ) : const SizedBox.shrink(),
+                appState.insecureMinifluxURL
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 10, bottom: 10),
+                        child: Text(
+                          AppLocalizations.of(context)!.insecureMinifluxURL,
+                          style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
                 // this headline indicate the general settings section
                 Padding(
                   padding: const EdgeInsets.only(top: 50.0, bottom: 12),
@@ -203,7 +204,7 @@ class Settings extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.only(left: 17.0),
                       child: Icon(
-                        Icons.remove_red_eye,
+                        Icons.check,
                       ),
                     ),
                     Padding(
@@ -619,12 +620,13 @@ class Settings extends StatelessWidget {
                         });
                       } else {
                         newText = controller.text;
-                        if(!newText.endsWith('/v1/')) {
-                          if(!newText.endsWith('/v1')) {
-                            if(newText.endsWith('/')) {
+                        if (!newText.endsWith('/v1/')) {
+                          if (!newText.endsWith('/v1')) {
+                            if (newText.endsWith('/')) {
                               newText = newText + FluxNewsState.apiVersionPath;
                             } else {
-                              newText = "$newText/${FluxNewsState.apiVersionPath}";
+                              newText =
+                                  "$newText/${FluxNewsState.apiVersionPath}";
                             }
                           } else {
                             newText = "$newText/";
@@ -640,7 +642,8 @@ class Settings extends StatelessWidget {
                               .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
-                          appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
+                          appState.insecureMinifluxURL =
+                              !newText.toLowerCase().startsWith('https');
                           appState.refreshView();
                         }
                         appState.storage.write(
@@ -656,12 +659,14 @@ class Settings extends StatelessWidget {
                       if (formKey.currentState!.validate()) {
                         if (controller.text != '') {
                           newText = controller.text;
-                          if(!newText.endsWith('/v1/')) {
-                            if(!newText.endsWith('/v1')) {
-                              if(newText.endsWith('/')) {
-                                newText = newText + FluxNewsState.apiVersionPath;
+                          if (!newText.endsWith('/v1/')) {
+                            if (!newText.endsWith('/v1')) {
+                              if (newText.endsWith('/')) {
+                                newText =
+                                    newText + FluxNewsState.apiVersionPath;
                               } else {
-                                newText = "$newText/${FluxNewsState.apiVersionPath}";
+                                newText =
+                                    "$newText/${FluxNewsState.apiVersionPath}";
                               }
                             } else {
                               newText = "$newText/";
@@ -679,7 +684,8 @@ class Settings extends StatelessWidget {
                               .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
-                          appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
+                          appState.insecureMinifluxURL =
+                              !newText.toLowerCase().startsWith('https');
                           appState.refreshView();
                         }
                         appState.storage.write(
@@ -754,7 +760,9 @@ class Settings extends StatelessWidget {
                             appState)
                         .onError((error, stackTrace) => false);
                     appState.errorOnMinifluxAuth = !authCheck;
-                    appState.insecureMinifluxURL = !appState.minifluxURL!.toLowerCase().startsWith('https');
+                    appState.insecureMinifluxURL = !appState.minifluxURL!
+                        .toLowerCase()
+                        .startsWith('https');
                     appState.refreshView();
                   }
 

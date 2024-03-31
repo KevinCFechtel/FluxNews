@@ -1,12 +1,12 @@
 // the list view widget with search result
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flux_news/flux_news_state.dart';
 import 'package:flux_news/news_card.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:flux_news/news_row.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 class SearchNewsList extends StatelessWidget {
   const SearchNewsList({

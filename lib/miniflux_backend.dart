@@ -2,14 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/logging.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'flux_news_state.dart';
 import 'news_model.dart';
-import 'package:flux_news/logging.dart';
-
-import 'package:http/http.dart' as http;
 
 // this is the class to reflect the update status json body, which is send
 // to the miniflux server to update the status of the news, which are provided
@@ -68,15 +67,13 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
     // of news provided by a response.
     // this is a kind of pagination.
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-      if(!appState.longSyncAborted) {
+      if (!appState.longSyncAborted) {
         // request the unread news with the parameter, how many news should be provided by
         // one response (limit) and the amount of news which should be skipped, because
         // they were already transferred (offset).
         final response = await client.get(
             Uri.parse(
-                '${appState
-                    .minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState
-                    .amountOfNewlyCaughtNews}&offset=$offset'),
+                '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
             headers: header);
         // only the response code 200 ist ok
         if (response.statusCode == 200) {
@@ -91,7 +88,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
           newsList.news.addAll(tempNewsList.news);
           // check if the execution time will took very long
           if (tempNewsList.newsCount > FluxNewsState.amountForLongNewsSync) {
-            if(tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
+            if (tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
               // remove the native splash after updating the list view
               FlutterNativeSplash.remove();
               appState.tooManyNews = true;
@@ -128,8 +125,7 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
         } else {
           logThis(
               'fetchNews',
-              'Got unexpected response from miniflux server: ${response
-                  .statusCode} for unread news',
+              'Got unexpected response from miniflux server: ${response.statusCode} for unread news',
               LogLevel.ERROR);
 
           // if the status is not 200, throw a exception
@@ -275,15 +271,13 @@ Future<List<News>> fetchSearchedNews(
     // of news provided by a response.
     // this is a kind of pagination.
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-      if(!appState.longSyncAborted) {
+      if (!appState.longSyncAborted) {
         // request the unread news with the parameter, how many news should be provided by
         // one response (limit) and the amount of news which should be skipped, because
         // they were already transferred (offset).
         final response = await client.get(
             Uri.parse(
-                '${appState
-                    .minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState
-                    .amountOfNewlyCaughtNews}&offset=$offset'),
+                '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
             headers: header);
         // only the response code 200 ist ok
         if (response.statusCode == 200) {
@@ -297,7 +291,7 @@ Future<List<News>> fetchSearchedNews(
           newList.addAll(tempNewsList.news);
           // check if the execution time will took very long
           if (tempNewsList.newsCount > FluxNewsState.amountForLongNewsSync) {
-            if(tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
+            if (tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
               appState.tooManyNews = true;
               appState.longSyncAborted = true;
               appState.refreshView();
@@ -323,8 +317,7 @@ Future<List<News>> fetchSearchedNews(
         } else {
           logThis(
               'fetchSearchedNews',
-              'Got unexpected response from miniflux server: ${response
-                  .statusCode} for search string $searchString',
+              'Got unexpected response from miniflux server: ${response.statusCode} for search string $searchString',
               LogLevel.ERROR);
           // if the status is not 200, throw a exception
           throw FluxNewsState.httpUnexpectedResponseErrorString;
@@ -332,7 +325,9 @@ Future<List<News>> fetchSearchedNews(
       } else {
         listSize = 0;
         if (appState.debugMode) {
-          logThis('fetchSearchedNews', 'Aborted fetching searched news from miniflux server',
+          logThis(
+              'fetchSearchedNews',
+              'Aborted fetching searched news from miniflux server',
               LogLevel.INFO);
         }
       }
@@ -345,7 +340,7 @@ Future<List<News>> fetchSearchedNews(
       List<Feed> feedList = [];
       List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
           'SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
-      for(Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+      for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
         feed.icon = appState.readFeedIconFile(feed.feedID);
         feedList.add(feed);
       }
@@ -543,7 +538,9 @@ Future<void> toggleBookmark(
 Future<void> saveNewsToThirdPartyService(
     http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
-    logThis('saveNewsToThirdPartyService', 'Starting saving news to third party service at miniflux server',
+    logThis(
+        'saveNewsToThirdPartyService',
+        'Starting saving news to third party service at miniflux server',
         LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
@@ -559,12 +556,14 @@ Future<void> saveNewsToThirdPartyService(
         headers: header,
       );
       if (response.statusCode != 202) {
-        if(response.statusCode == 400) {
-          final errorMessage = jsonDecode(response.body) as Map<String, dynamic>;
-          if(errorMessage['error_message'] == 'no third-party integration enabled') {
+        if (response.statusCode == 400) {
+          final errorMessage =
+              jsonDecode(response.body) as Map<String, dynamic>;
+          if (errorMessage['error_message'] ==
+              'no third-party integration enabled') {
             if (appState.debugMode) {
-              logThis('saveNewsToThirdPartyService', 'no third-party integration enabled',
-                  LogLevel.INFO);
+              logThis('saveNewsToThirdPartyService',
+                  'no third-party integration enabled', LogLevel.INFO);
             }
           } else {
             logThis(
@@ -586,7 +585,9 @@ Future<void> saveNewsToThirdPartyService(
     }
   }
   if (appState.debugMode) {
-    logThis('saveNewsToThirdPartyService', 'Finished saving news to third party service at miniflux server',
+    logThis(
+        'saveNewsToThirdPartyService',
+        'Finished saving news to third party service at miniflux server',
         LogLevel.INFO);
   }
 }

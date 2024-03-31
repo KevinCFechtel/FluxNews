@@ -238,16 +238,16 @@ class News {
   }
 
   void saveFeedIcon(List<Feed> feeds) {
-    for(Feed feed in feeds) {
-      if(feed.feedID == feedID) {
+    for (Feed feed in feeds) {
+      if (feed.feedID == feedID) {
         icon = feed.icon;
       }
     }
   }
 
   void getFeedInfo(List<Feed> feeds) {
-    for(Feed feed in feeds) {
-      if(feed.feedID == feedID) {
+    for (Feed feed in feeds) {
+      if (feed.feedID == feedID) {
         icon = feed.icon;
         iconMimeType = feed.iconMimeType;
       }
