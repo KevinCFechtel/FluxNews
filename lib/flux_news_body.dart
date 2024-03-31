@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
@@ -8,7 +10,6 @@ import 'package:flux_news/news_list.dart';
 import 'package:flux_news/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 import 'database_backend.dart';
 import 'flux_news_state.dart';
@@ -159,7 +160,11 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     ),
                     subtitle: appState.minifluxURL == null
                         ? const SizedBox.shrink()
-                        : Text(appState.minifluxURL!,softWrap: true, overflow: TextOverflow.ellipsis,),
+                        : Text(
+                            appState.minifluxURL!,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                   ),
                 ),
                 const CategoryList(),
@@ -233,7 +238,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       // here is the sync part
       IconButton(
         onPressed: () async {
-          if(appState.syncProcess) {
+          if (appState.syncProcess) {
             appState.longSyncAborted = true;
             appState.refreshView();
           } else {
@@ -279,7 +284,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   children: [
                     Icon(
                       appState.newsStatus == FluxNewsState.unreadNewsStatus
-                          ? Icons.remove_red_eye_outlined
+                          ? Icons.checklist
                           : Icons.fiber_new,
                     ),
                     Padding(
@@ -319,7 +324,19 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(left: 5),
-                      child: appState.selectedCategoryElementType == FluxNewsState.feedElementType ? Text(AppLocalizations.of(context)!.markFeedAsRead) : appState.selectedCategoryElementType == FluxNewsState.categoryElementType ? Text(AppLocalizations.of(context)!.markCategoryAsRead) : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType ? Text(AppLocalizations.of(context)!.markBookmarkedAsRead) : Text(AppLocalizations.of(context)!.markAllAsRead),
+                      child: appState.selectedCategoryElementType ==
+                              FluxNewsState.feedElementType
+                          ? Text(AppLocalizations.of(context)!.markFeedAsRead)
+                          : appState.selectedCategoryElementType ==
+                                  FluxNewsState.categoryElementType
+                              ? Text(AppLocalizations.of(context)!
+                                  .markCategoryAsRead)
+                              : appState.selectedCategoryElementType ==
+                                      FluxNewsState.bookmarkedNewsElementType
+                                  ? Text(AppLocalizations.of(context)!
+                                      .markBookmarkedAsRead)
+                                  : Text(AppLocalizations.of(context)!
+                                      .markAllAsRead),
                     )
                   ],
                 ),
@@ -464,10 +481,10 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               // mark news as read
               markNewsAsReadInDB(appState);
               // refresh news list with the all news state
-              appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
-                  .whenComplete(() {
+              appState.newsList =
+                  queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                 waitUntilNewsListBuild(appState).whenComplete(
-                      () {
+                  () {
                     context
                         .read<FluxNewsState>()
                         .itemScrollController
@@ -603,7 +620,10 @@ class LongSyncWidget extends StatelessWidget {
                     appState.refreshView();
                     Navigator.pop(context, FluxNewsState.cancelContextString);
                   },
-                  child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.red),),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -611,7 +631,6 @@ class LongSyncWidget extends StatelessWidget {
                   },
                   child: Text(AppLocalizations.of(context)!.ok),
                 ),
-
               ],
             );
           });
@@ -658,7 +677,6 @@ class TooManyNewsWidget extends StatelessWidget {
                   },
                   child: Text(AppLocalizations.of(context)!.ok),
                 ),
-
               ],
             );
           });
@@ -938,7 +956,8 @@ class CategoryList extends StatelessWidget {
     // so we use it to decide between all news (feedIds = null)
     // and bookmarked news (feedIds = -1).
     appState.feedIDs = [-1];
-    appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
+    appState.selectedCategoryElementType =
+        FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList =
         queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
@@ -995,8 +1014,8 @@ class FeedTile extends StatelessWidget {
               feed.title,
               style: Theme.of(context).textTheme.labelLarge,
               overflow: TextOverflow.ellipsis,
-            ),)
-          )
+            ),
+          ))
         ]),
       ),
       // show the news count of this feed

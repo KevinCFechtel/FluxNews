@@ -3,18 +3,16 @@ import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'
+    as sec_store;
 import 'package:flux_news/logging.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
-
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    as sec_store;
-
-import 'package:path/path.dart' as path_package;
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 import 'news_model.dart';
 
@@ -34,7 +32,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.3.7';
+  static const String applicationVersion = '1.3.8';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       ' https://github.com/KevinCFechtel/FluxNews';

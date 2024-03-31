@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/android_url_launcher.dart';
 import 'package:flux_news/database_backend.dart';
@@ -12,7 +13,6 @@ import 'package:flux_news/news_model.dart';
 import 'package:flux_news/news_widget_functions.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 // here we define the appearance of the news cards
 class NewsCard extends StatelessWidget {
@@ -142,29 +142,38 @@ class NewsCard extends StatelessWidget {
                                       child: Icon(
                                         Icons.fiber_new,
                                       )))
-                              : const SizedBox.shrink(),
+                              : Padding(
+                                  padding: const EdgeInsets.only(right: 15.0),
+                                  child: SizedBox(
+                                      width: 15,
+                                      height: 35,
+                                      child: Icon(
+                                        Icons.check,
+                                        color: Theme.of(context).disabledColor,
+                                      ))),
                           appState.showFeedIcons
                               ? Padding(
                                   padding: const EdgeInsets.only(right: 5.0),
                                   child: news.getFeedIcon(16.0, context))
                               : const SizedBox.shrink(),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 0.0),
-                            child: Text(
-                              news.feedTitle,
-                              overflow: TextOverflow.ellipsis,
-                              style: news.status ==
-                                      FluxNewsState.unreadNewsStatus
-                                  ? Theme.of(context).textTheme.bodyMedium
-                                  : Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          color:
-                                              Theme.of(context).disabledColor),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 0.0),
+                              child: Text(
+                                news.feedTitle,
+                                overflow: TextOverflow.ellipsis,
+                                style: news.status ==
+                                        FluxNewsState.unreadNewsStatus
+                                    ? Theme.of(context).textTheme.bodyMedium
+                                    : Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            color: Theme.of(context)
+                                                .disabledColor),
+                              ),
                             ),
-                          ),),
+                          ),
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(

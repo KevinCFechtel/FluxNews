@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
@@ -9,7 +10,6 @@ import 'package:flux_news/logging.dart';
 import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 // this is a helper function to get the actual tab position
 // this position is used to open the context menu of the news card here
@@ -76,7 +76,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         ),
         // save the news to third party service
         PopupMenuItem(
-            enabled: appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0')) ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion : true,
+            enabled:
+                appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
+                    ? appState.minifluxVersionInt >=
+                        FluxNewsState.minifluxSaveMinVersion
+                    : true,
             value: FluxNewsState.contextMenuSaveString,
             child: Row(children: [
               const Icon(
@@ -284,7 +288,8 @@ void showContextMenu(News news, BuildContext context, bool searchView,
 
       break;
     case FluxNewsState.contextMenuSaveString:
-      await saveNewsToThirdPartyService(http.Client(), appState, news).onError((error, stackTrace) {
+      await saveNewsToThirdPartyService(http.Client(), appState, news)
+          .onError((error, stackTrace) {
         logThis(
             'saveNewsToThirdPartyService',
             'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}',

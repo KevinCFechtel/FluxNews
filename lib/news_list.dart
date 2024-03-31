@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
@@ -9,7 +10,6 @@ import 'package:flux_news/news_model.dart';
 import 'package:flux_news/news_row.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 
 // the list view widget with news (main view)
 class BodyNewsList extends StatelessWidget {
