@@ -1,0 +1,1 @@
+It is now possible to limit the number of messages to be synchronized or searched.

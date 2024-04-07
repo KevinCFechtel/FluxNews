@@ -62,5 +62,7 @@
     "markAllAsRead" : "Alle Nachrichten als\ngelesen markieren",
     "markBookmarkedAsRead" : "Lesezeichen als gelesen\nmarkieren",
     "markCategoryAsRead" : "Kategorie als gelesen\nmarkieren",
-    "markFeedAsRead" : "Feed als gelesen\nmarkieren"
+    "markFeedAsRead" : "Feed als gelesen\nmarkieren",
+    "amountOfSyncedNews": "Anzahl der Nachrichten\ndie synchronisiert werden",
+    "amountOfSearchedNews": "Anzahl der Nachrichten\ndie durchsucht werden"
 }

@@ -62,5 +62,7 @@
     "markAllAsRead" : "Mark all news as read",
     "markBookmarkedAsRead" : "Mark bookmarked news\nas read",
     "markCategoryAsRead" : "Mark category as read",
-    "markFeedAsRead" : "Mark feed as read"
+    "markFeedAsRead" : "Mark feed as read",
+    "amountOfSyncedNews": "Amount of News\nwhich should be synced",
+    "amountOfSearchedNews": "Amount of News\nwhich should be searched"
 }
