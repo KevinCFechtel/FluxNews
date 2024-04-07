@@ -293,14 +293,14 @@ class FluxNewsState extends ChangeNotifier {
     // this maps use the key as the technical string and the value as the display name
     if (context.mounted) {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[
-        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.allNews),
+        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
         const KeyValueRecordType(key: "1000", value: "1000"),
         const KeyValueRecordType(key: "2000", value: "2000"),
         const KeyValueRecordType(key: "5000", value: "5000"),
         const KeyValueRecordType(key: "10000", value: "10000"),
       ];
       recordTypesAmountOfSearchedNews = <KeyValueRecordType>[
-        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.allNews),
+        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
         const KeyValueRecordType(key: "1000", value: "1000"),
         const KeyValueRecordType(key: "2000", value: "2000"),
         const KeyValueRecordType(key: "5000", value: "5000"),

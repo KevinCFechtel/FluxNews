@@ -13,6 +13,7 @@
     "provideMinifluxCredentials": "Bitte geben Sie die Miniflux URL und den API-Schlüssel an",
     "error": "Fehler",
     "ok": "Ok",
+    "all": "Alle",
     "settings": "Einstellungen",
     "minifluxSettings": "Miniflux Einstellungen",
     "apiUrl": "API Url",
