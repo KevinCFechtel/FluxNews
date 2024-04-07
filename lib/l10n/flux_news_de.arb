@@ -13,6 +13,7 @@
     "provideMinifluxCredentials": "Bitte geben Sie die Miniflux URL und den API-Schlüssel an",
     "error": "Fehler",
     "ok": "Ok",
+    "all": "Alle",
     "settings": "Einstellungen",
     "minifluxSettings": "Miniflux Einstellungen",
     "apiUrl": "API Url",
@@ -58,9 +59,11 @@
     "insecureMinifluxURL" : "Es wird eine unsichere Verbindung zu miniflux benutzt!",
     "longSyncWarning" : "Die Anzahl der Nachrichten führt zu einer langsamen Synchronisation!",
     "longSyncHeader" : "Langsame Synchronisation",
-    "tooManyNews" : "Die Anzahl der Nachrichten überschreitet die Grenze von 10.000, daher ist eine Synchronisation nicht möglich.",
+    "tooManyNews" : "Die Anzahl der Nachrichten überschreitet die Grenze von 10.000, daher ist eine Synchronisation nicht möglich.\nBitte reduzieren Sie die Anzahl der zu synchronisierenden Nachrichten.",
     "markAllAsRead" : "Alle Nachrichten als\ngelesen markieren",
     "markBookmarkedAsRead" : "Lesezeichen als gelesen\nmarkieren",
     "markCategoryAsRead" : "Kategorie als gelesen\nmarkieren",
-    "markFeedAsRead" : "Feed als gelesen\nmarkieren"
+    "markFeedAsRead" : "Feed als gelesen\nmarkieren",
+    "amountOfSyncedNews": "Anzahl der Nachrichten\ndie synchronisiert werden",
+    "amountOfSearchedNews": "Anzahl der Nachrichten\ndie durchsucht werden"
 }

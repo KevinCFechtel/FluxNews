@@ -5,8 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    as sec_store;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/logging.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
@@ -19,23 +18,19 @@ import 'news_model.dart';
 // generate android options to usw with flutter secure storage
 sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
       encryptedSharedPreferences: true,
-      keyCipherAlgorithm:
-          sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
-      storageCipherAlgorithm:
-          sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
+      keyCipherAlgorithm: sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
+      storageCipherAlgorithm: sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
     );
 
 class FluxNewsState extends ChangeNotifier {
   // init the persistent flutter secure storage
-  final storage =
-      sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
+  final storage = sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.3.8';
+  static const String applicationVersion = '1.4.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
-  static const String applicationProjectUrl =
-      ' https://github.com/KevinCFechtel/FluxNews';
+  static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
   static const String databasePathString = 'news_database.db';
   static const String rootRouteString = '/';
@@ -50,6 +45,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String databaseAllString = '%';
   static const String databaseDescString = 'DESC';
   static const String databaseAscString = 'ASC';
+  static const String minifluxDescString = 'desc';
+  static const String minifluxAscString = 'asc';
   static const String brightnessModeSystemString = 'System';
   static const String brightnessModeDarkString = 'Dark';
   static const String brightnessModeLightString = 'Light';
@@ -59,18 +56,16 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageMinifluxAPIKey = 'minifluxAPIKey';
   static const String secureStorageMinifluxVersionKey = 'minifluxVersionKey';
   static const String secureStorageBrightnessModeKey = 'brightnessMode';
+  static const String secureStorageAmountOfSyncedNewsKey = 'amountOfSyncedNews';
+  static const String secureStorageAmountOfSearchedNewsKey = 'amountOfSearchedNews';
   static const String secureStorageSortOrderKey = 'sortOrder';
-  static const String secureStorageSavedScrollPositionKey =
-      'savedScrollPosition';
-  static const String secureStorageMarkAsReadOnScrollOverKey =
-      'markAsReadOnScrollOver';
+  static const String secureStorageSavedScrollPositionKey = 'savedScrollPosition';
+  static const String secureStorageMarkAsReadOnScrollOverKey = 'markAsReadOnScrollOver';
   static const String secureStorageSyncOnStartKey = 'syncOnStart';
   static const String secureStorageNewsStatusKey = 'newsStatus';
   static const String secureStorageAmountOfSavedNewsKey = 'amountOfSavedNews';
-  static const String secureStorageAmountOfSavedStarredNewsKey =
-      'amountOfSavedStarredNews';
-  static const String secureStorageMultilineAppBarTextKey =
-      'multilineAppBarText';
+  static const String secureStorageAmountOfSavedStarredNewsKey = 'amountOfSavedStarredNews';
+  static const String secureStorageMultilineAppBarTextKey = 'multilineAppBarText';
   static const String secureStorageShowFeedIconsTextKey = 'showFeedIcons';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageTrueString = 'true';
@@ -115,16 +110,13 @@ class FluxNewsState extends ChangeNotifier {
   late Offset tapPosition;
   int scrollPosition = 0;
   final ItemScrollController itemScrollController = ItemScrollController();
-  final ItemPositionsListener itemPositionsListener =
-      ItemPositionsListener.create();
+  final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
   final TextEditingController searchController = TextEditingController();
-  final ItemScrollController searchItemScrollController =
-      ItemScrollController();
-  final ItemPositionsListener searchItemPositionsListener =
-      ItemPositionsListener.create();
+  final ItemScrollController searchItemScrollController = ItemScrollController();
+  final ItemPositionsListener searchItemPositionsListener = ItemPositionsListener.create();
 
   // var for formatting the date depending on locale settings
   DateFormat dateFormat = DateFormat('M/d/yy HH:mm');
@@ -155,15 +147,21 @@ class FluxNewsState extends ChangeNotifier {
   Map<String, String> storageValues = {};
   String brightnessMode = FluxNewsState.brightnessModeSystemString;
   KeyValueRecordType? brightnessModeSelection;
+  KeyValueRecordType? amontOfSyncedNewsSelection;
+  KeyValueRecordType? amontOfSearchedNewsSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
   int amountOfSavedStarredNews = 1000;
+  int amountOfSyncedNews = 0;
+  int amountOfSearchedNews = 0;
   bool markAsReadOnScrollOver = false;
   bool syncOnStart = false;
   bool multilineAppBarText = false;
   bool showFeedIcons = false;
   List<KeyValueRecordType>? recordTypesBrightnessMode;
+  List<KeyValueRecordType>? recordTypesAmountOfSyncedNews;
+  List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
 
   // vars for app bar text
   String appBarText = '';
@@ -294,18 +292,28 @@ class FluxNewsState extends ChangeNotifier {
     // init the maps for the brightness mode list
     // this maps use the key as the technical string and the value as the display name
     if (context.mounted) {
+      recordTypesAmountOfSyncedNews = <KeyValueRecordType>[
+        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+        const KeyValueRecordType(key: "1000", value: "1000"),
+        const KeyValueRecordType(key: "2000", value: "2000"),
+        const KeyValueRecordType(key: "5000", value: "5000"),
+        const KeyValueRecordType(key: "10000", value: "10000"),
+      ];
+      recordTypesAmountOfSearchedNews = <KeyValueRecordType>[
+        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+        const KeyValueRecordType(key: "1000", value: "1000"),
+        const KeyValueRecordType(key: "2000", value: "2000"),
+        const KeyValueRecordType(key: "5000", value: "5000"),
+        const KeyValueRecordType(key: "10000", value: "10000"),
+      ];
       recordTypesBrightnessMode = <KeyValueRecordType>[
-        KeyValueRecordType(
-            key: FluxNewsState.brightnessModeSystemString,
-            value: AppLocalizations.of(context)!.system),
-        KeyValueRecordType(
-            key: FluxNewsState.brightnessModeDarkString,
-            value: AppLocalizations.of(context)!.dark),
-        KeyValueRecordType(
-            key: FluxNewsState.brightnessModeLightString,
-            value: AppLocalizations.of(context)!.light),
+        KeyValueRecordType(key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
+        KeyValueRecordType(key: FluxNewsState.brightnessModeDarkString, value: AppLocalizations.of(context)!.dark),
+        KeyValueRecordType(key: FluxNewsState.brightnessModeLightString, value: AppLocalizations.of(context)!.light),
       ];
     } else {
+      recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
+      recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
       recordTypesBrightnessMode = <KeyValueRecordType>[];
     }
 
@@ -313,6 +321,20 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesBrightnessMode != null) {
       if (recordTypesBrightnessMode!.isNotEmpty) {
         brightnessModeSelection = recordTypesBrightnessMode![0];
+      }
+    }
+
+    // init the amount of synced news selection with the first value of the above generated maps
+    if (recordTypesAmountOfSyncedNews != null) {
+      if (recordTypesAmountOfSyncedNews!.isNotEmpty) {
+        amontOfSyncedNewsSelection = recordTypesAmountOfSyncedNews![0];
+      }
+    }
+
+    // init the amount of searched news selection with the first value of the above generated maps
+    if (recordTypesAmountOfSearchedNews != null) {
+      if (recordTypesAmountOfSearchedNews!.isNotEmpty) {
+        amontOfSearchedNewsSelection = recordTypesAmountOfSearchedNews![0];
       }
     }
 
@@ -350,6 +372,40 @@ class FluxNewsState extends ChangeNotifier {
           for (KeyValueRecordType recordSet in recordTypesBrightnessMode!) {
             if (value == recordSet.key) {
               brightnessModeSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the amount of synced news selection from persistent saved config
+      if (key == FluxNewsState.secureStorageAmountOfSyncedNewsKey) {
+        if (value != '') {
+          if (int.tryParse(value) != null) {
+            amountOfSyncedNews = int.parse(value);
+          } else {
+            amountOfSyncedNews = 0;
+          }
+
+          for (KeyValueRecordType recordSet in recordTypesAmountOfSyncedNews!) {
+            if (value == recordSet.key) {
+              amontOfSyncedNewsSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the amount of searched news selection from persistent saved config
+      if (key == FluxNewsState.secureStorageAmountOfSearchedNewsKey) {
+        if (value != '') {
+          if (int.tryParse(value) != null) {
+            amountOfSearchedNews = int.parse(value);
+          } else {
+            amountOfSearchedNews = 0;
+          }
+
+          for (KeyValueRecordType recordSet in recordTypesAmountOfSearchedNews!) {
+            if (value == recordSet.key) {
+              amontOfSearchedNewsSelection = recordSet;
             }
           }
         }

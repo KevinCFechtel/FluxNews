@@ -27,11 +27,10 @@ class ReadNewsList {
       };
 }
 
-// fetch all unread news from the miniflux backend
+// fetch unread news from the miniflux backend
 Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    logThis('fetchNews', 'Starting fetching news from miniflux server',
-        LogLevel.INFO);
+    logThis('fetchNews', 'Starting fetching news from miniflux server', LogLevel.INFO);
   }
 
   List<News> emptyList = [];
@@ -50,14 +49,24 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
   int offset = 0;
   // set the offset counter (multiplier) to 1 for the first request.
   int offsetCounter = 1;
+  // init the string for the request
+  String requestString = '';
+  // decide if the sort order is ascending or descending
+  String sortOrder = FluxNewsState.minifluxAscString;
+  if (appState.sortOrder != null) {
+    if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+      sortOrder = FluxNewsState.minifluxDescString;
+    } else {
+      sortOrder = FluxNewsState.minifluxAscString;
+    }
+  }
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     // define the header for the request.
     // the header contains the api key and the accepted content type
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-      FluxNewsState.httpMinifluxAcceptHeaderString:
-          FluxNewsState.httpContentTypeString,
+      FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
@@ -68,38 +77,38 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
     // this is a kind of pagination.
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       if (!appState.longSyncAborted) {
+        requestString =
+            '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=$sortOrder&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset';
         // request the unread news with the parameter, how many news should be provided by
         // one response (limit) and the amount of news which should be skipped, because
         // they were already transferred (offset).
-        final response = await client.get(
-            Uri.parse(
-                '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
-            headers: header);
+        final response = await client.get(Uri.parse(requestString), headers: header);
         // only the response code 200 ist ok
         if (response.statusCode == 200) {
           // parse the body to the temp news list
-          tempNewsList =
-              NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+          tempNewsList = NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
           if (appState.debugMode) {
-            logThis('fetchNews', '${tempNewsList.news.length} news fetched',
-                LogLevel.INFO);
+            logThis('fetchNews', '${tempNewsList.news.length} news fetched', LogLevel.INFO);
           }
           // add the temp news list to the returning news list
           newsList.news.addAll(tempNewsList.news);
           // check if the execution time will took very long
           if (tempNewsList.newsCount > FluxNewsState.amountForLongNewsSync) {
-            if (tempNewsList.newsCount > FluxNewsState.amountForTooManyNews) {
+            if (tempNewsList.newsCount > FluxNewsState.amountForTooManyNews && appState.amountOfSyncedNews == 0) {
               // remove the native splash after updating the list view
               FlutterNativeSplash.remove();
               appState.tooManyNews = true;
               appState.longSyncAborted = true;
               appState.refreshView();
             } else {
-              if (!appState.longSync && !appState.longSyncAlerted) {
-                // remove the native splash after updating the list view
-                FlutterNativeSplash.remove();
-                appState.longSync = true;
-                appState.refreshView();
+              if (appState.amountOfSyncedNews > FluxNewsState.amountForLongNewsSync ||
+                  appState.amountOfSyncedNews == 0) {
+                if (!appState.longSync && !appState.longSyncAlerted) {
+                  // remove the native splash after updating the list view
+                  FlutterNativeSplash.remove();
+                  appState.longSync = true;
+                  appState.refreshView();
+                }
               }
             }
           }
@@ -114,18 +123,17 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
           offsetCounter++;
           if (appState.debugMode) {
             if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-              logThis(
-                  'fetchNews',
-                  '${tempNewsList.newsCount - offset} news remaining',
-                  LogLevel.INFO);
+              logThis('fetchNews', '${tempNewsList.newsCount - offset} news remaining', LogLevel.INFO);
             } else {
               logThis('fetchNews', '0 news remaining', LogLevel.INFO);
             }
           }
+          if (offset >= appState.amountOfSyncedNews && appState.amountOfSyncedNews != 0) {
+            logThis('fetchNews', 'Reached limit of news to sync', LogLevel.INFO);
+            break;
+          }
         } else {
-          logThis(
-              'fetchNews',
-              'Got unexpected response from miniflux server: ${response.statusCode} for unread news',
+          logThis('fetchNews', 'Got unexpected response from miniflux server: ${response.statusCode} for unread news',
               LogLevel.ERROR);
 
           // if the status is not 200, throw a exception
@@ -134,21 +142,18 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
       } else {
         listSize = 0;
         if (appState.debugMode) {
-          logThis('fetchNews', 'Aborted fetching news from miniflux server',
-              LogLevel.INFO);
+          logThis('fetchNews', 'Aborted fetching news from miniflux server', LogLevel.INFO);
         }
       }
     }
     if (appState.debugMode) {
-      logThis('fetchNews', 'Finished fetching news from miniflux server',
-          LogLevel.INFO);
+      logThis('fetchNews', 'Finished fetching news from miniflux server', LogLevel.INFO);
     }
     // return the news list
     return newsList;
   } else {
     if (appState.debugMode) {
-      logThis('fetchNews', 'Finished fetching no new news from miniflux server',
-          LogLevel.INFO);
+      logThis('fetchNews', 'Finished fetching no new news from miniflux server', LogLevel.INFO);
     }
     // return an empty news list
     return newsList;
@@ -160,11 +165,9 @@ Future<NewsList> fetchNews(http.Client client, FluxNewsState appState) async {
 // the only difference is that the requested parameter is
 // starred=true and not status=unread
 // for details of the implementation see the comments above
-Future<NewsList> fetchStarredNews(
-    http.Client client, FluxNewsState appState) async {
+Future<NewsList> fetchStarredNews(http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    logThis('fetchStarredNews',
-        'Starting fetching starred news from miniflux server', LogLevel.INFO);
+    logThis('fetchStarredNews', 'Starting fetching starred news from miniflux server', LogLevel.INFO);
   }
   List<News> emptyList = [];
   NewsList newsList = NewsList(news: emptyList, newsCount: 0);
@@ -172,23 +175,28 @@ Future<NewsList> fetchStarredNews(
   int listSize = FluxNewsState.amountOfNewlyCaughtNews;
   int offset = 0;
   int offsetCounter = 1;
+  String requestString = '';
+  String sortOrder = FluxNewsState.minifluxAscString;
+  if (appState.sortOrder != null) {
+    if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+      sortOrder = FluxNewsState.minifluxDescString;
+    } else {
+      sortOrder = FluxNewsState.minifluxAscString;
+    }
+  }
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-      FluxNewsState.httpMinifluxAcceptHeaderString:
-          FluxNewsState.httpContentTypeString,
+      FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-      final response = await client.get(
-          Uri.parse(
-              '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
-          headers: header);
+      requestString =
+          '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=$sortOrder&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset';
+      final response = await client.get(Uri.parse(requestString), headers: header);
       if (response.statusCode == 200) {
-        tempNewsList =
-            NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+        tempNewsList = NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
         if (appState.debugMode) {
-          logThis('fetchStarredNews',
-              '${tempNewsList.news.length} news fetched', LogLevel.INFO);
+          logThis('fetchStarredNews', '${tempNewsList.news.length} news fetched', LogLevel.INFO);
         }
         newsList.news.addAll(tempNewsList.news);
         newsList.newsCount = tempNewsList.newsCount;
@@ -197,32 +205,29 @@ Future<NewsList> fetchStarredNews(
         offsetCounter++;
         if (appState.debugMode) {
           if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-            logThis(
-                'fetchStarredNews',
-                '${tempNewsList.newsCount - listSize} news remaining',
-                LogLevel.INFO);
+            logThis('fetchStarredNews', '${tempNewsList.newsCount - listSize} news remaining', LogLevel.INFO);
           } else {
             logThis('fetchStarredNews', '0 news remaining', LogLevel.INFO);
           }
         }
+        if (offset >= appState.amountOfSyncedNews && appState.amountOfSyncedNews != 0) {
+          logThis('fetchStarredNews', 'Reached limit of news to sync', LogLevel.INFO);
+          break;
+        }
       } else {
-        logThis(
-            'fetchStarredNews',
-            'Got unexpected response from miniflux server: ${response.statusCode} for starred news',
-            LogLevel.ERROR);
+        logThis('fetchStarredNews',
+            'Got unexpected response from miniflux server: ${response.statusCode} for starred news', LogLevel.ERROR);
 
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       }
     }
     if (appState.debugMode) {
-      logThis('fetchStarredNews',
-          'Finished fetching starred news from miniflux server', LogLevel.INFO);
+      logThis('fetchStarredNews', 'Finished fetching starred news from miniflux server', LogLevel.INFO);
     }
     return newsList;
   } else {
     if (appState.debugMode) {
-      logThis('fetchStarredNews',
-          'Finished fetching starred news from miniflux server', LogLevel.INFO);
+      logThis('fetchStarredNews', 'Finished fetching starred news from miniflux server', LogLevel.INFO);
     }
     return newsList;
   }
@@ -233,11 +238,9 @@ Future<NewsList> fetchStarredNews(
 // the only difference is that the requested parameter is
 // starred=true and not status=unread
 // for details of the implementation see the comments above
-Future<List<News>> fetchSearchedNews(
-    http.Client client, FluxNewsState appState, String searchString) async {
+Future<List<News>> fetchSearchedNews(http.Client client, FluxNewsState appState, String searchString) async {
   if (appState.debugMode) {
-    logThis('fetchSearchedNews',
-        'Starting fetching searched news from miniflux server', LogLevel.INFO);
+    logThis('fetchSearchedNews', 'Starting fetching searched news from miniflux server', LogLevel.INFO);
   }
   // init a empty news list
   List<News> newList = [];
@@ -254,14 +257,24 @@ Future<List<News>> fetchSearchedNews(
   int offset = 0;
   // set the offset counter (multiplier) to 1 for the first request.
   int offsetCounter = 1;
+  // init the string for the request
+  String requestString = '';
+  // decide if the sort order is ascending or descending
+  String sortOrder = FluxNewsState.minifluxAscString;
+  if (appState.sortOrder != null) {
+    if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+      sortOrder = FluxNewsState.minifluxDescString;
+    } else {
+      sortOrder = FluxNewsState.minifluxAscString;
+    }
+  }
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     // define the header for the request.
     // the header contains the api key and the accepted content type
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-      FluxNewsState.httpMinifluxAcceptHeaderString:
-          FluxNewsState.httpContentTypeString,
+      FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
@@ -275,17 +288,14 @@ Future<List<News>> fetchSearchedNews(
         // request the unread news with the parameter, how many news should be provided by
         // one response (limit) and the amount of news which should be skipped, because
         // they were already transferred (offset).
-        final response = await client.get(
-            Uri.parse(
-                '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
-            headers: header);
+        requestString =
+            '${appState.minifluxURL!}entries?search=$searchString&order=published_at&direction=$sortOrder&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset';
+        final response = await client.get(Uri.parse(requestString), headers: header);
         // only the response code 200 ist ok
         if (response.statusCode == 200) {
-          tempNewsList =
-              NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+          tempNewsList = NewsList.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
           if (appState.debugMode) {
-            logThis('fetchSearchedNews',
-                '${tempNewsList.news.length} news fetched', LogLevel.INFO);
+            logThis('fetchSearchedNews', '${tempNewsList.news.length} news fetched', LogLevel.INFO);
           }
           // add the news of the response to the news list
           newList.addAll(tempNewsList.news);
@@ -306,13 +316,14 @@ Future<List<News>> fetchSearchedNews(
           offsetCounter++;
           if (appState.debugMode) {
             if (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
-              logThis(
-                  'fetchSearchedNews',
-                  '${tempNewsList.newsCount - offset} news remaining',
-                  LogLevel.INFO);
+              logThis('fetchSearchedNews', '${tempNewsList.newsCount - offset} news remaining', LogLevel.INFO);
             } else {
               logThis('fetchSearchedNews', '0 news remaining', LogLevel.INFO);
             }
+          }
+          if (offset >= appState.amountOfSearchedNews && appState.amountOfSearchedNews != 0) {
+            logThis('fetchSearchedNews', 'Reached limit of news to search', LogLevel.INFO);
+            break;
           }
         } else {
           logThis(
@@ -325,10 +336,7 @@ Future<List<News>> fetchSearchedNews(
       } else {
         listSize = 0;
         if (appState.debugMode) {
-          logThis(
-              'fetchSearchedNews',
-              'Aborted fetching searched news from miniflux server',
-              LogLevel.INFO);
+          logThis('fetchSearchedNews', 'Aborted fetching searched news from miniflux server', LogLevel.INFO);
         }
       }
     }
@@ -338,8 +346,8 @@ Future<List<News>> fetchSearchedNews(
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
       List<Feed> feedList = [];
-      List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
-          'SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+      List<Map<String, Object?>> queryResult = await appState.db!
+          .rawQuery('SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
       for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
         feed.icon = appState.readFeedIconFile(feed.feedID);
         feedList.add(feed);
@@ -350,27 +358,18 @@ Future<List<News>> fetchSearchedNews(
         news.getFeedInfo(feedList);
 
         if (appState.debugMode) {
-          logThis(
-              'fetchSearchedNews',
-              'Got the feed icon from the database for feed ${news.feedID}',
-              LogLevel.INFO);
+          logThis('fetchSearchedNews', 'Got the feed icon from the database for feed ${news.feedID}', LogLevel.INFO);
         }
       }
     }
     if (appState.debugMode) {
-      logThis(
-          'fetchSearchedNews',
-          'Finished fetching searched news from miniflux server',
-          LogLevel.INFO);
+      logThis('fetchSearchedNews', 'Finished fetching searched news from miniflux server', LogLevel.INFO);
     }
     // return the news list
     return newList;
   } else {
     if (appState.debugMode) {
-      logThis(
-          'fetchSearchedNews',
-          'Finished fetching searched news from miniflux server',
-          LogLevel.INFO);
+      logThis('fetchSearchedNews', 'Finished fetching searched news from miniflux server', LogLevel.INFO);
     }
     // if the miniflux url or api key is not set, return the empty news list
     return newList;
@@ -378,11 +377,9 @@ Future<List<News>> fetchSearchedNews(
 }
 
 // mark the news as read at the miniflux server
-Future<void> toggleNewsAsRead(
-    http.Client client, FluxNewsState appState) async {
+Future<void> toggleNewsAsRead(http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    logThis('toggleNewsAsRead',
-        'Starting toggle news as read at miniflux server', LogLevel.INFO);
+    logThis('toggleNewsAsRead', 'Starting toggle news as read at miniflux server', LogLevel.INFO);
   }
   // check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -390,12 +387,9 @@ Future<void> toggleNewsAsRead(
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
       // query the database for all news with the status read and the sync status not synced
-      final List<Map<String, Object?>> queryResult = await appState.db!
-          .rawQuery(
-              'SELECT * FROM news WHERE status LIKE ? AND syncStatus = ?', [
-        FluxNewsState.readNewsStatus,
-        FluxNewsState.notSyncedSyncStatus
-      ]);
+      final List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
+          'SELECT * FROM news WHERE status LIKE ? AND syncStatus = ?',
+          [FluxNewsState.readNewsStatus, FluxNewsState.notSyncedSyncStatus]);
       List<News> newsList = queryResult.map((e) => News.fromMap(e)).toList();
       // iterate over the news list and add the news id to the news id list
       for (News news in newsList) {
@@ -404,18 +398,14 @@ Future<void> toggleNewsAsRead(
       // if the news id list is not empty, create a new ReadNewsList object
       if (newsIds.isNotEmpty) {
         // add the news id list and the status to the ReadNewsList object
-        ReadNewsList newReadNewsList = ReadNewsList(
-            newsIds: newsIds, status: FluxNewsState.readNewsStatus);
+        ReadNewsList newReadNewsList = ReadNewsList(newsIds: newsIds, status: FluxNewsState.readNewsStatus);
         final header = {
           FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-          FluxNewsState.httpMinifluxContentTypeHeaderString:
-              FluxNewsState.httpContentTypeString,
+          FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
         };
         // send the ReadNewsList object to the miniflux server to mark the news as read
-        final response = await client.put(
-            Uri.parse('${appState.minifluxURL!}entries'),
-            headers: header,
-            body: jsonEncode(newReadNewsList));
+        final response = await client.put(Uri.parse('${appState.minifluxURL!}entries'),
+            headers: header, body: jsonEncode(newReadNewsList));
         if (response.statusCode != 204) {
           logThis(
               'toggleNewsAsRead',
@@ -428,13 +418,9 @@ Future<void> toggleNewsAsRead(
           // if the response code is 204, update the sync status of the news in the database to synced
           for (News news in newsList) {
             await appState.db!.rawUpdate(
-                'UPDATE news SET syncStatus = ? WHERE newsId = ?',
-                [FluxNewsState.syncedSyncStatus, news.newsID]);
+                'UPDATE news SET syncStatus = ? WHERE newsId = ?', [FluxNewsState.syncedSyncStatus, news.newsID]);
             if (appState.debugMode) {
-              logThis(
-                  'toggleNewsAsRead',
-                  'Updated sync status of news ${news.newsID} in database',
-                  LogLevel.INFO);
+              logThis('toggleNewsAsRead', 'Updated sync status of news ${news.newsID} in database', LogLevel.INFO);
             }
           }
         }
@@ -442,35 +428,28 @@ Future<void> toggleNewsAsRead(
     }
   }
   if (appState.debugMode) {
-    logThis('toggleNewsAsRead',
-        'Finished toggle news as read at miniflux server', LogLevel.INFO);
+    logThis('toggleNewsAsRead', 'Finished toggle news as read at miniflux server', LogLevel.INFO);
   }
 }
 
 // mark one news directly as read at the miniflux server
-Future<void> toggleOneNewsAsRead(
-    http.Client client, FluxNewsState appState, News news) async {
+Future<void> toggleOneNewsAsRead(http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
-    logThis('toggleOneNewsAsRead',
-        'Starting toggle one news as read at miniflux server', LogLevel.INFO);
+    logThis('toggleOneNewsAsRead', 'Starting toggle one news as read at miniflux server', LogLevel.INFO);
   }
   // check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     List<int> newsIds = [];
 
     newsIds.add(news.newsID);
-    ReadNewsList newReadNewsList =
-        ReadNewsList(newsIds: newsIds, status: news.status);
+    ReadNewsList newReadNewsList = ReadNewsList(newsIds: newsIds, status: news.status);
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-      FluxNewsState.httpMinifluxContentTypeHeaderString:
-          FluxNewsState.httpContentTypeString,
+      FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
     };
     // send the ReadNewsList object to the miniflux server to mark the news as read
-    final response = await client.put(
-        Uri.parse('${appState.minifluxURL!}entries'),
-        headers: header,
-        body: jsonEncode(newReadNewsList));
+    final response = await client.put(Uri.parse('${appState.minifluxURL!}entries'),
+        headers: header, body: jsonEncode(newReadNewsList));
     if (response.statusCode != 204) {
       logThis(
           'toggleOneNewsAsRead',
@@ -482,17 +461,14 @@ Future<void> toggleOneNewsAsRead(
     }
   }
   if (appState.debugMode) {
-    logThis('toggleOneNewsAsRead',
-        'Finished toggle one news as read at miniflux server', LogLevel.INFO);
+    logThis('toggleOneNewsAsRead', 'Finished toggle one news as read at miniflux server', LogLevel.INFO);
   }
 }
 
 // mark a news as bookmarked at the miniflux server
-Future<void> toggleBookmark(
-    http.Client client, FluxNewsState appState, News news) async {
+Future<void> toggleBookmark(http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
-    logThis('toggleBookmark', 'Starting toggle bookmark at miniflux server',
-        LogLevel.INFO);
+    logThis('toggleBookmark', 'Starting toggle bookmark at miniflux server', LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -516,32 +492,24 @@ Future<void> toggleBookmark(
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       } else {
         // if the response code is 204, update the bookmark status of the news in the database
-        await appState.db!.rawUpdate(
-            'UPDATE news SET starred = ? WHERE newsId = ?',
-            [news.starred ? 1 : 0, news.newsID]);
+        await appState.db!
+            .rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?', [news.starred ? 1 : 0, news.newsID]);
         if (appState.debugMode) {
-          logThis(
-              'toggleBookmark',
-              'Updated bookmark status of news ${news.newsID} in database',
-              LogLevel.INFO);
+          logThis('toggleBookmark', 'Updated bookmark status of news ${news.newsID} in database', LogLevel.INFO);
         }
       }
     }
   }
   if (appState.debugMode) {
-    logThis('toggleBookmark', 'Finished toggle bookmark at miniflux server',
-        LogLevel.INFO);
+    logThis('toggleBookmark', 'Finished toggle bookmark at miniflux server', LogLevel.INFO);
   }
 }
 
 // mark a news as bookmarked at the miniflux server
-Future<void> saveNewsToThirdPartyService(
-    http.Client client, FluxNewsState appState, News news) async {
+Future<void> saveNewsToThirdPartyService(http.Client client, FluxNewsState appState, News news) async {
   if (appState.debugMode) {
     logThis(
-        'saveNewsToThirdPartyService',
-        'Starting saving news to third party service at miniflux server',
-        LogLevel.INFO);
+        'saveNewsToThirdPartyService', 'Starting saving news to third party service at miniflux server', LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
@@ -557,13 +525,10 @@ Future<void> saveNewsToThirdPartyService(
       );
       if (response.statusCode != 202) {
         if (response.statusCode == 400) {
-          final errorMessage =
-              jsonDecode(response.body) as Map<String, dynamic>;
-          if (errorMessage['error_message'] ==
-              'no third-party integration enabled') {
+          final errorMessage = jsonDecode(response.body) as Map<String, dynamic>;
+          if (errorMessage['error_message'] == 'no third-party integration enabled') {
             if (appState.debugMode) {
-              logThis('saveNewsToThirdPartyService',
-                  'no third-party integration enabled', LogLevel.INFO);
+              logThis('saveNewsToThirdPartyService', 'no third-party integration enabled', LogLevel.INFO);
             }
           } else {
             logThis(
@@ -586,20 +551,14 @@ Future<void> saveNewsToThirdPartyService(
   }
   if (appState.debugMode) {
     logThis(
-        'saveNewsToThirdPartyService',
-        'Finished saving news to third party service at miniflux server',
-        LogLevel.INFO);
+        'saveNewsToThirdPartyService', 'Finished saving news to third party service at miniflux server', LogLevel.INFO);
   }
 }
 
 // fetch the information about the categories from the miniflux server
-Future<Categories> fetchCategoryInformation(
-    http.Client client, FluxNewsState appState) async {
+Future<Categories> fetchCategoryInformation(http.Client client, FluxNewsState appState) async {
   if (appState.debugMode) {
-    logThis(
-        'fetchCategoryInformation',
-        'Starting fetching category information from miniflux server',
-        LogLevel.INFO);
+    logThis('fetchCategoryInformation', 'Starting fetching category information from miniflux server', LogLevel.INFO);
   }
   List<Category> newCategoryList = [];
   http.Response response;
@@ -609,8 +568,7 @@ Future<Categories> fetchCategoryInformation(
     if (appState.db != null) {
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxAcceptHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
       // then request the categories from the miniflux server
       response = await client.get(
@@ -628,15 +586,13 @@ Future<Categories> fetchCategoryInformation(
       } else {
         // if the response code is 200, decode the response body and create a new Categories list
         Iterable l = json.decode(utf8.decode(response.bodyBytes));
-        newCategoryList =
-            List<Category>.from(l.map((model) => Category.fromJson(model)));
+        newCategoryList = List<Category>.from(l.map((model) => Category.fromJson(model)));
 
         // iterate over the categories list and request the feeds for each category
         for (Category category in newCategoryList) {
           List<Feed> feedList = [];
           response = await client.get(
-            Uri.parse(
-                '${appState.minifluxURL!}categories/${category.categoryID}/feeds'),
+            Uri.parse('${appState.minifluxURL!}categories/${category.categoryID}/feeds'),
             headers: header,
           );
           if (response.statusCode != 200) {
@@ -655,8 +611,8 @@ Future<Categories> fetchCategoryInformation(
             // iterate over the feeds list and query the database for the news count of the feed
             for (Feed feed in feedList) {
               int? count;
-              count = Sqflite.firstIntValue(await appState.db!.rawQuery(
-                  'SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]));
+              count = Sqflite.firstIntValue(
+                  await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]));
               count ??= 0;
 
               // add the news count to the feed object
@@ -665,17 +621,14 @@ Future<Categories> fetchCategoryInformation(
               // if the feed icon id is not null and not 0, request the feed icon from the miniflux server
               if (feed.feedIconID != null && feed.feedIconID != 0) {
                 response = await client.get(
-                  Uri.parse(
-                      '${appState.minifluxURL!}feeds/${feed.feedID}/icon'),
+                  Uri.parse('${appState.minifluxURL!}feeds/${feed.feedID}/icon'),
                   headers: header,
                 );
                 if (response.statusCode != 200) {
                   if (response.statusCode == 404) {
                     if (appState.debugMode) {
                       logThis(
-                          'fetchCategoryInformation',
-                          'No feed icon for feed with id ${feed.feedID}',
-                          LogLevel.INFO);
+                          'fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
                     }
                     // This feed has no feed icon, do nothing.
                   } else {
@@ -687,17 +640,13 @@ Future<Categories> fetchCategoryInformation(
                     throw FluxNewsState.httpUnexpectedResponseErrorString;
                   }
                 } else {
-                  FeedIcon feedIcon = FeedIcon.fromJson(
-                      jsonDecode(utf8.decode(response.bodyBytes)));
+                  FeedIcon feedIcon = FeedIcon.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
                   feed.icon = feedIcon.getIcon();
                   feed.iconMimeType = feedIcon.iconMimeType;
                 }
               } else {
                 if (appState.debugMode) {
-                  logThis(
-                      'fetchCategoryInformation',
-                      'No feed icon for feed with id ${feed.feedID}',
-                      LogLevel.INFO);
+                  logThis('fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
                 }
               }
             }
@@ -709,10 +658,7 @@ Future<Categories> fetchCategoryInformation(
     }
   }
   if (appState.debugMode) {
-    logThis(
-        'fetchCategoryInformation',
-        'Finished fetching category information from miniflux server',
-        LogLevel.INFO);
+    logThis('fetchCategoryInformation', 'Finished fetching category information from miniflux server', LogLevel.INFO);
   }
   // return the new categories list
   Categories newCategories = Categories(categories: newCategoryList);
@@ -720,11 +666,9 @@ Future<Categories> fetchCategoryInformation(
 }
 
 // fetch the feed icon from the miniflux server
-Future<FeedIcon?> getFeedIcon(
-    http.Client client, FluxNewsState appState, int feedID) async {
+Future<FeedIcon?> getFeedIcon(http.Client client, FluxNewsState appState, int feedID) async {
   if (appState.debugMode) {
-    logThis('getFeedIcon', 'Starting getting feed icon from miniflux server',
-        LogLevel.INFO);
+    logThis('getFeedIcon', 'Starting getting feed icon from miniflux server', LogLevel.INFO);
   }
   http.Response response;
   FeedIcon? feedIcon;
@@ -735,8 +679,7 @@ Future<FeedIcon?> getFeedIcon(
       // then request the feed icon from the miniflux server
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxAcceptHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
       response = await client.get(
         Uri.parse('${appState.minifluxURL!}feeds/$feedID/icon'),
@@ -745,70 +688,54 @@ Future<FeedIcon?> getFeedIcon(
       if (response.statusCode != 200) {
         if (response.statusCode == 404) {
           if (appState.debugMode) {
-            logThis('getFeedIcon', 'No feed icon for feed with id $feedID',
-                LogLevel.INFO);
+            logThis('getFeedIcon', 'No feed icon for feed with id $feedID', LogLevel.INFO);
           }
           // This feed has no feed icon, do nothing
         } else {
-          logThis(
-              'getFeedIcon',
-              'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID',
-              LogLevel.ERROR);
+          logThis('getFeedIcon',
+              'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID', LogLevel.ERROR);
 
           // if the response code is not 200, throw an error
           throw FluxNewsState.httpUnexpectedResponseErrorString;
         }
       } else {
         // if the response code is 200, decode the response body and create a new FeedIcon object
-        feedIcon =
-            FeedIcon.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+        feedIcon = FeedIcon.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
       }
     }
   }
   if (appState.debugMode) {
-    logThis('getFeedIcon', 'Finished getting feed icon from miniflux server',
-        LogLevel.INFO);
+    logThis('getFeedIcon', 'Finished getting feed icon from miniflux server', LogLevel.INFO);
   }
   // return the feed icon
   return feedIcon;
 }
 
 // check if the miniflux credentials are valid
-Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
-    String? miniFluxApiKey, FluxNewsState appState) async {
+Future<bool> checkMinifluxCredentials(
+    http.Client client, String? miniFluxUrl, String? miniFluxApiKey, FluxNewsState appState) async {
   if (appState.debugMode) {
-    logThis('checkMinifluxCredentials',
-        'Starting checking miniflux credentials', LogLevel.INFO);
+    logThis('checkMinifluxCredentials', 'Starting checking miniflux credentials', LogLevel.INFO);
   }
   // first check if the miniflux url and api key is set
   if (miniFluxApiKey != null && miniFluxUrl != null) {
     final header = {
       FluxNewsState.httpMinifluxAuthHeaderString: miniFluxApiKey,
-      FluxNewsState.httpMinifluxAcceptHeaderString:
-          FluxNewsState.httpContentTypeString,
+      FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
     // then request the user information from the miniflux server
-    Response response =
-        await client.get(Uri.parse('${miniFluxUrl}me'), headers: header);
+    Response response = await client.get(Uri.parse('${miniFluxUrl}me'), headers: header);
     if (response.statusCode == 200) {
       // request the Version of the miniflux server
-      response =
-          await client.get(Uri.parse('${miniFluxUrl}version'), headers: header);
+      response = await client.get(Uri.parse('${miniFluxUrl}version'), headers: header);
       if (response.statusCode == 200) {
-        Version minifluxVersion =
-            Version.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-        appState.minifluxVersionInt =
-            int.parse(minifluxVersion.version.replaceAll(RegExp(r'\D'), ''));
+        Version minifluxVersion = Version.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+        appState.minifluxVersionInt = int.parse(minifluxVersion.version.replaceAll(RegExp(r'\D'), ''));
         appState.minifluxVersionString = minifluxVersion.version;
-        appState.storage.write(
-            key: FluxNewsState.secureStorageMinifluxVersionKey,
-            value: minifluxVersion.version);
+        appState.storage.write(key: FluxNewsState.secureStorageMinifluxVersionKey, value: minifluxVersion.version);
         appState.refreshView();
         if (appState.debugMode) {
-          logThis(
-              'checkMinifluxCredentials',
-              'Miniflux v1 API Version: ${minifluxVersion.version}',
-              LogLevel.INFO);
+          logThis('checkMinifluxCredentials', 'Miniflux v1 API Version: ${minifluxVersion.version}', LogLevel.INFO);
         }
       } else {
         // need to remove the "v1/" part from the url to request the version api endpoint
@@ -817,37 +744,28 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
           minifluxBaseURL = miniFluxUrl.substring(0, miniFluxUrl.length - 3);
         }
 
-        response = await client.get(Uri.parse('${minifluxBaseURL}version'),
-            headers: header);
+        response = await client.get(Uri.parse('${minifluxBaseURL}version'), headers: header);
         if (response.statusCode == 200) {
-          appState.minifluxVersionInt =
-              int.parse(response.body.replaceAll(RegExp(r'\D'), ''));
+          appState.minifluxVersionInt = int.parse(response.body.replaceAll(RegExp(r'\D'), ''));
           appState.minifluxVersionString = response.body;
-          appState.storage.write(
-              key: FluxNewsState.secureStorageMinifluxVersionKey,
-              value: response.body);
+          appState.storage.write(key: FluxNewsState.secureStorageMinifluxVersionKey, value: response.body);
           appState.refreshView();
           if (appState.debugMode) {
-            logThis('checkMinifluxCredentials',
-                'Miniflux Version: ${response.body}', LogLevel.INFO);
+            logThis('checkMinifluxCredentials', 'Miniflux Version: ${response.body}', LogLevel.INFO);
           }
         } else {
-          logThis(
-              'checkMinifluxCredentials',
-              'Got unexpected response from miniflux server: ${response.statusCode} for version',
-              LogLevel.ERROR);
+          logThis('checkMinifluxCredentials',
+              'Got unexpected response from miniflux server: ${response.statusCode} for version', LogLevel.ERROR);
         }
       }
       if (appState.debugMode) {
-        logThis('checkMinifluxCredentials',
-            'Finished checking miniflux credentials', LogLevel.INFO);
+        logThis('checkMinifluxCredentials', 'Finished checking miniflux credentials', LogLevel.INFO);
       }
       // if the response code is 200, the credentials are valid
       return true;
     } else {
       if (appState.debugMode) {
-        logThis('checkMinifluxCredentials',
-            'Finished checking miniflux credentials', LogLevel.INFO);
+        logThis('checkMinifluxCredentials', 'Finished checking miniflux credentials', LogLevel.INFO);
       }
       logThis(
           'checkMinifluxCredentials',
@@ -859,8 +777,7 @@ Future<bool> checkMinifluxCredentials(http.Client client, String? miniFluxUrl,
     }
   } else {
     if (appState.debugMode) {
-      logThis('checkMinifluxCredentials',
-          'Finished checking miniflux credentials', LogLevel.INFO);
+      logThis('checkMinifluxCredentials', 'Finished checking miniflux credentials', LogLevel.INFO);
     }
     // if the miniflux url or api key is not set, the credentials are invalid
     return false;
