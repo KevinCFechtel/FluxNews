@@ -59,7 +59,7 @@
     "insecureMinifluxURL" : "Es wird eine unsichere Verbindung zu miniflux benutzt!",
     "longSyncWarning" : "Die Anzahl der Nachrichten führt zu einer langsamen Synchronisation!",
     "longSyncHeader" : "Langsame Synchronisation",
-    "tooManyNews" : "Die Anzahl der Nachrichten überschreitet die Grenze von 10.000, daher ist eine Synchronisation nicht möglich.",
+    "tooManyNews" : "Die Anzahl der Nachrichten überschreitet die Grenze von 10.000, daher ist eine Synchronisation nicht möglich.\nBitte reduzieren Sie die Anzahl der zu synchronisierenden Nachrichten.",
     "markAllAsRead" : "Alle Nachrichten als\ngelesen markieren",
     "markBookmarkedAsRead" : "Lesezeichen als gelesen\nmarkieren",
     "markCategoryAsRead" : "Kategorie als gelesen\nmarkieren",
