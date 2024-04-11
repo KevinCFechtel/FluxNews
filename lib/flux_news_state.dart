@@ -28,7 +28,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.4.1';
+  static const String applicationVersion = '1.4.2';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -360,7 +360,7 @@ class FluxNewsState extends ChangeNotifier {
       // assign the miniflux server version from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxVersionKey) {
         if (value != '') {
-          minifluxVersionInt = int.parse(value.replaceAll(".", ""));
+          minifluxVersionInt = int.parse(value.replaceAll(RegExp(r'\D'), ''));
           minifluxVersionString = value;
         }
       }
