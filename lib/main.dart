@@ -28,12 +28,7 @@ Future<void> main() async {
   if (Platform.isAndroid || Platform.isIOS) {
     // init the log system
     await FlutterLogs.initLogs(
-        logLevelsEnabled: [
-          LogLevel.INFO,
-          LogLevel.WARNING,
-          LogLevel.ERROR,
-          LogLevel.SEVERE
-        ],
+        logLevelsEnabled: [LogLevel.INFO, LogLevel.WARNING, LogLevel.ERROR, LogLevel.SEVERE],
         timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
         directoryStructure: DirectoryStructure.FOR_DATE,
         logFileExtension: LogFileExtension.LOG,
@@ -75,14 +70,12 @@ class FluxNews extends StatelessWidget {
             if (context.mounted) {
               final box = context.findRenderObject() as RenderBox?;
               Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")],
-                  sharePositionOrigin:
-                      box!.localToGlobal(Offset.zero) & const Size(100, 100));
+                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100));
             }
           }
         } else {
           if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logError(FluxNewsState.logTag, "existsSync",
-                "File not found in storage.");
+            FlutterLogs.logError(FluxNewsState.logTag, "existsSync", "File not found in storage.");
           }
         }
       }
@@ -103,8 +96,7 @@ class FluxNews extends StatelessWidget {
   Widget getMaterialApp(BuildContext context) {
     FluxNewsState appState = context.read<FluxNewsState>();
     // read the date format of the system and assign it to the date format variable
-    final mediumDatePattern =
-        SystemDateTimeFormat.of(context).mediumDatePattern;
+    final mediumDatePattern = SystemDateTimeFormat.of(context).mediumDatePattern;
     final timePattern = SystemDateTimeFormat.of(context).timePattern;
     final dateFormatString = '$mediumDatePattern $timePattern';
     appState.dateFormat = DateFormat(dateFormatString);
@@ -112,8 +104,7 @@ class FluxNews extends StatelessWidget {
     // init the dynamic color selection.
     // if the device is capable, we read the configured color scheme of the device
     // and add it as the seed of the app color scheme.
-    return DynamicColorBuilder(
-        builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+    return DynamicColorBuilder(builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
       ColorScheme lightColorScheme;
       ColorScheme darkColorScheme;
 
@@ -135,8 +126,7 @@ class FluxNews extends StatelessWidget {
       }
       return MaterialApp(
         // setting theme mode depending on the settings
-        themeMode: appState.brightnessMode ==
-                FluxNewsState.brightnessModeSystemString
+        themeMode: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
             ? ThemeMode.system
             : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
                 ? ThemeMode.dark
@@ -152,13 +142,11 @@ class FluxNews extends StatelessWidget {
             listTileTheme: const ListTileThemeData(
               iconColor: Colors.black54,
             ),
-            expansionTileTheme:
-                const ExpansionTileThemeData(iconColor: Colors.black54),
+            expansionTileTheme: const ExpansionTileThemeData(iconColor: Colors.black54),
             primaryIconTheme: const IconThemeData(
               color: Colors.black54,
             ),
-            textSelectionTheme:
-                const TextSelectionThemeData(cursorColor: Colors.black54),
+            textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.black54),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: SystemUiOverlayStyle(
                   systemNavigationBarColor: Colors.white10,
@@ -180,14 +168,10 @@ class FluxNews extends StatelessWidget {
               headlineSmall: TextStyle(color: Colors.black54),
               bodyMedium: TextStyle(color: Colors.black54),
               bodyLarge: TextStyle(color: Colors.black54),
-              titleLarge: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
+              titleLarge: TextStyle(color: Colors.black54, fontSize: 18, fontWeight: FontWeight.bold),
               labelLarge: TextStyle(color: Colors.black54, fontSize: 16),
               labelMedium: TextStyle(color: Colors.black54),
-              titleMedium: TextStyle(
-                  color: Colors.black54, fontWeight: FontWeight.normal),
+              titleMedium: TextStyle(color: Colors.black54, fontWeight: FontWeight.normal),
             ),
             disabledColor: Colors.black26),
         // define the theme for the dark theme
@@ -201,13 +185,11 @@ class FluxNews extends StatelessWidget {
             listTileTheme: const ListTileThemeData(
               iconColor: Colors.white70,
             ),
-            expansionTileTheme:
-                const ExpansionTileThemeData(iconColor: Colors.white70),
+            expansionTileTheme: const ExpansionTileThemeData(iconColor: Colors.white70),
             primaryIconTheme: const IconThemeData(
               color: Colors.white70,
             ),
-            textSelectionTheme:
-                const TextSelectionThemeData(cursorColor: Colors.white70),
+            textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.white70),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: SystemUiOverlayStyle(
                   systemNavigationBarColor: Colors.black.withOpacity(0.1),
@@ -231,14 +213,10 @@ class FluxNews extends StatelessWidget {
               headlineSmall: TextStyle(color: Colors.white70),
               bodyMedium: TextStyle(color: Colors.white70),
               bodyLarge: TextStyle(color: Colors.white70),
-              titleLarge: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
+              titleLarge: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
               labelLarge: TextStyle(color: Colors.white70, fontSize: 16),
               labelMedium: TextStyle(color: Colors.white70),
-              titleMedium: TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.normal),
+              titleMedium: TextStyle(color: Colors.white70, fontWeight: FontWeight.normal),
             ),
             disabledColor: Colors.white30),
         // define routes for main view (FluxNewsBody), settings view and search view
@@ -252,6 +230,7 @@ class FluxNews extends StatelessWidget {
         supportedLocales: const [
           Locale('en', ''),
           Locale('de', ''),
+          Locale('tr', ''),
         ],
       );
     });

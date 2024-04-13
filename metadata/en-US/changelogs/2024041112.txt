@@ -1,0 +1,2 @@
+Fix the reading of the version under certain conditions with the V1 api
+Turkish language is added
