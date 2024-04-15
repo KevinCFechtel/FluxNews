@@ -19,7 +19,7 @@
     "apiUrl": "API Url",
     "apiKey": "API Key",
     "minifluxVersion": "Miniflux Version",
-    "brightnesMode": "Brightnes mode",
+    "brightnesMode": "Brightness mode",
     "sortOrderOfNews": "Sort order of News",
     "markAsReadOnScrollover": "Mark as read on scrollover",
     "amountSaved": "Amount of News\nwhich should be saved",
