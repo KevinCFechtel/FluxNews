@@ -79,6 +79,7 @@ flutter {
 
 dependencies {
     api "androidx.browser:browser:1.5.0"
+    //implementation "org.chromium.net:cronet-embedded:113.5672.61"
 }
 
 ext.abiCodes = ["x86_64": 1, "armeabi-v7a": 2, "arm64-v8a": 3]

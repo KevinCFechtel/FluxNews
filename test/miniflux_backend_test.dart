@@ -63,8 +63,7 @@ void main() {
       final client = MockClient();
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxAcceptHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
 
       when(client.get(
@@ -377,7 +376,7 @@ void main() {
         ]
       }''', 200));
 
-      var newsList = await fetchNews(client, appState);
+      var newsList = await fetchNews(appState);
       expect(newsList, isA<NewsList>());
       expect(newsList.newsCount == 5, isTrue);
       expect(newsList.news.length == 5, isTrue);
@@ -394,8 +393,7 @@ void main() {
       final client = MockClient();
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxAcceptHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
       when(client.get(
               Uri.parse(
@@ -404,11 +402,10 @@ void main() {
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
       try {
-        await fetchNews(client, appState);
+        await fetchNews(appState);
         fail("exception not thrown");
       } catch (e) {
-        expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString,
-            isTrue);
+        expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString, isTrue);
       }
     });
 
@@ -423,8 +420,7 @@ void main() {
       final client = MockClient();
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxAcceptHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
 
       when(client.get(
@@ -557,7 +553,7 @@ void main() {
         ]
       }''', 200));
 
-      var newsList = await fetchStarredNews(client, appState);
+      var newsList = await fetchStarredNews(appState);
       expect(newsList, isA<NewsList>());
       expect(newsList.newsCount == 2, isTrue);
       expect(newsList.news.length == 2, isTrue);
@@ -574,8 +570,7 @@ void main() {
       final client = MockClient();
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxAcceptHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
       when(client.get(
               Uri.parse(
@@ -584,11 +579,10 @@ void main() {
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
       try {
-        await fetchStarredNews(client, appState);
+        await fetchStarredNews(appState);
         fail("exception not thrown");
       } catch (e) {
-        expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString,
-            isTrue);
+        expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString, isTrue);
       }
     });
     testWidgets('toggleNewsAsRead failure test', (WidgetTester tester) async {
@@ -601,20 +595,17 @@ void main() {
       final client = MockClient();
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
-        FluxNewsState.httpMinifluxContentTypeHeaderString:
-            FluxNewsState.httpContentTypeString,
+        FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
       };
 
-      when(client.put(Uri.parse('${appState.minifluxURL!}entries'),
-              headers: header))
+      when(client.put(Uri.parse('${appState.minifluxURL!}entries'), headers: header))
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
       try {
-        await toggleNewsAsRead(client, appState);
+        await toggleNewsAsRead(appState);
         fail("exception not thrown");
       } catch (e) {
-        expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString,
-            isTrue);
+        expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString, isTrue);
       }
       /*
       await database.close();
