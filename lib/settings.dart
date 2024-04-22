@@ -1,17 +1,13 @@
 import 'dart:io';
 
-import 'package:cronet_http/cronet_http.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
-import 'package:flux_news/logging.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
 import 'package:provider/provider.dart';
 
 import 'flux_news_state.dart';
@@ -539,34 +535,6 @@ class Settings extends StatelessWidget {
                     _showDeleteLocalCacheDialog(context, appState);
                   },
                 ),
-                // START TEST
-                ListTile(
-                  leading: const Icon(
-                    Icons.api,
-                  ),
-                  title: Text(
-                    'Test',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  onTap: () async {
-                    final http.Client httpClient;
-                    if (Platform.isAndroid) {
-                      final engine = CronetEngine.build();
-                      httpClient = CronetClient.fromCronetEngine(engine, closeEngine: true);
-                    } else {
-                      httpClient = IOClient(HttpClient());
-                    }
-
-                    final header = {
-                      FluxNewsState.httpMinifluxAuthHeaderString: "Test",
-                      FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
-                    };
-                    http.Response response =
-                        await httpClient.get(Uri.parse('https://untrusted-root.badssl.com'), headers: header);
-                    logThis("Test", "Respons: ${response.statusCode}", LogLevel.INFO);
-                  },
-                ),
-                // END TEST
                 const Divider(),
                 // this list tile contains the about dialog
                 AboutListTile(
