@@ -231,6 +231,7 @@ class FluxNews extends StatelessWidget {
           Locale('en', ''),
           Locale('de', ''),
           Locale('tr', ''),
+          Locale('nl', ''),
         ],
       );
     });
