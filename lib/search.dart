@@ -5,7 +5,6 @@ import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/logging.dart';
 import 'package:flux_news/search_news_list.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'flux_news_state.dart';
@@ -47,8 +46,7 @@ class Search extends StatelessWidget {
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)!.searchHint,
               hintStyle: Theme.of(context).textTheme.bodyLarge,
-              border:
-                  UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
+              border: UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
               suffixIcon: IconButton(
                 onPressed: () {
                   appState.searchController.clear();
@@ -64,17 +62,11 @@ class Search extends StatelessWidget {
               if (value != '') {
                 // fetch the news list from the backend with the search text
                 Future<List<News>> searchNewsListResult =
-                    fetchSearchedNews(http.Client(), appState, value)
-                        .onError((error, stackTrace) {
-                  logThis(
-                      'fetchSearchedNews',
-                      'Caught an error in fetchSearchedNews function! : ${error.toString()}',
+                    fetchSearchedNews(appState, value).onError((error, stackTrace) {
+                  logThis('fetchSearchedNews', 'Caught an error in fetchSearchedNews function! : ${error.toString()}',
                       LogLevel.ERROR);
-                  if (appState.errorString !=
-                      AppLocalizations.of(context)!
-                          .communicateionMinifluxError) {
-                    appState.errorString = AppLocalizations.of(context)!
-                        .communicateionMinifluxError;
+                  if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+                    appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
                     appState.newError = true;
                     appState.refreshView();
                   }
@@ -164,8 +156,7 @@ class TooManyNewsWidget extends StatelessWidget {
 class FluxNewsSearchStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsSearchStatefulWrapper(
-      {super.key, required this.onInit, required this.child});
+  const FluxNewsSearchStatefulWrapper({super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }

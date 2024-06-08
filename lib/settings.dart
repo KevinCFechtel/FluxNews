@@ -8,7 +8,6 @@ import 'package:flux_news/database_backend.dart';
 import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'flux_news_state.dart';
@@ -661,9 +660,8 @@ class Settings extends StatelessWidget {
                           }
                         }
                         if (appState.minifluxAPIKey != null && appState.minifluxAPIKey != '') {
-                          bool authCheck =
-                              await checkMinifluxCredentials(http.Client(), newText, appState.minifluxAPIKey!, appState)
-                                  .onError((error, stackTrace) => false);
+                          bool authCheck = await checkMinifluxCredentials(newText, appState.minifluxAPIKey!, appState)
+                              .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
                           appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
@@ -693,9 +691,8 @@ class Settings extends StatelessWidget {
                           }
                         }
                         if (appState.minifluxAPIKey != null && appState.minifluxAPIKey != '' && newText != null) {
-                          bool authCheck =
-                              await checkMinifluxCredentials(http.Client(), newText, appState.minifluxAPIKey!, appState)
-                                  .onError((error, stackTrace) => false);
+                          bool authCheck = await checkMinifluxCredentials(newText, appState.minifluxAPIKey!, appState)
+                              .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
                           appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
@@ -760,9 +757,8 @@ class Settings extends StatelessWidget {
                     newText = controller.text;
                   }
                   if (appState.minifluxURL != null && appState.minifluxURL != '' && newText != null) {
-                    bool authCheck =
-                        await checkMinifluxCredentials(http.Client(), appState.minifluxURL!, newText, appState)
-                            .onError((error, stackTrace) => false);
+                    bool authCheck = await checkMinifluxCredentials(appState.minifluxURL!, newText, appState)
+                        .onError((error, stackTrace) => false);
                     appState.errorOnMinifluxAuth = !authCheck;
                     appState.insecureMinifluxURL = !appState.minifluxURL!.toLowerCase().startsWith('https');
                     appState.refreshView();

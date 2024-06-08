@@ -9,30 +9,25 @@ import 'package:flux_news/flux_news_state.dart';
 import 'package:flux_news/logging.dart';
 import 'package:flux_news/miniflux_backend.dart';
 import 'package:flux_news/news_model.dart';
-import 'package:http/http.dart' as http;
 
 // this is a helper function to get the actual tab position
 // this position is used to open the context menu of the news card here
-void getTapPosition(
-    TapDownDetails details, BuildContext context, FluxNewsState appState) {
+void getTapPosition(TapDownDetails details, BuildContext context, FluxNewsState appState) {
   appState.tapPosition = details.globalPosition;
 }
 
 // here is the function to show the context menu
 // this menu give the option to mark a news as read or unread and to bookmark a news
-void showContextMenu(News news, BuildContext context, bool searchView,
-    FluxNewsState appState, FluxNewsCounterState appCounterState) async {
+void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsState appState,
+    FluxNewsCounterState appCounterState) async {
   //Offset offset = details.globalPosition;
   final RenderObject overlay = Overlay.of(context).context.findRenderObject()!;
 
   final result = await showMenu(
       context: context,
       // open the menu on the previous recognized position
-      position: RelativeRect.fromRect(
-          Rect.fromLTWH(
-              appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
-          Rect.fromLTWH(0, 0, overlay.paintBounds.size.width,
-              overlay.paintBounds.size.height)),
+      position: RelativeRect.fromRect(Rect.fromLTWH(appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
+          Rect.fromLTWH(0, 0, overlay.paintBounds.size.width, overlay.paintBounds.size.height)),
       items: [
         // bookmark the news
         PopupMenuItem(
@@ -52,8 +47,7 @@ void showContextMenu(News news, BuildContext context, bool searchView,
                     Icons.star,
                   ),
                   Padding(
-                      padding: const EdgeInsets.only(left: 5),
-                      child: Text(AppLocalizations.of(context)!.addBookmark)),
+                      padding: const EdgeInsets.only(left: 5), child: Text(AppLocalizations.of(context)!.addBookmark)),
                 ]),
         ),
         // mark the news as unread or read
@@ -63,9 +57,7 @@ void showContextMenu(News news, BuildContext context, bool searchView,
               : FluxNewsState.readNewsStatus,
           child: Row(children: [
             Icon(
-              news.status == FluxNewsState.readNewsStatus
-                  ? Icons.fiber_new
-                  : Icons.remove_red_eye_outlined,
+              news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
             ),
             Padding(
                 padding: const EdgeInsets.only(left: 5),
@@ -76,11 +68,9 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         ),
         // save the news to third party service
         PopupMenuItem(
-            enabled:
-                appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
-                    ? appState.minifluxVersionInt >=
-                        FluxNewsState.minifluxSaveMinVersion
-                    : true,
+            enabled: appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
+                ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion
+                : true,
             value: FluxNewsState.contextMenuSaveString,
             child: Row(children: [
               const Icon(
@@ -106,17 +96,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
       }
 
       // toggle the news as bookmarked or not bookmarked at the miniflux server
-      await toggleBookmark(http.Client(), appState, news)
-          .onError((error, stackTrace) {
-        logThis(
-            'toggleBookmark',
-            'Caught an error in toggleBookmark function! : ${error.toString()}',
-            LogLevel.ERROR);
+      await toggleBookmark(appState, news).onError((error, stackTrace) {
+        logThis('toggleBookmark', 'Caught an error in toggleBookmark function! : ${error.toString()}', LogLevel.ERROR);
 
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
+        if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
           appState.newError = true;
           appState.refreshView();
         }
@@ -129,14 +113,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
           updateStarredCounter(appState, context);
         }
       } catch (e) {
-        logThis(
-            'updateNewsStarredStatusInDB',
-            'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}',
-            LogLevel.ERROR);
+        logThis('updateNewsStarredStatusInDB',
+            'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
 
         if (context.mounted) {
-          if (appState.errorString !=
-              AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -149,8 +130,7 @@ void showContextMenu(News news, BuildContext context, bool searchView,
       if (context.mounted) {
         if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
           appState.feedIDs = [-1];
-          appState.newsList =
-              queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+          appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
             waitUntilNewsListBuild(appState).whenComplete(
               () {
                 appState.itemScrollController.jumpTo(index: 0);
@@ -161,15 +141,11 @@ void showContextMenu(News news, BuildContext context, bool searchView,
         } else {
           if (searchView) {
             // update the news list of the main view
-            appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
-                .onError((error, stackTrace) {
-              logThis(
-                  'queryNewsFromDB',
-                  'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+            appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
+              logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}',
                   LogLevel.ERROR);
 
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
+              appState.errorString = AppLocalizations.of(context)!.databaseError;
               return [];
             });
           }
@@ -181,17 +157,13 @@ void showContextMenu(News news, BuildContext context, bool searchView,
     case FluxNewsState.unreadNewsStatus:
       // mark a news as unread, update the news unread status in database
       try {
-        updateNewsStatusInDB(
-            news.newsID, FluxNewsState.unreadNewsStatus, appState);
+        updateNewsStatusInDB(news.newsID, FluxNewsState.unreadNewsStatus, appState);
       } catch (e) {
-        logThis(
-            'updateNewsStatusInDB',
-            'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+        logThis('updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
             LogLevel.ERROR);
 
         if (context.mounted) {
-          if (appState.errorString !=
-              AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -204,20 +176,15 @@ void showContextMenu(News news, BuildContext context, bool searchView,
       if (searchView) {
         // update the news status at the miniflux server
         try {
-          toggleOneNewsAsRead(http.Client(), appState, news);
+          toggleOneNewsAsRead(appState, news);
         } catch (e) {
-          logThis(
-              'toggleOneNewsAsRead',
-              'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
+          logThis('toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
               LogLevel.ERROR);
         }
         // update the news list of the main view
-        appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
-            .onError((error, stackTrace) {
+        appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
-              'queryNewsFromDB',
-              'Caught an error in queryNewsFromDB function! : ${error.toString()}',
-              LogLevel.ERROR);
+              'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
 
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
@@ -235,17 +202,13 @@ void showContextMenu(News news, BuildContext context, bool searchView,
     case FluxNewsState.readNewsStatus:
       // mark a news as read, update the news read status in database
       try {
-        updateNewsStatusInDB(
-            news.newsID, FluxNewsState.readNewsStatus, appState);
+        updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
       } catch (e) {
-        logThis(
-            'updateNewsStatusInDB',
-            'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+        logThis('updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
             LogLevel.ERROR);
 
         if (context.mounted) {
-          if (appState.errorString !=
-              AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -259,20 +222,15 @@ void showContextMenu(News news, BuildContext context, bool searchView,
       if (searchView) {
         // update the news status at the miniflux server
         try {
-          toggleOneNewsAsRead(http.Client(), appState, news);
+          toggleOneNewsAsRead(appState, news);
         } catch (e) {
-          logThis(
-              'toggleOneNewsAsRead',
-              'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
+          logThis('toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
               LogLevel.ERROR);
         }
         // update the news list of the main view
-        appState.newsList = queryNewsFromDB(appState, appState.feedIDs)
-            .onError((error, stackTrace) {
+        appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
-              'queryNewsFromDB',
-              'Caught an error in queryNewsFromDB function! : ${error.toString()}',
-              LogLevel.ERROR);
+              'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
 
           appState.errorString = AppLocalizations.of(context)!.databaseError;
           return [];
@@ -288,17 +246,12 @@ void showContextMenu(News news, BuildContext context, bool searchView,
 
       break;
     case FluxNewsState.contextMenuSaveString:
-      await saveNewsToThirdPartyService(http.Client(), appState, news)
-          .onError((error, stackTrace) {
-        logThis(
-            'saveNewsToThirdPartyService',
-            'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}',
-            LogLevel.ERROR);
+      await saveNewsToThirdPartyService(appState, news).onError((error, stackTrace) {
+        logThis('saveNewsToThirdPartyService',
+            'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}', LogLevel.ERROR);
 
-        if (appState.errorString !=
-            AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString =
-              AppLocalizations.of(context)!.communicateionMinifluxError;
+        if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
           appState.newError = true;
           appState.refreshView();
         }
