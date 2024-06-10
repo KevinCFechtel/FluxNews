@@ -1,0 +1,5 @@
+Private SSL certificates are now supported
+A spelling mistake has been corrected
+Dependencies have been updated
+App is now backwards compatible with android 10
+Dutch language support has been added
