@@ -48,6 +48,9 @@ class News {
   List<Attachment>? attachments;
   String? attachmentURL = '';
   String? attachmentMimeType = '';
+  bool crawler = false;
+  String scraperRules = '';
+  String rewriteRules = '';
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -67,8 +70,7 @@ class News {
     );
 
     if (json['enclosures'] != null) {
-      news.attachments = List<Attachment>.from(
-          json['enclosures'].map((i) => Attachment.fromJson(i)));
+      news.attachments = List<Attachment>.from(json['enclosures'].map((i) => Attachment.fromJson(i)));
     }
 
     return news;
@@ -111,7 +113,10 @@ class News {
         icon = res['icon'],
         iconMimeType = res['iconMimeType'],
         attachmentURL = res['attachmentURL'],
-        attachmentMimeType = res['attachmentMimeType'];
+        attachmentMimeType = res['attachmentMimeType'],
+        crawler = res['crawler'],
+        scraperRules = res['scraper_rules'],
+        rewriteRules = res['rewrite_rules'];
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -142,16 +147,11 @@ class News {
   }
 
   Attachment getFirstImageAttachment() {
-    Attachment imageAttachment = Attachment(
-        attachmentID: -1,
-        newsID: -1,
-        attachmentURL: "",
-        attachmentMimeType: "");
+    Attachment imageAttachment = Attachment(attachmentID: -1, newsID: -1, attachmentURL: "", attachmentMimeType: "");
 
     if (attachments != null) {
       for (var attachment in attachments!) {
-        if (attachment.attachmentMimeType.startsWith("image") &&
-            imageAttachment.attachmentID == -1) {
+        if (attachment.attachmentMimeType.startsWith("image") && imageAttachment.attachmentID == -1) {
           imageAttachment = attachment;
         }
       }
@@ -198,13 +198,10 @@ class News {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsState>().brightnessMode ==
-        FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsState>().brightnessMode ==
-        FluxNewsState.brightnessModeSystemString) {
-      darkModeEnabled =
-          MediaQuery.of(context).platformBrightness == Brightness.dark;
+    } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
+      darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     if (icon != null) {
       if (iconMimeType == 'image/svg+xml') {
@@ -213,16 +210,14 @@ class News {
             String.fromCharCodes(icon!),
             width: size,
             height: size,
-            colorFilter:
-                const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
           );
         } else {
           return SvgPicture.string(
             String.fromCharCodes(icon!),
             width: size,
             height: size,
-            colorFilter:
-                const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
           );
         }
       } else {
@@ -280,7 +275,10 @@ class Feed {
       {required this.feedID,
       required this.title,
       required this.siteUrl,
-      this.feedIconID});
+      this.feedIconID,
+      required this.crawler,
+      required this.scraperRules,
+      required this.rewriteRules});
 
   // define the properties
   int feedID = 0;
@@ -290,6 +288,9 @@ class Feed {
   int newsCount = 0;
   Uint8List? icon;
   String iconMimeType = '';
+  bool crawler = false;
+  String scraperRules = '';
+  String rewriteRules = '';
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -298,6 +299,9 @@ class Feed {
       title: json['title'],
       siteUrl: json['site_url'],
       feedIconID: json['icon']?['icon_id'],
+      crawler: json['crawler'],
+      scraperRules: json['scraper_rules'],
+      rewriteRules: json['rewrite_rules'],
     );
   }
 
@@ -310,6 +314,9 @@ class Feed {
       'icon': icon,
       'iconMimeType': iconMimeType,
       'newsCount': newsCount,
+      'crawler': crawler,
+      'scraper_rules': scraperRules,
+      'rewrite_rules': rewriteRules,
     };
   }
 
@@ -320,7 +327,10 @@ class Feed {
         siteUrl = res['site_url'],
         icon = res['icon'],
         iconMimeType = res['iconMimeType'],
-        newsCount = res['newsCount'];
+        newsCount = res['newsCount'],
+        crawler = res['crawler'],
+        scraperRules = res['scraper_rules'],
+        rewriteRules = res['rewrite_rules'];
 
   // define the method to get the feed icon as a widget
   // the icon could be a svg or a png image
@@ -330,13 +340,10 @@ class Feed {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsState>().brightnessMode ==
-        FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsState>().brightnessMode ==
-        FluxNewsState.brightnessModeSystemString) {
-      darkModeEnabled =
-          MediaQuery.of(context).platformBrightness == Brightness.dark;
+    } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
+      darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     if (icon != null) {
       if (iconMimeType == 'image/svg+xml') {
@@ -345,16 +352,14 @@ class Feed {
             String.fromCharCodes(icon!),
             width: size,
             height: size,
-            colorFilter:
-                const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
           );
         } else {
           return SvgPicture.string(
             String.fromCharCodes(icon!),
             width: size,
             height: size,
-            colorFilter:
-                const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
           );
         }
       } else {
@@ -394,8 +399,7 @@ class FeedIcon {
 
 // define the model for a category
 class Category {
-  Category({required this.categoryID, required this.title, List<Feed>? feeds})
-      : feeds = feeds ?? [];
+  Category({required this.categoryID, required this.title, List<Feed>? feeds}) : feeds = feeds ?? [];
 
   // define the properties
   int categoryID = 0;
@@ -447,8 +451,7 @@ class Categories {
   // the news count of a category is the sum of the news count of each feed
   // the news count is stored in the appBarNewsCount variable if the category is currently displayed
   // the appState listener are notified to update the news count in the app bar
-  Future<void> renewNewsCount(
-      FluxNewsState appState, BuildContext context) async {
+  Future<void> renewNewsCount(FluxNewsState appState, BuildContext context) async {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
@@ -462,9 +465,8 @@ class Categories {
         int? categoryNewsCount = 0;
         for (Feed feed in category.feeds) {
           int? feedNewsCount;
-          feedNewsCount = Sqflite.firstIntValue(await appState.db!.rawQuery(
-              'SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?',
-              [feed.feedID, status]));
+          feedNewsCount = Sqflite.firstIntValue(await appState.db!
+              .rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?', [feed.feedID, status]));
           feedNewsCount ??= 0;
           categoryNewsCount ??= 0;
           categoryNewsCount = categoryNewsCount + feedNewsCount;

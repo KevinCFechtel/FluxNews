@@ -5,8 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    as sec_store;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/logging.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
@@ -19,23 +18,19 @@ import 'news_model.dart';
 // generate android options to usw with flutter secure storage
 sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
       encryptedSharedPreferences: true,
-      keyCipherAlgorithm:
-          sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
-      storageCipherAlgorithm:
-          sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
+      keyCipherAlgorithm: sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
+      storageCipherAlgorithm: sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
     );
 
 class FluxNewsState extends ChangeNotifier {
   // init the persistent flutter secure storage
-  final storage =
-      sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
+  final storage = sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
   static const String applicationVersion = '1.4.3';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
-  static const String applicationProjectUrl =
-      ' https://github.com/KevinCFechtel/FluxNews';
+  static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
   static const String databasePathString = 'news_database.db';
   static const String rootRouteString = '/';
@@ -62,20 +57,15 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageMinifluxVersionKey = 'minifluxVersionKey';
   static const String secureStorageBrightnessModeKey = 'brightnessMode';
   static const String secureStorageAmountOfSyncedNewsKey = 'amountOfSyncedNews';
-  static const String secureStorageAmountOfSearchedNewsKey =
-      'amountOfSearchedNews';
+  static const String secureStorageAmountOfSearchedNewsKey = 'amountOfSearchedNews';
   static const String secureStorageSortOrderKey = 'sortOrder';
-  static const String secureStorageSavedScrollPositionKey =
-      'savedScrollPosition';
-  static const String secureStorageMarkAsReadOnScrollOverKey =
-      'markAsReadOnScrollOver';
+  static const String secureStorageSavedScrollPositionKey = 'savedScrollPosition';
+  static const String secureStorageMarkAsReadOnScrollOverKey = 'markAsReadOnScrollOver';
   static const String secureStorageSyncOnStartKey = 'syncOnStart';
   static const String secureStorageNewsStatusKey = 'newsStatus';
   static const String secureStorageAmountOfSavedNewsKey = 'amountOfSavedNews';
-  static const String secureStorageAmountOfSavedStarredNewsKey =
-      'amountOfSavedStarredNews';
-  static const String secureStorageMultilineAppBarTextKey =
-      'multilineAppBarText';
+  static const String secureStorageAmountOfSavedStarredNewsKey = 'amountOfSavedStarredNews';
+  static const String secureStorageMultilineAppBarTextKey = 'multilineAppBarText';
   static const String secureStorageShowFeedIconsTextKey = 'showFeedIcons';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageTrueString = 'true';
@@ -120,16 +110,13 @@ class FluxNewsState extends ChangeNotifier {
   late Offset tapPosition;
   int scrollPosition = 0;
   final ItemScrollController itemScrollController = ItemScrollController();
-  final ItemPositionsListener itemPositionsListener =
-      ItemPositionsListener.create();
+  final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
   final TextEditingController searchController = TextEditingController();
-  final ItemScrollController searchItemScrollController =
-      ItemScrollController();
-  final ItemPositionsListener searchItemPositionsListener =
-      ItemPositionsListener.create();
+  final ItemScrollController searchItemScrollController = ItemScrollController();
+  final ItemPositionsListener searchItemPositionsListener = ItemPositionsListener.create();
 
   // var for formatting the date depending on locale settings
   DateFormat dateFormat = DateFormat('M/d/yy HH:mm');
@@ -235,6 +222,9 @@ class FluxNewsState extends ChangeNotifier {
                           icon BLOB,
                           iconMimeType TEXT,
                           newsCount INTEGER,
+                          crawler INTEGER,
+                          scraper_rules TEXT,
+                          rewrite_rules TEXT,
                           categoryID INTEGER)''',
         );
         // create the table attachments
@@ -280,10 +270,27 @@ class FluxNewsState extends ChangeNotifier {
             '''ALTER TABLE "feeds" 
                      RENAME COLUMN "categorieID" TO "categoryID";''',
           );
+        } else if (oldVersion == 3) {
+          logThis('upgradeDB', 'Upgrading DB from version 3', LogLevel.INFO);
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          icon BLOB,
+                          iconMimeType TEXT,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          scraper_rules TEXT,
+                          rewrite_rules TEXT,
+                          categoryID INTEGER)''',
+          );
         }
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 3,
+      version: 4,
     );
   }
 
@@ -320,15 +327,9 @@ class FluxNewsState extends ChangeNotifier {
         const KeyValueRecordType(key: "10000", value: "10000"),
       ];
       recordTypesBrightnessMode = <KeyValueRecordType>[
-        KeyValueRecordType(
-            key: FluxNewsState.brightnessModeSystemString,
-            value: AppLocalizations.of(context)!.system),
-        KeyValueRecordType(
-            key: FluxNewsState.brightnessModeDarkString,
-            value: AppLocalizations.of(context)!.dark),
-        KeyValueRecordType(
-            key: FluxNewsState.brightnessModeLightString,
-            value: AppLocalizations.of(context)!.light),
+        KeyValueRecordType(key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
+        KeyValueRecordType(key: FluxNewsState.brightnessModeDarkString, value: AppLocalizations.of(context)!.dark),
+        KeyValueRecordType(key: FluxNewsState.brightnessModeLightString, value: AppLocalizations.of(context)!.light),
       ];
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -422,8 +423,7 @@ class FluxNewsState extends ChangeNotifier {
             amountOfSearchedNews = 0;
           }
 
-          for (KeyValueRecordType recordSet
-              in recordTypesAmountOfSearchedNews!) {
+          for (KeyValueRecordType recordSet in recordTypesAmountOfSearchedNews!) {
             if (value == recordSet.key) {
               amontOfSearchedNewsSelection = recordSet;
             }
