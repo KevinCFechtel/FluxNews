@@ -222,7 +222,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         --feeds.icon,
                         feeds.iconMimeType,
                         attachments.attachmentURL,
-                        attachments.attachmentMimeType
+                        attachments.attachmentMimeType,
+                        feeds.crawler,
+                        feeds.scraper_rules,
+                        feeds.rewrite_rules
                   FROM news 
                   LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                   LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
@@ -248,7 +251,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         --feeds.icon,
                         feeds.iconMimeType,
                         attachments.attachmentURL,
-                        attachments.attachmentMimeType 
+                        attachments.attachmentMimeType,
+                        feeds.crawler,
+                        feeds.scraper_rules,
+                        feeds.rewrite_rules
                     FROM news 
                     LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                     LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
@@ -276,7 +282,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         --feeds.icon,
                         feeds.iconMimeType,
                         attachments.attachmentURL,
-                        attachments.attachmentMimeType
+                        attachments.attachmentMimeType,
+                        feeds.crawler,
+                        feeds.scraper_rules,
+                        feeds.rewrite_rules
                 FROM news 
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                 LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
@@ -412,12 +421,12 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawDelete('''DELETE FROM news 
-                        WHERE starred = 0 AND newsID NOT IN 
-                          (SELECT newsID 
-                            FROM news 
-                            WHERE starred = 0
-                            ORDER BY publishedAt DESC
-                            LIMIT ${appState.amountOfSavedNews})''');
+                                      WHERE starred = 0 AND newsID NOT IN 
+                                        (SELECT newsID 
+                                          FROM news 
+                                          WHERE starred = 0
+                                          ORDER BY publishedAt DESC
+                                          LIMIT ${appState.amountOfSavedNews})''');
   }
 
   if (appState.debugMode) {
@@ -437,12 +446,12 @@ Future<void> cleanStarredNews(FluxNewsState appState) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawDelete('''DELETE FROM news 
-                        WHERE starred = 1 AND newsID NOT IN 
-                          (SELECT newsID 
-                            FROM news 
-                            WHERE starred = 1
-                            ORDER BY publishedAt DESC
-                            LIMIT ${appState.amountOfSavedStarredNews})''');
+                                      WHERE starred = 1 AND newsID NOT IN 
+                                        (SELECT newsID 
+                                          FROM news 
+                                          WHERE starred = 1
+                                          ORDER BY publishedAt DESC
+                                          LIMIT ${appState.amountOfSavedStarredNews})''');
   }
 
   if (appState.debugMode) {
@@ -483,17 +492,50 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
         resultSelect = await appState.db!.rawQuery('SELECT feedID FROM feeds WHERE feedID = ?', [feed.feedID]);
         if (resultSelect.isEmpty) {
           // if they don't exists locally, insert the feed
-          result = await appState.db!.rawInsert(
-              'INSERT INTO feeds (feedID, title, site_url, iconMimeType, newsCount, categoryID) VALUES(?,?,?,?,?,?)',
-              [feed.feedID, feed.title, feed.siteUrl, feed.iconMimeType, feed.newsCount, category.categoryID]);
+          result = await appState.db!.rawInsert('''INSERT INTO feeds (feedID, 
+                                                                      title, 
+                                                                      site_url, 
+                                                                      iconMimeType, 
+                                                                      newsCount, 
+                                                                      crawler, 
+                                                                      scraper_rules, 
+                                                                      rewrite_rules, 
+                                                                      categoryID) 
+                                                    VALUES(?,?,?,?,?,?,?,?,?)''', [
+            feed.feedID,
+            feed.title,
+            feed.siteUrl,
+            feed.iconMimeType,
+            feed.newsCount,
+            feed.crawler,
+            feed.scraperRules,
+            feed.rewriteRules,
+            category.categoryID
+          ]);
           if (appState.debugMode) {
             logThis('insertCategoriesInDB', 'Inserted feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
         } else {
           // if they exists locally, update the feed
-          result = await appState.db!.rawUpdate(
-              'UPDATE feeds SET title = ?, site_url = ?, iconMimeType = ?, newsCount = ?, categoryID = ? WHERE feedID = ?',
-              [feed.title, feed.siteUrl, feed.iconMimeType, feed.newsCount, category.categoryID, feed.feedID]);
+          result = await appState.db!.rawUpdate('''UPDATE feeds SET title = ?, 
+                                                                    site_url = ?, 
+                                                                    iconMimeType = ?, 
+                                                                    newsCount = ?, 
+                                                                    crawler = ?,
+                                                                    scraper_rules = ?,
+                                                                    rewrite_rules = ?,
+                                                                    categoryID = ?
+                                                      WHERE feedID = ?''', [
+            feed.title,
+            feed.siteUrl,
+            feed.iconMimeType,
+            feed.newsCount,
+            feed.crawler,
+            feed.scraperRules,
+            feed.rewriteRules,
+            category.categoryID,
+            feed.feedID
+          ]);
           if (appState.debugMode) {
             logThis('insertCategoriesInDB', 'Updated feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
@@ -526,8 +568,17 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
     List<Feed> existingFeeds = [];
     bool feedFound = false;
     // get a list of the local feeds
-    resultSelect = await appState.db!
-        .rawQuery('SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+    resultSelect = await appState.db!.rawQuery('''SELECT feedID, 
+                                                          title, 
+                                                          site_url, 
+                                                          NULL AS icon, 
+                                                          iconMimeType, 
+                                                          newsCount, 
+                                                          crawler,
+                                                          scraper_rules,
+                                                          rewrite_rules,
+                                                          categoryID 
+                                                      FROM feeds''');
     if (resultSelect.isNotEmpty) {
       existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
     }
@@ -572,9 +623,18 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
     categoryList = queryResult.map((e) => Category.fromMap(e)).toList();
     for (Category category in categoryList) {
       List<Feed> feedList = [];
-      queryResult = await appState.db!.rawQuery(
-          'SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds WHERE categoryID = ?',
-          [category.categoryID]);
+      queryResult = await appState.db!.rawQuery('''SELECT feedID, 
+                                                          title, 
+                                                          site_url, 
+                                                          NULL AS icon, 
+                                                          iconMimeType, 
+                                                          newsCount,
+                                                          crawler,
+                                                          scraper_rules,
+                                                          rewrite_rules,
+                                                          categoryID 
+                                                      FROM feeds 
+                                                      WHERE categoryID = ?''', [category.categoryID]);
       for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
         feed.icon = appState.readFeedIconFile(feed.feedID);
         feedList.add(feed);
@@ -674,6 +734,9 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           icon BLOB,
                           iconMimeType TEXT,
                           newsCount INTEGER,
+                          crawler INTEGER,
+                          scraper_rules TEXT,
+                          rewrite_rules TEXT,
                           categoryID INTEGER)''',
     );
     // create the table attachments
