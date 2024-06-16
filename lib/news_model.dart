@@ -28,7 +28,10 @@ class News {
       required this.feedTitle,
       this.attachments,
       this.attachmentURL,
-      this.attachmentMimeType});
+      this.attachmentMimeType,
+      this.crawler,
+      this.scraperRules,
+      this.rewriteRules});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -48,9 +51,9 @@ class News {
   List<Attachment>? attachments;
   String? attachmentURL = '';
   String? attachmentMimeType = '';
-  bool crawler = false;
-  String scraperRules = '';
-  String rewriteRules = '';
+  int? crawler = 0;
+  String? scraperRules = '';
+  String? rewriteRules = '';
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -276,9 +279,9 @@ class Feed {
       required this.title,
       required this.siteUrl,
       this.feedIconID,
-      required this.crawler,
-      required this.scraperRules,
-      required this.rewriteRules});
+      this.crawler,
+      this.scraperRules,
+      this.rewriteRules});
 
   // define the properties
   int feedID = 0;
@@ -288,9 +291,9 @@ class Feed {
   int newsCount = 0;
   Uint8List? icon;
   String iconMimeType = '';
-  bool crawler = false;
-  String scraperRules = '';
-  String rewriteRules = '';
+  int? crawler = 0;
+  String? scraperRules = '';
+  String? rewriteRules = '';
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -299,7 +302,7 @@ class Feed {
       title: json['title'],
       siteUrl: json['site_url'],
       feedIconID: json['icon']?['icon_id'],
-      crawler: json['crawler'],
+      crawler: json['crawler'] ? 1 : 0,
       scraperRules: json['scraper_rules'],
       rewriteRules: json['rewrite_rules'],
     );
