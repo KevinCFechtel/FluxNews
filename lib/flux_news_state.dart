@@ -67,6 +67,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageAmountOfSavedStarredNewsKey = 'amountOfSavedStarredNews';
   static const String secureStorageMultilineAppBarTextKey = 'multilineAppBarText';
   static const String secureStorageShowFeedIconsTextKey = 'showFeedIcons';
+  static const String secureStorageActivateTruncateKey = 'activateTruncate';
+  static const String secureStorageTruncateModeKey = 'truncateMode';
+  static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
+  static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
@@ -149,6 +153,7 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? brightnessModeSelection;
   KeyValueRecordType? amontOfSyncedNewsSelection;
   KeyValueRecordType? amontOfSearchedNewsSelection;
+  KeyValueRecordType? amountOfCharactersToTruncateLimitSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
@@ -162,6 +167,11 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesBrightnessMode;
   List<KeyValueRecordType>? recordTypesAmountOfSyncedNews;
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
+  List<KeyValueRecordType>? recordTypesAmountOfCharactersToTruncateLimit;
+  bool activateTruncate = false;
+  int truncateMode = 0;
+  int charactersToTruncate = 100;
+  int charactersToTruncateLimit = 0;
 
   // vars for app bar text
   String appBarText = '';
@@ -325,6 +335,19 @@ class FluxNewsState extends ChangeNotifier {
         const KeyValueRecordType(key: "2000", value: "2000"),
         const KeyValueRecordType(key: "5000", value: "5000"),
         const KeyValueRecordType(key: "10000", value: "10000"),
+      ];
+      recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[
+        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.always),
+        const KeyValueRecordType(key: "100", value: "100"),
+        const KeyValueRecordType(key: "200", value: "200"),
+        const KeyValueRecordType(key: "300", value: "300"),
+        const KeyValueRecordType(key: "400", value: "400"),
+        const KeyValueRecordType(key: "500", value: "500"),
+        const KeyValueRecordType(key: "600", value: "600"),
+        const KeyValueRecordType(key: "700", value: "700"),
+        const KeyValueRecordType(key: "800", value: "800"),
+        const KeyValueRecordType(key: "900", value: "900"),
+        const KeyValueRecordType(key: "1000", value: "1000"),
       ];
       recordTypesBrightnessMode = <KeyValueRecordType>[
         KeyValueRecordType(key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
@@ -508,6 +531,48 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageAmountOfSavedStarredNewsKey) {
         if (value != '') {
           amountOfSavedStarredNews = int.parse(value);
+        }
+      }
+
+      // assign the truncate mode from persistent saved config
+      if (key == FluxNewsState.secureStorageTruncateModeKey) {
+        if (value != '') {
+          truncateMode = int.parse(value);
+        }
+      }
+
+      // assign the truncate mode from persistent saved config
+      if (key == FluxNewsState.secureStorageCharactersToTruncateKey) {
+        if (value != '') {
+          charactersToTruncate = int.parse(value);
+        }
+      }
+
+      // assign the truncate mode from persistent saved config
+      if (key == FluxNewsState.secureStorageCharactersToTruncateLimitKey) {
+        if (value != '') {
+          if (int.tryParse(value) != null) {
+            charactersToTruncateLimit = int.parse(value);
+          } else {
+            charactersToTruncateLimit = 0;
+          }
+
+          for (KeyValueRecordType recordSet in recordTypesAmountOfCharactersToTruncateLimit!) {
+            if (value == recordSet.key) {
+              amountOfCharactersToTruncateLimitSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the mark as read on scroll over selection from persistent saved config
+      if (key == FluxNewsState.secureStorageActivateTruncateKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            activateTruncate = true;
+          } else {
+            activateTruncate = false;
+          }
         }
       }
 

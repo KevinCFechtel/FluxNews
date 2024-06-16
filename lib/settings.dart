@@ -20,6 +20,7 @@ class Settings extends StatelessWidget {
   static const List<int> amountOfSavedNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
   static const List<int> amountOfSavedStarredNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
   static const List<int> amountOfNewsToSync = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
+  static const List<int> amountOfCharactersToTruncate = <int>[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
   @override
   Widget build(BuildContext context) {
@@ -472,7 +473,213 @@ class Settings extends StatelessWidget {
                     ),
                   ],
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context)!.truncateSettings,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.normal,
+                          )),
+                    ],
+                  ),
+                ),
+                // this row contains the selection if the debug mode is turned on
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0),
+                      child: Icon(
+                        Icons.cut_outlined,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30.0),
+                      child: Text(
+                        AppLocalizations.of(context)!.activateTruncate,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    const Spacer(),
+                    Switch.adaptive(
+                      value: appState.activateTruncate,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.activateTruncate = value;
+                        appState.storage.write(key: FluxNewsState.secureStorageActivateTruncateKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
                 const Divider(),
+                appState.activateTruncate
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 12.0, left: 20.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(AppLocalizations.of(context)!.truncateMode,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.normal,
+                                )),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateTruncate
+                    ? RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.truncateModeAll,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 0,
+                        groupValue: appState.truncateMode,
+                        onChanged: (int? value) {
+                          if (value != null) {
+                            appState.truncateMode = value;
+                            appState.storage
+                                .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
+                            appState.refreshView();
+                          }
+                        },
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateTruncate
+                    ? RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.truncateModeScraper,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 1,
+                        groupValue: appState.truncateMode,
+                        onChanged: (int? value) {
+                          if (value != null) {
+                            appState.truncateMode = value;
+                            appState.storage
+                                .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
+                            appState.refreshView();
+                          }
+                        },
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateTruncate
+                    ? RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.truncateModeScraperWORules,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 2,
+                        groupValue: appState.truncateMode,
+                        onChanged: (int? value) {
+                          if (value != null) {
+                            appState.truncateMode = value;
+                            appState.storage
+                                .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
+                            appState.refreshView();
+                          }
+                        },
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
+                appState.activateTruncate
+                    ? Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 17.0),
+                            child: Icon(
+                              Icons.cut_outlined,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30.0),
+                            child: Text(AppLocalizations.of(context)!.charactersToTruncate,
+                                style: Theme.of(context).textTheme.titleMedium),
+                          ),
+                          const Spacer(),
+                          DropdownButton<int>(
+                            value: appState.charactersToTruncate,
+                            elevation: 16,
+                            underline: Container(
+                              height: 2,
+                            ),
+                            alignment: AlignmentDirectional.centerEnd,
+                            onChanged: (int? value) {
+                              if (value != null) {
+                                appState.charactersToTruncate = value;
+                                appState.storage.write(
+                                    key: FluxNewsState.secureStorageCharactersToTruncateKey, value: value.toString());
+                                appState.refreshView();
+                              }
+                            },
+                            items: amountOfCharactersToTruncate.map<DropdownMenuItem<int>>((int value) {
+                              return DropdownMenuItem<int>(
+                                value: value,
+                                child: Text(value.toString()),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
+                appState.activateTruncate
+                    ? Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 17.0),
+                            child: Icon(
+                              Icons.cut_outlined,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30.0),
+                            child: Text(AppLocalizations.of(context)!.charactersToTruncateLimit,
+                                style: Theme.of(context).textTheme.titleMedium),
+                          ),
+                          const Spacer(),
+                          DropdownButton<KeyValueRecordType>(
+                            value: appState.amountOfCharactersToTruncateLimitSelection,
+                            elevation: 16,
+                            underline: Container(
+                              height: 2,
+                            ),
+                            alignment: AlignmentDirectional.centerEnd,
+                            onChanged: (KeyValueRecordType? value) {
+                              if (value != null) {
+                                appState.charactersToTruncateLimit = int.parse(value.key);
+                                appState.amountOfCharactersToTruncateLimitSelection = value;
+                                appState.storage.write(
+                                    key: FluxNewsState.secureStorageCharactersToTruncateLimitKey, value: value.key);
+                                appState.refreshView();
+                              }
+                            },
+                            items: appState.recordTypesAmountOfCharactersToTruncateLimit!
+                                .map<DropdownMenuItem<KeyValueRecordType>>(
+                                    (recordType) => DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType,
+                                          child: Text(
+                                            recordType.value,
+                                          ),
+                                        ))
+                                .toList(),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context)!.debugSettings,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.normal,
+                          )),
+                    ],
+                  ),
+                ),
                 // this row contains the selection if the debug mode is turned on
                 Row(
                   children: [

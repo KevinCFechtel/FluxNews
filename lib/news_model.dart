@@ -127,7 +127,7 @@ class News {
   // if this result is less than 50 chars, the text is searched in the p tags
   // if no text is found the empty string is returned
   // if there is no raw text the text is searched in the p tags
-  String getText() {
+  String getText(FluxNewsState appState) {
     final document = parse(content);
     String? text = '';
     text = parse(document.body?.text).documentElement?.text;
@@ -146,6 +146,44 @@ class News {
       }
     }
     text ??= '';
+    if (appState.activateTruncate) {
+      switch (appState.truncateMode) {
+        case 0:
+          if (appState.charactersToTruncateLimit == 0) {
+            text = truncateText(text, appState.charactersToTruncate);
+          } else if (appState.charactersToTruncateLimit < text.length) {
+            text = truncateText(text, appState.charactersToTruncate);
+          }
+          break;
+        case 1:
+          if (crawler != null) {
+            if (crawler == 1) {
+              if (appState.charactersToTruncateLimit == 0) {
+                text = truncateText(text, appState.charactersToTruncate);
+              } else if (appState.charactersToTruncateLimit < text.length) {
+                text = truncateText(text, appState.charactersToTruncate);
+              }
+            }
+          }
+          break;
+        case 2:
+          if (crawler != null) {
+            if (crawler == 1) {
+              if (scraperRules != null && rewriteRules != null) {
+                if (scraperRules != '' || rewriteRules != '') {
+                  if (appState.charactersToTruncateLimit == 0) {
+                    text = truncateText(text, appState.charactersToTruncate);
+                  } else if (appState.charactersToTruncateLimit < text.length) {
+                    text = truncateText(text, appState.charactersToTruncate);
+                  }
+                }
+              }
+            }
+          }
+          break;
+      }
+    }
+
     return text;
   }
 
@@ -563,4 +601,23 @@ class Version {
       os: json['os'],
     );
   }
+}
+
+// this is a helper function to get the actual tab position
+// this position is used to open the context menu of the news card here
+String truncateText(String text, int characterLimit) {
+  String truncatedText = '';
+  int characterCount = 0;
+  final words = text.split(' ');
+  for (String word in words) {
+    characterCount = characterCount + word.length;
+    truncatedText = truncatedText + word;
+    if (characterCount < characterLimit) {
+      truncatedText = '$truncatedText ';
+    } else {
+      truncatedText = '$truncatedText...';
+      break;
+    }
+  }
+  return truncatedText;
 }

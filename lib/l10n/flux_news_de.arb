@@ -14,6 +14,7 @@
     "error": "Fehler",
     "ok": "Ok",
     "all": "Alle",
+    "always": "Immer",
     "settings": "Einstellungen",
     "minifluxSettings": "Miniflux Einstellungen",
     "apiUrl": "API Url",
@@ -65,5 +66,14 @@
     "markCategoryAsRead" : "Kategorie als gelesen\nmarkieren",
     "markFeedAsRead" : "Feed als gelesen\nmarkieren",
     "amountOfSyncedNews": "Anzahl der Nachrichten\ndie synchronisiert werden",
-    "amountOfSearchedNews": "Anzahl der Nachrichten\ndie durchsucht werden"
+    "amountOfSearchedNews": "Anzahl der Nachrichten\ndie durchsucht werden",
+    "debugSettings": "Debug Einstellungen",
+    "truncateSettings": "Truncate Einstellungen",
+    "activateTruncate": "Nachrichtentext abschneiden",
+    "truncateMode": "Truncate Modus",
+    "truncateModeAll": "Nachrichtentext bei allen Nachrichten abschneiden",
+    "truncateModeScraper": "Nachrichtentext bei Nachrichten von Feeds abschneiden, bei denen der Originalinhalt heruntergelanden wird",
+    "truncateModeScraperWORules": "Nachrichtentext bei Nachrichten von Feeds abschneiden, bei denen der Originalinhalt heruntergelanden wird und keine Scraper oder Rewrite Rules angegeben wurden",
+    "charactersToTruncate": "Anzahl der Zeichen\nauf die der Text gekürzt wird",
+    "charactersToTruncateLimit": "Anzahl der Zeichen\nab denen der Text gekürzt wird"
 }
