@@ -98,14 +98,19 @@ Future<int> updateStarredNewsInDB(NewsList newsList, FluxNewsState appState) asy
   if (appState.db != null) {
     List<Map<String, Object?>> resultSelect = [];
     for (News news in newsList.news) {
-      // check if the news is already marked as bookmarked
-      resultSelect =
-          await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ? AND starred = ?', [news.newsID, 1]);
+      resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID, 1]);
       if (resultSelect.isEmpty) {
-        // if the news is not already marked, mark it as bookmarked
-        result = await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
-        if (appState.debugMode) {
-          logThis('updateStarredNewsInDB', 'Marked news with id ${news.newsID} as bookmarked in DB', LogLevel.INFO);
+        appState.db!.insert('news', news.toMap());
+      } else {
+        // check if the news is already marked as bookmarked
+        resultSelect =
+            await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ? AND starred = ?', [news.newsID, 1]);
+        if (resultSelect.isEmpty) {
+          // if the news is not already marked, mark it as bookmarked
+          result = await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
+          if (appState.debugMode) {
+            logThis('updateStarredNewsInDB', 'Marked news with id ${news.newsID} as bookmarked in DB', LogLevel.INFO);
+          }
         }
       }
     }
