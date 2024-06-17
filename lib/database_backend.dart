@@ -289,8 +289,8 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
     }
     List<Feed> feedList = [];
-    List<Map<String, Object?>> queryResult = await appState.db!
-        .rawQuery('SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+    List<Map<String, Object?>> queryResult =
+        await appState.db!.rawQuery('SELECT feedID, title, site_url, iconMimeType, newsCount, categoryID FROM feeds');
     for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
       feed.icon = appState.readFeedIconFile(feed.feedID);
       feedList.add(feed);
@@ -502,6 +502,12 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
         // iterate over the feeds of the category and check if they already exists locally
         resultSelect = await appState.db!.rawQuery('SELECT feedID FROM feeds WHERE feedID = ?', [feed.feedID]);
         if (resultSelect.isEmpty) {
+          int crawlerInt = 0;
+          if (feed.crawler != null) {
+            if (feed.crawler == true) {
+              crawlerInt = 1;
+            }
+          }
           // if they don't exists locally, insert the feed
           result = await appState.db!.rawInsert('''INSERT INTO feeds (feedID, 
                                                                       title, 
@@ -517,14 +523,20 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
             feed.siteUrl,
             feed.iconMimeType,
             feed.newsCount,
-            feed.crawler,
-            false,
+            crawlerInt,
+            0,
             category.categoryID
           ]);
           if (appState.debugMode) {
             logThis('insertCategoriesInDB', 'Inserted feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
         } else {
+          int crawlerInt = 0;
+          if (feed.crawler != null) {
+            if (feed.crawler == true) {
+              crawlerInt = 1;
+            }
+          }
           // if they exists locally, update the feed
           result = await appState.db!.rawUpdate('''UPDATE feeds SET title = ?, 
                                                                     site_url = ?, 
@@ -537,7 +549,7 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
             feed.siteUrl,
             feed.iconMimeType,
             feed.newsCount,
-            feed.crawler,
+            crawlerInt,
             category.categoryID,
             feed.feedID
           ]);
@@ -576,7 +588,6 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
     resultSelect = await appState.db!.rawQuery('''SELECT feedID, 
                                                           title, 
                                                           site_url, 
-                                                          NULL AS icon, 
                                                           iconMimeType, 
                                                           newsCount, 
                                                           crawler,
@@ -630,7 +641,6 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
       queryResult = await appState.db!.rawQuery('''SELECT feedID, 
                                                           title, 
                                                           site_url, 
-                                                          NULL AS icon, 
                                                           iconMimeType, 
                                                           newsCount,
                                                           crawler,
@@ -734,7 +744,6 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
       '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
                           title TEXT, 
                           site_url TEXT, 
-                          icon BLOB,
                           iconMimeType TEXT,
                           newsCount INTEGER,
                           crawler INTEGER,
