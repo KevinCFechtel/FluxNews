@@ -98,7 +98,7 @@ Future<int> updateStarredNewsInDB(NewsList newsList, FluxNewsState appState) asy
   if (appState.db != null) {
     List<Map<String, Object?>> resultSelect = [];
     for (News news in newsList.news) {
-      resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID, 1]);
+      resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
       if (resultSelect.isEmpty) {
         appState.db!.insert('news', news.toMap());
       } else {
