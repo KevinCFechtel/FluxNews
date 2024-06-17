@@ -73,7 +73,8 @@
     "truncateMode": "Truncate Mode",
     "truncateModeAll": "Truncate all news",
     "truncateModeScraper": "Truncate all news from feeds with original content fetched",
-    "truncateModeScraperWORules": "Truncate all news from feeds with original content fetched and no scrape or rewrite rules applied",
+    "truncateModeManual": "Truncate all news from feeds which has been selected manually (using a longpress on the specific feed)",
     "charactersToTruncate": "Amount of characters\nto which the text is truncated",
-    "charactersToTruncateLimit": "Amount of characters\nfrom which the text is truncated"
+    "charactersToTruncateLimit": "Amount of characters\nfrom which the text is truncated",
+    "manualTruncate": "Truncate news"
 }

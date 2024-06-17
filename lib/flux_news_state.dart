@@ -28,7 +28,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.4.3';
+  static const String applicationVersion = '1.5.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -233,8 +233,7 @@ class FluxNewsState extends ChangeNotifier {
                           iconMimeType TEXT,
                           newsCount INTEGER,
                           crawler INTEGER,
-                          scraper_rules TEXT,
-                          rewrite_rules TEXT,
+                          manualTruncate INTEGER,
                           categoryID INTEGER)''',
         );
         // create the table attachments
@@ -293,8 +292,7 @@ class FluxNewsState extends ChangeNotifier {
                           iconMimeType TEXT,
                           newsCount INTEGER,
                           crawler INTEGER,
-                          scraper_rules TEXT,
-                          rewrite_rules TEXT,
+                          manualTruncate INTEGER,
                           categoryID INTEGER)''',
           );
         }
@@ -378,6 +376,13 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesAmountOfSearchedNews != null) {
       if (recordTypesAmountOfSearchedNews!.isNotEmpty) {
         amontOfSearchedNewsSelection = recordTypesAmountOfSearchedNews![0];
+      }
+    }
+
+    // init the amount of searched news selection with the first value of the above generated maps
+    if (recordTypesAmountOfCharactersToTruncateLimit != null) {
+      if (recordTypesAmountOfCharactersToTruncateLimit!.isNotEmpty) {
+        amountOfCharactersToTruncateLimitSelection = recordTypesAmountOfCharactersToTruncateLimit![0];
       }
     }
 

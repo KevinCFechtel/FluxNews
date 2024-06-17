@@ -30,8 +30,7 @@ class News {
       this.attachmentURL,
       this.attachmentMimeType,
       this.crawler,
-      this.scraperRules,
-      this.rewriteRules});
+      this.manualTruncate});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -51,9 +50,8 @@ class News {
   List<Attachment>? attachments;
   String? attachmentURL = '';
   String? attachmentMimeType = '';
-  int? crawler = 0;
-  String? scraperRules = '';
-  String? rewriteRules = '';
+  bool? crawler = false;
+  bool? manualTruncate = false;
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -117,9 +115,8 @@ class News {
         iconMimeType = res['iconMimeType'],
         attachmentURL = res['attachmentURL'],
         attachmentMimeType = res['attachmentMimeType'],
-        crawler = res['crawler'],
-        scraperRules = res['scraper_rules'],
-        rewriteRules = res['rewrite_rules'];
+        crawler = res['crawler'] == 1 ? true : false,
+        manualTruncate = res['manualTruncate'] == 1 ? true : false;
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -149,34 +146,24 @@ class News {
     if (appState.activateTruncate) {
       switch (appState.truncateMode) {
         case 0:
-          if (appState.charactersToTruncateLimit == 0) {
-            text = truncateText(text, appState.charactersToTruncate);
-          } else if (appState.charactersToTruncateLimit < text.length) {
+          if (appState.charactersToTruncateLimit == 0 || appState.charactersToTruncateLimit < text.length) {
             text = truncateText(text, appState.charactersToTruncate);
           }
           break;
         case 1:
           if (crawler != null) {
-            if (crawler == 1) {
-              if (appState.charactersToTruncateLimit == 0) {
-                text = truncateText(text, appState.charactersToTruncate);
-              } else if (appState.charactersToTruncateLimit < text.length) {
+            if (crawler == true) {
+              if (appState.charactersToTruncateLimit == 0 || appState.charactersToTruncateLimit < text.length) {
                 text = truncateText(text, appState.charactersToTruncate);
               }
             }
           }
           break;
         case 2:
-          if (crawler != null) {
-            if (crawler == 1) {
-              if (scraperRules != null && rewriteRules != null) {
-                if (scraperRules != '' || rewriteRules != '') {
-                  if (appState.charactersToTruncateLimit == 0) {
-                    text = truncateText(text, appState.charactersToTruncate);
-                  } else if (appState.charactersToTruncateLimit < text.length) {
-                    text = truncateText(text, appState.charactersToTruncate);
-                  }
-                }
+          if (manualTruncate != null) {
+            if (manualTruncate == true) {
+              if (appState.charactersToTruncateLimit == 0 || appState.charactersToTruncateLimit < text.length) {
+                text = truncateText(text, appState.charactersToTruncate);
               }
             }
           }
@@ -318,8 +305,7 @@ class Feed {
       required this.siteUrl,
       this.feedIconID,
       this.crawler,
-      this.scraperRules,
-      this.rewriteRules});
+      this.manualTruncate});
 
   // define the properties
   int feedID = 0;
@@ -329,9 +315,8 @@ class Feed {
   int newsCount = 0;
   Uint8List? icon;
   String iconMimeType = '';
-  int? crawler = 0;
-  String? scraperRules = '';
-  String? rewriteRules = '';
+  bool? crawler = false;
+  bool? manualTruncate = false;
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -340,9 +325,7 @@ class Feed {
       title: json['title'],
       siteUrl: json['site_url'],
       feedIconID: json['icon']?['icon_id'],
-      crawler: json['crawler'] ? 1 : 0,
-      scraperRules: json['scraper_rules'],
-      rewriteRules: json['rewrite_rules'],
+      crawler: json['crawler'],
     );
   }
 
@@ -356,8 +339,7 @@ class Feed {
       'iconMimeType': iconMimeType,
       'newsCount': newsCount,
       'crawler': crawler,
-      'scraper_rules': scraperRules,
-      'rewrite_rules': rewriteRules,
+      'manualTruncate': manualTruncate,
     };
   }
 
@@ -369,9 +351,8 @@ class Feed {
         icon = res['icon'],
         iconMimeType = res['iconMimeType'],
         newsCount = res['newsCount'],
-        crawler = res['crawler'],
-        scraperRules = res['scraper_rules'],
-        rewriteRules = res['rewrite_rules'];
+        crawler = res['crawler'] == 1 ? true : false,
+        manualTruncate = res['manualTruncate'] == 1 ? true : false;
 
   // define the method to get the feed icon as a widget
   // the icon could be a svg or a png image

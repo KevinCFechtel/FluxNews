@@ -567,7 +567,7 @@ class Settings extends StatelessWidget {
                     : const SizedBox.shrink(),
                 appState.activateTruncate
                     ? RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.truncateModeScraperWORules,
+                        title: Text(AppLocalizations.of(context)!.truncateModeManual,
                             style: Theme.of(context).textTheme.titleMedium),
                         value: 2,
                         groupValue: appState.truncateMode,
