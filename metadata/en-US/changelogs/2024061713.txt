@@ -1,0 +1,3 @@
+It is now possible to display the text of a news item truncated.
+Either all news items can be truncated or only news items from feeds where the original content is downloaded or it is possible to completely determine manual from which feeds the news items should be truncated.
+The length of the displayed text can also be specified and it is possible to specify that the text should only be truncated above a certain length.
