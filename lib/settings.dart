@@ -9,6 +9,7 @@ import 'package:flux_news/flux_news_counter_state.dart';
 import 'package:flux_news/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'dart:io' show Platform;
 
 import 'flux_news_state.dart';
 import 'miniflux_backend.dart';
@@ -141,7 +142,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(AppLocalizations.of(context)!.brightnesMode,
                           style: Theme.of(context).textTheme.titleMedium),
                     ),
@@ -180,7 +181,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(
                         AppLocalizations.of(context)!.markAsReadOnScrollover,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -213,7 +214,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(
                         AppLocalizations.of(context)!.syncOnStart,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -246,7 +247,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(
                         AppLocalizations.of(context)!.multilineAppBarTextSetting,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -279,7 +280,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(
                         AppLocalizations.of(context)!.showFeedIconsTextSettings,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -313,7 +314,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(AppLocalizations.of(context)!.amountSaved,
                           style: Theme.of(context).textTheme.titleMedium),
                     ),
@@ -354,7 +355,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(AppLocalizations.of(context)!.amountSavedStarred,
                           style: Theme.of(context).textTheme.titleMedium),
                     ),
@@ -395,7 +396,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(AppLocalizations.of(context)!.amountOfSyncedNews,
                           style: Theme.of(context).textTheme.titleMedium),
                     ),
@@ -440,7 +441,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(AppLocalizations.of(context)!.amountOfSearchedNews,
                           style: Theme.of(context).textTheme.titleMedium),
                     ),
@@ -496,7 +497,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(
                         AppLocalizations.of(context)!.activateTruncate,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -592,7 +593,7 @@ class Settings extends StatelessWidget {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 30.0),
+                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                             child: Text(AppLocalizations.of(context)!.charactersToTruncate,
                                 style: Theme.of(context).textTheme.titleMedium),
                           ),
@@ -633,7 +634,7 @@ class Settings extends StatelessWidget {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 30.0),
+                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                             child: Text(AppLocalizations.of(context)!.charactersToTruncateLimit,
                                 style: Theme.of(context).textTheme.titleMedium),
                           ),
@@ -690,7 +691,7 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30.0),
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
                       child: Text(
                         AppLocalizations.of(context)!.debugModeTextSettings,
                         style: Theme.of(context).textTheme.titleMedium,

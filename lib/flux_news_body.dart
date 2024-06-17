@@ -1011,7 +1011,9 @@ class FeedTile extends StatelessWidget {
         getTapPosition(details, context, appState);
       },
       onLongPress: () {
-        showContextMenu(context, appState, feed);
+        if (appState.truncateMode == 2) {
+          showContextMenu(context, appState, feed);
+        }
       },
     );
   }
@@ -1067,7 +1069,7 @@ void showContextMenu(BuildContext context, FluxNewsState appState, Feed feed) as
                 Icons.cut_outlined,
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 5),
+                padding: const EdgeInsets.only(left: 2),
                 child: Text(AppLocalizations.of(context)!.manualTruncate),
               )
             ])),

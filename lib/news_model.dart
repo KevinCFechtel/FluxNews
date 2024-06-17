@@ -201,6 +201,7 @@ class News {
       if (attrib != null) {
         if (attrib.startsWith('http')) {
           imageUrl = attrib;
+          break;
         }
       }
     }
