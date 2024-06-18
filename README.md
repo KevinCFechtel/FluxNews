@@ -69,6 +69,8 @@ moment, the following is supported:
 **Filter articles by feed:** Articles can be filtered by feed.
 
 **Send an article:** Articles can be send to third-party services if enabled.
+
+**Truncate an article:** Articles can be truncated to have a teaser instead of the full article text.
 <br/><br/>
 
 ## Limitations:
