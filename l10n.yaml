@@ -1,3 +1,4 @@
 arb-dir: lib/l10n
 template-arb-file: flux_news_en.arb
 output-localization-file: flux_news_localizations.dart
+untranslated-messages-file: l10n_errors.txt

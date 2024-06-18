@@ -98,14 +98,19 @@ Future<int> updateStarredNewsInDB(NewsList newsList, FluxNewsState appState) asy
   if (appState.db != null) {
     List<Map<String, Object?>> resultSelect = [];
     for (News news in newsList.news) {
-      // check if the news is already marked as bookmarked
-      resultSelect =
-          await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ? AND starred = ?', [news.newsID, 1]);
+      resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
       if (resultSelect.isEmpty) {
-        // if the news is not already marked, mark it as bookmarked
-        result = await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
-        if (appState.debugMode) {
-          logThis('updateStarredNewsInDB', 'Marked news with id ${news.newsID} as bookmarked in DB', LogLevel.INFO);
+        appState.db!.insert('news', news.toMap());
+      } else {
+        // check if the news is already marked as bookmarked
+        resultSelect =
+            await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ? AND starred = ?', [news.newsID, 1]);
+        if (resultSelect.isEmpty) {
+          // if the news is not already marked, mark it as bookmarked
+          result = await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
+          if (appState.debugMode) {
+            logThis('updateStarredNewsInDB', 'Marked news with id ${news.newsID} as bookmarked in DB', LogLevel.INFO);
+          }
         }
       }
     }
@@ -219,13 +224,11 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         news.starred, 
                         news.feedTitle, 
                         news.syncStatus,
-                        --feeds.icon,
                         feeds.iconMimeType,
-                        attachments.attachmentURL,
-                        attachments.attachmentMimeType,
                         feeds.crawler,
-                        feeds.scraper_rules,
-                        feeds.rewrite_rules
+                        feeds.manualTruncate,
+                        attachments.attachmentURL,
+                        attachments.attachmentMimeType
                   FROM news 
                   LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                   LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
@@ -248,13 +251,11 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         news.starred, 
                         news.feedTitle, 
                         news.syncStatus,
-                        --feeds.icon,
                         feeds.iconMimeType,
-                        attachments.attachmentURL,
-                        attachments.attachmentMimeType,
                         feeds.crawler,
-                        feeds.scraper_rules,
-                        feeds.rewrite_rules
+                        feeds.manualTruncate,
+                        attachments.attachmentURL,
+                        attachments.attachmentMimeType
                     FROM news 
                     LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                     LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
@@ -279,13 +280,11 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         news.starred, 
                         news.feedTitle, 
                         news.syncStatus,
-                        --feeds.icon,
                         feeds.iconMimeType,
-                        attachments.attachmentURL,
-                        attachments.attachmentMimeType,
                         feeds.crawler,
-                        feeds.scraper_rules,
-                        feeds.rewrite_rules
+                        feeds.manualTruncate,
+                        attachments.attachmentURL,
+                        attachments.attachmentMimeType
                 FROM news 
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                 LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
@@ -295,8 +294,8 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
     }
     List<Feed> feedList = [];
-    List<Map<String, Object?>> queryResult = await appState.db!
-        .rawQuery('SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+    List<Map<String, Object?>> queryResult =
+        await appState.db!.rawQuery('SELECT feedID, title, site_url, iconMimeType, newsCount, categoryID FROM feeds');
     for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
       feed.icon = appState.readFeedIconFile(feed.feedID);
       feedList.add(feed);
@@ -322,6 +321,23 @@ void updateNewsStatusInDB(int newsID, String status, FluxNewsState appState) asy
   }
   if (appState.debugMode) {
     logThis('updateNewsStatusInDB', 'Finished updating news status in DB', LogLevel.INFO);
+  }
+}
+
+// update the status (read or unread) of the news in the database
+Future<void> updateManualTruncateStatusOfFeedInDB(int feedID, bool manualTruncate, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updateManualTruncateStatusOfFeedInDB', 'Starting updating manual truncate status of feed in DB',
+        LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!
+        .rawUpdate('UPDATE feeds SET manualTruncate = ? WHERE feedID = ?', [manualTruncate ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updateManualTruncateStatusOfFeedInDB', 'Finished updating manual truncate status of feed in DB',
+        LogLevel.INFO);
   }
 }
 
@@ -491,48 +507,54 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
         // iterate over the feeds of the category and check if they already exists locally
         resultSelect = await appState.db!.rawQuery('SELECT feedID FROM feeds WHERE feedID = ?', [feed.feedID]);
         if (resultSelect.isEmpty) {
+          int crawlerInt = 0;
+          if (feed.crawler != null) {
+            if (feed.crawler == true) {
+              crawlerInt = 1;
+            }
+          }
           // if they don't exists locally, insert the feed
           result = await appState.db!.rawInsert('''INSERT INTO feeds (feedID, 
                                                                       title, 
                                                                       site_url, 
                                                                       iconMimeType, 
                                                                       newsCount, 
-                                                                      crawler, 
-                                                                      scraper_rules, 
-                                                                      rewrite_rules, 
+                                                                      crawler,
+                                                                      manualTruncate,
                                                                       categoryID) 
-                                                    VALUES(?,?,?,?,?,?,?,?,?)''', [
+                                                    VALUES(?,?,?,?,?,?,?,?)''', [
             feed.feedID,
             feed.title,
             feed.siteUrl,
             feed.iconMimeType,
             feed.newsCount,
-            feed.crawler,
-            feed.scraperRules,
-            feed.rewriteRules,
+            crawlerInt,
+            0,
             category.categoryID
           ]);
           if (appState.debugMode) {
             logThis('insertCategoriesInDB', 'Inserted feed with id ${feed.feedID} in DB', LogLevel.INFO);
           }
         } else {
+          int crawlerInt = 0;
+          if (feed.crawler != null) {
+            if (feed.crawler == true) {
+              crawlerInt = 1;
+            }
+          }
           // if they exists locally, update the feed
           result = await appState.db!.rawUpdate('''UPDATE feeds SET title = ?, 
                                                                     site_url = ?, 
                                                                     iconMimeType = ?, 
                                                                     newsCount = ?, 
                                                                     crawler = ?,
-                                                                    scraper_rules = ?,
-                                                                    rewrite_rules = ?,
                                                                     categoryID = ?
                                                       WHERE feedID = ?''', [
             feed.title,
             feed.siteUrl,
             feed.iconMimeType,
             feed.newsCount,
-            feed.crawler,
-            feed.scraperRules,
-            feed.rewriteRules,
+            crawlerInt,
             category.categoryID,
             feed.feedID
           ]);
@@ -571,12 +593,10 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
     resultSelect = await appState.db!.rawQuery('''SELECT feedID, 
                                                           title, 
                                                           site_url, 
-                                                          NULL AS icon, 
                                                           iconMimeType, 
                                                           newsCount, 
                                                           crawler,
-                                                          scraper_rules,
-                                                          rewrite_rules,
+                                                          manualTruncate,
                                                           categoryID 
                                                       FROM feeds''');
     if (resultSelect.isNotEmpty) {
@@ -626,12 +646,10 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
       queryResult = await appState.db!.rawQuery('''SELECT feedID, 
                                                           title, 
                                                           site_url, 
-                                                          NULL AS icon, 
                                                           iconMimeType, 
                                                           newsCount,
                                                           crawler,
-                                                          scraper_rules,
-                                                          rewrite_rules,
+                                                          manualTruncate,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?''', [category.categoryID]);
@@ -731,12 +749,10 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
       '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
                           title TEXT, 
                           site_url TEXT, 
-                          icon BLOB,
                           iconMimeType TEXT,
                           newsCount INTEGER,
                           crawler INTEGER,
-                          scraper_rules TEXT,
-                          rewrite_rules TEXT,
+                          manualTruncate INTEGER,
                           categoryID INTEGER)''',
     );
     // create the table attachments

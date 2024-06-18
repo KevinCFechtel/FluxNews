@@ -36,19 +36,14 @@ class NewsCard extends StatelessWidget {
         onTap: () async {
           // on tab we update the status of the news to read and open the news
           try {
-            updateNewsStatusInDB(
-                news.newsID, FluxNewsState.readNewsStatus, appState);
+            updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
           } catch (e) {
-            logThis(
-                'updateNewsStatusInDB',
-                'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+            logThis('updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
                 LogLevel.ERROR);
 
             if (context.mounted) {
-              if (appState.errorString !=
-                  AppLocalizations.of(context)!.databaseError) {
-                appState.errorString =
-                    AppLocalizations.of(context)!.databaseError;
+              if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+                appState.errorString = AppLocalizations.of(context)!.databaseError;
                 appState.newError = true;
                 appState.refreshView();
               }
@@ -93,8 +88,7 @@ class NewsCard extends StatelessWidget {
           getTapPosition(details, context, appState);
         },
         onLongPress: () {
-          showContextMenu(news, context, searchView, appState,
-              context.read<FluxNewsCounterState>());
+          showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
         },
         child: Column(
           children: [
@@ -120,10 +114,7 @@ class NewsCard extends StatelessWidget {
                   news.title,
                   style: news.status == FluxNewsState.unreadNewsStatus
                       ? Theme.of(context).textTheme.titleLarge
-                      : Theme.of(context)
-                          .textTheme
-                          .titleLarge!
-                          .copyWith(color: Theme.of(context).disabledColor),
+                      : Theme.of(context).textTheme.titleLarge!.copyWith(color: Theme.of(context).disabledColor),
                 ),
                 subtitle: Column(
                   children: [
@@ -153,8 +144,7 @@ class NewsCard extends StatelessWidget {
                                       ))),
                           appState.showFeedIcons
                               ? Padding(
-                                  padding: const EdgeInsets.only(right: 5.0),
-                                  child: news.getFeedIcon(16.0, context))
+                                  padding: const EdgeInsets.only(right: 5.0), child: news.getFeedIcon(16.0, context))
                               : const SizedBox.shrink(),
                           Expanded(
                             child: Padding(
@@ -162,34 +152,25 @@ class NewsCard extends StatelessWidget {
                               child: Text(
                                 news.feedTitle,
                                 overflow: TextOverflow.ellipsis,
-                                style: news.status ==
-                                        FluxNewsState.unreadNewsStatus
+                                style: news.status == FluxNewsState.unreadNewsStatus
                                     ? Theme.of(context).textTheme.bodyMedium
                                     : Theme.of(context)
                                         .textTheme
                                         .bodyMedium!
-                                        .copyWith(
-                                            color: Theme.of(context)
-                                                .disabledColor),
+                                        .copyWith(color: Theme.of(context).disabledColor),
                               ),
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
-                              context
-                                  .read<FluxNewsState>()
-                                  .dateFormat
-                                  .format(news.getPublishingDate()),
-                              style: news.status ==
-                                      FluxNewsState.unreadNewsStatus
+                              context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
+                              style: news.status == FluxNewsState.unreadNewsStatus
                                   ? Theme.of(context).textTheme.bodyMedium
                                   : Theme.of(context)
                                       .textTheme
                                       .bodyMedium!
-                                      .copyWith(
-                                          color:
-                                              Theme.of(context).disabledColor),
+                                      .copyWith(color: Theme.of(context).disabledColor),
                             ),
                           ),
                           SizedBox(
@@ -198,11 +179,8 @@ class NewsCard extends StatelessWidget {
                             child: news.starred
                                 ? Icon(
                                     Icons.star,
-                                    color: news.status ==
-                                            FluxNewsState.unreadNewsStatus
-                                        ? Theme.of(context)
-                                            .primaryIconTheme
-                                            .color
+                                    color: news.status == FluxNewsState.unreadNewsStatus
+                                        ? Theme.of(context).primaryIconTheme.color
                                         : Theme.of(context).disabledColor,
                                   )
                                 : const SizedBox.shrink(),
@@ -214,11 +192,10 @@ class NewsCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 2.0, bottom: 10),
                       child: Text(
-                        news.getText(),
+                        news.getText(appState),
                         style: news.status == FluxNewsState.unreadNewsStatus
                             ? Theme.of(context).textTheme.bodyMedium
-                            : Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                color: Theme.of(context).disabledColor),
+                            : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
                       ),
                     ),
                   ],
