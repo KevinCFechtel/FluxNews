@@ -1,0 +1,2 @@
+Hotfix for the error ERR_CLEARTEXT_NOT_PERMITTED after the client engine was switched to cronet
+Update of the dependencies
