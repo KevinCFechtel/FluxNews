@@ -256,6 +256,15 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
           appState.refreshView();
         }
       });
+
+      if (context.mounted) {
+        if (!appState.newError) {
+          var successflulSaveSnackBar = SnackBar(
+            content: Text(AppLocalizations.of(context)!.successfullSaveToThirdParty),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(successflulSaveSnackBar);
+        }
+      }
       break;
   }
 }

@@ -76,5 +76,6 @@
     "truncateModeManual": "Truncate all news from feeds which has been selected manually (using a longpress on the specific feed)",
     "charactersToTruncate": "Amount of characters\nto which the text is truncated",
     "charactersToTruncateLimit": "Amount of characters\nfrom which the text is truncated",
-    "manualTruncate": "Truncate news"
+    "manualTruncate": "Truncate news",
+    "successfullSaveToThirdParty": "The news was successfully saved!"
 }
