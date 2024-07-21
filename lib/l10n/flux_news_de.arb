@@ -76,5 +76,6 @@
     "truncateModeManual": "Nachrichtentext bei Nachrichten von Feeds abschneiden, die manuell ausgewählt wurden (mithilfe eines longpress auf den jeweiligen Feed)",
     "charactersToTruncate": "Anzahl der Zeichen\nauf die der Text gekürzt wird",
     "charactersToTruncateLimit": "Anzahl der Zeichen\nab denen der Text gekürzt wird",
-    "manualTruncate": "Nachrichtentext abschneiden"
+    "manualTruncate": "Nachrichtentext abschneiden",
+    "successfullSaveToThirdParty": "Die Nachricht wurde erfolgreich gespeichert!"
 }
