@@ -20,7 +20,6 @@ class Settings extends StatelessWidget {
   // define the selection lists for the settings of saved news and starred news
   static const List<int> amountOfSavedNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
   static const List<int> amountOfSavedStarredNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  static const List<int> amountOfNewsToSync = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
   static const List<int> amountOfCharactersToTruncate = <int>[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
   @override

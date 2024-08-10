@@ -353,6 +353,7 @@ class FluxNewsState extends ChangeNotifier {
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
       recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
+      recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
       recordTypesBrightnessMode = <KeyValueRecordType>[];
     }
 
