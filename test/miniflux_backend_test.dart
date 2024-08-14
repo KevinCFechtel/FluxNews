@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flux_news/flux_news_body.dart';
-import 'package:flux_news/flux_news_state.dart';
+import 'package:flux_news/ui/flux_news_body.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
 
 import 'package:flux_news/main.dart';
-import 'package:flux_news/miniflux_backend.dart';
-import 'package:flux_news/news_model.dart';
+import 'package:flux_news/miniflux/miniflux_backend.dart';
+import 'package:flux_news/models/news_model.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';

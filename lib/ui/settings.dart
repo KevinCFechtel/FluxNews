@@ -4,15 +4,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flux_news/database_backend.dart';
-import 'package:flux_news/flux_news_counter_state.dart';
-import 'package:flux_news/news_model.dart';
+import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/models/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
 
-import 'flux_news_state.dart';
-import 'miniflux_backend.dart';
+import '../state_management/flux_news_state.dart';
+import '../miniflux/miniflux_backend.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});

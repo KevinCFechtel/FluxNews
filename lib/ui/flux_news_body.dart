@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flux_news/flux_news_counter_state.dart';
-import 'package:flux_news/logging.dart';
-import 'package:flux_news/news_list.dart';
-import 'package:flux_news/sync_news.dart';
+import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/ui/news_list.dart';
+import 'package:flux_news/functions/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
-import 'database_backend.dart';
-import 'flux_news_state.dart';
-import 'news_model.dart';
+import '../database/database_backend.dart';
+import '../state_management/flux_news_state.dart';
+import '../models/news_model.dart';
 
 class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   const FluxNewsBody({super.key});

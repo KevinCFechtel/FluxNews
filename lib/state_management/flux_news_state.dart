@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
-import 'package:flux_news/logging.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'news_model.dart';
+import '../models/news_model.dart';
 
 // generate android options to usw with flutter secure storage
 sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(

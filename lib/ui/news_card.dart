@@ -4,19 +4,19 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flux_news/android_url_launcher.dart';
-import 'package:flux_news/database_backend.dart';
-import 'package:flux_news/flux_news_counter_state.dart';
-import 'package:flux_news/flux_news_state.dart';
-import 'package:flux_news/logging.dart';
-import 'package:flux_news/news_model.dart';
-import 'package:flux_news/news_widget_functions.dart';
+import 'package:flux_news/functions/android_url_launcher.dart';
+import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // here we define the appearance of the news cards
-class NewsRow extends StatelessWidget {
-  const NewsRow({
+class NewsCard extends StatelessWidget {
+  const NewsCard({
     super.key,
     required this.news,
     required this.context,
@@ -52,7 +52,6 @@ class NewsRow extends StatelessWidget {
           // update the status to read on the news list and notify the categories
           // to recalculate the news count
           news.status = FluxNewsState.readNewsStatus;
-
           context.read<FluxNewsCounterState>().listUpdated = true;
           context.read<FluxNewsCounterState>().refreshView();
           appState.refreshView();
@@ -83,15 +82,6 @@ class NewsRow extends StatelessWidget {
             );
           }
         },
-        /*
-        onLongPressStart: (details) {
-          // on tap get the actual position of the list on tab
-          // to place the context menu on this position
-          // after tab on long-press, open the context menu on the tab position
-          showContextMenu(details, news, context, searchView, appState,
-              context.read<FluxNewsCounterState>());
-        },
-        */
         // on tap get the actual position of the list on tab
         // to place the context menu on this position
         onTapDown: (details) {
@@ -100,35 +90,26 @@ class NewsRow extends StatelessWidget {
         onLongPress: () {
           showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
         },
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
           children: [
+            // load the news image if present
             news.getImageURL() != FluxNewsState.noImageUrlString
-                ? Expanded(
-                    flex: searchView
-                        ? context.select((FluxNewsState model) => model.isTablet)
-                            ? 4
-                            : 5
-                        : 5,
-                    child: CachedNetworkImage(
-                      imageUrl: news.getImageURL(),
-                      height: 230,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.error,
-                      ),
+                ?
+                // the CachedNetworkImage is used to load the images
+                CachedNetworkImage(
+                    imageUrl: news.getImageURL(),
+                    height: appState.isTablet ? 250 : 175,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.error,
                     ),
                   )
                 // if no image is available, shrink this widget
                 : const SizedBox.shrink(),
-            Expanded(
-              flex: searchView
-                  ? context.select((FluxNewsState model) => model.isTablet)
-                      ? 7
-                      : 5
-                  : 5,
-              child: ListTile(
+            // the title and additional info's are presented within a ListTile
+            // the Opacity decide between read and unread news
+            ListTile(
                 title: Text(
                   news.title,
                   style: news.status == FluxNewsState.unreadNewsStatus
@@ -218,9 +199,7 @@ class NewsRow extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
-              ),
-            ),
+                )),
           ],
         ),
       ),

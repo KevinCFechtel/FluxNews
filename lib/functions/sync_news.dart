@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flux_news/database_backend.dart';
-import 'package:flux_news/flux_news_state.dart';
-import 'package:flux_news/logging.dart';
-import 'package:flux_news/miniflux_backend.dart';
-import 'package:flux_news/news_model.dart';
+import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/miniflux/miniflux_backend.dart';
+import 'package:flux_news/models/news_model.dart';
 
 Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
   logThis('syncNews', 'Start syncing with miniflux server.', LogLevel.INFO);

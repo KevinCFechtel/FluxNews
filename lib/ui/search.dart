@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flux_news/logging.dart';
-import 'package:flux_news/search_news_list.dart';
+import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/ui/search_news_list.dart';
 import 'package:provider/provider.dart';
 
-import 'flux_news_state.dart';
-import 'miniflux_backend.dart';
-import 'news_model.dart';
+import '../state_management/flux_news_state.dart';
+import '../miniflux/miniflux_backend.dart';
+import '../models/news_model.dart';
 
 class Search extends StatelessWidget {
   const Search({super.key});

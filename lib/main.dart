@@ -8,17 +8,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
 
-import 'flux_news_body.dart';
-import 'flux_news_state.dart';
-import 'search.dart';
-import 'settings.dart';
+import 'ui/flux_news_body.dart';
+import 'state_management/flux_news_state.dart';
+import 'ui/search.dart';
+import 'ui/settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
