@@ -130,35 +130,12 @@ class BodyNewsList extends StatelessWidget {
                                 appState.refreshView();
                                 context.read<FluxNewsCounterState>().refreshView();
                               }
-
-                              // here is a helper function to get the first visible widget in the list view
-                              // this widget is used as the limit on marking previous news as read.
-                              // so every item of the list, which is previous to the first visible
-                              // will be marked as read.
-                              // the positions is also saved, if the app is resumed later.
-                              Iterable<ItemPosition> positions = appState.itemPositionsListener.itemPositions.value;
-                              int? firstItem;
-                              if (positions.isNotEmpty) {
-                                firstItem = positions
-                                    .where((ItemPosition position) => position.itemTrailingEdge > 0)
-                                    .reduce((ItemPosition first, ItemPosition position) =>
-                                        position.itemTrailingEdge < first.itemTrailingEdge ? position : first)
-                                    .index;
-                              }
-                              if (firstItem == null) {
-                                appState.scrollPosition = 0;
-                                appState.storage
-                                    .write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
-                              } else {
-                                appState.scrollPosition = firstItem;
-                                appState.storage.write(
-                                    key: FluxNewsState.secureStorageSavedScrollPositionKey,
-                                    value: firstItem.toString());
-                              }
                               // return always false to ensure the processing of the notification
                               return false;
                             },
                           ),
+                          // get the actual scroll position on stop scrolling
+                          positionsView(context, appState),
                         ]);
             }
         }
@@ -167,3 +144,29 @@ class BodyNewsList extends StatelessWidget {
     return getData;
   }
 }
+
+// here is a helper function to get the first visible widget in the list view
+// this widget is used as the limit on marking previous news as read.
+// so every item of the list, which is previous to the first visible
+// will be marked as read.
+Widget positionsView(BuildContext context, FluxNewsState appState) => ValueListenableBuilder<Iterable<ItemPosition>>(
+      valueListenable: appState.itemPositionsListener.itemPositions,
+      builder: (context, positions, child) {
+        int? firstItem;
+        if (positions.isNotEmpty) {
+          firstItem = positions
+              .where((ItemPosition position) => position.itemTrailingEdge > 0)
+              .reduce((ItemPosition first, ItemPosition position) =>
+                  position.itemTrailingEdge < first.itemTrailingEdge ? position : first)
+              .index;
+        }
+        if (firstItem == null) {
+          appState.scrollPosition = 0;
+          appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
+        } else {
+          appState.scrollPosition = firstItem;
+          appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: firstItem.toString());
+        }
+        return const SizedBox.shrink();
+      },
+    );
