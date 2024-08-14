@@ -1,10 +1,10 @@
 // the list view widget with search result
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
-import 'package:flux_news/flux_news_state.dart';
-import 'package:flux_news/news_card.dart';
-import 'package:flux_news/news_model.dart';
-import 'package:flux_news/news_row.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/news_card.dart';
+import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/news_row.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -45,25 +45,15 @@ class SearchNewsList extends StatelessWidget {
                       // otherwise create list view with the news of the search result
                       : Stack(children: [
                           ScrollablePositionedList.builder(
-                              key: const PageStorageKey<String>(
-                                  'NewsSearchList'),
+                              key: const PageStorageKey<String>('NewsSearchList'),
                               itemCount: snapshot.data!.length,
-                              itemScrollController:
-                                  appState.searchItemScrollController,
-                              itemPositionsListener:
-                                  appState.searchItemPositionsListener,
+                              itemScrollController: appState.searchItemScrollController,
+                              itemPositionsListener: appState.searchItemPositionsListener,
                               initialScrollIndex: 0,
                               itemBuilder: (context, i) {
-                                return appState.orientation ==
-                                        Orientation.landscape
-                                    ? NewsRow(
-                                        news: snapshot.data![i],
-                                        context: context,
-                                        searchView: searchView)
-                                    : NewsCard(
-                                        news: snapshot.data![i],
-                                        context: context,
-                                        searchView: searchView);
+                                return appState.orientation == Orientation.landscape
+                                    ? NewsRow(news: snapshot.data![i], context: context, searchView: searchView)
+                                    : NewsCard(news: snapshot.data![i], context: context, searchView: searchView);
                               }),
                         ]);
             }

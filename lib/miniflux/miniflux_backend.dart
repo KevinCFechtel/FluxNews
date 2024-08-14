@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:cronet_http/cronet_http.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flux_news/logging.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'flux_news_state.dart';
-import 'news_model.dart';
+import '../state_management/flux_news_state.dart';
+import '../models/news_model.dart';
 
 // this is the class to reflect the update status json body, which is send
 // to the miniflux server to update the status of the news, which are provided

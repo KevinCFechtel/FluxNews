@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flux_news/database_backend.dart';
-import 'package:flux_news/flux_news_counter_state.dart';
-import 'package:flux_news/flux_news_state.dart';
-import 'package:flux_news/logging.dart';
-import 'package:flux_news/miniflux_backend.dart';
-import 'package:flux_news/news_model.dart';
+import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/miniflux/miniflux_backend.dart';
+import 'package:flux_news/models/news_model.dart';
 
 // this is a helper function to get the actual tab position
 // this position is used to open the context menu of the news card here
@@ -98,11 +98,12 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       // toggle the news as bookmarked or not bookmarked at the miniflux server
       await toggleBookmark(appState, news).onError((error, stackTrace) {
         logThis('toggleBookmark', 'Caught an error in toggleBookmark function! : ${error.toString()}', LogLevel.ERROR);
-
-        if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
+        if (context.mounted) {
+          if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+            appState.newError = true;
+            appState.refreshView();
+          }
         }
       });
 
@@ -144,8 +145,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
             appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
               logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}',
                   LogLevel.ERROR);
-
-              appState.errorString = AppLocalizations.of(context)!.databaseError;
+              if (context.mounted) {
+                appState.errorString = AppLocalizations.of(context)!.databaseError;
+              }
               return [];
             });
           }
@@ -185,8 +187,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
               'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
-
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
+          if (context.mounted) {
+            appState.errorString = AppLocalizations.of(context)!.databaseError;
+          }
           return [];
         });
         appState.refreshView();
@@ -231,8 +234,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
               'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
-
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
+          if (context.mounted) {
+            appState.errorString = AppLocalizations.of(context)!.databaseError;
+          }
           return [];
         });
         appState.refreshView();
@@ -251,7 +255,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
             'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}', LogLevel.ERROR);
 
         if (!appState.newError) {
-          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+          if (context.mounted) {
+            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+          }
           appState.newError = true;
           appState.refreshView();
         }

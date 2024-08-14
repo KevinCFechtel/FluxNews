@@ -3,13 +3,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:flux_news/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'flux_news_state.dart';
+import '../state_management/flux_news_state.dart';
 
 // define the model
 class News {
