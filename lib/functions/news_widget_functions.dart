@@ -98,11 +98,12 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       // toggle the news as bookmarked or not bookmarked at the miniflux server
       await toggleBookmark(appState, news).onError((error, stackTrace) {
         logThis('toggleBookmark', 'Caught an error in toggleBookmark function! : ${error.toString()}', LogLevel.ERROR);
-
-        if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
-          appState.newError = true;
-          appState.refreshView();
+        if (context.mounted) {
+          if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+            appState.newError = true;
+            appState.refreshView();
+          }
         }
       });
 
@@ -144,8 +145,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
             appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
               logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}',
                   LogLevel.ERROR);
-
-              appState.errorString = AppLocalizations.of(context)!.databaseError;
+              if (context.mounted) {
+                appState.errorString = AppLocalizations.of(context)!.databaseError;
+              }
               return [];
             });
           }
@@ -185,8 +187,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
               'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
-
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
+          if (context.mounted) {
+            appState.errorString = AppLocalizations.of(context)!.databaseError;
+          }
           return [];
         });
         appState.refreshView();
@@ -231,8 +234,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
               'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
-
-          appState.errorString = AppLocalizations.of(context)!.databaseError;
+          if (context.mounted) {
+            appState.errorString = AppLocalizations.of(context)!.databaseError;
+          }
           return [];
         });
         appState.refreshView();
@@ -251,7 +255,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
             'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}', LogLevel.ERROR);
 
         if (!appState.newError) {
-          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+          if (context.mounted) {
+            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+          }
           appState.newError = true;
           appState.refreshView();
         }

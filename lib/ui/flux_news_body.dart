@@ -362,7 +362,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      if (context.mounted) {
+                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      }
                     },
                   );
                 });
@@ -384,7 +386,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      if (context.mounted) {
+                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      }
                     },
                   );
                 });
@@ -409,7 +413,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      if (context.mounted) {
+                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      }
                     },
                   );
                 });
@@ -431,7 +437,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                   waitUntilNewsListBuild(appState).whenComplete(
                     () {
-                      context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      if (context.mounted) {
+                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                      }
                     },
                   );
                 });
@@ -448,7 +456,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                 waitUntilNewsListBuild(appState).whenComplete(
                   () {
-                    context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                    if (context.mounted) {
+                      context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+                    }
                   },
                 );
               });
@@ -990,7 +1000,9 @@ class FeedTile extends StatelessWidget {
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
           waitUntilNewsListBuild(appState).whenComplete(
             () {
-              context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+              if (context.mounted) {
+                context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+              }
             },
           );
         });
@@ -1087,7 +1099,9 @@ void showContextMenu(BuildContext context, FluxNewsState appState, Feed feed) as
       appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
         waitUntilNewsListBuild(appState).whenComplete(
           () {
-            context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+            if (context.mounted) {
+              context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
+            }
           },
         );
       });
