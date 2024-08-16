@@ -130,6 +130,19 @@ class BodyNewsList extends StatelessWidget {
                                 appState.refreshView();
                                 context.read<FluxNewsCounterState>().refreshView();
                               }
+
+                              Iterable<ItemPosition> positions = appState.itemPositionsListener.itemPositions.value;
+                              int firstItem = 0;
+                              if (positions.isNotEmpty) {
+                                firstItem = positions
+                                    .where((ItemPosition position) => position.itemTrailingEdge > 0)
+                                    .reduce((ItemPosition first, ItemPosition position) =>
+                                        position.itemTrailingEdge < first.itemTrailingEdge ? position : first)
+                                    .index;
+                              }
+                              appState.storage.write(
+                                  key: FluxNewsState.secureStorageSavedScrollPositionKey, value: firstItem.toString());
+
                               // return always false to ensure the processing of the notification
                               return false;
                             },
@@ -152,7 +165,7 @@ class BodyNewsList extends StatelessWidget {
 Widget positionsView(BuildContext context, FluxNewsState appState) => ValueListenableBuilder<Iterable<ItemPosition>>(
       valueListenable: appState.itemPositionsListener.itemPositions,
       builder: (context, positions, child) {
-        int? firstItem;
+        int firstItem = 0;
         if (positions.isNotEmpty) {
           firstItem = positions
               .where((ItemPosition position) => position.itemTrailingEdge > 0)
@@ -160,13 +173,9 @@ Widget positionsView(BuildContext context, FluxNewsState appState) => ValueListe
                   position.itemTrailingEdge < first.itemTrailingEdge ? position : first)
               .index;
         }
-        if (firstItem == null) {
-          appState.scrollPosition = 0;
-          appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
-        } else {
-          appState.scrollPosition = firstItem;
-          appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: firstItem.toString());
-        }
+
+        appState.scrollPosition = firstItem;
+
         return const SizedBox.shrink();
       },
     );
