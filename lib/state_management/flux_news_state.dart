@@ -181,8 +181,8 @@ class FluxNewsState extends ChangeNotifier {
   int charactersToTruncate = 100;
   int charactersToTruncateLimit = 0;
   bool activateSwipeGestures = true;
-  String leftSwipeAction = FluxNewsState.swipeActionBookmarkString;
-  String rightSwipeAction = FluxNewsState.swipeActionReadUnreadString;
+  String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
+  String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
 
   // vars for app bar text
   String appBarText = '';
