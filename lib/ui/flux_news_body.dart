@@ -92,8 +92,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // set the scroll position to the persistent saved scroll position on normal startup
       // if sync on startup is enabled, the scroll position is set to the top of the list
-      if (!appState.syncOnStart) {
-        appState.scrollPosition = appState.savedScrollPosition;
+      if (!appState.syncOnStart && !appState.markAsReadOnScrollOver) {
+        appState.jumpToItem(appState.savedScrollPosition);
       }
 
       if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
@@ -360,13 +360,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
                 // refresh news list with the all news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                  waitUntilNewsListBuild(appState).whenComplete(
-                    () {
-                      if (context.mounted) {
-                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-                      }
-                    },
-                  );
+                  appState.jumpToItem(0);
                 });
 
                 // notify the categories to update the news count
@@ -384,13 +378,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
                 // refresh news list with the only unread news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                  waitUntilNewsListBuild(appState).whenComplete(
-                    () {
-                      if (context.mounted) {
-                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-                      }
-                    },
-                  );
+                  appState.jumpToItem(0);
                 });
 
                 // notify the categories to update the news count
@@ -411,13 +399,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
                 // refresh news list with the all news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                  waitUntilNewsListBuild(appState).whenComplete(
-                    () {
-                      if (context.mounted) {
-                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-                      }
-                    },
-                  );
+                  appState.jumpToItem(0);
                 });
 
                 // notify the categories to update the news count
@@ -435,13 +417,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
                 // refresh news list with the only unread news state
                 appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                  waitUntilNewsListBuild(appState).whenComplete(
-                    () {
-                      if (context.mounted) {
-                        context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-                      }
-                    },
-                  );
+                  appState.jumpToItem(0);
                 });
 
                 // notify the categories to update the news count
@@ -454,13 +430,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               markNewsAsReadInDB(appState);
               // refresh news list with the all news state
               appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                waitUntilNewsListBuild(appState).whenComplete(
-                  () {
-                    if (context.mounted) {
-                      context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-                    }
-                  },
-                );
+                appState.jumpToItem(0);
               });
 
               // notify the categories to update the news count
@@ -855,11 +825,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
     // reload the news list with the new filter
     appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-      waitUntilNewsListBuild(appState).whenComplete(
-        () {
-          appState.itemScrollController.jumpTo(index: 0);
-        },
-      );
+      appState.jumpToItem(0);
     });
     // set the category title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -883,11 +849,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.allNewsElementType;
     // reload the news list with the new filter (empty)
     appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-      waitUntilNewsListBuild(appState).whenComplete(
-        () {
-          appState.itemScrollController.jumpTo(index: 0);
-        },
-      );
+      appState.jumpToItem(0);
     });
     // set the "All News" title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -916,11 +878,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-      waitUntilNewsListBuild(appState).whenComplete(
-        () {
-          appState.itemScrollController.jumpTo(index: 0);
-        },
-      );
+      appState.jumpToItem(0);
     });
     // set the "Bookmarked" title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -998,13 +956,7 @@ class FeedTile extends StatelessWidget {
         appState.selectedCategoryElementType = FluxNewsState.feedElementType;
         // reload the news list with the new filter
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-          waitUntilNewsListBuild(appState).whenComplete(
-            () {
-              if (context.mounted) {
-                context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-              }
-            },
-          );
+          appState.jumpToItem(0);
         });
         // set the feed title as app bar title
         // and update the news count in the app bar, if the function is activated.
@@ -1097,13 +1049,7 @@ void showContextMenu(BuildContext context, FluxNewsState appState, Feed feed) as
       }
       // reload the news list with the new filter
       appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-        waitUntilNewsListBuild(appState).whenComplete(
-          () {
-            if (context.mounted) {
-              context.read<FluxNewsState>().itemScrollController.jumpTo(index: 0);
-            }
-          },
-        );
+        appState.jumpToItem(0);
       });
       appState.refreshView();
       break;

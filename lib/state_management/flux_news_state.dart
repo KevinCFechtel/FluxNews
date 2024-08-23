@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -10,8 +11,8 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import '../models/news_model.dart';
 
@@ -28,7 +29,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.5.5';
+  static const String applicationVersion = '1.5.6';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -113,14 +114,12 @@ class FluxNewsState extends ChangeNotifier {
   bool syncProcess = false;
   late Offset tapPosition;
   int scrollPosition = 0;
-  final ItemScrollController itemScrollController = ItemScrollController();
-  final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
+  final ScrollController scrollController = ScrollController();
+  final ListController listController = ListController();
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
   final TextEditingController searchController = TextEditingController();
-  final ItemScrollController searchItemScrollController = ItemScrollController();
-  final ItemPositionsListener searchItemPositionsListener = ItemPositionsListener.create();
 
   // var for formatting the date depending on locale settings
   DateFormat dateFormat = DateFormat('M/d/yy HH:mm');
@@ -652,6 +651,34 @@ class FluxNewsState extends ChangeNotifier {
         file.deleteSync();
       }
     }
+  }
+
+  void jumpToItem(int index) {
+    waitUntilNewsListBuild().whenComplete(
+      () {
+        listController.jumpToItem(index: index, scrollController: scrollController, alignment: 0.0);
+      },
+    );
+  }
+
+  // this function is needed because after the news are fetched from the database,
+  // the list of news need some time to be generated.
+  // only after the list is generated, we can set the scroll position of the list
+  // we can check that the list is generated if the scroll controller is attached to the list.
+  // so the function checks the scroll controller and if it's not attached it waits 1 millisecond
+  // and check then again if the scroll controller is attached.
+  // With calling this function as await, we can wait with the further processing
+  // on finishing with the list build.
+  Future<void> waitUntilNewsListBuild() async {
+    final completer = Completer();
+    if (scrollController.positions.isNotEmpty) {
+      completer.complete();
+    } else {
+      await Future.delayed(const Duration(milliseconds: 1));
+      return waitUntilNewsListBuild();
+    }
+
+    return completer.future;
   }
 
   // notify the listeners of FluxNewsState to refresh views

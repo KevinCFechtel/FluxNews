@@ -132,11 +132,7 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
           appState.feedIDs = [-1];
           appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-            waitUntilNewsListBuild(appState).whenComplete(
-              () {
-                appState.itemScrollController.jumpTo(index: 0);
-              },
-            );
+            appState.jumpToItem(0);
           });
           appState.refreshView();
         } else {
@@ -273,23 +269,4 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       }
       break;
   }
-}
-
-// this function is needed because after the news are fetched from the database,
-// the list of news need some time to be generated.
-// only after the list is generated, we can set the scroll position of the list
-// we can check that the list is generated if the scroll controller is attached to the list.
-// so the function checks the scroll controller and if it's not attached it waits 1 millisecond
-// and check then again if the scroll controller is attached.
-// With calling this function as await, we can wait with the further processing
-// on finishing with the list build.
-Future<void> waitUntilNewsListBuild(FluxNewsState appState) async {
-  final completer = Completer();
-  if (appState.itemScrollController.isAttached) {
-    await Future.delayed(const Duration(milliseconds: 1));
-    return waitUntilNewsListBuild(appState);
-  } else {
-    completer.complete();
-  }
-  return completer.future;
 }
