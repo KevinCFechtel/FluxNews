@@ -147,14 +147,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       appState.scrollPosition = 0;
       appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
       appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-        waitUntilNewsListBuild(appState).whenComplete(
-          () {
-            // set the view position to the top of the new list
-            if (appState.itemScrollController.isAttached) {
-              appState.itemScrollController.jumpTo(index: 0);
-            }
-          },
-        );
+        appState.jumpToItem(0);
       });
     }
 
@@ -264,14 +257,12 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         if (newNews.newsCount > 0 && appState.feedIDs == null) {
           // if new news exists and the "All News" category is selected,
           // set the list view position to the top
-          if (appState.itemScrollController.isAttached) {
-            appState.itemScrollController.jumpTo(index: 0);
-          }
+          appState.jumpToItem(0);
         } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
           if (appState.feedIDs?.first == -1) {
             // if new news exists and the "Bookmarked" category is selected,
             // set the list view position to the top
-            appState.itemScrollController.jumpTo(index: 0);
+            appState.jumpToItem(0);
           }
         }
       });
@@ -292,15 +283,4 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     logThis('syncNews', 'Syncing with miniflux server executed in ${stopwatch.elapsed}', LogLevel.INFO);
   }
   logThis('syncNews', 'Finished syncing with miniflux server.', LogLevel.INFO);
-}
-
-Future<void> waitUntilNewsListBuild(FluxNewsState appState) async {
-  final completer = Completer();
-  if (appState.itemScrollController.isAttached) {
-    completer.complete();
-  } else {
-    await Future.delayed(const Duration(milliseconds: 1));
-    return waitUntilNewsListBuild(appState);
-  }
-  return completer.future;
 }

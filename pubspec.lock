@@ -794,14 +794,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
-  scrollable_positioned_list:
+  scrollview_observer:
     dependency: "direct main"
     description:
-      name: scrollable_positioned_list
-      sha256: "1b54d5f1329a1e263269abc9e2543d90806131aa14fe7c6062a8054d57249287"
+      name: scrollview_observer
+      sha256: "228dbc7d2e9d975a7c1d4beca1be7fdda7fff6bd7b3c37a646a8563301dc4753"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.8"
+    version: "1.21.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -875,10 +875,10 @@ packages:
     dependency: transitive
     description:
       name: sqflite_common
-      sha256: c5e5b2a142a893a752cb36ae5888680248686725a54afceff31f9a3a76bc53c2
+      sha256: "7b41b6c3507854a159e24ae90a8e3e9cc01eb26a477c118d6dca065b5f55453e"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.4+1"
+    version: "2.5.4+2"
   sqflite_common_ffi:
     dependency: "direct dev"
     description:
@@ -927,6 +927,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  super_sliver_list:
+    dependency: "direct main"
+    description:
+      name: super_sliver_list
+      sha256: b1e1e64d08ce40e459b9bb5d9f8e361617c26b8c9f3bb967760b0f436b6e3f56
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1"
   synchronized:
     dependency: transitive
     description:
