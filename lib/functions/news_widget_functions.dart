@@ -88,144 +88,70 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       ]);
   switch (result) {
     case FluxNewsState.contextMenuBookmarkString:
-      // switch between bookmarked or not bookmarked depending on the previous status
-      if (news.starred) {
-        news.starred = false;
-      } else {
-        news.starred = true;
-      }
-
-      // toggle the news as bookmarked or not bookmarked at the miniflux server
-      await toggleBookmark(appState, news).onError((error, stackTrace) {
-        logThis('toggleBookmark', 'Caught an error in toggleBookmark function! : ${error.toString()}', LogLevel.ERROR);
-        if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
-            appState.newError = true;
-            appState.refreshView();
-          }
-        }
-      });
-
-      // update the bookmarked status in the database
-      try {
-        updateNewsStarredStatusInDB(news.newsID, news.starred, appState);
-        if (context.mounted) {
-          updateStarredCounter(appState, context);
-        }
-      } catch (e) {
-        logThis('updateNewsStarredStatusInDB',
-            'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
-
-        if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-            appState.errorString = AppLocalizations.of(context)!.databaseError;
-            appState.newError = true;
-            appState.refreshView();
-          }
-        }
-      }
-
-      // if we are in the bookmarked category, reload the list of bookmarked news
-      // after the previous change, because there happened changes to this list.
-      if (context.mounted) {
-        if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
-          appState.feedIDs = [-1];
-          appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-            appState.jumpToItem(0);
-          });
-          appState.refreshView();
-        } else {
-          if (searchView) {
-            // update the news list of the main view
-            appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
-              logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}',
-                  LogLevel.ERROR);
-              if (context.mounted) {
-                appState.errorString = AppLocalizations.of(context)!.databaseError;
-              }
-              return [];
-            });
-          }
-          appState.refreshView();
-        }
-      }
-
+      bookmarkAction(news, appState, context, searchView);
       break;
     case FluxNewsState.unreadNewsStatus:
-      // mark a news as unread, update the news unread status in database
-      try {
-        updateNewsStatusInDB(news.newsID, FluxNewsState.unreadNewsStatus, appState);
-      } catch (e) {
-        logThis('updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
-            LogLevel.ERROR);
-
-        if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-            appState.errorString = AppLocalizations.of(context)!.databaseError;
-            appState.newError = true;
-            appState.refreshView();
-          }
-        }
-      }
-      // set the new unread status to the news object and toggle the recalculation
-      // of the news counter
-      news.status = FluxNewsState.unreadNewsStatus;
-      if (searchView) {
-        // update the news status at the miniflux server
-        try {
-          toggleOneNewsAsRead(appState, news);
-        } catch (e) {
-          logThis('toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
-              LogLevel.ERROR);
-        }
-        // update the news list of the main view
-        appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
-          logThis(
-              'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
-          if (context.mounted) {
-            appState.errorString = AppLocalizations.of(context)!.databaseError;
-          }
-          return [];
-        });
-        appState.refreshView();
-        appCounterState.listUpdated = true;
-        appCounterState.refreshView();
-      } else {
-        appCounterState.listUpdated = true;
-        appCounterState.refreshView();
-        appState.refreshView();
-      }
-
+      markNewsAsReadAction(news, appState, context, searchView, appCounterState);
       break;
     case FluxNewsState.readNewsStatus:
-      // mark a news as read, update the news read status in database
-      try {
-        updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
-      } catch (e) {
-        logThis('updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
-            LogLevel.ERROR);
+      markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+      break;
+    case FluxNewsState.contextMenuSaveString:
+      saveToThirdPartyAction(news, appState, context);
+      break;
+  }
+}
 
-        if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-            appState.errorString = AppLocalizations.of(context)!.databaseError;
-            appState.newError = true;
-            appState.refreshView();
-          }
-        }
+Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext context, bool searchView) async {
+// switch between bookmarked or not bookmarked depending on the previous status
+  if (news.starred) {
+    news.starred = false;
+  } else {
+    news.starred = true;
+  }
+
+  // toggle the news as bookmarked or not bookmarked at the miniflux server
+  await toggleBookmark(appState, news).onError((error, stackTrace) {
+    logThis('toggleBookmark', 'Caught an error in toggleBookmark function! : ${error.toString()}', LogLevel.ERROR);
+    if (context.mounted) {
+      if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+        appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+        appState.newError = true;
+        appState.refreshView();
       }
-      // set the new read status to the news object and toggle the recalculation
-      // of the news counter
-      news.status = FluxNewsState.readNewsStatus;
+    }
+  });
 
+  // update the bookmarked status in the database
+  try {
+    updateNewsStarredStatusInDB(news.newsID, news.starred, appState);
+    if (context.mounted) {
+      updateStarredCounter(appState, context);
+    }
+  } catch (e) {
+    logThis('updateNewsStarredStatusInDB', 'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}',
+        LogLevel.ERROR);
+
+    if (context.mounted) {
+      if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+        appState.newError = true;
+        appState.refreshView();
+      }
+    }
+  }
+
+  // if we are in the bookmarked category, reload the list of bookmarked news
+  // after the previous change, because there happened changes to this list.
+  if (context.mounted) {
+    if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
+      appState.feedIDs = [-1];
+      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+        appState.jumpToItem(0);
+      });
+      appState.refreshView();
+    } else {
       if (searchView) {
-        // update the news status at the miniflux server
-        try {
-          toggleOneNewsAsRead(appState, news);
-        } catch (e) {
-          logThis('toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
-              LogLevel.ERROR);
-        }
         // update the news list of the main view
         appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
           logThis(
@@ -235,38 +161,125 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
           }
           return [];
         });
-        appState.refreshView();
-        appCounterState.listUpdated = true;
-        appCounterState.refreshView();
-      } else {
-        appCounterState.listUpdated = true;
-        appCounterState.refreshView();
-        appState.refreshView();
       }
+      appState.refreshView();
+    }
+  }
+}
 
-      break;
-    case FluxNewsState.contextMenuSaveString:
-      await saveNewsToThirdPartyService(appState, news).onError((error, stackTrace) {
-        logThis('saveNewsToThirdPartyService',
-            'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}', LogLevel.ERROR);
+Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildContext context) async {
+  await saveNewsToThirdPartyService(appState, news).onError((error, stackTrace) {
+    logThis('saveNewsToThirdPartyService',
+        'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}', LogLevel.ERROR);
 
-        if (!appState.newError) {
-          if (context.mounted) {
-            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
-          }
-          appState.newError = true;
-          appState.refreshView();
-        }
-      });
-
+    if (!appState.newError) {
       if (context.mounted) {
-        if (!appState.newError) {
-          var successflulSaveSnackBar = SnackBar(
-            content: Text(AppLocalizations.of(context)!.successfullSaveToThirdParty),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(successflulSaveSnackBar);
-        }
+        appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
       }
-      break;
+      appState.newError = true;
+      appState.refreshView();
+    }
+  });
+
+  if (context.mounted) {
+    if (!appState.newError) {
+      var successflulSaveSnackBar = SnackBar(
+        content: Text(AppLocalizations.of(context)!.successfullSaveToThirdParty),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(successflulSaveSnackBar);
+    }
+  }
+}
+
+void markNewsAsReadAction(
+    News news, FluxNewsState appState, BuildContext context, bool searchView, FluxNewsCounterState appCounterState) {
+  // mark a news as read, update the news read status in database
+  try {
+    updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
+  } catch (e) {
+    logThis(
+        'updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
+
+    if (context.mounted) {
+      if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+        appState.newError = true;
+        appState.refreshView();
+      }
+    }
+  }
+  // set the new read status to the news object and toggle the recalculation
+  // of the news counter
+  news.status = FluxNewsState.readNewsStatus;
+
+  if (searchView) {
+    // update the news status at the miniflux server
+    try {
+      toggleOneNewsAsRead(appState, news);
+    } catch (e) {
+      logThis(
+          'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+    }
+    // update the news list of the main view
+    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
+      logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
+      if (context.mounted) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+      }
+      return [];
+    });
+    appState.refreshView();
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+  } else {
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+    appState.refreshView();
+  }
+}
+
+void markNewsAsUnreadAction(
+    News news, FluxNewsState appState, BuildContext context, bool searchView, FluxNewsCounterState appCounterState) {
+  // mark a news as unread, update the news unread status in database
+  try {
+    updateNewsStatusInDB(news.newsID, FluxNewsState.unreadNewsStatus, appState);
+  } catch (e) {
+    logThis(
+        'updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
+
+    if (context.mounted) {
+      if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+        appState.newError = true;
+        appState.refreshView();
+      }
+    }
+  }
+  // set the new unread status to the news object and toggle the recalculation
+  // of the news counter
+  news.status = FluxNewsState.unreadNewsStatus;
+  if (searchView) {
+    // update the news status at the miniflux server
+    try {
+      toggleOneNewsAsRead(appState, news);
+    } catch (e) {
+      logThis(
+          'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+    }
+    // update the news list of the main view
+    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
+      logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
+      if (context.mounted) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+      }
+      return [];
+    });
+    appState.refreshView();
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+  } else {
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+    appState.refreshView();
   }
 }

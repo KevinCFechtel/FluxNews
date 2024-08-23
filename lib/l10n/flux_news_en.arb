@@ -77,5 +77,9 @@
     "charactersToTruncate": "Amount of characters\nto which the text is truncated",
     "charactersToTruncateLimit": "Amount of characters\nfrom which the text is truncated",
     "manualTruncate": "Truncate news",
-    "successfullSaveToThirdParty": "The news was successfully saved!"
+    "successfullSaveToThirdParty": "The news was successfully saved!",
+    "bookmarkShort": "Bookmark",
+    "saveShort": "Save",
+    "readShort": "Read",
+    "unreadShort": "Unread"
 }
