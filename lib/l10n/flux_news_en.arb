@@ -81,5 +81,8 @@
     "bookmarkShort": "Bookmark",
     "saveShort": "Save",
     "readShort": "Read",
-    "unreadShort": "Unread"
+    "unreadShort": "Unread",
+    "leftSwipeSelectionOption": "Select action\nfor swiping to the left",
+    "rightSwipeSelectionOption": "Select action\nfor swiping to the right",
+    "activateSwiping": "Activate swipe gestures"
 }

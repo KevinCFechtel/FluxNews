@@ -73,6 +73,9 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
   static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
   static const String secureStorageDebugModeKey = 'debugMode';
+  static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
+  static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
+  static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -83,6 +86,9 @@ class FluxNewsState extends ChangeNotifier {
   static const String noImageUrlString = 'NoImageUrl';
   static const String contextMenuBookmarkString = 'bookmark';
   static const String contextMenuSaveString = 'saveToThirdParty';
+  static const String swipeActionSaveString = 'saveToThirdParty';
+  static const String swipeActionBookmarkString = 'bookmark';
+  static const String swipeActionReadUnreadString = 'readUnread';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -153,6 +159,8 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? amontOfSyncedNewsSelection;
   KeyValueRecordType? amontOfSearchedNewsSelection;
   KeyValueRecordType? amountOfCharactersToTruncateLimitSelection;
+  KeyValueRecordType? leftSwipeActionSelection;
+  KeyValueRecordType? rightSwipeActionSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
@@ -167,10 +175,14 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesAmountOfSyncedNews;
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
   List<KeyValueRecordType>? recordTypesAmountOfCharactersToTruncateLimit;
+  List<KeyValueRecordType>? recordTypesSwipeActions;
   bool activateTruncate = false;
   int truncateMode = 0;
   int charactersToTruncate = 100;
   int charactersToTruncateLimit = 0;
+  bool activateSwipeGestures = true;
+  String leftSwipeAction = FluxNewsState.swipeActionBookmarkString;
+  String rightSwipeAction = FluxNewsState.swipeActionReadUnreadString;
 
   // vars for app bar text
   String appBarText = '';
@@ -349,11 +361,19 @@ class FluxNewsState extends ChangeNotifier {
         KeyValueRecordType(key: FluxNewsState.brightnessModeDarkString, value: AppLocalizations.of(context)!.dark),
         KeyValueRecordType(key: FluxNewsState.brightnessModeLightString, value: AppLocalizations.of(context)!.light),
       ];
+      recordTypesSwipeActions = <KeyValueRecordType>[
+        KeyValueRecordType(
+            key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
+        KeyValueRecordType(
+            key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
+        KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+      ];
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
       recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
       recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
       recordTypesBrightnessMode = <KeyValueRecordType>[];
+      recordTypesSwipeActions = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -381,6 +401,20 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesAmountOfCharactersToTruncateLimit != null) {
       if (recordTypesAmountOfCharactersToTruncateLimit!.isNotEmpty) {
         amountOfCharactersToTruncateLimitSelection = recordTypesAmountOfCharactersToTruncateLimit![0];
+      }
+    }
+
+    // init the left Swipe action selection with the first value of the above generated maps
+    if (recordTypesSwipeActions != null) {
+      if (recordTypesSwipeActions!.isNotEmpty) {
+        leftSwipeActionSelection = recordTypesSwipeActions![0];
+      }
+    }
+
+    // init the right Swipe action selection with the first value of the above generated maps
+    if (recordTypesSwipeActions != null) {
+      if (recordTypesSwipeActions!.isNotEmpty) {
+        rightSwipeActionSelection = recordTypesSwipeActions![1];
       }
     }
 
@@ -586,6 +620,41 @@ class FluxNewsState extends ChangeNotifier {
             debugMode = true;
           } else {
             debugMode = false;
+          }
+        }
+      }
+
+      // assign the activate swiping gestures selection from persistent saved config
+      if (key == FluxNewsState.secureStorageActivateSwipeGesturesKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            activateSwipeGestures = true;
+          } else {
+            activateSwipeGestures = false;
+          }
+        }
+      }
+
+      // assign the left Swipe Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageLeftSwipeActionKey) {
+        if (value != '') {
+          leftSwipeAction = value;
+          for (KeyValueRecordType recordSet in recordTypesSwipeActions!) {
+            if (value == recordSet.key) {
+              leftSwipeActionSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the right Swipe Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageRightSwipeActionKey) {
+        if (value != '') {
+          rightSwipeAction = value;
+          for (KeyValueRecordType recordSet in recordTypesSwipeActions!) {
+            if (value == recordSet.key) {
+              rightSwipeActionSelection = recordSet;
+            }
           }
         }
       }

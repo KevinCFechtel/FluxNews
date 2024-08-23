@@ -30,10 +30,60 @@ class NewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    List<Widget> rightSwipeActions = [];
+    List<Widget> leftSwipeActions = [];
+    SlidableAction bookmarkSlidableAction = SlidableAction(
+      onPressed: (context) {
+        bookmarkAction(news, appState, context, searchView);
+      },
+      backgroundColor: const Color.fromARGB(255, 254, 197, 73),
+      foregroundColor: Colors.white,
+      icon: Icons.star_outline,
+      label: AppLocalizations.of(context)!.bookmarkShort,
+    );
+    SlidableAction readSlidableAction = SlidableAction(
+      onPressed: (context) {
+        if (news.status == FluxNewsState.readNewsStatus) {
+          markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+        } else {
+          markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+        }
+      },
+      backgroundColor: const Color(0xFF7BC043),
+      foregroundColor: Colors.white,
+      icon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
+      label: news.status == FluxNewsState.readNewsStatus
+          ? AppLocalizations.of(context)!.unreadShort
+          : AppLocalizations.of(context)!.readShort,
+    );
+    SlidableAction saveSlidableAction = SlidableAction(
+      onPressed: (context) {
+        saveToThirdPartyAction(news, appState, context);
+      },
+      backgroundColor: const Color(0xFF21B7CA),
+      foregroundColor: Colors.white,
+      icon: Icons.save,
+      label: AppLocalizations.of(context)!.saveShort,
+    );
+    if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+      rightSwipeActions.add(readSlidableAction);
+    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+      rightSwipeActions.add(bookmarkSlidableAction);
+    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
+      rightSwipeActions.add(saveSlidableAction);
+    }
+
+    if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+      leftSwipeActions.add(readSlidableAction);
+    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+      leftSwipeActions.add(bookmarkSlidableAction);
+    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
+      leftSwipeActions.add(saveSlidableAction);
+    }
     return Slidable(
         // Specify a key if the Slidable is dismissible.
         key: UniqueKey(),
-
+        enabled: appState.activateSwipeGestures,
         // The start action pane is the one at the left or the top side.
         startActionPane: ActionPane(
           //dismissible: DismissiblePane(onDismissed: () {}),
@@ -41,63 +91,14 @@ class NewsCard extends StatelessWidget {
           motion: const ScrollMotion(),
 
           // All actions are defined in the children parameter.
-          children: [
-            // A SlidableAction can have an icon and/or a label.
-            SlidableAction(
-              flex: 2,
-              onPressed: (context) {
-                bookmarkAction(news, appState, context, searchView);
-              },
-              backgroundColor: const Color.fromARGB(255, 254, 197, 73),
-              foregroundColor: Colors.white,
-              icon: Icons.star_outline,
-              label: AppLocalizations.of(context)!.bookmarkShort,
-            ),
-            appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
-                ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion
-                    ? SlidableAction(
-                        onPressed: (context) {
-                          saveToThirdPartyAction(news, appState, context);
-                        },
-                        backgroundColor: const Color(0xFF21B7CA),
-                        foregroundColor: Colors.white,
-                        icon: Icons.save,
-                        label: AppLocalizations.of(context)!.saveShort,
-                      )
-                    : const SizedBox.shrink()
-                : SlidableAction(
-                    onPressed: (context) {
-                      saveToThirdPartyAction(news, appState, context);
-                    },
-                    backgroundColor: const Color(0xFF21B7CA),
-                    foregroundColor: Colors.white,
-                    icon: Icons.save,
-                    label: AppLocalizations.of(context)!.saveShort,
-                  ),
-          ],
+          children: rightSwipeActions,
         ),
 
         // The end action pane is the one at the right or the bottom side.
         endActionPane: ActionPane(
           motion: const ScrollMotion(),
           //dismissible: DismissiblePane(onDismissed: () {}),
-          children: [
-            SlidableAction(
-              onPressed: (context) {
-                if (news.status == FluxNewsState.readNewsStatus) {
-                  markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                } else {
-                  markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                }
-              },
-              backgroundColor: const Color(0xFF7BC043),
-              foregroundColor: Colors.white,
-              icon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
-              label: news.status == FluxNewsState.readNewsStatus
-                  ? AppLocalizations.of(context)!.unreadShort
-                  : AppLocalizations.of(context)!.readShort,
-            ),
-          ],
+          children: leftSwipeActions,
         ),
 
         // The child of the Slidable is what the user sees when the

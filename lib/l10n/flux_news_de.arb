@@ -81,5 +81,8 @@
     "bookmarkShort": "Lesezeichen",
     "saveShort": "Speichern",
     "readShort": "Gelesen",
-    "unreadShort": "Ungelesen"
+    "unreadShort": "Ungelesen",
+    "leftSwipeSelectionOption": "Wählen Sie die Aktion,\ndie bei einem Wische nach\nlinks ausgeführt werden soll",
+    "rightSwipeSelectionOption": "Wählen Sie die Aktion,\ndie bei einem Wische nach\nrechts ausgeführt werden soll",
+    "activateSwiping": "Aktiviere Wischgesten"
 }

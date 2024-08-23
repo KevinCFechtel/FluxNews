@@ -473,6 +473,126 @@ class Settings extends StatelessWidget {
                     ),
                   ],
                 ),
+                const Divider(),
+                // this row contains the selection if swiping is enabled
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0),
+                      child: Icon(
+                        Icons.swipe,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                      child: Text(
+                        AppLocalizations.of(context)!.activateSwiping,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    const Spacer(),
+                    Switch.adaptive(
+                      value: appState.activateSwipeGestures,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.activateSwipeGestures = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageActivateSwipeGesturesKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection of left swipe action
+                // there are the choices of read, bookmark and save
+                appState.activateSwipeGestures
+                    ? Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 17.0),
+                            child: Icon(
+                              Icons.swipe_left,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                            child: Text(AppLocalizations.of(context)!.leftSwipeSelectionOption,
+                                style: Theme.of(context).textTheme.titleMedium),
+                          ),
+                          const Spacer(),
+                          DropdownButton<KeyValueRecordType>(
+                            value: appState.leftSwipeActionSelection,
+                            elevation: 16,
+                            underline: Container(
+                              height: 2,
+                            ),
+                            alignment: AlignmentDirectional.centerEnd,
+                            onChanged: (KeyValueRecordType? value) {
+                              if (value != null) {
+                                appState.leftSwipeAction = value.key;
+                                appState.leftSwipeActionSelection = value;
+                                appState.storage
+                                    .write(key: FluxNewsState.secureStorageLeftSwipeActionKey, value: value.key);
+                                appState.refreshView();
+                              }
+                            },
+                            items: appState.recordTypesSwipeActions!
+                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                    DropdownMenuItem<KeyValueRecordType>(
+                                        value: recordType, child: Text(recordType.value)))
+                                .toList(),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+                // this row contains the selection of left swipe action
+                // there are the choices of read, bookmark and save
+                appState.activateSwipeGestures
+                    ? Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 17.0),
+                            child: Icon(
+                              Icons.swipe_right,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                            child: Text(AppLocalizations.of(context)!.rightSwipeSelectionOption,
+                                style: Theme.of(context).textTheme.titleMedium),
+                          ),
+                          const Spacer(),
+                          DropdownButton<KeyValueRecordType>(
+                            value: appState.rightSwipeActionSelection,
+                            elevation: 16,
+                            underline: Container(
+                              height: 2,
+                            ),
+                            alignment: AlignmentDirectional.centerEnd,
+                            onChanged: (KeyValueRecordType? value) {
+                              if (value != null) {
+                                appState.rightSwipeAction = value.key;
+                                appState.rightSwipeActionSelection = value;
+                                appState.storage
+                                    .write(key: FluxNewsState.secureStorageRightSwipeActionKey, value: value.key);
+                                appState.refreshView();
+                              }
+                            },
+                            items: appState.recordTypesSwipeActions!
+                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                    DropdownMenuItem<KeyValueRecordType>(
+                                        value: recordType, child: Text(recordType.value)))
+                                .toList(),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
@@ -486,7 +606,7 @@ class Settings extends StatelessWidget {
                     ],
                   ),
                 ),
-                // this row contains the selection if the debug mode is turned on
+                // this sections contains the truncate options
                 Row(
                   children: [
                     const Padding(
