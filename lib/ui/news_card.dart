@@ -86,7 +86,28 @@ class NewsCard extends StatelessWidget {
         enabled: appState.activateSwipeGestures,
         // The start action pane is the one at the left or the top side.
         startActionPane: ActionPane(
-          //dismissible: DismissiblePane(onDismissed: () {}),
+          dragDismissible: true,
+          dismissible: DismissiblePane(
+            closeOnCancel: true,
+            dismissThreshold: 0.75,
+            confirmDismiss: () async {
+              if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+                if (news.status == FluxNewsState.readNewsStatus) {
+                  markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                } else {
+                  markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                }
+              } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+                bookmarkAction(news, appState, context, searchView);
+              } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
+                saveToThirdPartyAction(news, appState, context);
+              }
+              return false;
+            },
+            onDismissed: () {
+              // Never gets called back
+            },
+          ),
           // A motion is a widget used to control how the pane animates.
           motion: const ScrollMotion(),
 
@@ -96,8 +117,29 @@ class NewsCard extends StatelessWidget {
 
         // The end action pane is the one at the right or the bottom side.
         endActionPane: ActionPane(
+          dragDismissible: true,
+          dismissible: DismissiblePane(
+            closeOnCancel: true,
+            dismissThreshold: 0.75,
+            confirmDismiss: () async {
+              if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+                if (news.status == FluxNewsState.readNewsStatus) {
+                  markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                } else {
+                  markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                }
+              } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+                bookmarkAction(news, appState, context, searchView);
+              } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
+                saveToThirdPartyAction(news, appState, context);
+              }
+              return false;
+            },
+            onDismissed: () {
+              // Never gets called back
+            },
+          ),
           motion: const ScrollMotion(),
-          //dismissible: DismissiblePane(onDismissed: () {}),
           children: leftSwipeActions,
         ),
 

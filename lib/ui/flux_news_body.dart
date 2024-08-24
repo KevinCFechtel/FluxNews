@@ -215,6 +215,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                         : Text(
                             appState.minifluxURL!,
                             style: Theme.of(context).textTheme.bodyMedium,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
                           ),
                   ),
                 ),
@@ -262,12 +264,17 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 value: 0,
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.search,
+                    const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(
+                        Icons.search,
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5),
-                      child: Text(AppLocalizations.of(context)!.search),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.search,
+                        overflow: TextOverflow.visible,
+                      ),
                     )
                   ],
                 ),
@@ -277,14 +284,22 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 value: 1,
                 child: Row(
                   children: [
-                    Icon(
-                      appState.newsStatus == FluxNewsState.unreadNewsStatus ? Icons.checklist : Icons.fiber_new,
-                    ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 5),
+                      padding: const EdgeInsets.only(right: 5),
+                      child: Icon(
+                        appState.newsStatus == FluxNewsState.unreadNewsStatus ? Icons.checklist : Icons.fiber_new,
+                      ),
+                    ),
+                    Expanded(
                       child: appState.newsStatus == FluxNewsState.unreadNewsStatus
-                          ? Text(AppLocalizations.of(context)!.showRead)
-                          : Text(AppLocalizations.of(context)!.showUnread),
+                          ? Text(
+                              AppLocalizations.of(context)!.showRead,
+                              overflow: TextOverflow.visible,
+                            )
+                          : Text(
+                              AppLocalizations.of(context)!.showUnread,
+                              overflow: TextOverflow.visible,
+                            ),
                     )
                   ],
                 ),
@@ -294,14 +309,22 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 value: 2,
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.sort,
+                    const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(
+                        Icons.sort,
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5),
+                    Expanded(
                       child: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
-                          ? Text(AppLocalizations.of(context)!.oldestFirst)
-                          : Text(AppLocalizations.of(context)!.newestFirst),
+                          ? Text(
+                              AppLocalizations.of(context)!.oldestFirst,
+                              overflow: TextOverflow.visible,
+                            )
+                          : Text(
+                              AppLocalizations.of(context)!.newestFirst,
+                              overflow: TextOverflow.visible,
+                            ),
                     )
                   ],
                 ),
@@ -310,18 +333,32 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 value: 3,
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.check_circle_outline,
+                    const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(
+                        Icons.check_circle_outline,
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5),
+                    Expanded(
                       child: appState.selectedCategoryElementType == FluxNewsState.feedElementType
-                          ? Text(AppLocalizations.of(context)!.markFeedAsRead)
+                          ? Text(
+                              AppLocalizations.of(context)!.markFeedAsRead,
+                              overflow: TextOverflow.visible,
+                            )
                           : appState.selectedCategoryElementType == FluxNewsState.categoryElementType
-                              ? Text(AppLocalizations.of(context)!.markCategoryAsRead)
+                              ? Text(
+                                  AppLocalizations.of(context)!.markCategoryAsRead,
+                                  overflow: TextOverflow.visible,
+                                )
                               : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType
-                                  ? Text(AppLocalizations.of(context)!.markBookmarkedAsRead)
-                                  : Text(AppLocalizations.of(context)!.markAllAsRead),
+                                  ? Text(
+                                      AppLocalizations.of(context)!.markBookmarkedAsRead,
+                                      overflow: TextOverflow.visible,
+                                    )
+                                  : Text(
+                                      AppLocalizations.of(context)!.markAllAsRead,
+                                      overflow: TextOverflow.visible,
+                                    ),
                     )
                   ],
                 ),
@@ -331,12 +368,17 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 value: 4,
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.settings,
+                    const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(
+                        Icons.settings,
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5),
-                      child: Text(AppLocalizations.of(context)!.settings),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.settings,
+                        overflow: TextOverflow.visible,
+                      ),
                     )
                   ],
                 ),
@@ -1029,12 +1071,17 @@ void showContextMenu(BuildContext context, FluxNewsState appState, Feed feed) as
         PopupMenuItem(
             value: 1,
             child: Row(children: [
-              const Icon(
-                Icons.cut_outlined,
+              const Padding(
+                padding: EdgeInsets.only(right: 2),
+                child: Icon(
+                  Icons.cut_outlined,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: Text(AppLocalizations.of(context)!.manualTruncate),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.manualTruncate,
+                  overflow: TextOverflow.visible,
+                ),
               )
             ])),
       ]);

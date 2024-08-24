@@ -32,23 +32,25 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         // bookmark the news
         PopupMenuItem(
           value: FluxNewsState.contextMenuBookmarkString,
-          child: news.starred
-              ? Row(children: [
-                  const Icon(
-                    Icons.star_outline,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 5),
-                    child: Text(AppLocalizations.of(context)!.deleteBookmark),
-                  )
-                ])
-              : Row(children: [
-                  const Icon(
-                    Icons.star,
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.only(left: 5), child: Text(AppLocalizations.of(context)!.addBookmark)),
-                ]),
+          child: Row(children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 5),
+              child: Icon(
+                news.starred ? Icons.star_outline : Icons.star,
+              ),
+            ),
+            Expanded(
+              child: news.starred
+                  ? Text(
+                      AppLocalizations.of(context)!.deleteBookmark,
+                      overflow: TextOverflow.visible,
+                    )
+                  : Text(
+                      AppLocalizations.of(context)!.addBookmark,
+                      overflow: TextOverflow.visible,
+                    ),
+            )
+          ]),
         ),
         // mark the news as unread or read
         PopupMenuItem(
@@ -56,14 +58,22 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
               ? FluxNewsState.unreadNewsStatus
               : FluxNewsState.readNewsStatus,
           child: Row(children: [
-            Icon(
-              news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
-            ),
             Padding(
-                padding: const EdgeInsets.only(left: 5),
+              padding: const EdgeInsets.only(right: 5),
+              child: Icon(
+                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
+              ),
+            ),
+            Expanded(
                 child: news.status == FluxNewsState.readNewsStatus
-                    ? Text(AppLocalizations.of(context)!.markAsUnread)
-                    : Text(AppLocalizations.of(context)!.markAsRead)),
+                    ? Text(
+                        AppLocalizations.of(context)!.markAsUnread,
+                        overflow: TextOverflow.visible,
+                      )
+                    : Text(
+                        AppLocalizations.of(context)!.markAsRead,
+                        overflow: TextOverflow.visible,
+                      )),
           ]),
         ),
         // save the news to third party service
@@ -73,15 +83,16 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
                 : true,
             value: FluxNewsState.contextMenuSaveString,
             child: Row(children: [
-              const Icon(
-                Icons.save,
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.save,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 5),
+              Expanded(
                 child: Text(
                   AppLocalizations.of(context)!.contextSaveButton,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: TextOverflow.visible,
                 ),
               )
             ])),

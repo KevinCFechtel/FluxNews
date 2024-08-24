@@ -134,18 +134,19 @@ class Settings extends StatelessWidget {
                 // there are the choices of light, dark and system
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.light_mode,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                      child: Text(AppLocalizations.of(context)!.brightnesMode,
-                          style: Theme.of(context).textTheme.titleMedium),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.brightnesMode,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                    const Spacer(),
                     DropdownButton<KeyValueRecordType>(
                       value: appState.brightnessModeSelection,
                       elevation: 16,
@@ -173,20 +174,19 @@ class Settings extends StatelessWidget {
                 // if it is turned on, a news is marked as read if it is scrolled over
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.check,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.markAsReadOnScrollover,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.markAsReadOnScrollOver,
                       onChanged: (bool value) {
@@ -206,20 +206,19 @@ class Settings extends StatelessWidget {
                 // this row contains the selection of the sync on start
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.refresh,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.syncOnStart,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.syncOnStart,
                       onChanged: (bool value) {
@@ -239,20 +238,19 @@ class Settings extends StatelessWidget {
                 // is turned on, the app bar text is showing the news count in the second line
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.numbers,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.multilineAppBarTextSetting,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.multilineAppBarText,
                       onChanged: (bool value) {
@@ -272,20 +270,19 @@ class Settings extends StatelessWidget {
                 // this row contains the selection if the feed icon is shown
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.image,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.showFeedIconsTextSettings,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.showFeedIcons,
                       onChanged: (bool value) {
@@ -306,18 +303,19 @@ class Settings extends StatelessWidget {
                 // if the news exceeds the amount, the oldest news were deleted
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.save_alt,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                      child: Text(AppLocalizations.of(context)!.amountSaved,
-                          style: Theme.of(context).textTheme.titleMedium),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.amountSaved,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                    const Spacer(),
                     DropdownButton<int>(
                       value: appState.amountOfSavedNews,
                       elevation: 16,
@@ -347,18 +345,19 @@ class Settings extends StatelessWidget {
                 // if the news exceeds the amount, the oldest news were deleted
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.star,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                      child: Text(AppLocalizations.of(context)!.amountSavedStarred,
-                          style: Theme.of(context).textTheme.titleMedium),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.amountSavedStarred,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                    const Spacer(),
                     DropdownButton<int>(
                       value: appState.amountOfSavedStarredNews,
                       elevation: 16,
@@ -388,18 +387,19 @@ class Settings extends StatelessWidget {
                 // there are the choices of all, 1000, 2000, 5000 and 10000
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.repeat_one,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                      child: Text(AppLocalizations.of(context)!.amountOfSyncedNews,
-                          style: Theme.of(context).textTheme.titleMedium),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.amountOfSyncedNews,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                    const Spacer(),
                     DropdownButton<KeyValueRecordType>(
                       value: appState.amontOfSyncedNewsSelection,
                       elevation: 16,
@@ -433,18 +433,19 @@ class Settings extends StatelessWidget {
                 // there are the choices of all, 1000, 2000, 5000 and 10000
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.manage_search,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                      child: Text(AppLocalizations.of(context)!.amountOfSearchedNews,
-                          style: Theme.of(context).textTheme.titleMedium),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.amountOfSearchedNews,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                    const Spacer(),
                     DropdownButton<KeyValueRecordType>(
                       value: appState.amontOfSearchedNewsSelection,
                       elevation: 16,
@@ -477,20 +478,19 @@ class Settings extends StatelessWidget {
                 // this row contains the selection if swiping is enabled
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.swipe,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.activateSwiping,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.activateSwipeGestures,
                       onChanged: (bool value) {
@@ -512,18 +512,19 @@ class Settings extends StatelessWidget {
                 appState.activateSwipeGestures
                     ? Row(
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 17.0),
-                            child: Icon(
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
                               Icons.swipe_left,
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                            child: Text(AppLocalizations.of(context)!.leftSwipeSelectionOption,
-                                style: Theme.of(context).textTheme.titleMedium),
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context)!.leftSwipeSelectionOption,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
                           ),
-                          const Spacer(),
                           DropdownButton<KeyValueRecordType>(
                             value: appState.leftSwipeActionSelection,
                             elevation: 16,
@@ -555,18 +556,19 @@ class Settings extends StatelessWidget {
                 appState.activateSwipeGestures
                     ? Row(
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 17.0),
-                            child: Icon(
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
                               Icons.swipe_right,
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                            child: Text(AppLocalizations.of(context)!.rightSwipeSelectionOption,
-                                style: Theme.of(context).textTheme.titleMedium),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.rightSwipeSelectionOption,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
                           ),
-                          const Spacer(),
                           DropdownButton<KeyValueRecordType>(
                             value: appState.rightSwipeActionSelection,
                             elevation: 16,
@@ -609,20 +611,19 @@ class Settings extends StatelessWidget {
                 // this sections contains the truncate options
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.cut_outlined,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.activateTruncate,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.activateTruncate,
                       onChanged: (bool value) {
@@ -705,18 +706,19 @@ class Settings extends StatelessWidget {
                 appState.activateTruncate
                     ? Row(
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 17.0),
-                            child: Icon(
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
                               Icons.cut_outlined,
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                            child: Text(AppLocalizations.of(context)!.charactersToTruncate,
-                                style: Theme.of(context).textTheme.titleMedium),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.charactersToTruncate,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
                           ),
-                          const Spacer(),
                           DropdownButton<int>(
                             value: appState.charactersToTruncate,
                             elevation: 16,
@@ -746,18 +748,19 @@ class Settings extends StatelessWidget {
                 appState.activateTruncate
                     ? Row(
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 17.0),
-                            child: Icon(
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
                               Icons.cut_outlined,
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
-                            child: Text(AppLocalizations.of(context)!.charactersToTruncateLimit,
-                                style: Theme.of(context).textTheme.titleMedium),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.charactersToTruncateLimit,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
                           ),
-                          const Spacer(),
                           DropdownButton<KeyValueRecordType>(
                             value: appState.amountOfCharactersToTruncateLimitSelection,
                             elevation: 16,
@@ -787,6 +790,7 @@ class Settings extends StatelessWidget {
                         ],
                       )
                     : const SizedBox.shrink(),
+                appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
@@ -803,20 +807,19 @@ class Settings extends StatelessWidget {
                 // this row contains the selection if the debug mode is turned on
                 Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0),
-                      child: Icon(
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
                         Icons.developer_mode,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: Platform.isIOS ? 15.0 : 30.0),
+                    Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.debugModeTextSettings,
                         style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
-                    const Spacer(),
                     Switch.adaptive(
                       value: appState.debugMode,
                       onChanged: (bool value) {
