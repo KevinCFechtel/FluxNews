@@ -39,12 +39,12 @@ class NewsCard extends StatelessWidget {
       backgroundColor: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
           ? MediaQuery.of(context).platformBrightness == Brightness.dark
               ? const Color.fromARGB(200, 254, 180, 0)
-              : const Color.fromARGB(255, 254, 180, 0)
+              : const Color.fromARGB(255, 255, 210, 95)
           : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
               ? const Color.fromARGB(200, 254, 180, 0)
-              : const Color.fromARGB(255, 254, 180, 0),
-      foregroundColor: Colors.white,
-      icon: Icons.star_outline,
+              : const Color.fromARGB(255, 255, 210, 95),
+      foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
+      icon: Icons.star,
       label: AppLocalizations.of(context)!.bookmarkShort,
     );
     SlidableAction readSlidableAction = SlidableAction(
@@ -58,11 +58,11 @@ class NewsCard extends StatelessWidget {
       backgroundColor: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
           ? MediaQuery.of(context).platformBrightness == Brightness.dark
               ? const Color.fromARGB(255, 0, 100, 10)
-              : const Color.fromARGB(255, 0, 200, 10)
+              : const Color.fromARGB(255, 92, 251, 172)
           : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
               ? const Color.fromARGB(255, 0, 100, 10)
-              : const Color.fromARGB(255, 0, 200, 10),
-      foregroundColor: Colors.white,
+              : const Color.fromARGB(255, 92, 251, 145),
+      foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
       icon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
       label: news.status == FluxNewsState.readNewsStatus
           ? AppLocalizations.of(context)!.unreadShort
@@ -75,11 +75,11 @@ class NewsCard extends StatelessWidget {
       backgroundColor: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
           ? MediaQuery.of(context).platformBrightness == Brightness.dark
               ? const Color.fromARGB(130, 0, 160, 235)
-              : const Color.fromARGB(198, 0, 160, 235)
+              : const Color.fromARGB(197, 82, 200, 255)
           : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
               ? const Color.fromARGB(130, 0, 160, 235)
-              : const Color.fromARGB(198, 0, 160, 235),
-      foregroundColor: Colors.white,
+              : const Color.fromARGB(197, 82, 200, 255),
+      foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
       icon: Icons.save,
       label: AppLocalizations.of(context)!.saveShort,
     );
