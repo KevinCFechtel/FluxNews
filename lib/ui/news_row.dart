@@ -36,7 +36,13 @@ class NewsRow extends StatelessWidget {
       onPressed: (context) {
         bookmarkAction(news, appState, context, searchView);
       },
-      backgroundColor: const Color.fromARGB(255, 254, 197, 73),
+      backgroundColor: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          ? MediaQuery.of(context).platformBrightness == Brightness.dark
+              ? const Color.fromARGB(200, 254, 180, 0)
+              : const Color.fromARGB(255, 254, 180, 0)
+          : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              ? const Color.fromARGB(200, 254, 180, 0)
+              : const Color.fromARGB(255, 254, 180, 0),
       foregroundColor: Colors.white,
       icon: Icons.star_outline,
       label: AppLocalizations.of(context)!.bookmarkShort,
@@ -49,7 +55,13 @@ class NewsRow extends StatelessWidget {
           markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
         }
       },
-      backgroundColor: const Color(0xFF7BC043),
+      backgroundColor: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          ? MediaQuery.of(context).platformBrightness == Brightness.dark
+              ? const Color.fromARGB(255, 0, 100, 10)
+              : const Color.fromARGB(255, 0, 200, 10)
+          : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              ? const Color.fromARGB(255, 0, 100, 10)
+              : const Color.fromARGB(255, 0, 200, 10),
       foregroundColor: Colors.white,
       icon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
       label: news.status == FluxNewsState.readNewsStatus
@@ -60,7 +72,13 @@ class NewsRow extends StatelessWidget {
       onPressed: (context) {
         saveToThirdPartyAction(news, appState, context);
       },
-      backgroundColor: const Color(0xFF21B7CA),
+      backgroundColor: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          ? MediaQuery.of(context).platformBrightness == Brightness.dark
+              ? const Color.fromARGB(130, 0, 160, 235)
+              : const Color.fromARGB(198, 0, 160, 235)
+          : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              ? const Color.fromARGB(130, 0, 160, 235)
+              : const Color.fromARGB(198, 0, 160, 235),
       foregroundColor: Colors.white,
       icon: Icons.save,
       label: AppLocalizations.of(context)!.saveShort,
@@ -84,12 +102,14 @@ class NewsRow extends StatelessWidget {
         // Specify a key if the Slidable is dismissible.
         key: UniqueKey(),
         enabled: appState.activateSwipeGestures,
+        closeOnScroll: true,
         // The start action pane is the one at the left or the top side.
         startActionPane: ActionPane(
+          extentRatio: 0.2,
           dragDismissible: true,
           dismissible: DismissiblePane(
             closeOnCancel: true,
-            dismissThreshold: 0.6,
+            dismissThreshold: 0.4,
             confirmDismiss: () async {
               if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
                 if (news.status == FluxNewsState.readNewsStatus) {
@@ -117,10 +137,11 @@ class NewsRow extends StatelessWidget {
 
         // The end action pane is the one at the right or the bottom side.
         endActionPane: ActionPane(
+          extentRatio: 0.2,
           dragDismissible: true,
           dismissible: DismissiblePane(
             closeOnCancel: true,
-            dismissThreshold: 0.6,
+            dismissThreshold: 0.4,
             confirmDismiss: () async {
               if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
                 if (news.status == FluxNewsState.readNewsStatus) {
