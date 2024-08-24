@@ -89,7 +89,7 @@ class NewsRow extends StatelessWidget {
           dragDismissible: true,
           dismissible: DismissiblePane(
             closeOnCancel: true,
-            dismissThreshold: 0.75,
+            dismissThreshold: 0.6,
             confirmDismiss: () async {
               if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
                 if (news.status == FluxNewsState.readNewsStatus) {
@@ -120,7 +120,7 @@ class NewsRow extends StatelessWidget {
           dragDismissible: true,
           dismissible: DismissiblePane(
             closeOnCancel: true,
-            dismissThreshold: 0.75,
+            dismissThreshold: 0.6,
             confirmDismiss: () async {
               if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
                 if (news.status == FluxNewsState.readNewsStatus) {
