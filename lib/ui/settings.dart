@@ -518,7 +518,7 @@ class Settings extends StatelessWidget {
                               Icons.swipe_left,
                             ),
                           ),
-                          Flexible(
+                          Expanded(
                             child: Text(
                               AppLocalizations.of(context)!.leftSwipeSelectionOption,
                               style: Theme.of(context).textTheme.titleMedium,
