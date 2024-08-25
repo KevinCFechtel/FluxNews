@@ -61,7 +61,7 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
             Padding(
               padding: const EdgeInsets.only(right: 5),
               child: Icon(
-                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
+                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
               ),
             ),
             Expanded(
