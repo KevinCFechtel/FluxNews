@@ -1,0 +1,4 @@
+The functions from the context menu are now also available as swipe actions.
+The action for a swipe to the right or left can be set in the settings.
+A dependency that was no longer maintained has been removed.
+The texts in the settings now adapt better to the screen width.
