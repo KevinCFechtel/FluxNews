@@ -78,7 +78,7 @@ class NewsRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.remove_red_eye_outlined,
+                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
               ),
               Text(
                 news.status == FluxNewsState.readNewsStatus
