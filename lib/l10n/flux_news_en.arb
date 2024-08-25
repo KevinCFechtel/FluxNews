@@ -78,11 +78,13 @@
     "charactersToTruncateLimit": "Amount of characters from which the text is truncated",
     "manualTruncate": "Truncate news",
     "successfullSaveToThirdParty": "The news was successfully saved!",
+    "addBookmarkShort": "Add Bookmark",
     "bookmarkShort": "Bookmark",
     "saveShort": "Save",
     "readShort": "Read",
     "unreadShort": "Unread",
     "leftSwipeSelectionOption": "Select action for swiping to the left",
     "rightSwipeSelectionOption": "Select action for swiping to the right",
+    "deleteBookmarkShort": "Delete Bookmark",
     "activateSwiping": "Activate swipe gestures"
 }

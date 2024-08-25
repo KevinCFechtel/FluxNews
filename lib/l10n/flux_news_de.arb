@@ -78,11 +78,13 @@
     "charactersToTruncateLimit": "Anzahl der Zeichen ab denen der Text gekürzt wird",
     "manualTruncate": "Nachrichtentext abschneiden",
     "successfullSaveToThirdParty": "Die Nachricht wurde erfolgreich gespeichert!",
+    "addBookmarkShort": "Lesezeichen hinzufügen",
     "bookmarkShort": "Lesezeichen",
     "saveShort": "Speichern",
     "readShort": "Gelesen",
     "unreadShort": "Ungelesen",
     "leftSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nach linksa usgeführt werden soll",
     "rightSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nachrechts ausgeführt werden soll",
+    "deleteBookmarkShort": "Lesezeichen entfernen",
     "activateSwiping": "Aktiviere Wischgesten"
 }
