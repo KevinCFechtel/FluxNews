@@ -102,10 +102,10 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       bookmarkAction(news, appState, context, searchView);
       break;
     case FluxNewsState.unreadNewsStatus:
-      markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+      markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
       break;
     case FluxNewsState.readNewsStatus:
-      markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+      markNewsAsReadAction(news, appState, context, searchView, appCounterState);
       break;
     case FluxNewsState.contextMenuSaveString:
       saveToThirdPartyAction(news, appState, context);
@@ -202,8 +202,8 @@ Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildCont
   }
 }
 
-void markNewsAsReadAction(
-    News news, FluxNewsState appState, BuildContext context, bool searchView, FluxNewsCounterState appCounterState) {
+Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContext context, bool searchView,
+    FluxNewsCounterState appCounterState) async {
   // mark a news as read, update the news read status in database
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
@@ -249,8 +249,8 @@ void markNewsAsReadAction(
   }
 }
 
-void markNewsAsUnreadAction(
-    News news, FluxNewsState appState, BuildContext context, bool searchView, FluxNewsCounterState appCounterState) {
+Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildContext context, bool searchView,
+    FluxNewsCounterState appCounterState) async {
   // mark a news as unread, update the news unread status in database
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.unreadNewsStatus, appState);
