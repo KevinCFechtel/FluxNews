@@ -126,19 +126,29 @@ class News {
   String getText(FluxNewsState appState) {
     final document = parse(content);
     String? text = '';
+    List<dom.Element> elements = document.getElementsByTagName('p');
     text = parse(document.body?.text).documentElement?.text;
-    if (text != null) {
-      text = text.split('\n').first;
-      if (text.length < 50) {
-        List<dom.Element> elements = document.getElementsByTagName('p');
-        if (elements.isNotEmpty) {
-          text = elements.first.text;
+    if (elements.length > 1) {
+      for (dom.Element element in elements) {
+        text = element.text;
+        if (text.isNotEmpty) {
+          break;
         }
       }
     } else {
-      List<dom.Element> elements = document.getElementsByTagName('p');
-      if (elements.isNotEmpty) {
-        text = elements.first.text;
+      if (text != null) {
+        text = text.split('\n').first;
+        if (text.length < 50) {
+          elements = document.getElementsByTagName('p');
+          if (elements.isNotEmpty) {
+            text = elements.first.text;
+          }
+        }
+      } else {
+        elements = document.getElementsByTagName('p');
+        if (elements.isNotEmpty) {
+          text = elements.first.text;
+        }
       }
     }
     text ??= '';
