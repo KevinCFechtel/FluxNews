@@ -9,6 +9,7 @@ import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/ui/feed_settings.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -224,6 +225,7 @@ class FluxNews extends StatelessWidget {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),
           FluxNewsState.settingsRouteString: (context) => const Settings(),
           FluxNewsState.searchRouteString: (context) => const Search(),
+          FluxNewsState.feedSettingsRouteString: (context) => const FeedSettings(),
         },
         // define localization with english as fallback
         localizationsDelegates: AppLocalizations.localizationsDelegates,

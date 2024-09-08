@@ -86,5 +86,11 @@
     "leftSwipeSelectionOption": "Select action for swiping to the left",
     "rightSwipeSelectionOption": "Select action for swiping to the right",
     "deleteBookmarkShort": "Delete Bookmark",
-    "activateSwiping": "Activate swipe gestures"
+    "activateSwiping": "Activate swipe gestures",
+    "feedSettings": "Feed Settings",
+    "emptyFeedList": "No Feeds fetched",
+    "preferParagraph": "Prefer first HTML paragraph as news text",
+    "preferAttachmentImage": "Prefer attachment image as news picture",
+    "manualAdaptLightModeToIcon": "Manual adapt the light mode to the feed icon",
+    "manualAdaptDarkModeToIcon": "Manual adapt the dark mode to the feed icon"
 }

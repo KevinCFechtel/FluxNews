@@ -28,7 +28,22 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
     for (News news in newsList.news) {
       if (!appState.longSyncAborted) {
         // check if news already present in the database
-        resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
+        resultSelect = await appState.db!.rawQuery('''
+          SELECT news.newsID, 
+                 news.feedID, 
+                 substr(news.title, 1, 1000000) as title, 
+                 substr(news.url, 1, 1000000) as url, 
+                 substr(news.content, 1, 1000000) as content, 
+                 news.hash, 
+                 news.publishedAt, 
+                 news.createdAt, 
+                 news.status, 
+                 news.readingTime, 
+                 news.starred, 
+                 substr(news.feedTitle, 1, 1000000) as feedTitle,
+                 news.syncStatus 
+          FROM news 
+          WHERE newsID = ?''', [news.newsID]);
         // if the news is not present, insert the news
         if (resultSelect.isEmpty) {
           batch.insert('news', news.toMap());
@@ -98,13 +113,42 @@ Future<int> updateStarredNewsInDB(NewsList newsList, FluxNewsState appState) asy
   if (appState.db != null) {
     List<Map<String, Object?>> resultSelect = [];
     for (News news in newsList.news) {
-      resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ?', [news.newsID]);
+      resultSelect = await appState.db!.rawQuery('''
+        SELECT news.newsID, 
+                 news.feedID, 
+                 substr(news.title, 1, 1000000) as title, 
+                 substr(news.url, 1, 1000000) as url, 
+                 substr(news.content, 1, 1000000) as content, 
+                 news.hash, 
+                 news.publishedAt, 
+                 news.createdAt, 
+                 news.status, 
+                 news.readingTime, 
+                 news.starred, 
+                 substr(news.feedTitle, 1, 1000000) as feedTitle,
+                 news.syncStatus 
+          FROM news 
+          WHERE newsID = ?''', [news.newsID]);
       if (resultSelect.isEmpty) {
         appState.db!.insert('news', news.toMap());
       } else {
         // check if the news is already marked as bookmarked
-        resultSelect =
-            await appState.db!.rawQuery('SELECT * FROM news WHERE newsID = ? AND starred = ?', [news.newsID, 1]);
+        resultSelect = await appState.db!.rawQuery('''
+              SELECT news.newsID, 
+                     news.feedID, 
+                     substr(news.title, 1, 1000000) as title, 
+                     substr(news.url, 1, 1000000) as url, 
+                     substr(news.content, 1, 1000000) as content, 
+                     news.hash, 
+                     news.publishedAt, 
+                     news.createdAt, 
+                     news.status, 
+                     news.readingTime, 
+                     news.starred, 
+                     substr(news.feedTitle, 1, 1000000) as feedTitle,
+                     news.syncStatus 
+              FROM news 
+              WHERE newsID = ? AND starred = ?''', [news.newsID, 1]);
         if (resultSelect.isEmpty) {
           // if the news is not already marked, mark it as bookmarked
           result = await appState.db!.rawUpdate('UPDATE news SET starred = ? WHERE newsId = ?', [1, news.newsID]);
@@ -117,7 +161,22 @@ Future<int> updateStarredNewsInDB(NewsList newsList, FluxNewsState appState) asy
     // check if the existing bookmarks also exist in the given list.
     // if not, delete the bookmark flag at the news
     List<News> existingNotStarredNews = [];
-    resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE starred = ?', [1]);
+    resultSelect = await appState.db!.rawQuery('''
+                SELECT news.newsID, 
+                     news.feedID, 
+                     substr(news.title, 1, 1000000) as title, 
+                     substr(news.url, 1, 1000000) as url, 
+                     substr(news.content, 1, 1000000) as content, 
+                     news.hash, 
+                     news.publishedAt, 
+                     news.createdAt, 
+                     news.status, 
+                     news.readingTime, 
+                     news.starred, 
+                     substr(news.feedTitle, 1, 1000000) as feedTitle,
+                     news.syncStatus 
+              FROM news 
+              WHERE starred = ?''', [1]);
     if (resultSelect.isNotEmpty) {
       existingNotStarredNews = resultSelect.map((e) => News.fromMap(e)).toList();
     }
@@ -150,7 +209,22 @@ Future<int> markNotFetchedNewsAsRead(NewsList newNewsList, FluxNewsState appStat
     List<Map<String, Object?>> resultSelect = [];
     List<News> existingNews = [];
     // get the local unread news
-    resultSelect = await appState.db!.rawQuery('SELECT * FROM news WHERE status = ? AND syncStatus = ?',
+    resultSelect = await appState.db!.rawQuery('''
+                SELECT news.newsID, 
+                     news.feedID, 
+                     substr(news.title, 1, 1000000) as title, 
+                     substr(news.url, 1, 1000000) as url, 
+                     substr(news.content, 1, 1000000) as content, 
+                     news.hash, 
+                     news.publishedAt, 
+                     news.createdAt, 
+                     news.status, 
+                     news.readingTime, 
+                     news.starred, 
+                     substr(news.feedTitle, 1, 1000000) as feedTitle,
+                     news.syncStatus 
+              FROM news 
+              WHERE status = ? AND syncStatus = ?''',
         [FluxNewsState.unreadNewsStatus, FluxNewsState.notSyncedSyncStatus]);
     if (resultSelect.isNotEmpty) {
       existingNews = resultSelect.map((e) => News.fromMap(e)).toList();
@@ -211,23 +285,28 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       // if the feed id is not null a category, a feed or the bookmarked news ar selected
       if (appState.feedIDs?.first == -1) {
         // if the feed id is -1 the bookmarked news are selected
-        List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''SELECT news.newsID, 
+        List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
+                    SELECT news.newsID, 
                         news.feedID, 
-                        news.title, 
-                        news.url, 
-                        news.content, 
+                        substr(news.title, 1, 1000000) as title, 
+                        substr(news.url, 1, 1000000) as url, 
+                        substr(news.content, 1, 1000000) as content, 
                         news.hash, 
                         news.publishedAt, 
                         news.createdAt, 
                         news.status, 
                         news.readingTime, 
                         news.starred, 
-                        news.feedTitle, 
+                        substr(news.feedTitle, 1, 1000000) as feedTitle,
                         news.syncStatus,
                         feeds.iconMimeType,
                         feeds.crawler,
                         feeds.manualTruncate,
-                        attachments.attachmentURL,
+                        feeds.preferParagraph,
+                        feeds.preferAttachmentImage,
+                        feeds.manualAdaptLightModeToIcon,
+                        feeds.manualAdaptDarkModeToIcon,
+                        substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                   FROM news 
                   LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
@@ -238,23 +317,28 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       } else {
         // if the feed id is not -1 a feed or a category with multiple feeds is selected
         for (int feedID in feedIDs) {
-          List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''SELECT news.newsID, 
+          List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
+                    SELECT news.newsID, 
                         news.feedID, 
-                        news.title, 
-                        news.url, 
-                        news.content, 
+                        substr(news.title, 1, 1000000) as title, 
+                        substr(news.url, 1, 1000000) as url, 
+                        substr(news.content, 1, 1000000) as content, 
                         news.hash, 
                         news.publishedAt, 
                         news.createdAt, 
                         news.status, 
                         news.readingTime, 
                         news.starred, 
-                        news.feedTitle, 
+                        substr(news.feedTitle, 1, 1000000) as feedTitle,
                         news.syncStatus,
                         feeds.iconMimeType,
                         feeds.crawler,
                         feeds.manualTruncate,
-                        attachments.attachmentURL,
+                        feeds.preferParagraph,
+                        feeds.preferAttachmentImage,
+                        feeds.manualAdaptLightModeToIcon,
+                        feeds.manualAdaptDarkModeToIcon,
+                        substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                     FROM news 
                     LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
@@ -267,23 +351,28 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       }
     } else {
       // if the feed id is null, "all news" are selected
-      List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''SELECT news.newsID, 
+      List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
+                SELECT news.newsID, 
                         news.feedID, 
-                        news.title, 
-                        news.url, 
-                        news.content, 
+                        substr(news.title, 1, 1000000) as title, 
+                        substr(news.url, 1, 1000000) as url, 
+                        substr(news.content, 1, 1000000) as content, 
                         news.hash, 
                         news.publishedAt, 
                         news.createdAt, 
                         news.status, 
                         news.readingTime, 
                         news.starred, 
-                        news.feedTitle, 
+                        substr(news.feedTitle, 1, 1000000) as feedTitle, 
                         news.syncStatus,
                         feeds.iconMimeType,
                         feeds.crawler,
                         feeds.manualTruncate,
-                        attachments.attachmentURL,
+                        feeds.preferParagraph,
+                        feeds.preferAttachmentImage,
+                        feeds.manualAdaptLightModeToIcon,
+                        feeds.manualAdaptDarkModeToIcon,
+                        substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                 FROM news 
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
@@ -324,7 +413,7 @@ void updateNewsStatusInDB(int newsID, String status, FluxNewsState appState) asy
   }
 }
 
-// update the status (read or unread) of the news in the database
+// update the manual Truncate Flag of the feed in the database
 Future<void> updateManualTruncateStatusOfFeedInDB(int feedID, bool manualTruncate, FluxNewsState appState) async {
   if (appState.debugMode) {
     logThis('updateManualTruncateStatusOfFeedInDB', 'Starting updating manual truncate status of feed in DB',
@@ -338,6 +427,77 @@ Future<void> updateManualTruncateStatusOfFeedInDB(int feedID, bool manualTruncat
   if (appState.debugMode) {
     logThis('updateManualTruncateStatusOfFeedInDB', 'Finished updating manual truncate status of feed in DB',
         LogLevel.INFO);
+  }
+}
+
+// update the prefer Paragraph Flag of the feed in the database
+Future<void> updatePreferParagraphStatusOfFeedInDB(int feedID, bool preferParagraph, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updatePreferParagraphStatusOfFeedInDB', 'Starting updating prefer Paragraph Flag of feed in DB',
+        LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!
+        .rawUpdate('UPDATE feeds SET preferParagraph = ? WHERE feedID = ?', [preferParagraph ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updatePreferParagraphStatusOfFeedInDB', 'Finished updating prefer Paragraph Flag of feed in DB',
+        LogLevel.INFO);
+  }
+}
+
+// update the prefer Attachment Image Flag of the feed in the database
+Future<void> updatePreferAttachmentImageStatusOfFeedInDB(
+    int feedID, bool preferAttachmentImage, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updatePreferAttachmentImageStatusOfFeedInDB',
+        'Starting updating prefer Attachment Image Flag of feed in DB', LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawUpdate(
+        'UPDATE feeds SET preferAttachmentImage = ? WHERE feedID = ?', [preferAttachmentImage ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updatePreferAttachmentImageStatusOfFeedInDB',
+        'Finished updating prefer Attachment Image Flag of feed in DB', LogLevel.INFO);
+  }
+}
+
+// update the manual Adapt Light Mode to Icon Flag of the feed in the database
+Future<void> updateManualAdaptLightModeToIconStatusOfFeedInDB(
+    int feedID, bool manualAdaptLightModeToIcon, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updateManualAdaptLightModeToIconStatusOfFeedInDB',
+        'Starting updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawUpdate('UPDATE feeds SET manualAdaptLightModeToIcon = ? WHERE feedID = ?',
+        [manualAdaptLightModeToIcon ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updateManualAdaptLightModeToIconStatusOfFeedInDB',
+        'Finished updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
+  }
+}
+
+// update the manual Adapt Light Mode to Icon Flag of the feed in the database
+Future<void> updateManualAdaptDarkModeToIconStatusOfFeedInDB(
+    int feedID, bool manualAdaptDarkModeToIcon, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updateManualAdaptDarkModeToIconStatusOfFeedInDB',
+        'Starting updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawUpdate(
+        'UPDATE feeds SET manualAdaptDarkModeToIcon = ? WHERE feedID = ?', [manualAdaptDarkModeToIcon ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updateManualAdaptDarkModeToIconStatusOfFeedInDB',
+        'Finished updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
   }
 }
 
@@ -521,14 +681,22 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                                       newsCount, 
                                                                       crawler,
                                                                       manualTruncate,
+                                                                      preferParagraph,
+                                                                      preferAttachmentImage,
+                                                                      manualAdaptLightModeToIcon,
+                                                                      manualAdaptDarkModeToIcon,
                                                                       categoryID) 
-                                                    VALUES(?,?,?,?,?,?,?,?)''', [
+                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', [
             feed.feedID,
             feed.title,
             feed.siteUrl,
             feed.iconMimeType,
             feed.newsCount,
             crawlerInt,
+            0,
+            0,
+            0,
+            0,
             0,
             category.categoryID
           ]);
@@ -597,6 +765,10 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                           newsCount, 
                                                           crawler,
                                                           manualTruncate,
+                                                          preferParagraph,
+                                                          preferAttachmentImage,
+                                                          manualAdaptLightModeToIcon,
+                                                          manualAdaptDarkModeToIcon,
                                                           categoryID 
                                                       FROM feeds''');
     if (resultSelect.isNotEmpty) {
@@ -650,6 +822,10 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
                                                           newsCount,
                                                           crawler,
                                                           manualTruncate,
+                                                          preferParagraph,
+                                                          preferAttachmentImage,
+                                                          manualAdaptLightModeToIcon,
+                                                          manualAdaptDarkModeToIcon,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?''', [category.categoryID]);
@@ -672,6 +848,39 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
     logThis('queryCategoriesFromDB', 'Finished querying categories from DB', LogLevel.INFO);
   }
   return categories;
+}
+
+// get the categories from the database and calculate the news count of this categories
+Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    logThis('queryFeedsFromDB', 'Starting querying feeds from DB', LogLevel.INFO);
+  }
+
+  List<Feed> feedList = [];
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''SELECT feedID, 
+                                                          title, 
+                                                          site_url, 
+                                                          iconMimeType, 
+                                                          newsCount,
+                                                          crawler,
+                                                          manualTruncate,
+                                                          preferParagraph,
+                                                          preferAttachmentImage,
+                                                          manualAdaptLightModeToIcon,
+                                                          manualAdaptDarkModeToIcon,
+                                                          categoryID 
+                                                      FROM feeds''');
+    for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+      feed.icon = appState.readFeedIconFile(feed.feedID);
+      feedList.add(feed);
+    }
+  }
+  if (appState.debugMode) {
+    logThis('queryFeedsFromDB', 'Finished querying categories from DB', LogLevel.INFO);
+  }
+  return feedList;
 }
 
 // calculate the news count of the "all news" section
@@ -753,6 +962,10 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
                           categoryID INTEGER)''',
     );
     // create the table attachments

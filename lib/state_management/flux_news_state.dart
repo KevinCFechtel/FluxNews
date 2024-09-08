@@ -29,7 +29,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.6.2';
+  static const String applicationVersion = '1.7.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -37,6 +37,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
+  static const String feedSettingsRouteString = '/feedSettings';
   static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
@@ -113,6 +114,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for lists of main view
   late Future<List<News>> newsList;
   late Future<Categories> categoryList;
+  late Future<List<Feed>> feedSettingsList;
   List<int>? feedIDs;
   String selectedCategoryElementType = 'all';
 
@@ -244,6 +246,10 @@ class FluxNewsState extends ChangeNotifier {
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
                           categoryID INTEGER)''',
         );
         // create the table attachments
@@ -304,10 +310,29 @@ class FluxNewsState extends ChangeNotifier {
                           manualTruncate INTEGER,
                           categoryID INTEGER)''',
           );
+        } else if (oldVersion == 4) {
+          logThis('upgradeDB', 'Upgrading DB from version 4', LogLevel.INFO);
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          categoryID INTEGER)''',
+          );
         }
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 4,
+      version: 5,
     );
   }
 

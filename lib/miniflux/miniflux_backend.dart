@@ -416,9 +416,23 @@ Future<void> toggleNewsAsRead(FluxNewsState appState) async {
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
       // query the database for all news with the status read and the sync status not synced
-      final List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
-          'SELECT * FROM news WHERE status LIKE ? AND syncStatus = ?',
-          [FluxNewsState.readNewsStatus, FluxNewsState.notSyncedSyncStatus]);
+      final List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
+             SELECT news.newsID, 
+                    news.feedID, 
+                    substr(news.title, 1, 1000000) as title, 
+                    substr(news.url, 1, 1000000) as url, 
+                    substr(news.content, 1, 1000000) as content, 
+                    news.hash, 
+                    news.publishedAt, 
+                    news.createdAt, 
+                    news.status, 
+                    news.readingTime, 
+                    news.starred, 
+                    substr(news.feedTitle, 1, 1000000) as feedTitle,
+                    news.syncStatus
+             FROM news 
+             WHERE status LIKE ? 
+              AND syncStatus = ?''', [FluxNewsState.readNewsStatus, FluxNewsState.notSyncedSyncStatus]);
       List<News> newsList = queryResult.map((e) => News.fromMap(e)).toList();
       // iterate over the news list and add the news id to the news id list
       for (News news in newsList) {

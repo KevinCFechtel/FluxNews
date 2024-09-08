@@ -86,5 +86,11 @@
     "leftSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nach linksa usgeführt werden soll",
     "rightSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nachrechts ausgeführt werden soll",
     "deleteBookmarkShort": "Lesezeichen entfernen",
-    "activateSwiping": "Aktiviere Wischgesten"
+    "activateSwiping": "Aktiviere Wischgesten",
+    "feedSettings": "Feed Einstellungen",
+    "emptyFeedList": "Keine Feeds vorhanden",
+    "preferParagraph": "Bevorzuge den ersten HTML Paragraphen mit Text als News Text",
+    "preferAttachmentImage": "Bevorzuge das angehängte Bild",
+    "manualAdaptLightModeToIcon": "Passe das Feed Icon manuell an den Light Mode an",
+    "manualAdaptDarkModeToIcon": "Passe das Feed Icon manuell an den Dark Mode an"
 }
