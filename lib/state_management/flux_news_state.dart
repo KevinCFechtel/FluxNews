@@ -313,6 +313,47 @@ class FluxNewsState extends ChangeNotifier {
         } else if (oldVersion == 4) {
           logThis('upgradeDB', 'Upgrading DB from version 4', LogLevel.INFO);
 
+          await db.execute(
+            '''CREATE TABLE tempFeeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into tempFeeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        0 AS preferParagraph,
+                        0 AS preferAttachmentImage,
+                        0 AS manualAdaptLightModeToIcon,
+                        0 AS manualAdaptDarkModeToIcon,
+                        categoryID  
+                  from feeds;''');
+
           // create the table feeds
           await db.execute('DROP TABLE IF EXISTS feeds');
           await db.execute(
@@ -329,6 +370,32 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           categoryID INTEGER)''',
           );
+
+          await db.execute('''insert into feeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        categoryID  
+                  from tempFeeds;''');
         }
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
