@@ -396,6 +396,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         categoryID  
                   from tempFeeds;''');
+          await db.execute('DROP TABLE IF EXISTS tempFeeds');
         }
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
