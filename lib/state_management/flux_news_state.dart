@@ -87,9 +87,11 @@ class FluxNewsState extends ChangeNotifier {
   static const String noImageUrlString = 'NoImageUrl';
   static const String contextMenuBookmarkString = 'bookmark';
   static const String contextMenuSaveString = 'saveToThirdParty';
+  static const String contextMenuOpenMinifluxString = 'openMiniflux';
   static const String swipeActionSaveString = 'saveToThirdParty';
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
+  static const String swipeActionOpenMinifluxString = 'openMiniflux';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -99,6 +101,8 @@ class FluxNewsState extends ChangeNotifier {
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
   static const String apiVersionPath = "v1/";
+  static const String minifluxEntryPathPrefix = "unread/feed/";
+  static const String minifluxEntryPathSuffix = "/entry/";
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*
@@ -250,6 +254,7 @@ class FluxNewsState extends ChangeNotifier {
                           preferAttachmentImage INTEGER,
                           manualAdaptLightModeToIcon INTEGER,
                           manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
                           categoryID INTEGER)''',
         );
         // create the table attachments
@@ -325,6 +330,7 @@ class FluxNewsState extends ChangeNotifier {
                           preferAttachmentImage INTEGER,
                           manualAdaptLightModeToIcon INTEGER,
                           manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -339,6 +345,7 @@ class FluxNewsState extends ChangeNotifier {
                                         preferAttachmentImage,
                                         manualAdaptLightModeToIcon,
                                         manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -351,6 +358,7 @@ class FluxNewsState extends ChangeNotifier {
                         0 AS preferAttachmentImage,
                         0 AS manualAdaptLightModeToIcon,
                         0 AS manualAdaptDarkModeToIcon,
+                        0 AS openMinifluxEntry,
                         categoryID  
                   from feeds;''');
 
@@ -368,6 +376,7 @@ class FluxNewsState extends ChangeNotifier {
                           preferAttachmentImage INTEGER,
                           manualAdaptLightModeToIcon INTEGER,
                           manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -382,6 +391,7 @@ class FluxNewsState extends ChangeNotifier {
                                         preferAttachmentImage,
                                         manualAdaptLightModeToIcon,
                                         manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -394,6 +404,7 @@ class FluxNewsState extends ChangeNotifier {
                         preferAttachmentImage,
                         manualAdaptLightModeToIcon,
                         manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
@@ -460,6 +471,8 @@ class FluxNewsState extends ChangeNotifier {
         KeyValueRecordType(
             key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
         KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+        KeyValueRecordType(
+            key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
       ];
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];

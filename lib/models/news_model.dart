@@ -34,7 +34,8 @@ class News {
       this.preferParagraph,
       this.preferAttachmentImage,
       this.manualAdaptLightModeToIcon,
-      this.manualAdaptDarkModeToIcon});
+      this.manualAdaptDarkModeToIcon,
+      this.openMinifluxEntry});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -60,6 +61,7 @@ class News {
   bool? preferAttachmentImage = false;
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
+  bool? openMinifluxEntry = false;
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -127,7 +129,8 @@ class News {
         preferParagraph = res['preferParagraph'] == 1 ? true : false,
         preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
-        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false;
+        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -416,7 +419,8 @@ class Feed {
       this.preferParagraph,
       this.preferAttachmentImage,
       this.manualAdaptLightModeToIcon,
-      this.manualAdaptDarkModeToIcon});
+      this.manualAdaptDarkModeToIcon,
+      this.openMinifluxEntry});
 
   // define the properties
   int feedID = 0;
@@ -432,6 +436,7 @@ class Feed {
   bool? preferAttachmentImage = false;
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
+  bool? openMinifluxEntry = false;
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -458,6 +463,7 @@ class Feed {
       'preferAttachmentImage': preferAttachmentImage,
       'manualAdaptLightModeToIcon': manualAdaptLightModeToIcon,
       'manualAdaptDarkModeToIcon': manualAdaptDarkModeToIcon,
+      'openMinifluxEntry': openMinifluxEntry
     };
   }
 
@@ -473,7 +479,8 @@ class Feed {
         preferParagraph = res['preferParagraph'] == 1 ? true : false,
         preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
-        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false;
+        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
 
   // define the method to get the feed icon as a widget
   // the icon could be a svg or a png image

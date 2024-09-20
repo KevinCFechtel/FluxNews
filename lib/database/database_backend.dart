@@ -306,6 +306,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         feeds.preferAttachmentImage,
                         feeds.manualAdaptLightModeToIcon,
                         feeds.manualAdaptDarkModeToIcon,
+                        feeds.openMinifluxEntry,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                   FROM news 
@@ -338,6 +339,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         feeds.preferAttachmentImage,
                         feeds.manualAdaptLightModeToIcon,
                         feeds.manualAdaptDarkModeToIcon,
+                        feeds.openMinifluxEntry,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                     FROM news 
@@ -372,6 +374,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         feeds.preferAttachmentImage,
                         feeds.manualAdaptLightModeToIcon,
                         feeds.manualAdaptDarkModeToIcon,
+                        feeds.openMinifluxEntry,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                 FROM news 
@@ -497,6 +500,23 @@ Future<void> updateManualAdaptDarkModeToIconStatusOfFeedInDB(
   }
   if (appState.debugMode) {
     logThis('updateManualAdaptDarkModeToIconStatusOfFeedInDB',
+        'Finished updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
+  }
+}
+
+// update the manual Adapt Light Mode to Icon Flag of the feed in the database
+Future<void> updateOpenMinifluxEntryStatusOfFeedInDB(int feedID, bool openMinifluxEntry, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updateOpenMinifluxEntryStatusOfFeedInDB',
+        'Starting updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!
+        .rawUpdate('UPDATE feeds SET openMinifluxEntry = ? WHERE feedID = ?', [openMinifluxEntry ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updateOpenMinifluxEntryStatusOfFeedInDB',
         'Finished updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
   }
 }
@@ -685,14 +705,16 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                                       preferAttachmentImage,
                                                                       manualAdaptLightModeToIcon,
                                                                       manualAdaptDarkModeToIcon,
+                                                                      openMinifluxEntry,
                                                                       categoryID) 
-                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', [
+                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', [
             feed.feedID,
             feed.title,
             feed.siteUrl,
             feed.iconMimeType,
             feed.newsCount,
             crawlerInt,
+            0,
             0,
             0,
             0,
@@ -769,6 +791,7 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                           preferAttachmentImage,
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
+                                                          openMinifluxEntry,
                                                           categoryID 
                                                       FROM feeds''');
     if (resultSelect.isNotEmpty) {
@@ -826,6 +849,7 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
                                                           preferAttachmentImage,
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
+                                                          openMinifluxEntry,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?''', [category.categoryID]);
@@ -870,6 +894,7 @@ Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context
                                                           preferAttachmentImage,
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
+                                                          openMinifluxEntry,
                                                           categoryID 
                                                       FROM feeds''');
     for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
@@ -966,6 +991,7 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           preferAttachmentImage INTEGER,
                           manualAdaptLightModeToIcon INTEGER,
                           manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
                           categoryID INTEGER)''',
     );
     // create the table attachments
