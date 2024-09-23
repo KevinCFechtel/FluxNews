@@ -297,19 +297,64 @@ class News {
     manualAdaptDarkModeToIcon ??= false;
     if (icon != null) {
       if (iconMimeType == 'image/svg+xml') {
-        if (darkModeEnabled) {
-          return SvgPicture.string(
-            String.fromCharCodes(icon!),
-            width: size,
-            height: size,
-            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
-          );
+        if (manualAdaptLightModeToIcon! || manualAdaptDarkModeToIcon!) {
+          if (manualAdaptDarkModeToIcon!) {
+            if (darkModeEnabled) {
+              return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  child: SvgPicture.string(
+                    String.fromCharCodes(icon!),
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              if (manualAdaptLightModeToIcon!) {
+                return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                    child: SvgPicture.string(
+                      String.fromCharCodes(icon!),
+                      width: size,
+                      height: size,
+                    ));
+              } else {
+                return SvgPicture.string(
+                  String.fromCharCodes(icon!),
+                  width: size,
+                  height: size,
+                );
+              }
+            }
+          } else {
+            if (!darkModeEnabled) {
+              return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  child: SvgPicture.string(
+                    String.fromCharCodes(icon!),
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              return SvgPicture.string(
+                String.fromCharCodes(icon!),
+                width: size,
+                height: size,
+              );
+            }
+          }
         } else {
           return SvgPicture.string(
             String.fromCharCodes(icon!),
             width: size,
             height: size,
-            colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
           );
         }
       } else {
@@ -317,7 +362,10 @@ class News {
           if (manualAdaptDarkModeToIcon!) {
             if (darkModeEnabled) {
               return Container(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                   child: Image.memory(
                     icon!,
                     width: size,
@@ -333,7 +381,10 @@ class News {
           } else {
             if (!darkModeEnabled) {
               return Container(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                   child: Image.memory(
                     icon!,
                     width: size,
@@ -342,7 +393,10 @@ class News {
             } else {
               if (manualAdaptLightModeToIcon!) {
                 return Container(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
                     child: Image.memory(
                       icon!,
                       width: size,
@@ -499,19 +553,64 @@ class Feed {
     manualAdaptDarkModeToIcon ??= false;
     if (icon != null) {
       if (iconMimeType == 'image/svg+xml') {
-        if (darkModeEnabled) {
-          return SvgPicture.string(
-            String.fromCharCodes(icon!),
-            width: size,
-            height: size,
-            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
-          );
+        if (manualAdaptLightModeToIcon! || manualAdaptDarkModeToIcon!) {
+          if (manualAdaptDarkModeToIcon!) {
+            if (darkModeEnabled) {
+              return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  child: SvgPicture.string(
+                    String.fromCharCodes(icon!),
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              if (manualAdaptLightModeToIcon!) {
+                return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                    child: SvgPicture.string(
+                      String.fromCharCodes(icon!),
+                      width: size,
+                      height: size,
+                    ));
+              } else {
+                return SvgPicture.string(
+                  String.fromCharCodes(icon!),
+                  width: size,
+                  height: size,
+                );
+              }
+            }
+          } else {
+            if (!darkModeEnabled) {
+              return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  child: SvgPicture.string(
+                    String.fromCharCodes(icon!),
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              return SvgPicture.string(
+                String.fromCharCodes(icon!),
+                width: size,
+                height: size,
+              );
+            }
+          }
         } else {
           return SvgPicture.string(
             String.fromCharCodes(icon!),
             width: size,
             height: size,
-            colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcIn),
           );
         }
       } else {
@@ -519,7 +618,10 @@ class Feed {
           if (manualAdaptDarkModeToIcon!) {
             if (darkModeEnabled) {
               return Container(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                   child: Image.memory(
                     icon!,
                     width: size,
@@ -528,7 +630,10 @@ class Feed {
             } else {
               if (manualAdaptLightModeToIcon!) {
                 return Container(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
                     child: Image.memory(
                       icon!,
                       width: size,
@@ -545,7 +650,10 @@ class Feed {
           } else {
             if (!darkModeEnabled) {
               return Container(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                   child: Image.memory(
                     icon!,
                     width: size,

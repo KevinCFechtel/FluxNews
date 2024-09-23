@@ -91,8 +91,8 @@
     "emptyFeedList": "Keine Feeds vorhanden",
     "preferParagraph": "Bevorzuge den ersten HTML Paragraphen mit Text als News Text",
     "preferAttachmentImage": "Bevorzuge das angehängte Bild",
-    "manualAdaptLightModeToIcon": "Passe das Feed Icon manuell an den Light Mode an",
-    "manualAdaptDarkModeToIcon": "Passe das Feed Icon manuell an den Dark Mode an",
+    "manualAdaptLightModeToIcon": "Passe ein durchsichtiges Feed Icon manuell an den Light Mode an",
+    "manualAdaptDarkModeToIcon": "Passe  ein durchsichtiges Feed Icon manuell an den Dark Mode an",
     "openMinifluxEntry": "Öffne die Nachricht im Miniflux Webinterface",
     "openMinifluxShort": "Öffnen in Miniflux"
 }
