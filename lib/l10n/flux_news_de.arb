@@ -73,7 +73,7 @@
     "truncateMode": "Truncate Modus",
     "truncateModeAll": "Nachrichtentext bei allen Nachrichten abschneiden",
     "truncateModeScraper": "Nachrichtentext bei Nachrichten von Feeds abschneiden, bei denen der Originalinhalt heruntergelanden wird",
-    "truncateModeManual": "Nachrichtentext bei Nachrichten von Feeds abschneiden, die manuell ausgewählt wurden (mithilfe eines longpress auf den jeweiligen Feed)",
+    "truncateModeManual": "Nachrichtentext bei Nachrichten von Feeds abschneiden, die manuell in den Feed Einstellungen ausgewählt wurden",
     "charactersToTruncate": "Anzahl der Zeichen auf die der Text gekürzt wird",
     "charactersToTruncateLimit": "Anzahl der Zeichen ab denen der Text gekürzt wird",
     "manualTruncate": "Nachrichtentext abschneiden",
@@ -83,8 +83,16 @@
     "saveShort": "Speichern",
     "readShort": "Gelesen",
     "unreadShort": "Ungelesen",
-    "leftSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nach linksa usgeführt werden soll",
+    "leftSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nach links ausgeführt werden soll",
     "rightSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nachrechts ausgeführt werden soll",
     "deleteBookmarkShort": "Lesezeichen entfernen",
-    "activateSwiping": "Aktiviere Wischgesten"
+    "activateSwiping": "Aktiviere Wischgesten",
+    "feedSettings": "Feed Einstellungen",
+    "emptyFeedList": "Keine Feeds vorhanden",
+    "preferParagraph": "Bevorzuge den ersten HTML Paragraphen mit Text als News Text",
+    "preferAttachmentImage": "Bevorzuge das angehängte Bild",
+    "manualAdaptLightModeToIcon": "Passe das Feed Icon manuell an den Light Mode an",
+    "manualAdaptDarkModeToIcon": "Passe das Feed Icon manuell an den Dark Mode an",
+    "openMinifluxEntry": "Öffne die Nachricht im Miniflux Webinterface",
+    "openMinifluxShort": "Öffnen in Miniflux"
 }

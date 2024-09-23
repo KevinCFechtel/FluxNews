@@ -30,7 +30,12 @@ class News {
       this.attachmentURL,
       this.attachmentMimeType,
       this.crawler,
-      this.manualTruncate});
+      this.manualTruncate,
+      this.preferParagraph,
+      this.preferAttachmentImage,
+      this.manualAdaptLightModeToIcon,
+      this.manualAdaptDarkModeToIcon,
+      this.openMinifluxEntry});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -52,6 +57,11 @@ class News {
   String? attachmentMimeType = '';
   bool? crawler = false;
   bool? manualTruncate = false;
+  bool? preferParagraph = false;
+  bool? preferAttachmentImage = false;
+  bool? manualAdaptLightModeToIcon = false;
+  bool? manualAdaptDarkModeToIcon = false;
+  bool? openMinifluxEntry = false;
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -115,7 +125,12 @@ class News {
         attachmentURL = res['attachmentURL'],
         attachmentMimeType = res['attachmentMimeType'],
         crawler = res['crawler'] == 1 ? true : false,
-        manualTruncate = res['manualTruncate'] == 1 ? true : false;
+        manualTruncate = res['manualTruncate'] == 1 ? true : false,
+        preferParagraph = res['preferParagraph'] == 1 ? true : false,
+        preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
+        manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
+        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -126,21 +141,50 @@ class News {
   String getText(FluxNewsState appState) {
     final document = parse(content);
     String? text = '';
+    List<dom.Element> elements = document.getElementsByTagName('p');
     text = parse(document.body?.text).documentElement?.text;
-    if (text != null) {
-      text = text.split('\n').first;
-      if (text.length < 50) {
-        List<dom.Element> elements = document.getElementsByTagName('p');
+
+    if (preferParagraph != null && preferParagraph!) {
+      if (elements.length > 1) {
+        for (dom.Element element in elements) {
+          text = element.text;
+          if (text.isNotEmpty) {
+            break;
+          }
+        }
+      } else {
+        if (text != null) {
+          text = text.split('\n').first;
+          if (text.length < 50) {
+            elements = document.getElementsByTagName('p');
+            if (elements.isNotEmpty) {
+              text = elements.first.text;
+            }
+          }
+        } else {
+          elements = document.getElementsByTagName('p');
+          if (elements.isNotEmpty) {
+            text = elements.first.text;
+          }
+        }
+      }
+    } else {
+      if (text != null) {
+        text = text.split('\n').first;
+        if (text.length < 50) {
+          elements = document.getElementsByTagName('p');
+          if (elements.isNotEmpty) {
+            text = elements.first.text;
+          }
+        }
+      } else {
+        elements = document.getElementsByTagName('p');
         if (elements.isNotEmpty) {
           text = elements.first.text;
         }
       }
-    } else {
-      List<dom.Element> elements = document.getElementsByTagName('p');
-      if (elements.isNotEmpty) {
-        text = elements.first.text;
-      }
     }
+
     text ??= '';
     if (appState.activateTruncate) {
       switch (appState.truncateMode) {
@@ -194,19 +238,37 @@ class News {
   String getImageURL() {
     String imageUrl = FluxNewsState.noImageUrlString;
     final document = parse(content);
-    var images = document.getElementsByTagName('img');
-    for (var image in images) {
-      String? attrib = image.attributes['src'];
-      if (attrib != null) {
-        if (attrib.startsWith('http')) {
-          imageUrl = attrib;
-          break;
-        }
-      }
-    }
-    if (imageUrl == FluxNewsState.noImageUrlString) {
+    if (preferAttachmentImage != null && preferAttachmentImage!) {
       if (attachmentURL != null) {
         imageUrl = attachmentURL!;
+      }
+      if (imageUrl == FluxNewsState.noImageUrlString) {
+        var images = document.getElementsByTagName('img');
+        for (var image in images) {
+          String? attrib = image.attributes['src'];
+          if (attrib != null) {
+            if (attrib.startsWith('http')) {
+              imageUrl = attrib;
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      var images = document.getElementsByTagName('img');
+      for (var image in images) {
+        String? attrib = image.attributes['src'];
+        if (attrib != null) {
+          if (attrib.startsWith('http')) {
+            imageUrl = attrib;
+            break;
+          }
+        }
+      }
+      if (imageUrl == FluxNewsState.noImageUrlString) {
+        if (attachmentURL != null) {
+          imageUrl = attachmentURL!;
+        }
       }
     }
     return imageUrl;
@@ -231,6 +293,8 @@ class News {
     } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
+    manualAdaptLightModeToIcon ??= false;
+    manualAdaptDarkModeToIcon ??= false;
     if (icon != null) {
       if (iconMimeType == 'image/svg+xml') {
         if (darkModeEnabled) {
@@ -249,11 +313,57 @@ class News {
           );
         }
       } else {
-        return Image.memory(
-          icon!,
-          width: size,
-          height: size,
-        );
+        if (manualAdaptLightModeToIcon! || manualAdaptDarkModeToIcon!) {
+          if (manualAdaptDarkModeToIcon!) {
+            if (darkModeEnabled) {
+              return Container(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  child: Image.memory(
+                    icon!,
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              return Image.memory(
+                icon!,
+                width: size,
+                height: size,
+              );
+            }
+          } else {
+            if (!darkModeEnabled) {
+              return Container(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  child: Image.memory(
+                    icon!,
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              if (manualAdaptLightModeToIcon!) {
+                return Container(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    child: Image.memory(
+                      icon!,
+                      width: size,
+                      height: size,
+                    ));
+              } else {
+                return Image.memory(
+                  icon!,
+                  width: size,
+                  height: size,
+                );
+              }
+            }
+          }
+        } else {
+          return Image.memory(
+            icon!,
+            width: size,
+            height: size,
+          );
+        }
       }
     } else {
       return SizedBox.fromSize(size: Size(size, size));
@@ -305,7 +415,12 @@ class Feed {
       required this.siteUrl,
       this.feedIconID,
       this.crawler,
-      this.manualTruncate});
+      this.manualTruncate,
+      this.preferParagraph,
+      this.preferAttachmentImage,
+      this.manualAdaptLightModeToIcon,
+      this.manualAdaptDarkModeToIcon,
+      this.openMinifluxEntry});
 
   // define the properties
   int feedID = 0;
@@ -317,6 +432,11 @@ class Feed {
   String iconMimeType = '';
   bool? crawler = false;
   bool? manualTruncate = false;
+  bool? preferParagraph = false;
+  bool? preferAttachmentImage = false;
+  bool? manualAdaptLightModeToIcon = false;
+  bool? manualAdaptDarkModeToIcon = false;
+  bool? openMinifluxEntry = false;
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -339,6 +459,11 @@ class Feed {
       'newsCount': newsCount,
       'crawler': crawler,
       'manualTruncate': manualTruncate,
+      'preferParagraph': preferParagraph,
+      'preferAttachmentImage': preferAttachmentImage,
+      'manualAdaptLightModeToIcon': manualAdaptLightModeToIcon,
+      'manualAdaptDarkModeToIcon': manualAdaptDarkModeToIcon,
+      'openMinifluxEntry': openMinifluxEntry
     };
   }
 
@@ -350,7 +475,12 @@ class Feed {
         iconMimeType = res['iconMimeType'],
         newsCount = res['newsCount'],
         crawler = res['crawler'] == 1 ? true : false,
-        manualTruncate = res['manualTruncate'] == 1 ? true : false;
+        manualTruncate = res['manualTruncate'] == 1 ? true : false,
+        preferParagraph = res['preferParagraph'] == 1 ? true : false,
+        preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
+        manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
+        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
 
   // define the method to get the feed icon as a widget
   // the icon could be a svg or a png image
@@ -365,6 +495,8 @@ class Feed {
     } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
+    manualAdaptLightModeToIcon ??= false;
+    manualAdaptDarkModeToIcon ??= false;
     if (icon != null) {
       if (iconMimeType == 'image/svg+xml') {
         if (darkModeEnabled) {
@@ -383,11 +515,57 @@ class Feed {
           );
         }
       } else {
-        return Image.memory(
-          icon!,
-          width: size,
-          height: size,
-        );
+        if (manualAdaptLightModeToIcon! || manualAdaptDarkModeToIcon!) {
+          if (manualAdaptDarkModeToIcon!) {
+            if (darkModeEnabled) {
+              return Container(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  child: Image.memory(
+                    icon!,
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              if (manualAdaptLightModeToIcon!) {
+                return Container(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    child: Image.memory(
+                      icon!,
+                      width: size,
+                      height: size,
+                    ));
+              } else {
+                return Image.memory(
+                  icon!,
+                  width: size,
+                  height: size,
+                );
+              }
+            }
+          } else {
+            if (!darkModeEnabled) {
+              return Container(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  child: Image.memory(
+                    icon!,
+                    width: size,
+                    height: size,
+                  ));
+            } else {
+              return Image.memory(
+                icon!,
+                width: size,
+                height: size,
+              );
+            }
+          }
+        } else {
+          return Image.memory(
+            icon!,
+            width: size,
+            height: size,
+          );
+        }
       }
     } else {
       return SizedBox.fromSize(size: Size(size, size));

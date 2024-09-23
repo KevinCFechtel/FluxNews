@@ -1,19 +1,12 @@
-import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:flux_news/functions/android_url_launcher.dart';
-import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
-import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // here we define the appearance of the news cards
 class NewsRow extends StatelessWidget {
@@ -126,12 +119,42 @@ class NewsRow extends StatelessWidget {
         },
       ),
     );
+    Widget openMinifluxAction = Expanded(
+      child: InkWell(
+        child: Card(
+          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+              ? MediaQuery.of(context).platformBrightness == Brightness.dark
+                  ? const Color.fromARGB(130, 133, 0, 235)
+                  : const Color.fromARGB(130, 191, 120, 245)
+              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                  ? const Color.fromARGB(130, 133, 0, 235)
+                  : const Color.fromARGB(130, 191, 120, 245),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.open_in_browser,
+              ),
+              Text(
+                AppLocalizations.of(context)!.openMinifluxShort,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        onTap: () {
+          openNewsAction(news, appState, context, true);
+        },
+      ),
+    );
     if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
       rightSwipeActions.add(readSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
       rightSwipeActions.add(bookmarkSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
       rightSwipeActions.add(saveSlidableAction);
+    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+      rightSwipeActions.add(openMinifluxAction);
     }
 
     if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -140,6 +163,8 @@ class NewsRow extends StatelessWidget {
       leftSwipeActions.add(bookmarkSlidableAction);
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
       leftSwipeActions.add(saveSlidableAction);
+    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+      leftSwipeActions.add(openMinifluxAction);
     }
     return ClipRect(
         clipBehavior: Clip.none,
@@ -166,6 +191,8 @@ class NewsRow extends StatelessWidget {
                     bookmarkAction(news, appState, context, searchView);
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
+                  } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+                    openNewsAction(news, appState, context, true);
                   }
                   return false;
                 },
@@ -198,6 +225,8 @@ class NewsRow extends StatelessWidget {
                     bookmarkAction(news, appState, context, searchView);
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
+                  } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+                    openNewsAction(news, appState, context, true);
                   }
                   return false;
                 },
@@ -216,64 +245,12 @@ class NewsRow extends StatelessWidget {
               child: InkWell(
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
-                  // on tab we update the status of the news to read and open the news
-                  try {
-                    updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
-                  } catch (e) {
-                    logThis('updateNewsStatusInDB',
-                        'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
-
-                    if (context.mounted) {
-                      if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-                        appState.errorString = AppLocalizations.of(context)!.databaseError;
-                        appState.newError = true;
-                        appState.refreshView();
-                      }
-                    }
-                  }
-                  // update the status to read on the news list and notify the categories
-                  // to recalculate the news count
-                  news.status = FluxNewsState.readNewsStatus;
-
-                  context.read<FluxNewsCounterState>().listUpdated = true;
-                  context.read<FluxNewsCounterState>().refreshView();
-                  appState.refreshView();
-
-                  // there are difference on launching the news url between the platforms
-                  // on android and ios it's preferred to check first if the link can be opened
-                  // by an installed app, if not then the link is opened in a web-view within the app.
-                  // on macos we open directly the web-view within the app.
-                  if (Platform.isAndroid) {
-                    AndroidUrlLauncher.launchUrl(context, news.url);
-                  } else if (Platform.isIOS) {
-                    // catch exception if no app is installed to handle the url
-                    final bool nativeAppLaunchSucceeded = await launchUrl(
-                      Uri.parse(news.url),
-                      mode: LaunchMode.externalNonBrowserApplication,
-                    );
-                    //if exception is caught, open the app in web-view
-                    if (!nativeAppLaunchSucceeded) {
-                      await launchUrl(
-                        Uri.parse(news.url),
-                        mode: LaunchMode.inAppWebView,
-                      );
-                    }
-                  } else if (Platform.isMacOS) {
-                    await launchUrl(
-                      Uri.parse(news.url),
-                      mode: LaunchMode.externalApplication,
-                    );
+                  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+                    openNewsAction(news, appState, context, true);
+                  } else {
+                    openNewsAction(news, appState, context, false);
                   }
                 },
-                /*
-        onLongPressStart: (details) {
-          // on tap get the actual position of the list on tab
-          // to place the context menu on this position
-          // after tab on long-press, open the context menu on the tab position
-          showContextMenu(details, news, context, searchView, appState,
-              context.read<FluxNewsCounterState>());
-        },
-        */
                 // on tap get the actual position of the list on tab
                 // to place the context menu on this position
                 onTapDown: (details) {

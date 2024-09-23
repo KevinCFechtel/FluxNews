@@ -29,7 +29,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.6.2';
+  static const String applicationVersion = '1.7.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -37,6 +37,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
+  static const String feedSettingsRouteString = '/feedSettings';
   static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
@@ -86,9 +87,11 @@ class FluxNewsState extends ChangeNotifier {
   static const String noImageUrlString = 'NoImageUrl';
   static const String contextMenuBookmarkString = 'bookmark';
   static const String contextMenuSaveString = 'saveToThirdParty';
+  static const String contextMenuOpenMinifluxString = 'openMiniflux';
   static const String swipeActionSaveString = 'saveToThirdParty';
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
+  static const String swipeActionOpenMinifluxString = 'openMiniflux';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -98,6 +101,8 @@ class FluxNewsState extends ChangeNotifier {
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
   static const String apiVersionPath = "v1/";
+  static const String minifluxEntryPathPrefix = "unread/feed/";
+  static const String minifluxEntryPathSuffix = "/entry/";
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*
@@ -113,6 +118,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for lists of main view
   late Future<List<News>> newsList;
   late Future<Categories> categoryList;
+  late Future<List<Feed>> feedSettingsList;
   List<int>? feedIDs;
   String selectedCategoryElementType = 'all';
 
@@ -244,6 +250,11 @@ class FluxNewsState extends ChangeNotifier {
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
                           categoryID INTEGER)''',
         );
         // create the table attachments
@@ -304,10 +315,103 @@ class FluxNewsState extends ChangeNotifier {
                           manualTruncate INTEGER,
                           categoryID INTEGER)''',
           );
+        } else if (oldVersion == 4) {
+          logThis('upgradeDB', 'Upgrading DB from version 4', LogLevel.INFO);
+
+          await db.execute(
+            '''CREATE TABLE tempFeeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into tempFeeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        0 AS preferParagraph,
+                        0 AS preferAttachmentImage,
+                        0 AS manualAdaptLightModeToIcon,
+                        0 AS manualAdaptDarkModeToIcon,
+                        0 AS openMinifluxEntry,
+                        categoryID  
+                  from feeds;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into feeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        categoryID  
+                  from tempFeeds;''');
+          await db.execute('DROP TABLE IF EXISTS tempFeeds');
         }
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 4,
+      version: 5,
     );
   }
 
@@ -367,6 +471,8 @@ class FluxNewsState extends ChangeNotifier {
         KeyValueRecordType(
             key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
         KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+        KeyValueRecordType(
+            key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
       ];
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];

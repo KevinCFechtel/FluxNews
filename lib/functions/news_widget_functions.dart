@@ -1,14 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/functions/android_url_launcher.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // this is a helper function to get the actual tab position
 // this position is used to open the context menu of the news card here
@@ -96,6 +100,23 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
                 ),
               )
             ])),
+        // save the news to third party service
+        PopupMenuItem(
+            value: FluxNewsState.contextMenuOpenMinifluxString,
+            child: Row(children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.open_in_browser,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.openMinifluxEntry,
+                  overflow: TextOverflow.visible,
+                ),
+              )
+            ])),
       ]);
   switch (result) {
     case FluxNewsState.contextMenuBookmarkString:
@@ -109,6 +130,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       break;
     case FluxNewsState.contextMenuSaveString:
       saveToThirdPartyAction(news, appState, context);
+      break;
+    case FluxNewsState.contextMenuOpenMinifluxString:
+      openNewsAction(news, appState, context, true);
       break;
   }
 }
@@ -292,5 +316,70 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
     appCounterState.listUpdated = true;
     appCounterState.refreshView();
     appState.refreshView();
+  }
+}
+
+Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext context, bool openMiniflux) async {
+  // on tab we update the status of the news to read and open the news
+  try {
+    updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
+  } catch (e) {
+    logThis(
+        'updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
+
+    if (context.mounted) {
+      if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+        appState.newError = true;
+        appState.refreshView();
+      }
+    }
+  }
+  // update the status to read on the news list and notify the categories
+  // to recalculate the news count
+  news.status = FluxNewsState.readNewsStatus;
+  context.read<FluxNewsCounterState>().listUpdated = true;
+  context.read<FluxNewsCounterState>().refreshView();
+  appState.refreshView();
+
+  // there are difference on launching the news url between the platforms
+  // on android and ios it's preferred to check first if the link can be opened
+  // by an installed app, if not then the link is opened in a web-view within the app.
+  // on macos we open directly the web-view within the app.
+  String url = news.url;
+  if (openMiniflux) {
+    if (appState.minifluxURL != null) {
+      String minifluxBaseURL = appState.minifluxURL!;
+      if (minifluxBaseURL.endsWith('/v1/')) {
+        minifluxBaseURL = minifluxBaseURL.substring(0, minifluxBaseURL.length - 3);
+      }
+      url = minifluxBaseURL +
+          FluxNewsState.minifluxEntryPathPrefix +
+          news.feedID.toString() +
+          FluxNewsState.minifluxEntryPathSuffix +
+          news.newsID.toString();
+    }
+  }
+
+  if (Platform.isAndroid) {
+    AndroidUrlLauncher.launchUrl(context, url);
+  } else if (Platform.isIOS) {
+    // catch exception if no app is installed to handle the url
+    final bool nativeAppLaunchSucceeded = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalNonBrowserApplication,
+    );
+    //if exception is caught, open the app in web-view
+    if (!nativeAppLaunchSucceeded) {
+      await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.inAppWebView,
+      );
+    }
+  } else if (Platform.isMacOS) {
+    await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
   }
 }

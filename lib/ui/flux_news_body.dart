@@ -954,42 +954,27 @@ class FeedTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    return InkWell(
-      splashFactory: NoSplash.splashFactory,
-      child: ListTile(
-        title: Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: Row(children: [
-            // if the option is enabled, show the feed icon
-            appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
-            appState.truncateMode == 2
-                ? feed.manualTruncate != null
-                    ? feed.manualTruncate!
-                        ? const Padding(
-                            padding: EdgeInsets.only(left: 5.0),
-                            child: Icon(
-                              size: 16.0,
-                              Icons.cut_outlined,
-                            ))
-                        : const SizedBox.shrink()
-                    : const SizedBox.shrink()
-                : const SizedBox.shrink(),
-            Expanded(
-                child: Padding(
-              padding: const EdgeInsets.only(left: 10.0),
-              child: Text(
-                feed.title,
-                style: Theme.of(context).textTheme.labelLarge,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ))
-          ]),
-        ),
-        // show the news count of this feed
-        trailing: Text(
-          '${feed.newsCount}',
-          style: Theme.of(context).textTheme.labelLarge,
-        ),
+    return ListTile(
+      title: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Row(children: [
+          // if the option is enabled, show the feed icon
+          appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
+          Expanded(
+              child: Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: Text(
+              feed.title,
+              style: Theme.of(context).textTheme.labelLarge,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ))
+        ]),
+      ),
+      // show the news count of this feed
+      trailing: Text(
+        '${feed.newsCount}',
+        style: Theme.of(context).textTheme.labelLarge,
       ),
       onTap: () {
         // on tab we want to show only the news of this feed in the news list.
@@ -1011,14 +996,6 @@ class FeedTile extends StatelessWidget {
         // if the device is a tablet, no drawer is used.
         if (!appState.isTablet) {
           Navigator.pop(context);
-        }
-      },
-      onTapDown: (details) {
-        getTapPosition(details, context, appState);
-      },
-      onLongPress: () {
-        if (appState.truncateMode == 2) {
-          showContextMenu(context, appState, feed);
         }
       },
     );
@@ -1051,54 +1028,4 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
 
   @override
   bool get wantKeepAlive => true;
-}
-
-void getTapPosition(TapDownDetails details, BuildContext context, FluxNewsState appState) {
-  appState.tapPosition = details.globalPosition;
-}
-
-void showContextMenu(BuildContext context, FluxNewsState appState, Feed feed) async {
-  //Offset offset = details.globalPosition;
-  final RenderObject overlay = Overlay.of(context).context.findRenderObject()!;
-
-  final result = await showMenu(
-      context: context,
-      // open the menu on the previous recognized position
-      position: RelativeRect.fromRect(Rect.fromLTWH(appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
-          Rect.fromLTWH(0, 0, overlay.paintBounds.size.width, overlay.paintBounds.size.height)),
-      items: [
-        // bookmark the news
-        PopupMenuItem(
-            value: 1,
-            child: Row(children: [
-              const Padding(
-                padding: EdgeInsets.only(right: 2),
-                child: Icon(
-                  Icons.cut_outlined,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  AppLocalizations.of(context)!.manualTruncate,
-                  overflow: TextOverflow.visible,
-                ),
-              )
-            ])),
-      ]);
-  switch (result) {
-    case 1:
-      if (feed.manualTruncate == false) {
-        feed.manualTruncate = true;
-        await updateManualTruncateStatusOfFeedInDB(feed.feedID, true, appState);
-      } else {
-        feed.manualTruncate = false;
-        await updateManualTruncateStatusOfFeedInDB(feed.feedID, false, appState);
-      }
-      // reload the news list with the new filter
-      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-        appState.jumpToItem(0);
-      });
-      appState.refreshView();
-      break;
-  }
 }

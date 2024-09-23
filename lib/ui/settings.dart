@@ -791,6 +791,23 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
+
+                // this list tile contains feed settings
+                // it is clickable and opens the feed settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.feed,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.feedSettings,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
+                  },
+                ),
+                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
