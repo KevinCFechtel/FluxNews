@@ -1,0 +1,7 @@
+Added feed fettings
+Added the option to prefer first HTML paragraph as news text
+Added the option to prefer attachment image as news picture
+Added the option to manual adapt the light mode to the feed icon
+Added the option to manual adapt the dark mode to the feed icon
+Added the option to open the news item in the miniflux web frontend
+Prevent an exception when working with news longer than 2000000 chars

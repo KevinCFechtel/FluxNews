@@ -73,7 +73,7 @@
     "truncateMode": "Truncate Mode",
     "truncateModeAll": "Truncate all news",
     "truncateModeScraper": "Truncate all news from feeds with original content fetched",
-    "truncateModeManual": "Truncate all news from feeds which has been selected manually (using a longpress on the specific feed)",
+    "truncateModeManual": "Truncate all news from feeds which has been selected manually in the feed settings",
     "charactersToTruncate": "Amount of characters to which the text is truncated",
     "charactersToTruncateLimit": "Amount of characters from which the text is truncated",
     "manualTruncate": "Truncate news",
@@ -85,14 +85,14 @@
     "unreadShort": "Unread",
     "leftSwipeSelectionOption": "Select action for swiping to the left",
     "rightSwipeSelectionOption": "Select action for swiping to the right",
-    "deleteBookmarkShort": "Delete Bookmark",
+    "deleteBookmarkShort": "Delete bookmark",
     "activateSwiping": "Activate swipe gestures",
-    "feedSettings": "Feed Settings",
+    "feedSettings": "Feed settings",
     "emptyFeedList": "No Feeds fetched",
     "preferParagraph": "Prefer first HTML paragraph as news text",
     "preferAttachmentImage": "Prefer attachment image as news picture",
     "manualAdaptLightModeToIcon": "Manual adapt the light mode to the feed icon",
     "manualAdaptDarkModeToIcon": "Manual adapt the dark mode to the feed icon",
     "openMinifluxEntry": "Open news in miniflux webinterface",
-    "openMinifluxShort": "Open in Miniflux"
+    "openMinifluxShort": "Open in miniflux"
 }
