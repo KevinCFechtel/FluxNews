@@ -301,6 +301,7 @@ class News {
           if (manualAdaptDarkModeToIcon!) {
             if (darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -313,6 +314,7 @@ class News {
             } else {
               if (manualAdaptLightModeToIcon!) {
                 return Container(
+                    padding: const EdgeInsets.all(1.5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(3),
                       color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -333,6 +335,7 @@ class News {
           } else {
             if (!darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -362,6 +365,7 @@ class News {
           if (manualAdaptDarkModeToIcon!) {
             if (darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -381,6 +385,7 @@ class News {
           } else {
             if (!darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -393,6 +398,7 @@ class News {
             } else {
               if (manualAdaptLightModeToIcon!) {
                 return Container(
+                    padding: const EdgeInsets.all(1.5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(3),
                       color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -557,6 +563,7 @@ class Feed {
           if (manualAdaptDarkModeToIcon!) {
             if (darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -569,6 +576,7 @@ class Feed {
             } else {
               if (manualAdaptLightModeToIcon!) {
                 return Container(
+                    padding: const EdgeInsets.all(1.5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(3),
                       color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -589,6 +597,7 @@ class Feed {
           } else {
             if (!darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -618,6 +627,7 @@ class Feed {
           if (manualAdaptDarkModeToIcon!) {
             if (darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -630,6 +640,7 @@ class Feed {
             } else {
               if (manualAdaptLightModeToIcon!) {
                 return Container(
+                    padding: const EdgeInsets.all(1.5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(3),
                       color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -650,6 +661,7 @@ class Feed {
           } else {
             if (!darkModeEnabled) {
               return Container(
+                  padding: const EdgeInsets.all(1.5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     color: Theme.of(context).textTheme.bodyMedium?.color,

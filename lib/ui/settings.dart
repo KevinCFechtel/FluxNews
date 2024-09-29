@@ -61,9 +61,14 @@ class Settings extends StatelessWidget {
                   leading: const Icon(
                     Icons.link,
                   ),
-                  title: Text(
-                    '${AppLocalizations.of(context)!.apiUrl}: ${appState.minifluxURL ?? ''}',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      '${AppLocalizations.of(context)!.apiUrl}: ${appState.minifluxURL ?? ''}',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                   onTap: () {
                     _showURLEditDialog(context, appState);
@@ -76,9 +81,14 @@ class Settings extends StatelessWidget {
                   leading: const Icon(
                     Icons.api,
                   ),
-                  title: Text(
-                    '${AppLocalizations.of(context)!.apiKey}: ${appState.minifluxAPIKey ?? ''}',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      '${AppLocalizations.of(context)!.apiKey}: ${appState.minifluxAPIKey ?? ''}',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                   onTap: () {
                     _showApiKeyEditDialog(context, appState);
@@ -89,9 +99,14 @@ class Settings extends StatelessWidget {
                   leading: const Icon(
                     Icons.numbers,
                   ),
-                  title: Text(
-                    '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                 ),
                 // it there is an error on the authentication of the miniflux server
@@ -798,9 +813,14 @@ class Settings extends StatelessWidget {
                   leading: const Icon(
                     Icons.feed,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.feedSettings,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.feedSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                   onTap: () {
                     // navigate to the search page
@@ -857,9 +877,14 @@ class Settings extends StatelessWidget {
                   leading: const Icon(
                     Icons.import_export,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.exportLogs,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.exportLogs,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                   onTap: () {
                     if (Platform.isAndroid || Platform.isIOS) {
@@ -874,9 +899,14 @@ class Settings extends StatelessWidget {
                     Icons.delete_forever,
                     color: Colors.red,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.deleteLocalCache,
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.red),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.deleteLocalCache,
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.red),
+                    ),
                   ),
                   onTap: () {
                     _showDeleteLocalCacheDialog(context, appState);
@@ -885,7 +915,12 @@ class Settings extends StatelessWidget {
                 const Divider(),
                 // this list tile contains the about dialog
                 AboutListTile(
-                  icon: const Icon(Icons.info),
+                  icon: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(0, 0, 15, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: const Icon(Icons.info),
+                  ),
                   applicationIcon: const Icon(
                     FontAwesomeIcons.bookOpen,
                   ),
