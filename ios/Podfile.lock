@@ -3,7 +3,7 @@ PODS:
   - flutter_logs (0.0.1):
     - Flutter
     - ZIPFoundation
-  - flutter_native_splash (0.0.1):
+  - flutter_native_splash (2.4.3):
     - Flutter
   - flutter_secure_storage (6.0.0):
     - Flutter
@@ -12,7 +12,7 @@ PODS:
     - FlutterMacOS
   - share_plus (0.0.1):
     - Flutter
-  - sqflite (0.0.3):
+  - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
   - system_date_time_format (0.0.1):
@@ -28,7 +28,7 @@ DEPENDENCIES:
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
-  - sqflite (from `.symlinks/plugins/sqflite/darwin`)
+  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - system_date_time_format (from `.symlinks/plugins/system_date_time_format/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -49,8 +49,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
-  sqflite:
-    :path: ".symlinks/plugins/sqflite/darwin"
+  sqflite_darwin:
+    :path: ".symlinks/plugins/sqflite_darwin/darwin"
   system_date_time_format:
     :path: ".symlinks/plugins/system_date_time_format/ios"
   url_launcher_ios:
@@ -59,15 +59,15 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_logs: 5d0dca26963e0f30b11a995a764744ef77d5d428
-  flutter_native_splash: edf599c81f74d093a4daf8e17bd7a018854bc778
+  flutter_native_splash: f71420956eb811e6d310720fee915f1d42852e7a
   flutter_secure_storage: d33dac7ae2ea08509be337e775f6b59f1ff45f12
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
-  share_plus: 8875f4f2500512ea181eef553c3e27dba5135aad
-  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
+  share_plus: 8b6f8b3447e494cca5317c8c3073de39b3600d1f
+  sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
   system_date_time_format: b7d92d72dea1a17adc3b14b8c467ae6bc6181c00
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
   ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
 
 PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2
