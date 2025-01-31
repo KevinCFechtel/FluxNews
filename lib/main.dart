@@ -151,7 +151,8 @@ class FluxNews extends StatelessWidget {
             appBarTheme: AppBarTheme(
               systemOverlayStyle: SystemUiOverlayStyle(
                   systemNavigationBarColor: Colors.white10,
-                  statusBarColor: Colors.white.withOpacity(0.0),
+                  statusBarColor: Colors.white.withValues(alpha: 0.0),
+                  //statusBarColor: Colors.white.withOpacity(0.0),
                   statusBarIconBrightness: Brightness.dark,
                   systemNavigationBarIconBrightness: Brightness.dark),
               iconTheme: const IconThemeData(
@@ -193,8 +194,10 @@ class FluxNews extends StatelessWidget {
             textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.white70),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: SystemUiOverlayStyle(
-                  systemNavigationBarColor: Colors.black.withOpacity(0.1),
-                  statusBarColor: Colors.black.withOpacity(0.0),
+                  systemNavigationBarColor: Colors.black.withValues(alpha: 0.1),
+                  statusBarColor: Colors.black.withValues(alpha: 0.0),
+                  //systemNavigationBarColor: Colors.black.withOpacity(0.1),
+                  //statusBarColor: Colors.black.withOpacity(0.0),
                   statusBarIconBrightness: Brightness.light,
                   systemNavigationBarIconBrightness: Brightness.light),
               iconTheme: const IconThemeData(
