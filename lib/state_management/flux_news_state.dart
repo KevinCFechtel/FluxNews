@@ -18,7 +18,6 @@ import '../models/news_model.dart';
 
 // generate android options to usw with flutter secure storage
 sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
-      encryptedSharedPreferences: true,
       keyCipherAlgorithm: sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
       storageCipherAlgorithm: sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
     );
