@@ -401,7 +401,7 @@ packages:
     source: hosted
     version: "2.0.1"
   flutter_secure_storage_web:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: flutter_secure_storage_web
       sha256: "4c3f233e739545c6cb09286eeec1cc4744138372b985113acc904f7263bef517"
