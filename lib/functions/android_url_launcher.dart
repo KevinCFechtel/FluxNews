@@ -17,7 +17,7 @@ class AndroidUrlLauncher {
     Map<String, Object?> arguments = {
       'url': url,
       'preferredPackageName': null,
-      'toolbarColor': Theme.of(context).primaryColor.value,
+      'toolbarColor': Theme.of(context).primaryColor.toARGB32(),
       'showPageTitle': true,
       'enableUrlBarHiding': false,
       'enableDefaultShare': true,

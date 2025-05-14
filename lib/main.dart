@@ -66,12 +66,16 @@ class FluxNews extends StatelessWidget {
         File file = File("${externalDirectory!.path}/$zipName");
         if (file.existsSync()) {
           if (Platform.isAndroid) {
-            Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+            //Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
+            SharePlus.instance.share(ShareParams(files: [XFile("${externalDirectory.path}/$zipName")]));
           } else {
             if (context.mounted) {
               final box = context.findRenderObject() as RenderBox?;
-              Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")],
-                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100));
+              SharePlus.instance.share(ShareParams(
+                  files: [XFile("${externalDirectory.path}/$zipName")],
+                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+              //Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")],
+              //    sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100));
             }
           }
         } else {
