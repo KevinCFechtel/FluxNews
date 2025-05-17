@@ -94,5 +94,6 @@
     "manualAdaptLightModeToIcon": "Passe ein durchsichtiges Feed Icon manuell an den Light Mode an",
     "manualAdaptDarkModeToIcon": "Passe  ein durchsichtiges Feed Icon manuell an den Dark Mode an",
     "openMinifluxEntry": "Öffne die Nachricht im Miniflux Webinterface",
-    "openMinifluxShort": "Öffnen in Miniflux"
+    "openMinifluxShort": "Öffnen in Miniflux",
+    "scrollHorizontal": "Horizontal scrollen"
 }

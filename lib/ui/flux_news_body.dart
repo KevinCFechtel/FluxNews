@@ -108,8 +108,27 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   }
 
   Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in portrait mode
     return Scaffold(
+      floatingActionButton: appState.floatingButtonVisible
+          ? FloatingActionButton(
+              onPressed: () {
+                // mark news as read
+                markNewsAsReadInDB(appState);
+                // refresh news list with the all news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.jumpToItem(0);
+                });
+
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
+                appState.refreshView();
+              },
+              child: const Icon(Icons.check_circle_outline),
+            )
+          : null,
       appBar: AppBar(
         toolbarHeight: 65,
         leading: Builder(
@@ -134,8 +153,27 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   }
 
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
+      floatingActionButton: appState.floatingButtonVisible
+          ? FloatingActionButton(
+              onPressed: () {
+                // mark news as read
+                markNewsAsReadInDB(appState);
+                // refresh news list with the all news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.jumpToItem(0);
+                });
+
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
+                appState.refreshView();
+              },
+              child: const Icon(Icons.check_circle_outline),
+            )
+          : null,
       appBar: AppBar(
         title: const AppBarTitle(),
         actions: appBarButtons(context),

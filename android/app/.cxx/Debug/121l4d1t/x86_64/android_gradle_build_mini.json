@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/kevinfechtel/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/kevinfechtel/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/kevinfechtel/GitHub/FluxNews/android/app/.cxx/Debug/121l4d1t/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/kevinfechtel/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/kevinfechtel/GitHub/FluxNews/android/app/.cxx/Debug/121l4d1t/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
