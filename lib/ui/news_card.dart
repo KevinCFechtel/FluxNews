@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_popup_card/flutter_popup_card.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -418,43 +418,58 @@ class PopupCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(children: [
-        Html(
-          data: news.content,
-          style: {
-            "body": Style(
-              color: news.status == FluxNewsState.unreadNewsStatus
-                  ? Theme.of(context).textTheme.bodyMedium!.color
-                  : Theme.of(context).disabledColor,
-              fontSize: FontSize(14.0),
-            ),
-          },
-        ),
-        Row(
-          children: [
-            Padding(
-                padding: const EdgeInsets.only(left: 10.0),
-                child: OutlinedButton(
+    FluxNewsState appState = context.watch<FluxNewsState>();
+    return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(children: [
+          Flexible(
+              flex: 1,
+              child: HtmlWidget(
+                news.content,
+                renderMode: RenderMode.listView,
+                enableCaching: true,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: news.status == FluxNewsState.unreadNewsStatus
+                      ? Theme.of(context).textTheme.bodyMedium!.color
+                      : Theme.of(context).disabledColor,
+                ),
+              )),
+          Flexible(
+              flex: 0,
+              child: Row(children: [
+                ElevatedButton(
+                    child: Text(news.status == FluxNewsState.readNewsStatus
+                        ? AppLocalizations.of(context)!.markAsUnread
+                        : AppLocalizations.of(context)!.markAsRead),
+                    onPressed: () {
+                      if (news.status == FluxNewsState.readNewsStatus) {
+                        markNewsAsUnreadAction(
+                            news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                      } else {
+                        markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                      }
+                    }),
+                Padding(
+                    padding: const EdgeInsets.only(left: 5.0),
+                    child: ElevatedButton(
+                        child: Text(
+                          AppLocalizations.of(context)!.open,
+                        ),
+                        onPressed: () {
+                          if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+                            openNewsAction(news, appState, context, true);
+                          } else {
+                            openNewsAction(news, appState, context, false);
+                          }
+                        })),
+                const Spacer(),
+                ElevatedButton(
+                    child: Icon(Icons.close),
                     onPressed: () {
                       Navigator.pop(context);
-                    },
-                    child: Text(
-                      AppLocalizations.of(context)!.markAsRead,
-                    ))),
-            const Spacer(),
-            Padding(
-                padding: const EdgeInsets.only(right: 10.0),
-                child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      AppLocalizations.of(context)!.cancel,
-                    )))
-          ],
-        ),
-      ]),
-    );
+                    })
+              ])),
+        ]));
   }
 }

@@ -112,8 +112,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     // start the main view in portrait mode
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
-          ? FloatingActionButton(
-              onPressed: () {
+          ? GestureDetector(
+              onLongPress: () {
                 // mark news as read
                 markNewsAsReadInDB(appState);
                 // refresh news list with the all news state
@@ -126,10 +126,45 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appCounterState.refreshView();
                 appState.refreshView();
               },
-              child: const Icon(Icons.check_circle_outline),
-            )
+              child: FloatingActionButton(
+                onPressed: () {
+                  showDialog<String>(
+                      context: context,
+                      builder: (BuildContext context) => AlertDialog.adaptive(
+                            title: Text(AppLocalizations.of(context)!.markAsRead),
+                            content: Text('${AppLocalizations.of(context)!.markAllAsRead}?'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text(AppLocalizations.of(context)!.ok),
+                                onPressed: () {
+                                  // mark news as read
+                                  markNewsAsReadInDB(appState);
+                                  // refresh news list with the all news state
+                                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                                    appState.jumpToItem(0);
+                                  });
+
+                                  // notify the categories to update the news count
+                                  appCounterState.listUpdated = true;
+                                  appCounterState.refreshView();
+                                  appState.refreshView();
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: Text(AppLocalizations.of(context)!.cancel),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          ));
+                },
+                child: const Icon(Icons.check_circle_outline),
+              ))
           : null,
       appBar: AppBar(
+        forceMaterialTransparency: appState.useBlackMode ? true : false,
         toolbarHeight: 65,
         leading: Builder(
           builder: (BuildContext context) {
@@ -157,8 +192,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
-          ? FloatingActionButton(
-              onPressed: () {
+          ? GestureDetector(
+              onLongPress: () {
                 // mark news as read
                 markNewsAsReadInDB(appState);
                 // refresh news list with the all news state
@@ -171,10 +206,25 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 appCounterState.refreshView();
                 appState.refreshView();
               },
-              child: const Icon(Icons.check_circle_outline),
-            )
+              child: FloatingActionButton(
+                onPressed: () {
+                  // mark news as read
+                  markNewsAsReadInDB(appState);
+                  // refresh news list with the all news state
+                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                    appState.jumpToItem(0);
+                  });
+
+                  // notify the categories to update the news count
+                  appCounterState.listUpdated = true;
+                  appCounterState.refreshView();
+                  appState.refreshView();
+                },
+                child: const Icon(Icons.check_circle_outline),
+              ))
           : null,
       appBar: AppBar(
+        forceMaterialTransparency: appState.useBlackMode ? true : false,
         title: const AppBarTitle(),
         actions: appBarButtons(context),
       ),

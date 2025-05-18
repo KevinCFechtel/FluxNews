@@ -32,6 +32,7 @@ class Settings extends StatelessWidget {
       appState.orientation = orientation;
       return Scaffold(
         appBar: AppBar(
+          forceMaterialTransparency: appState.useBlackMode ? true : false,
           // set the title of the settings page to the localized settings string
           title: Text(AppLocalizations.of(context)!.settings, style: Theme.of(context).textTheme.titleLarge),
         ),
@@ -490,6 +491,125 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // this row contains the selection if the horizontal scrolling is turned on
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.swap_horiz,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.scrollHorizontal,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.scrollHorizontal,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          appState.activateSwipeGestures = false;
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageActivateSwipeGesturesKey,
+                              value: FluxNewsState.secureStorageFalseString);
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.scrollHorizontal = value;
+                        appState.storage.write(key: FluxNewsState.secureStorageScrollHorizontalKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection if the horizontal scrolling is turned on
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.check_circle_outline,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.floatingActionButton,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.floatingButtonVisible,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.floatingButtonVisible = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection if the horizontal scrolling is turned on
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.settings_display_rounded,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.useBlackMode,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.useBlackMode,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.useBlackMode = value;
+                        appState.storage.write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this list tile contains feed settings
+                // it is clickable and opens the feed settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.feed,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.feedSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
+                  },
+                ),
+                const Divider(),
                 // this row contains the selection if swiping is enabled
                 Row(
                   children: [
@@ -811,94 +931,6 @@ class Settings extends StatelessWidget {
                     : const SizedBox.shrink(),
                 appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
 
-                // this list tile contains feed settings
-                // it is clickable and opens the feed settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.feed,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.feedSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
-                  },
-                ),
-                const Divider(),
-                // this row contains the selection if the horizontal scrolling is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.swap_horiz,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.scrollHorizontal,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.scrollHorizontal,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          appState.activateSwipeGestures = false;
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageActivateSwipeGesturesKey,
-                              value: FluxNewsState.secureStorageFalseString);
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.scrollHorizontal = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageScrollHorizontalKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if the horizontal scrolling is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.bubble_chart,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.scrollHorizontal,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.floatingButtonVisible,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.floatingButtonVisible = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(

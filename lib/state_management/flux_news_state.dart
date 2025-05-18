@@ -78,6 +78,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
   static const String secureStorageScrollHorizontalKey = 'scrollHorizontal';
   static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
+  static const String secureStorageUseBlackModeKey = 'floatingButtonVisible';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -131,6 +132,7 @@ class FluxNewsState extends ChangeNotifier {
   final ListController listController = ListController();
   bool scrollHorizontal = false;
   bool floatingButtonVisible = false;
+  bool useBlackMode = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
@@ -786,6 +788,17 @@ class FluxNewsState extends ChangeNotifier {
             floatingButtonVisible = true;
           } else {
             floatingButtonVisible = false;
+          }
+        }
+      }
+
+      // assign the use black mode selection from persistent saved config
+      if (key == FluxNewsState.secureStorageUseBlackModeKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            useBlackMode = true;
+          } else {
+            useBlackMode = false;
           }
         }
       }

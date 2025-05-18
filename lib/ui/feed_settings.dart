@@ -37,6 +37,7 @@ class FeedSettings extends StatelessWidget {
   Scaffold feedSettingsLayout(BuildContext context, FluxNewsState appState) {
     return Scaffold(
         appBar: AppBar(
+          forceMaterialTransparency: appState.useBlackMode ? true : false,
           // set the title of the search page to search text field
           title: Text(AppLocalizations.of(context)!.feedSettings),
         ),

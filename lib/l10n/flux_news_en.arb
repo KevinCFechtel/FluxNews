@@ -95,5 +95,8 @@
     "manualAdaptDarkModeToIcon": "Manual adapt the dark mode to a transparent feed icon",
     "openMinifluxEntry": "Open news in miniflux webinterface",
     "openMinifluxShort": "Open in miniflux",
-    "scrollHorizontal": "Scroll horizontal"
+    "scrollHorizontal": "Scroll horizontal",
+    "open": "Open",
+    "floatingActionButton": "Use an extra button to mark all messages as read",
+    "useBlackMode": "Enable black mode specifically for OLED displays"
 }

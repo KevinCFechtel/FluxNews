@@ -66,7 +66,7 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final Client client;
     if (Platform.isAndroid) {
-      final engine = CronetEngine.build();
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
     } else {
       client = IOClient(HttpClient());
@@ -198,7 +198,7 @@ Future<NewsList> fetchStarredNews(FluxNewsState appState) async {
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final Client client;
     if (Platform.isAndroid) {
-      final engine = CronetEngine.build();
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
     } else {
       client = IOClient(HttpClient());
@@ -292,7 +292,7 @@ Future<List<News>> fetchSearchedNews(FluxNewsState appState, String searchString
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final Client client;
     if (Platform.isAndroid) {
-      final engine = CronetEngine.build();
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
     } else {
       client = IOClient(HttpClient());
@@ -444,7 +444,7 @@ Future<void> toggleNewsAsRead(FluxNewsState appState) async {
         ReadNewsList newReadNewsList = ReadNewsList(newsIds: newsIds, status: FluxNewsState.readNewsStatus);
         final Client client;
         if (Platform.isAndroid) {
-          final engine = CronetEngine.build();
+          final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
           client = CronetClient.fromCronetEngine(engine, closeEngine: true);
         } else {
           client = IOClient(HttpClient());
@@ -493,7 +493,7 @@ Future<void> toggleOneNewsAsRead(FluxNewsState appState, News news) async {
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final Client client;
     if (Platform.isAndroid) {
-      final engine = CronetEngine.build();
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
     } else {
       client = IOClient(HttpClient());
@@ -537,7 +537,7 @@ Future<void> toggleBookmark(FluxNewsState appState, News news) async {
     if (appState.db != null) {
       final Client client;
       if (Platform.isAndroid) {
-        final engine = CronetEngine.build();
+        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
         client = CronetClient.fromCronetEngine(engine, closeEngine: true);
       } else {
         client = IOClient(HttpClient());
@@ -587,7 +587,7 @@ Future<void> saveNewsToThirdPartyService(FluxNewsState appState, News news) asyn
     if (appState.db != null) {
       final Client client;
       if (Platform.isAndroid) {
-        final engine = CronetEngine.build();
+        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
         client = CronetClient.fromCronetEngine(engine, closeEngine: true);
       } else {
         client = IOClient(HttpClient());
@@ -647,7 +647,7 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
     if (appState.db != null) {
       final Client client;
       if (Platform.isAndroid) {
-        final engine = CronetEngine.build();
+        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
         client = CronetClient.fromCronetEngine(engine, closeEngine: true);
       } else {
         client = IOClient(HttpClient());
@@ -766,7 +766,7 @@ Future<FeedIcon?> getFeedIcon(FluxNewsState appState, int feedID) async {
     if (appState.db != null) {
       final Client client;
       if (Platform.isAndroid) {
-        final engine = CronetEngine.build();
+        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
         client = CronetClient.fromCronetEngine(engine, closeEngine: true);
       } else {
         client = IOClient(HttpClient());
@@ -817,7 +817,7 @@ Future<bool> checkMinifluxCredentials(String? miniFluxUrl, String? miniFluxApiKe
   if (miniFluxApiKey != null && miniFluxUrl != null) {
     final Client client;
     if (Platform.isAndroid) {
-      final engine = CronetEngine.build();
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
     } else {
       client = IOClient(HttpClient());

@@ -39,6 +39,7 @@ class Search extends StatelessWidget {
   Scaffold searchLayout(BuildContext context, FluxNewsState appState) {
     return Scaffold(
         appBar: AppBar(
+          forceMaterialTransparency: appState.useBlackMode ? true : false,
           // set the title of the search page to search text field
           title: TextField(
             controller: appState.searchController,

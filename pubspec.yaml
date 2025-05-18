@@ -62,7 +62,7 @@ dependencies:
   super_sliver_list: ^0.4.1
   flutter_slidable: ^4.0.0
   flutter_popup_card: ^0.0.6
-  flutter_html: ^3.0.0
+  flutter_widget_from_html_core: ^0.16.0
 
 dev_dependencies:
   flutter_test:

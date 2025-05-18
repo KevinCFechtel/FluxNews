@@ -129,6 +129,10 @@ class FluxNews extends StatelessWidget {
           brightness: Brightness.dark,
         );
       }
+      if (appState.useBlackMode) {
+        darkColorScheme = darkColorScheme.copyWith(surface: Colors.black);
+      }
+
       return MaterialApp(
         // setting theme mode depending on the settings
         themeMode: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
@@ -164,11 +168,12 @@ class FluxNews extends StatelessWidget {
               ),
             ),
             cardTheme: CardTheme(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                clipBehavior: Clip.antiAlias,
-                elevation: 5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              clipBehavior: Clip.antiAlias,
+              elevation: 5,
+            ),
             textTheme: const TextTheme(
               headlineMedium: TextStyle(color: Colors.black54),
               headlineSmall: TextStyle(color: Colors.black54),
@@ -200,8 +205,6 @@ class FluxNews extends StatelessWidget {
               systemOverlayStyle: SystemUiOverlayStyle(
                   systemNavigationBarColor: Colors.black.withValues(alpha: 0.1),
                   statusBarColor: Colors.black.withValues(alpha: 0.0),
-                  //systemNavigationBarColor: Colors.black.withOpacity(0.1),
-                  //statusBarColor: Colors.black.withOpacity(0.0),
                   statusBarIconBrightness: Brightness.light,
                   systemNavigationBarIconBrightness: Brightness.light),
               iconTheme: const IconThemeData(
@@ -215,6 +218,7 @@ class FluxNews extends StatelessWidget {
               ),
               clipBehavior: Clip.antiAlias,
               elevation: 5,
+              color: appState.useBlackMode ? Colors.black : null,
             ),
             textTheme: const TextTheme(
               headlineMedium: TextStyle(color: Colors.white70),
@@ -226,7 +230,10 @@ class FluxNews extends StatelessWidget {
               labelMedium: TextStyle(color: Colors.white70),
               titleMedium: TextStyle(color: Colors.white70, fontWeight: FontWeight.normal),
             ),
-            disabledColor: Colors.white30),
+            disabledColor: Colors.white30,
+            drawerTheme: DrawerThemeData(
+              backgroundColor: appState.useBlackMode ? Colors.black : null,
+            )),
         // define routes for main view (FluxNewsBody), settings view and search view
         routes: {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),
