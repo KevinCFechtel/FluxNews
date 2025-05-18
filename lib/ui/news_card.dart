@@ -243,7 +243,7 @@ class NewsCard extends StatelessWidget {
         // The child of the Slidable is what the user sees when the
         // component is not dragged.
         child: SizedBox(
-            width: appState.scrollHorizontal ? 400 : double.infinity,
+            width: appState.scrollHorizontal ? MediaQuery.of(context).size.width * 0.9 : double.infinity,
             child: Card(
               // inkwell is used for the onTab and onLongPress functions
               child: InkWell(
