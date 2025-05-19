@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -393,15 +394,26 @@ class NewsRow extends StatelessWidget {
                             // here is the news text, the Opacity decide between read and unread
                             Padding(
                               padding: const EdgeInsets.only(top: 2.0, bottom: 10),
-                              child: Text(
-                                news.getText(appState),
-                                style: news.status == FluxNewsState.unreadNewsStatus
-                                    ? Theme.of(context).textTheme.bodyMedium
-                                    : Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(color: Theme.of(context).disabledColor),
-                              ),
+                              child: news.expanded
+                                  ? HtmlWidget(
+                                      news.content,
+                                      enableCaching: true,
+                                      textStyle: TextStyle(
+                                        fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize,
+                                        color: news.status == FluxNewsState.unreadNewsStatus
+                                            ? Theme.of(context).textTheme.bodyMedium!.color
+                                            : Theme.of(context).disabledColor,
+                                      ),
+                                    )
+                                  : Text(
+                                      news.getText(appState),
+                                      style: news.status == FluxNewsState.unreadNewsStatus
+                                          ? Theme.of(context).textTheme.bodyMedium
+                                          : Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium!
+                                              .copyWith(color: Theme.of(context).disabledColor),
+                                    ),
                             ),
                           ],
                         ),

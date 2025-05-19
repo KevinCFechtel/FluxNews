@@ -493,41 +493,7 @@ class Settings extends StatelessWidget {
                     ),
                   ],
                 ),
-                const Divider(),
-                // this row contains the selection if the horizontal scrolling is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.swap_horiz,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.scrollHorizontal,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.scrollHorizontal,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          appState.activateSwipeGestures = false;
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageActivateSwipeGesturesKey,
-                              value: FluxNewsState.secureStorageFalseString);
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.scrollHorizontal = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageScrollHorizontalKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
+
                 const Divider(),
                 // this row contains the selection if the horizontal scrolling is turned on
                 Row(
@@ -712,10 +678,6 @@ class Settings extends StatelessWidget {
                         String stringValue = FluxNewsState.secureStorageFalseString;
                         if (value == true) {
                           stringValue = FluxNewsState.secureStorageTrueString;
-                          appState.scrollHorizontal = false;
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageScrollHorizontalKey,
-                              value: FluxNewsState.secureStorageFalseString);
                         }
                         appState.activateSwipeGestures = value;
                         appState.storage

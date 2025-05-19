@@ -78,7 +78,6 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
-  static const String secureStorageScrollHorizontalKey = 'scrollHorizontal';
   static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
   static const String secureStorageUseBlackModeKey = 'useBlackMode';
   static const String secureStorageTabActionKey = 'tabAction';
@@ -138,7 +137,6 @@ class FluxNewsState extends ChangeNotifier {
   int scrollPosition = 0;
   final ScrollController scrollController = ScrollController();
   final ListController listController = ListController();
-  bool scrollHorizontal = false;
   bool floatingButtonVisible = false;
 
   // vars for search view
@@ -841,17 +839,6 @@ class FluxNewsState extends ChangeNotifier {
             if (value == recordSet.key) {
               rightSwipeActionSelection = recordSet;
             }
-          }
-        }
-      }
-
-      // assign the horizontal scroll selection from persistent saved config
-      if (key == FluxNewsState.secureStorageScrollHorizontalKey) {
-        if (value != '') {
-          if (value == FluxNewsState.secureStorageTrueString) {
-            scrollHorizontal = true;
-          } else {
-            scrollHorizontal = false;
           }
         }
       }

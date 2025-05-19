@@ -59,7 +59,6 @@ class BodyNewsList extends StatelessWidget {
                               itemCount: snapshot.data!.length,
                               controller: appState.scrollController,
                               listController: appState.listController,
-                              scrollDirection: appState.scrollHorizontal ? Axis.horizontal : Axis.vertical,
                               itemBuilder: (context, i) {
                                 return appState.orientation == Orientation.landscape
                                     ? NewsRow(news: snapshot.data![i], context: context, searchView: searchView)
