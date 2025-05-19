@@ -185,6 +185,12 @@ class FluxNews extends StatelessWidget {
               color: Colors.white70,
             ),
             textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.white70),
+            popupMenuTheme: PopupMenuThemeData(
+              color: themeState.useBlackMode ? Colors.black : null,
+            ),
+            dialogTheme: DialogTheme(
+              backgroundColor: themeState.useBlackMode ? Colors.black : null,
+            ),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: SystemUiOverlayStyle(
                   systemNavigationBarColor: Colors.black.withValues(alpha: 0.1),

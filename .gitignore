@@ -34,6 +34,12 @@ migrate_working_dir/
 .pub/
 /build/
 l10n_errors.txt
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+**/.cxx/
+
+# iOS/XCode related
+**/ios/**/*.mode1v3
 
 # Symbolication related
 app.*.symbols

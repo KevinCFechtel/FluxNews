@@ -189,6 +189,38 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // this row contains the selection if the black mode is turned on
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.settings_display_rounded,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.useBlackMode,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: themeState.useBlackMode,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        themeState.useBlackMode = value;
+                        appState.storage.write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
+                        appState.refreshView();
+                        themeState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
                 // this row contains the selection of the mark as read on scroll over
                 // if it is turned on, a news is marked as read if it is scrolled over
                 Row(
@@ -312,6 +344,38 @@ class Settings extends StatelessWidget {
                         appState.showFeedIcons = value;
                         appState.storage
                             .write(key: FluxNewsState.secureStorageShowFeedIconsTextKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection if the button to mark as read is turned on
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.check_circle_outline,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.floatingActionButton,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.floatingButtonVisible,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.floatingButtonVisible = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
                         appState.refreshView();
                       },
                     ),
@@ -495,70 +559,7 @@ class Settings extends StatelessWidget {
                 ),
 
                 const Divider(),
-                // this row contains the selection if the horizontal scrolling is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.check_circle_outline,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.floatingActionButton,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.floatingButtonVisible,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.floatingButtonVisible = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if the horizontal scrolling is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.settings_display_rounded,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.useBlackMode,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: themeState.useBlackMode,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        themeState.useBlackMode = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
-                        appState.refreshView();
-                        themeState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
+
                 Row(
                   children: [
                     Padding(
@@ -633,27 +634,6 @@ class Settings extends StatelessWidget {
                           .toList(),
                     ),
                   ],
-                ),
-                const Divider(),
-                // this list tile contains feed settings
-                // it is clickable and opens the feed settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.feed,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.feedSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
-                  },
                 ),
                 const Divider(),
                 // this row contains the selection if swiping is enabled
@@ -776,6 +756,28 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+
+                // this list tile contains feed settings
+                // it is clickable and opens the feed settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.feed,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.feedSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
+                  },
+                ),
+                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
