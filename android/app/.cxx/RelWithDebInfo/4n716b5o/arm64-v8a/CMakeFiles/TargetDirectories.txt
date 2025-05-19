@@ -1,2 +1,0 @@
-/Users/kevinfechtel/GitHub/FluxNews/android/app/.cxx/RelWithDebInfo/4n716b5o/arm64-v8a/CMakeFiles/edit_cache.dir
-/Users/kevinfechtel/GitHub/FluxNews/android/app/.cxx/RelWithDebInfo/4n716b5o/arm64-v8a/CMakeFiles/rebuild_cache.dir

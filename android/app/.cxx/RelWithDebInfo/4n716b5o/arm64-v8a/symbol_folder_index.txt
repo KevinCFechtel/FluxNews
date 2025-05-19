@@ -1,1 +1,0 @@
-/Users/kevinfechtel/GitHub/FluxNews/build/app/intermediates/cxx/RelWithDebInfo/4n716b5o/obj/arm64-v8a
