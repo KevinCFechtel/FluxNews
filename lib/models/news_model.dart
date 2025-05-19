@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
@@ -288,9 +289,9 @@ class News {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
+    } else if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     manualAdaptLightModeToIcon ??= false;
@@ -550,9 +551,9 @@ class Feed {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
+    } else if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     manualAdaptLightModeToIcon ??= false;

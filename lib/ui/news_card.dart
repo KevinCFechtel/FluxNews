@@ -8,6 +8,7 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:provider/provider.dart';
 
 // here we define the appearance of the news cards
@@ -25,16 +26,17 @@ class NewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     List<Widget> rightSwipeActions = [];
     List<Widget> leftSwipeActions = [];
     Widget bookmarkSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95),
           child: Column(
@@ -62,11 +64,11 @@ class NewsCard extends StatelessWidget {
     Widget readSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 172)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 145),
           child: Column(
@@ -96,11 +98,11 @@ class NewsCard extends StatelessWidget {
     Widget saveSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255),
           child: Column(
@@ -124,11 +126,11 @@ class NewsCard extends StatelessWidget {
     Widget openMinifluxAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245),
           child: Column(

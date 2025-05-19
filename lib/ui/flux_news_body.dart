@@ -6,6 +6,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/news_list.dart';
 import 'package:flux_news/functions/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -59,6 +60,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         appState.appBarText = AppLocalizations.of(context)!.allNews;
         // read the saved config
         appState.readConfig(context);
+        appState.readThemeConfigValues(context);
       }
 
       if (appState.syncOnStart) {
@@ -109,6 +111,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     // start the main view in portrait mode
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
@@ -164,7 +167,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               ))
           : null,
       appBar: AppBar(
-        forceMaterialTransparency: appState.useBlackMode ? true : false,
+        forceMaterialTransparency: themeState.useBlackMode ? true : false,
         toolbarHeight: 65,
         leading: Builder(
           builder: (BuildContext context) {
@@ -189,6 +192,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
@@ -224,7 +228,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               ))
           : null,
       appBar: AppBar(
-        forceMaterialTransparency: appState.useBlackMode ? true : false,
+        forceMaterialTransparency: themeState.useBlackMode ? true : false,
         title: const AppBarTitle(),
         actions: appBarButtons(context),
       ),

@@ -7,6 +7,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
@@ -25,6 +26,7 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
 
     return FluxNewsSettingsStatefulWrapper(onInit: () {
       initConfig(context);
@@ -32,7 +34,7 @@ class Settings extends StatelessWidget {
       appState.orientation = orientation;
       return Scaffold(
         appBar: AppBar(
-          forceMaterialTransparency: appState.useBlackMode ? true : false,
+          forceMaterialTransparency: themeState.useBlackMode ? true : false,
           // set the title of the settings page to the localized settings string
           title: Text(AppLocalizations.of(context)!.settings, style: Theme.of(context).textTheme.titleLarge),
         ),
@@ -172,10 +174,11 @@ class Settings extends StatelessWidget {
                       alignment: AlignmentDirectional.centerEnd,
                       onChanged: (KeyValueRecordType? value) {
                         if (value != null) {
-                          appState.brightnessMode = value.key;
+                          themeState.brightnessMode = value.key;
                           appState.brightnessModeSelection = value;
                           appState.storage.write(key: FluxNewsState.secureStorageBrightnessModeKey, value: value.key);
                           appState.refreshView();
+                          themeState.refreshView();
                         }
                       },
                       items: appState.recordTypesBrightnessMode!
@@ -575,15 +578,16 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Switch.adaptive(
-                      value: appState.useBlackMode,
+                      value: themeState.useBlackMode,
                       onChanged: (bool value) {
                         String stringValue = FluxNewsState.secureStorageFalseString;
                         if (value == true) {
                           stringValue = FluxNewsState.secureStorageTrueString;
                         }
-                        appState.useBlackMode = value;
+                        themeState.useBlackMode = value;
                         appState.storage.write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
                         appState.refreshView();
+                        themeState.refreshView();
                       },
                     ),
                   ],
@@ -1061,6 +1065,7 @@ class Settings extends StatelessWidget {
     await appState.readConfigValues();
     if (context.mounted) {
       appState.readConfig(context);
+      appState.readThemeConfigValues(context);
     }
     appState.db = await appState.initializeDB();
     appState.refreshView();

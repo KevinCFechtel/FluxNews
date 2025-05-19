@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/search_news_list.dart';
 import 'package:provider/provider.dart';
 
@@ -33,13 +34,15 @@ class Search extends StatelessWidget {
     await appState.readConfigValues();
     if (context.mounted) {
       appState.readConfig(context);
+      appState.readThemeConfigValues(context);
     }
   }
 
   Scaffold searchLayout(BuildContext context, FluxNewsState appState) {
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     return Scaffold(
         appBar: AppBar(
-          forceMaterialTransparency: appState.useBlackMode ? true : false,
+          forceMaterialTransparency: themeState.useBlackMode ? true : false,
           // set the title of the search page to search text field
           title: TextField(
             controller: appState.searchController,

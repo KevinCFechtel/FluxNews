@@ -8,9 +8,11 @@ import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
@@ -78,7 +80,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
   static const String secureStorageScrollHorizontalKey = 'scrollHorizontal';
   static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
-  static const String secureStorageUseBlackModeKey = 'floatingButtonVisible';
+  static const String secureStorageUseBlackModeKey = 'useBlackMode';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -132,7 +134,6 @@ class FluxNewsState extends ChangeNotifier {
   final ListController listController = ListController();
   bool scrollHorizontal = false;
   bool floatingButtonVisible = false;
-  bool useBlackMode = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
@@ -165,7 +166,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for settings
   Map<String, String> storageValues = {};
-  String brightnessMode = FluxNewsState.brightnessModeSystemString;
+  //String brightnessMode = FluxNewsState.brightnessModeSystemString;
   KeyValueRecordType? brightnessModeSelection;
   KeyValueRecordType? amontOfSyncedNewsSelection;
   KeyValueRecordType? amontOfSearchedNewsSelection;
@@ -431,54 +432,88 @@ class FluxNewsState extends ChangeNotifier {
     return true;
   }
 
+  // read the some persistent saved configuration
+  Future<bool> readThemeConfigValues(BuildContext context) async {
+    logThis('readThemeConfigValues', 'Starting read config values', LogLevel.INFO);
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
+
+    var useBlackModeStoredValue = await storage.read(key: FluxNewsState.secureStorageUseBlackModeKey);
+    if (useBlackModeStoredValue != '') {
+      if (useBlackModeStoredValue == FluxNewsState.secureStorageTrueString) {
+        themeState.useBlackMode = true;
+      } else {
+        themeState.useBlackMode = false;
+      }
+    }
+    var brightnessModeStoredValue = await storage.read(key: FluxNewsState.secureStorageBrightnessModeKey);
+    if (brightnessModeStoredValue != '') {
+      themeState.brightnessMode = brightnessModeStoredValue!;
+    }
+    themeState.notifyListeners();
+
+    logThis('readThemeConfigValues', 'Finished read config values', LogLevel.INFO);
+
+    return true;
+  }
+
   // init the persistent saved configuration
   bool readConfig(BuildContext context) {
     logThis('readConfig', 'Starting read config', LogLevel.INFO);
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
 
     // init the maps for the brightness mode list
     // this maps use the key as the technical string and the value as the display name
     if (context.mounted) {
-      recordTypesAmountOfSyncedNews = <KeyValueRecordType>[
-        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
-        const KeyValueRecordType(key: "1000", value: "1000"),
-        const KeyValueRecordType(key: "2000", value: "2000"),
-        const KeyValueRecordType(key: "5000", value: "5000"),
-        const KeyValueRecordType(key: "10000", value: "10000"),
-      ];
-      recordTypesAmountOfSearchedNews = <KeyValueRecordType>[
-        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
-        const KeyValueRecordType(key: "1000", value: "1000"),
-        const KeyValueRecordType(key: "2000", value: "2000"),
-        const KeyValueRecordType(key: "5000", value: "5000"),
-        const KeyValueRecordType(key: "10000", value: "10000"),
-      ];
-      recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[
-        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.always),
-        const KeyValueRecordType(key: "100", value: "100"),
-        const KeyValueRecordType(key: "200", value: "200"),
-        const KeyValueRecordType(key: "300", value: "300"),
-        const KeyValueRecordType(key: "400", value: "400"),
-        const KeyValueRecordType(key: "500", value: "500"),
-        const KeyValueRecordType(key: "600", value: "600"),
-        const KeyValueRecordType(key: "700", value: "700"),
-        const KeyValueRecordType(key: "800", value: "800"),
-        const KeyValueRecordType(key: "900", value: "900"),
-        const KeyValueRecordType(key: "1000", value: "1000"),
-      ];
-      recordTypesBrightnessMode = <KeyValueRecordType>[
-        KeyValueRecordType(key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
-        KeyValueRecordType(key: FluxNewsState.brightnessModeDarkString, value: AppLocalizations.of(context)!.dark),
-        KeyValueRecordType(key: FluxNewsState.brightnessModeLightString, value: AppLocalizations.of(context)!.light),
-      ];
-      recordTypesSwipeActions = <KeyValueRecordType>[
-        KeyValueRecordType(
-            key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
-        KeyValueRecordType(
-            key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
-        KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
-        KeyValueRecordType(
-            key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
-      ];
+      if (AppLocalizations.of(context) != null) {
+        recordTypesAmountOfSyncedNews = <KeyValueRecordType>[
+          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          const KeyValueRecordType(key: "1000", value: "1000"),
+          const KeyValueRecordType(key: "2000", value: "2000"),
+          const KeyValueRecordType(key: "5000", value: "5000"),
+          const KeyValueRecordType(key: "10000", value: "10000"),
+        ];
+        recordTypesAmountOfSearchedNews = <KeyValueRecordType>[
+          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          const KeyValueRecordType(key: "1000", value: "1000"),
+          const KeyValueRecordType(key: "2000", value: "2000"),
+          const KeyValueRecordType(key: "5000", value: "5000"),
+          const KeyValueRecordType(key: "10000", value: "10000"),
+        ];
+        recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[
+          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.always),
+          const KeyValueRecordType(key: "100", value: "100"),
+          const KeyValueRecordType(key: "200", value: "200"),
+          const KeyValueRecordType(key: "300", value: "300"),
+          const KeyValueRecordType(key: "400", value: "400"),
+          const KeyValueRecordType(key: "500", value: "500"),
+          const KeyValueRecordType(key: "600", value: "600"),
+          const KeyValueRecordType(key: "700", value: "700"),
+          const KeyValueRecordType(key: "800", value: "800"),
+          const KeyValueRecordType(key: "900", value: "900"),
+          const KeyValueRecordType(key: "1000", value: "1000"),
+        ];
+        recordTypesBrightnessMode = <KeyValueRecordType>[
+          KeyValueRecordType(
+              key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
+          KeyValueRecordType(key: FluxNewsState.brightnessModeDarkString, value: AppLocalizations.of(context)!.dark),
+          KeyValueRecordType(key: FluxNewsState.brightnessModeLightString, value: AppLocalizations.of(context)!.light),
+        ];
+        recordTypesSwipeActions = <KeyValueRecordType>[
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
+          KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
+        ];
+      } else {
+        recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
+        recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
+        recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
+        recordTypesBrightnessMode = <KeyValueRecordType>[];
+        recordTypesSwipeActions = <KeyValueRecordType>[];
+      }
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
       recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
@@ -559,12 +594,13 @@ class FluxNewsState extends ChangeNotifier {
       // assign the brightness mode selection from persistent saved config
       if (key == FluxNewsState.secureStorageBrightnessModeKey) {
         if (value != '') {
-          brightnessMode = value;
+          themeState.brightnessMode = value;
           for (KeyValueRecordType recordSet in recordTypesBrightnessMode!) {
             if (value == recordSet.key) {
               brightnessModeSelection = recordSet;
             }
           }
+          themeState.notifyListeners();
         }
       }
 
@@ -788,17 +824,6 @@ class FluxNewsState extends ChangeNotifier {
             floatingButtonVisible = true;
           } else {
             floatingButtonVisible = false;
-          }
-        }
-      }
-
-      // assign the use black mode selection from persistent saved config
-      if (key == FluxNewsState.secureStorageUseBlackModeKey) {
-        if (value != '') {
-          if (value == FluxNewsState.secureStorageTrueString) {
-            useBlackMode = true;
-          } else {
-            useBlackMode = false;
           }
         }
       }
