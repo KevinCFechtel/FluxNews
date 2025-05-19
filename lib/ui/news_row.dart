@@ -247,10 +247,19 @@ class NewsRow extends StatelessWidget {
               child: InkWell(
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
-                  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                    openNewsAction(news, appState, context, true);
+                  if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                    if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+                      openNewsAction(news, appState, context, true);
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else {
-                    openNewsAction(news, appState, context, false);
+                    if (news.expanded) {
+                      news.expanded = false;
+                    } else {
+                      news.expanded = true;
+                    }
+                    appState.refreshView();
                   }
                 },
                 // on tap get the actual position of the list on tab
@@ -259,7 +268,16 @@ class NewsRow extends StatelessWidget {
                   getTapPosition(details, context, appState);
                 },
                 onLongPress: () {
-                  showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                  if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
+                    showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                  } else {
+                    if (news.expanded) {
+                      news.expanded = false;
+                    } else {
+                      news.expanded = true;
+                    }
+                    appState.refreshView();
+                  }
                 },
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

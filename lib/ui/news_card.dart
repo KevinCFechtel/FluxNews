@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
-import 'package:flutter_popup_card/flutter_popup_card.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -251,10 +250,19 @@ class NewsCard extends StatelessWidget {
               child: InkWell(
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
-                  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                    openNewsAction(news, appState, context, true);
+                  if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                    if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+                      openNewsAction(news, appState, context, true);
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else {
-                    openNewsAction(news, appState, context, false);
+                    if (news.expanded) {
+                      news.expanded = false;
+                    } else {
+                      news.expanded = true;
+                    }
+                    appState.refreshView();
                   }
                 },
                 // on tap get the actual position of the list on tab
@@ -263,25 +271,16 @@ class NewsCard extends StatelessWidget {
                   getTapPosition(details, context, appState);
                 },
                 onLongPress: () {
-                  showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
-                },
-                onDoubleTap: () {
-                  showPopupCard(
-                    context: context,
-                    builder: (context) {
-                      return PopupCard(
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: PopupCardWidget(news: news, searchView: searchView),
-                      );
-                    },
-                    offset: const Offset(0, 0),
-                    alignment: Alignment.topRight,
-                    useSafeArea: true,
-                    dimBackground: true,
-                  );
+                  if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
+                    showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                  } else {
+                    if (news.expanded) {
+                      news.expanded = false;
+                    } else {
+                      news.expanded = true;
+                    }
+                    appState.refreshView();
+                  }
                 },
                 child: Column(
                   children: [
@@ -388,15 +387,27 @@ class NewsCard extends StatelessWidget {
                             // here is the news text, the Opacity decide between read and unread
                             Padding(
                               padding: const EdgeInsets.only(top: 2.0, bottom: 10),
-                              child: Text(
-                                news.getText(appState),
-                                style: news.status == FluxNewsState.unreadNewsStatus
-                                    ? Theme.of(context).textTheme.bodyMedium
-                                    : Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(color: Theme.of(context).disabledColor),
-                              ),
+                              child: news.expanded
+                                  ? HtmlWidget(
+                                      news.content,
+                                      //renderMode: RenderMode.listView,
+                                      enableCaching: true,
+                                      textStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: news.status == FluxNewsState.unreadNewsStatus
+                                            ? Theme.of(context).textTheme.bodyMedium!.color
+                                            : Theme.of(context).disabledColor,
+                                      ),
+                                    )
+                                  : Text(
+                                      news.getText(appState),
+                                      style: news.status == FluxNewsState.unreadNewsStatus
+                                          ? Theme.of(context).textTheme.bodyMedium
+                                          : Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium!
+                                              .copyWith(color: Theme.of(context).disabledColor),
+                                    ),
                             ),
                           ],
                         )),
@@ -406,72 +417,5 @@ class NewsCard extends StatelessWidget {
             )),
       ),
     );
-  }
-}
-
-class PopupCardWidget extends StatelessWidget {
-  const PopupCardWidget({
-    super.key,
-    required this.news,
-    required this.searchView,
-  });
-  final News news;
-  final bool searchView;
-
-  @override
-  Widget build(BuildContext context) {
-    FluxNewsState appState = context.watch<FluxNewsState>();
-    return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(children: [
-          Flexible(
-              flex: 1,
-              child: HtmlWidget(
-                news.content,
-                renderMode: RenderMode.listView,
-                enableCaching: true,
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: news.status == FluxNewsState.unreadNewsStatus
-                      ? Theme.of(context).textTheme.bodyMedium!.color
-                      : Theme.of(context).disabledColor,
-                ),
-              )),
-          Flexible(
-              flex: 0,
-              child: Row(children: [
-                ElevatedButton(
-                    child: Text(news.status == FluxNewsState.readNewsStatus
-                        ? AppLocalizations.of(context)!.markAsUnread
-                        : AppLocalizations.of(context)!.markAsRead),
-                    onPressed: () {
-                      if (news.status == FluxNewsState.readNewsStatus) {
-                        markNewsAsUnreadAction(
-                            news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                      } else {
-                        markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                      }
-                    }),
-                Padding(
-                    padding: const EdgeInsets.only(left: 5.0),
-                    child: ElevatedButton(
-                        child: Text(
-                          AppLocalizations.of(context)!.open,
-                        ),
-                        onPressed: () {
-                          if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                            openNewsAction(news, appState, context, true);
-                          } else {
-                            openNewsAction(news, appState, context, false);
-                          }
-                        })),
-                const Spacer(),
-                ElevatedButton(
-                    child: Icon(Icons.close),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    })
-              ])),
-        ]));
   }
 }

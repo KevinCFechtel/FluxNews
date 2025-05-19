@@ -63,6 +63,7 @@ class News {
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
+  bool expanded = false;
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {

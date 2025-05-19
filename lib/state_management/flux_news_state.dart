@@ -81,6 +81,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageScrollHorizontalKey = 'scrollHorizontal';
   static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
   static const String secureStorageUseBlackModeKey = 'useBlackMode';
+  static const String secureStorageTabActionKey = 'tabAction';
+  static const String secureStorageLongPressActionKey = 'LongPressAction';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -96,6 +98,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
   static const String swipeActionOpenMinifluxString = 'openMiniflux';
+  static const String tabActionOpenString = 'open';
+  static const String tabActionExpandString = 'expand';
+  static const String longPressActionMenuString = 'menu';
+  static const String longPressActionExpandString = 'expand';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -173,6 +179,8 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? amountOfCharactersToTruncateLimitSelection;
   KeyValueRecordType? leftSwipeActionSelection;
   KeyValueRecordType? rightSwipeActionSelection;
+  KeyValueRecordType? tabActionSelection;
+  KeyValueRecordType? longPressActionSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
@@ -188,6 +196,8 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
   List<KeyValueRecordType>? recordTypesAmountOfCharactersToTruncateLimit;
   List<KeyValueRecordType>? recordTypesSwipeActions;
+  List<KeyValueRecordType>? recordTypesTabActions;
+  List<KeyValueRecordType>? recordTypesLongPressActions;
   bool activateTruncate = false;
   int truncateMode = 0;
   int charactersToTruncate = 100;
@@ -195,6 +205,8 @@ class FluxNewsState extends ChangeNotifier {
   bool activateSwipeGestures = true;
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
+  String tabAction = FluxNewsState.tabActionOpenString;
+  String longPressAction = FluxNewsState.longPressActionMenuString;
 
   // vars for app bar text
   String appBarText = '';
@@ -449,7 +461,7 @@ class FluxNewsState extends ChangeNotifier {
     if (brightnessModeStoredValue != '') {
       themeState.brightnessMode = brightnessModeStoredValue!;
     }
-    themeState.notifyListeners();
+    themeState.refreshView();
 
     logThis('readThemeConfigValues', 'Finished read config values', LogLevel.INFO);
 
@@ -507,12 +519,23 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
         ];
+        recordTypesTabActions = <KeyValueRecordType>[
+          KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(key: FluxNewsState.tabActionExpandString, value: AppLocalizations.of(context)!.expand),
+        ];
+        recordTypesLongPressActions = <KeyValueRecordType>[
+          KeyValueRecordType(key: FluxNewsState.longPressActionMenuString, value: AppLocalizations.of(context)!.menu),
+          KeyValueRecordType(
+              key: FluxNewsState.longPressActionExpandString, value: AppLocalizations.of(context)!.expand),
+        ];
       } else {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
         recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
         recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
         recordTypesBrightnessMode = <KeyValueRecordType>[];
         recordTypesSwipeActions = <KeyValueRecordType>[];
+        recordTypesTabActions = <KeyValueRecordType>[];
+        recordTypesLongPressActions = <KeyValueRecordType>[];
       }
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -520,6 +543,8 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
       recordTypesBrightnessMode = <KeyValueRecordType>[];
       recordTypesSwipeActions = <KeyValueRecordType>[];
+      recordTypesTabActions = <KeyValueRecordType>[];
+      recordTypesLongPressActions = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -564,6 +589,20 @@ class FluxNewsState extends ChangeNotifier {
       }
     }
 
+    // init the tab action selection with the first value of the above generated maps
+    if (recordTypesTabActions != null) {
+      if (recordTypesTabActions!.isNotEmpty) {
+        tabActionSelection = recordTypesTabActions![0];
+      }
+    }
+
+    // init the right Swipe action selection with the first value of the above generated maps
+    if (recordTypesLongPressActions != null) {
+      if (recordTypesLongPressActions!.isNotEmpty) {
+        longPressActionSelection = recordTypesLongPressActions![0];
+      }
+    }
+
     // init the miniflux server config with null
     minifluxURL = null;
     minifluxAPIKey = null;
@@ -600,7 +639,7 @@ class FluxNewsState extends ChangeNotifier {
               brightnessModeSelection = recordSet;
             }
           }
-          themeState.notifyListeners();
+          themeState.refreshView();
         }
       }
 
@@ -824,6 +863,30 @@ class FluxNewsState extends ChangeNotifier {
             floatingButtonVisible = true;
           } else {
             floatingButtonVisible = false;
+          }
+        }
+      }
+
+      // assign the Tab Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageTabActionKey) {
+        if (value != '') {
+          tabAction = value;
+          for (KeyValueRecordType recordSet in recordTypesTabActions!) {
+            if (value == recordSet.key) {
+              tabActionSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the Tab Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageLongPressActionKey) {
+        if (value != '') {
+          longPressAction = value;
+          for (KeyValueRecordType recordSet in recordTypesLongPressActions!) {
+            if (value == recordSet.key) {
+              longPressActionSelection = recordSet;
+            }
           }
         }
       }

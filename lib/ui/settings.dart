@@ -593,6 +593,82 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.touch_app,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.tabActionSettings,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    DropdownButton<KeyValueRecordType>(
+                      value: appState.tabActionSelection,
+                      elevation: 16,
+                      underline: Container(
+                        height: 2,
+                      ),
+                      alignment: AlignmentDirectional.centerEnd,
+                      onChanged: (KeyValueRecordType? value) {
+                        if (value != null) {
+                          appState.tabAction = value.key;
+                          appState.tabActionSelection = value;
+                          appState.storage.write(key: FluxNewsState.secureStorageTabActionKey, value: value.key);
+                          appState.refreshView();
+                        }
+                      },
+                      items: appState.recordTypesTabActions!
+                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                          .toList(),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.touch_app_outlined,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.longPressActionSettings,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    DropdownButton<KeyValueRecordType>(
+                      value: appState.longPressActionSelection,
+                      elevation: 16,
+                      underline: Container(
+                        height: 2,
+                      ),
+                      alignment: AlignmentDirectional.centerEnd,
+                      onChanged: (KeyValueRecordType? value) {
+                        if (value != null) {
+                          appState.longPressAction = value.key;
+                          appState.longPressActionSelection = value;
+                          appState.storage.write(key: FluxNewsState.secureStorageLongPressActionKey, value: value.key);
+                          appState.refreshView();
+                        }
+                      },
+                      items: appState.recordTypesLongPressActions!
+                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                          .toList(),
+                    ),
+                  ],
+                ),
+                const Divider(),
                 // this list tile contains feed settings
                 // it is clickable and opens the feed settings
                 ListTile(

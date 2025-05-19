@@ -98,5 +98,9 @@
     "scrollHorizontal": "Horizontal scrollen",
     "open": "Öffnen",
     "floatingActionButton": "Nutze einen extra Button um alle Nachrichten als gelesen zu markieren",
-    "useBlackMode": "Aktiviere den Black Mode speziell für OLED Displays"
+    "useBlackMode": "Aktiviere den Black Mode speziell für OLED Displays",
+    "expand": "Erweitern",
+    "menu": "Aktionsmenü",
+    "tabActionSettings": "Wählen Sie die Aktion, die bei einem Tab auf die News ausgeführt werden soll",
+    "longPressActionSettings": "Wählen Sie die Aktion, die bei einem Long Press auf die News ausgeführt werden soll"
 }
