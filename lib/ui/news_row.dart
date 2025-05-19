@@ -404,6 +404,9 @@ class NewsRow extends StatelessWidget {
                                             ? Theme.of(context).textTheme.bodyMedium!.color
                                             : Theme.of(context).disabledColor,
                                       ),
+                                      onTapUrl: (url) async {
+                                        return await openUrlAction(url, context);
+                                      },
                                     )
                                   : Text(
                                       news.getText(appState),
