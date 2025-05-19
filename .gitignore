@@ -36,7 +36,7 @@ migrate_working_dir/
 l10n_errors.txt
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
-**/.cxx/
+.cxx/
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
