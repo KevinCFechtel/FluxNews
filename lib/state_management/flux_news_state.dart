@@ -130,6 +130,7 @@ class FluxNewsState extends ChangeNotifier {
   late Future<List<Feed>> feedSettingsList;
   List<int>? feedIDs;
   String selectedCategoryElementType = 'all';
+  Categories? actualCategoryList;
 
   // vars for main view
   bool syncProcess = false;
@@ -208,6 +209,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for app bar text
   String appBarText = '';
+  int? selectedID;
 
   // vars for detecting device orientation and device type
   bool isTablet = false;

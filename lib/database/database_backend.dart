@@ -386,8 +386,8 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
     }
     List<Feed> feedList = [];
-    List<Map<String, Object?>> queryResult =
-        await appState.db!.rawQuery('SELECT feedID, title, site_url, iconMimeType, newsCount, categoryID FROM feeds');
+    List<Map<String, Object?>> queryResult = await appState.db!
+        .rawQuery('SELECT feedID, title, site_url, iconMimeType, newsCount, categoryID FROM feeds ORDER BY feedID ASC');
     for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
       feed.icon = appState.readFeedIconFile(feed.feedID);
       feedList.add(feed);
@@ -760,7 +760,7 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
     // if they don't exists, the category is deleted and needs also to be deleted locally
     List<Category> existingCategories = [];
     // get a list of the local categories
-    resultSelect = await appState.db!.rawQuery('SELECT * FROM categories');
+    resultSelect = await appState.db!.rawQuery('SELECT * FROM categories ORDER BY categoryID ASC');
     if (resultSelect.isNotEmpty) {
       existingCategories = resultSelect.map((e) => Category.fromMap(e)).toList();
     }
@@ -793,7 +793,8 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
                                                           categoryID 
-                                                      FROM feeds''');
+                                                      FROM feeds
+                                                      ORDER BY feedID ASC''');
     if (resultSelect.isNotEmpty) {
       existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
     }
@@ -834,7 +835,8 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     // get the categories from the database
-    List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('SELECT * FROM categories');
+    List<Map<String, Object?>> queryResult =
+        await appState.db!.rawQuery('SELECT * FROM categories ORDER BY categoryID ASC');
     categoryList = queryResult.map((e) => Category.fromMap(e)).toList();
     for (Category category in categoryList) {
       List<Feed> feedList = [];
@@ -852,7 +854,8 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
                                                           openMinifluxEntry,
                                                           categoryID 
                                                       FROM feeds 
-                                                      WHERE categoryID = ?''', [category.categoryID]);
+                                                      WHERE categoryID = ?
+                                                      ORDER BY feedID ASC''', [category.categoryID]);
       for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
         feed.icon = appState.readFeedIconFile(feed.feedID);
         feedList.add(feed);
@@ -896,7 +899,8 @@ Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
                                                           categoryID 
-                                                      FROM feeds''');
+                                                      FROM feeds
+                                                      ORDER BY feedID ASC''');
     for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
       feed.icon = appState.readFeedIconFile(feed.feedID);
       feedList.add(feed);
@@ -1006,4 +1010,120 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
   if (appState.debugMode) {
     logThis('deleteLocalNewsCache', 'Finished deleting the local news cache', LogLevel.INFO);
   }
+}
+
+// get the next feed id from the database
+Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    logThis('queryNextFeedFromDB', 'Starting querying next feed from DB', LogLevel.INFO);
+  }
+
+  int? nextFeedID;
+  Feed? nextFeed;
+  Feed? actualFeed;
+  List<Feed> feedList = [];
+
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    if (appState.selectedID != null) {
+      List<Map<String, Object?>> queryResult =
+          await appState.db!.rawQuery('SELECT * FROM feeds WHERE feedID = ?', [appState.selectedID]);
+      feedList = queryResult.map((e) => Feed.fromMap(e)).toList();
+      for (Feed feed in feedList) {
+        actualFeed = feed;
+      }
+      if (actualFeed != null) {
+        nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
+                                                                      FROM feeds WHERE feedID > ? AND categoryID = ?''',
+            [actualFeed.feedID, actualFeed.categoryID]));
+        nextFeedID ??= appState.selectedID;
+        // get the categories from the database
+        List<Map<String, Object?>> queryResult =
+            await appState.db!.rawQuery('SELECT * FROM feeds WHERE feedID = ?', [nextFeedID]);
+        feedList = queryResult.map((e) => Feed.fromMap(e)).toList();
+        for (Feed feed in feedList) {
+          nextFeed = feed;
+        }
+        if (nextFeed != null) {
+          if (actualFeed.feedID == nextFeed.feedID) {
+            int? nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery(
+                '''SELECT MIN(categoryID) as categoryID
+                                                                      FROM categories WHERE categoryID > ?''',
+                [actualFeed.categoryID]));
+            if (nextCategoryID != null) {
+              nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
+                                                                      FROM feeds WHERE categoryID = ?''',
+                  [nextCategoryID]));
+              nextFeedID ??= appState.selectedID;
+              // get the categories from the database
+              List<Map<String, Object?>> queryResult =
+                  await appState.db!.rawQuery('SELECT * FROM feeds WHERE feedID = ?', [nextFeedID]);
+              feedList = queryResult.map((e) => Feed.fromMap(e)).toList();
+              for (Feed feed in feedList) {
+                nextFeed = feed;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (appState.debugMode) {
+    logThis('queryNextFeedFromDB', 'Finished querying next feed from DB', LogLevel.INFO);
+  }
+  return nextFeed;
+}
+
+// get the next feed id from the database
+Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    logThis('queryNextCategoryFromDB', 'Starting querying next category from DB', LogLevel.INFO);
+  }
+
+  int? nextCategoryID;
+  Category? nextCategory;
+  List<Category> categoryList = [];
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    if (appState.selectedID != null) {
+      nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(categoryID) as categoryID
+                                                                      FROM categories WHERE categoryID > ?''',
+          [appState.selectedID]));
+      nextCategoryID ??= appState.selectedID;
+      // get the categories from the database
+      List<Map<String, Object?>> queryResult =
+          await appState.db!.rawQuery('SELECT * FROM categories WHERE categoryID = ?', [nextCategoryID]);
+      categoryList = queryResult.map((e) => Category.fromMap(e)).toList();
+      for (Category category in categoryList) {
+        nextCategory = category;
+        List<Feed> feedList = [];
+        queryResult = await appState.db!.rawQuery('''SELECT feedID, 
+                                                          title, 
+                                                          site_url, 
+                                                          iconMimeType, 
+                                                          newsCount,
+                                                          crawler,
+                                                          manualTruncate,
+                                                          preferParagraph,
+                                                          preferAttachmentImage,
+                                                          manualAdaptLightModeToIcon,
+                                                          manualAdaptDarkModeToIcon,
+                                                          openMinifluxEntry,
+                                                          categoryID 
+                                                      FROM feeds 
+                                                      WHERE categoryID = ?
+                                                      ORDER BY feedID ASC''', [category.categoryID]);
+        for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+          feed.icon = appState.readFeedIconFile(feed.feedID);
+          feedList.add(feed);
+        }
+        nextCategory.feeds = feedList;
+      }
+    }
+  }
+
+  if (appState.debugMode) {
+    logThis('queryNextCategoryFromDB', 'Finished querying next category from DB', LogLevel.INFO);
+  }
+  return nextCategory;
 }

@@ -190,37 +190,42 @@ class Settings extends StatelessWidget {
                 ),
                 const Divider(),
                 // this row contains the selection if the black mode is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.settings_display_rounded,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.useBlackMode,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: themeState.useBlackMode,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        themeState.useBlackMode = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
-                        appState.refreshView();
-                        themeState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
+                themeState.brightnessMode != FluxNewsState.brightnessModeLightString
+                    ? Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
+                              Icons.settings_display_rounded,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.useBlackMode,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: themeState.useBlackMode,
+                            onChanged: (bool value) {
+                              String stringValue = FluxNewsState.secureStorageFalseString;
+                              if (value == true) {
+                                stringValue = FluxNewsState.secureStorageTrueString;
+                              }
+                              themeState.useBlackMode = value;
+                              appState.storage
+                                  .write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
+                              appState.refreshView();
+                              themeState.refreshView();
+                            },
+                          ),
+                        ],
+                      )
+                    : SizedBox.shrink(),
+                themeState.brightnessMode != FluxNewsState.brightnessModeLightString
+                    ? const Divider()
+                    : SizedBox.shrink(),
                 // this row contains the selection of the mark as read on scroll over
                 // if it is turned on, a news is marked as read if it is scrolled over
                 Row(

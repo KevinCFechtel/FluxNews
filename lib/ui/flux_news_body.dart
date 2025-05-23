@@ -116,18 +116,32 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
-              onLongPress: () {
+              onLongPress: () async {
                 // mark news as read
                 markNewsAsReadInDB(appState);
-                // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
+                if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                  await queryNextCategoryFromDB(appState, context).then((value) {
+                    if (context.mounted) {
+                      setNextCategory(value, appState, context);
+                    }
+                  });
+                } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                  await queryNextFeedFromDB(appState, context).then((value) {
+                    if (context.mounted) {
+                      setNextFeed(value, appState, context);
+                    }
+                  });
+                } else {
+                  // refresh news list with the all news state
+                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                    appState.jumpToItem(0);
+                  });
 
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
+                  // notify the categories to update the news count
+                  appCounterState.listUpdated = true;
+                  appCounterState.refreshView();
+                  appState.refreshView();
+                }
               },
               child: FloatingActionButton(
                 onPressed: () {
@@ -578,6 +592,53 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
           }),
     ];
   }
+
+  // if the title of the category is clicked,
+  // we want all the news of this category in the news view.
+  Future<void> setNextCategory(Category? category, FluxNewsState appState, BuildContext context) async {
+    if (category != null) {
+      // add the according feeds of this category as a filter
+      appState.feedIDs = category.getFeedIDs();
+      appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
+      // reload the news list with the new filter
+      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+        appState.jumpToItem(0);
+      });
+      // set the category title as app bar title
+      // and update the news count in the app bar, if the function is activated.
+      appState.appBarText = category.title;
+      appState.selectedID = category.categoryID;
+      if (appState.actualCategoryList != null) {
+        appState.actualCategoryList!.renewNewsCount(appState, context);
+      }
+      // update the view after changing the values
+      appState.refreshView();
+    }
+  }
+
+  Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext context) async {
+    if (feed != null) {
+      // if the title of the feed is clicked,
+      // we want all the news of this feed in the news view.
+      // on tab we want to show only the news of this feed in the news list.
+      // set the feed id of the selected feed in the feedIDs filter
+      appState.feedIDs = [feed.feedID];
+      appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+      // reload the news list with the new filter
+      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+        appState.jumpToItem(0);
+      });
+      // set the feed title as app bar title
+      // and update the news count in the app bar, if the function is activated.
+      appState.appBarText = feed.title;
+      appState.selectedID = feed.feedID;
+      if (appState.actualCategoryList != null) {
+        appState.actualCategoryList!.renewNewsCount(appState, context);
+      }
+      // update the view after changing the values
+      appState.refreshView();
+    }
+  }
 }
 
 class FluxNewsBodyList extends StatelessWidget {
@@ -864,6 +925,7 @@ class CategoryList extends StatelessWidget {
               if (snapshot.hasError) {
                 return const SizedBox.shrink();
               } else {
+                appState.actualCategoryList = snapshot.data;
                 return snapshot.data != null
                     ? snapshot.data!.categories.isEmpty
                         ? const SizedBox.shrink()
@@ -964,6 +1026,7 @@ class CategoryList extends StatelessWidget {
     // set the category title as app bar title
     // and update the news count in the app bar, if the function is activated.
     appState.appBarText = category.title;
+    appState.selectedID = category.categoryID;
     categories.renewNewsCount(appState, context);
     // update the view after changing the values
     appState.refreshView();
@@ -988,6 +1051,7 @@ class CategoryList extends StatelessWidget {
     // set the "All News" title as app bar title
     // and update the news count in the app bar, if the function is activated.
     appState.appBarText = AppLocalizations.of(context)!.allNews;
+    appState.selectedID = null;
     if (context.mounted) {
       renewAllNewsCount(appState, context);
     }
@@ -1017,6 +1081,7 @@ class CategoryList extends StatelessWidget {
     // set the "Bookmarked" title as app bar title
     // and update the news count in the app bar, if the function is activated.
     appState.appBarText = AppLocalizations.of(context)!.bookmarked;
+    appState.selectedID = -1;
     if (context.mounted) {
       updateStarredCounter(appState, context);
     }
@@ -1080,6 +1145,7 @@ class FeedTile extends StatelessWidget {
         // set the feed title as app bar title
         // and update the news count in the app bar, if the function is activated.
         appState.appBarText = feed.title;
+        appState.selectedID = feed.feedID;
         categories.renewNewsCount(appState, context);
         // update the view after changing the values
         appState.refreshView();

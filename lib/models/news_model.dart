@@ -499,6 +499,7 @@ class Feed {
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
+  int? categoryID;
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -542,7 +543,8 @@ class Feed {
         preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
-        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
+        categoryID = res['categoryID'];
 
   // define the method to get the feed icon as a widget
   // the icon could be a svg or a png image
