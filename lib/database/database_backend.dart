@@ -1059,9 +1059,16 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
         actualFeed = feed;
       }
       if (actualFeed != null) {
-        nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
-                                                                      FROM feeds WHERE feedID > ? AND categoryID = ?''',
-            [actualFeed.feedID, actualFeed.categoryID]));
+        nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feeds.feedID) as feedID
+                                                                      FROM feeds
+                                                                      LEFT OUTER JOIN news ON feeds.feedID = news.feedID
+                                                                      WHERE feeds.feedID > ? 
+                                                                        AND feeds.categoryID = ?
+                                                                        AND (SELECT COUNT(news.newsID)
+                                                                            FROM news 
+                                                                            WHERE news.feedID = feeds.feedID 
+                                                                              AND news.status LIKE ?) > 0''',
+            [actualFeed.feedID, actualFeed.categoryID, FluxNewsState.unreadNewsStatus]));
         nextFeedID ??= appState.selectedID;
         // get the categories from the database
         List<Map<String, Object?>> queryResult =
@@ -1073,9 +1080,15 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
         if (nextFeed != null) {
           if (actualFeed.feedID == nextFeed.feedID) {
             int? nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery(
-                '''SELECT MIN(categoryID) as categoryID
-                                                                      FROM categories WHERE categoryID > ?''',
-                [actualFeed.categoryID]));
+                '''SELECT MIN(categories.categoryID) as categoryID
+                                                                      FROM categories
+                                                                      LEFT OUTER JOIN feeds ON categories.categoryID = feeds.categoryID
+                                                                      WHERE categories.categoryID > ?
+                                                                        AND (SELECT COUNT(news.newsID)
+                                                                            FROM news 
+                                                                            WHERE news.feedID = feeds.feedID 
+                                                                              AND news.status LIKE ?) > 0''',
+                [actualFeed.categoryID, FluxNewsState.unreadNewsStatus]));
             if (nextCategoryID != null) {
               nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
                                                                       FROM feeds WHERE categoryID = ?''',
@@ -1112,9 +1125,16 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     if (appState.selectedID != null) {
-      nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(categoryID) as categoryID
-                                                                      FROM categories WHERE categoryID > ?''',
-          [appState.selectedID]));
+      nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery(
+          '''SELECT MIN(categories.categoryID) as categoryID
+                                                                      FROM categories
+                                                                      LEFT OUTER JOIN feeds ON categories.categoryID = feeds.categoryID
+                                                                      WHERE categories.categoryID > ?
+                                                                        AND (SELECT COUNT(news.newsID)
+                                                                            FROM news 
+                                                                            WHERE news.feedID = feeds.feedID 
+                                                                              AND news.status LIKE ?) > 0''',
+          [appState.selectedID, FluxNewsState.unreadNewsStatus]));
       nextCategoryID ??= appState.selectedID;
       // get the categories from the database
       List<Map<String, Object?>> queryResult =
