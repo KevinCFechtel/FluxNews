@@ -7,6 +7,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
@@ -25,6 +26,7 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
 
     return FluxNewsSettingsStatefulWrapper(onInit: () {
       initConfig(context);
@@ -32,6 +34,7 @@ class Settings extends StatelessWidget {
       appState.orientation = orientation;
       return Scaffold(
         appBar: AppBar(
+          forceMaterialTransparency: themeState.useBlackMode ? true : false,
           // set the title of the settings page to the localized settings string
           title: Text(AppLocalizations.of(context)!.settings, style: Theme.of(context).textTheme.titleLarge),
         ),
@@ -86,7 +89,7 @@ class Settings extends StatelessWidget {
                         ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
                         : const EdgeInsets.fromLTRB(0, 0, 0, 0),
                     child: Text(
-                      '${AppLocalizations.of(context)!.apiKey}: ${appState.minifluxAPIKey ?? ''}',
+                      '${AppLocalizations.of(context)!.apiKey}: ${appState.minifluxAPIKey != null ? '******************' : ''}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
@@ -171,10 +174,11 @@ class Settings extends StatelessWidget {
                       alignment: AlignmentDirectional.centerEnd,
                       onChanged: (KeyValueRecordType? value) {
                         if (value != null) {
-                          appState.brightnessMode = value.key;
+                          themeState.brightnessMode = value.key;
                           appState.brightnessModeSelection = value;
                           appState.storage.write(key: FluxNewsState.secureStorageBrightnessModeKey, value: value.key);
                           appState.refreshView();
+                          themeState.refreshView();
                         }
                       },
                       items: appState.recordTypesBrightnessMode!
@@ -185,6 +189,43 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // this row contains the selection if the black mode is turned on
+                themeState.brightnessMode != FluxNewsState.brightnessModeLightString
+                    ? Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
+                              Icons.settings_display_rounded,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.useBlackMode,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: themeState.useBlackMode,
+                            onChanged: (bool value) {
+                              String stringValue = FluxNewsState.secureStorageFalseString;
+                              if (value == true) {
+                                stringValue = FluxNewsState.secureStorageTrueString;
+                              }
+                              themeState.useBlackMode = value;
+                              appState.storage
+                                  .write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
+                              appState.refreshView();
+                              themeState.refreshView();
+                            },
+                          ),
+                        ],
+                      )
+                    : SizedBox.shrink(),
+                themeState.brightnessMode != FluxNewsState.brightnessModeLightString
+                    ? const Divider()
+                    : SizedBox.shrink(),
                 // this row contains the selection of the mark as read on scroll over
                 // if it is turned on, a news is marked as read if it is scrolled over
                 Row(
@@ -243,6 +284,38 @@ class Settings extends StatelessWidget {
                         }
                         appState.syncOnStart = value;
                         appState.storage.write(key: FluxNewsState.secureStorageSyncOnStartKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection if only feeds and categories with new news are shown
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.numbers,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.showOnlyFeedCategoriesWithNewNews,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.showOnlyFeedCategoriesWithNewNews,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.showOnlyFeedCategoriesWithNewNews = value;
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageShowOnlyFeedCategoriesWithNewNeKey, value: stringValue);
                         appState.refreshView();
                       },
                     ),
@@ -308,6 +381,70 @@ class Settings extends StatelessWidget {
                         appState.showFeedIcons = value;
                         appState.storage
                             .write(key: FluxNewsState.secureStorageShowFeedIconsTextKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection if the headline is shown on top of the news
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.vertical_align_top,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.showHeadlineOnTop,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.showHeadlineOnTop,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.showHeadlineOnTop = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageShowHeadlineOnTopKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                // this row contains the selection if the button to mark as read is turned on
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.check_circle_outline,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.floatingActionButton,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.floatingButtonVisible,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.floatingButtonVisible = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
                         appState.refreshView();
                       },
                     ),
@@ -489,6 +626,84 @@ class Settings extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                const Divider(),
+
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.touch_app,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.tabActionSettings,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    DropdownButton<KeyValueRecordType>(
+                      value: appState.tabActionSelection,
+                      elevation: 16,
+                      underline: Container(
+                        height: 2,
+                      ),
+                      alignment: AlignmentDirectional.centerEnd,
+                      onChanged: (KeyValueRecordType? value) {
+                        if (value != null) {
+                          appState.tabAction = value.key;
+                          appState.tabActionSelection = value;
+                          appState.storage.write(key: FluxNewsState.secureStorageTabActionKey, value: value.key);
+                          appState.refreshView();
+                        }
+                      },
+                      items: appState.recordTypesTabActions!
+                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                          .toList(),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.touch_app_outlined,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.longPressActionSettings,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    DropdownButton<KeyValueRecordType>(
+                      value: appState.longPressActionSelection,
+                      elevation: 16,
+                      underline: Container(
+                        height: 2,
+                      ),
+                      alignment: AlignmentDirectional.centerEnd,
+                      onChanged: (KeyValueRecordType? value) {
+                        if (value != null) {
+                          appState.longPressAction = value.key;
+                          appState.longPressActionSelection = value;
+                          appState.storage.write(key: FluxNewsState.secureStorageLongPressActionKey, value: value.key);
+                          appState.refreshView();
+                        }
+                      },
+                      items: appState.recordTypesLongPressActions!
+                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                          .toList(),
+                    ),
+                  ],
+                ),
                 const Divider(),
                 // this row contains the selection if swiping is enabled
                 Row(
@@ -610,6 +825,28 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+
+                // this list tile contains feed settings
+                // it is clickable and opens the feed settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.feed,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.feedSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
+                  },
+                ),
+                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
@@ -807,27 +1044,6 @@ class Settings extends StatelessWidget {
                     : const SizedBox.shrink(),
                 appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
 
-                // this list tile contains feed settings
-                // it is clickable and opens the feed settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.feed,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.feedSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
-                  },
-                ),
-                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(
@@ -958,6 +1174,7 @@ class Settings extends StatelessWidget {
     await appState.readConfigValues();
     if (context.mounted) {
       appState.readConfig(context);
+      appState.readThemeConfigValues(context);
     }
     appState.db = await appState.initializeDB();
     appState.refreshView();

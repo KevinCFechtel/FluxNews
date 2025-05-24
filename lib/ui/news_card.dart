@@ -6,6 +6,8 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/news_items.dart';
 import 'package:provider/provider.dart';
 
 // here we define the appearance of the news cards
@@ -23,16 +25,17 @@ class NewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     List<Widget> rightSwipeActions = [];
     List<Widget> leftSwipeActions = [];
     Widget bookmarkSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95),
           child: Column(
@@ -60,11 +63,11 @@ class NewsCard extends StatelessWidget {
     Widget readSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 172)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 145),
           child: Column(
@@ -94,11 +97,11 @@ class NewsCard extends StatelessWidget {
     Widget saveSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255),
           child: Column(
@@ -122,11 +125,11 @@ class NewsCard extends StatelessWidget {
     Widget openMinifluxAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245),
           child: Column(
@@ -245,10 +248,19 @@ class NewsCard extends StatelessWidget {
             child: InkWell(
               splashFactory: NoSplash.splashFactory,
               onTap: () async {
-                if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                  openNewsAction(news, appState, context, true);
+                if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+                    openNewsAction(news, appState, context, true);
+                  } else {
+                    openNewsAction(news, appState, context, false);
+                  }
                 } else {
-                  openNewsAction(news, appState, context, false);
+                  if (news.expanded) {
+                    news.expanded = false;
+                  } else {
+                    news.expanded = true;
+                  }
+                  appState.refreshView();
                 }
               },
               // on tap get the actual position of the list on tab
@@ -257,10 +269,20 @@ class NewsCard extends StatelessWidget {
                 getTapPosition(details, context, appState);
               },
               onLongPress: () {
-                showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
+                  showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                } else {
+                  if (news.expanded) {
+                    news.expanded = false;
+                  } else {
+                    news.expanded = true;
+                  }
+                  appState.refreshView();
+                }
               },
               child: Column(
                 children: [
+                  appState.showHeadlineOnTop ? NewsTopHeadline(news: news) : SizedBox.shrink(),
                   // load the news image if present
                   news.getImageURL() != FluxNewsState.noImageUrlString
                       ?
@@ -279,100 +301,98 @@ class NewsCard extends StatelessWidget {
                   // the title and additional info's are presented within a ListTile
                   // the Opacity decide between read and unread news
                   ListTile(
-                      title: Text(
-                        news.title,
-                        style: news.status == FluxNewsState.unreadNewsStatus
-                            ? Theme.of(context).textTheme.titleLarge
-                            : Theme.of(context).textTheme.titleLarge!.copyWith(color: Theme.of(context).disabledColor),
-                      ),
-                      subtitle: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: 2.0,
-                            ),
-                            child: Row(
-                              children: [
-                                news.status == FluxNewsState.unreadNewsStatus
-                                    ? const Padding(
-                                        padding: EdgeInsets.only(right: 15.0),
-                                        child: SizedBox(
-                                            width: 15,
-                                            height: 35,
-                                            child: Icon(
-                                              Icons.fiber_new,
-                                            )))
-                                    : Padding(
-                                        padding: const EdgeInsets.only(right: 15.0),
-                                        child: SizedBox(
-                                            width: 15,
-                                            height: 35,
-                                            child: Icon(
-                                              Icons.check,
-                                              color: Theme.of(context).disabledColor,
-                                            ))),
-                                appState.showFeedIcons
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(right: 5.0),
-                                        child: news.getFeedIcon(16.0, context))
-                                    : const SizedBox.shrink(),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 0.0),
-                                    child: Text(
-                                      news.feedTitle,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: news.status == FluxNewsState.unreadNewsStatus
-                                          ? Theme.of(context).textTheme.bodyMedium
-                                          : Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium!
-                                              .copyWith(color: Theme.of(context).disabledColor),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: Text(
-                                    context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
-                                    style: news.status == FluxNewsState.unreadNewsStatus
-                                        ? Theme.of(context).textTheme.bodyMedium
-                                        : Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(color: Theme.of(context).disabledColor),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 40,
-                                  height: 35,
-                                  child: news.starred
-                                      ? Icon(
-                                          Icons.star,
-                                          color: news.status == FluxNewsState.unreadNewsStatus
-                                              ? Theme.of(context).primaryIconTheme.color
-                                              : Theme.of(context).disabledColor,
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // here is the news text, the Opacity decide between read and unread
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2.0, bottom: 10),
-                            child: Text(
-                              news.getText(appState),
+                      title: !appState.showHeadlineOnTop
+                          ? Text(
+                              news.title,
                               style: news.status == FluxNewsState.unreadNewsStatus
-                                  ? Theme.of(context).textTheme.bodyMedium
+                                  ? Theme.of(context).textTheme.titleLarge
                                   : Theme.of(context)
                                       .textTheme
-                                      .bodyMedium!
+                                      .titleLarge!
                                       .copyWith(color: Theme.of(context).disabledColor),
-                            ),
+                            )
+                          : const SizedBox.shrink(),
+                      subtitle: Column(
+                        children: [
+                          !appState.showHeadlineOnTop
+                              ? Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 2.0,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      news.status == FluxNewsState.unreadNewsStatus
+                                          ? const Padding(
+                                              padding: EdgeInsets.only(right: 15.0),
+                                              child: SizedBox(
+                                                  width: 15,
+                                                  height: 35,
+                                                  child: Icon(
+                                                    Icons.fiber_new,
+                                                  )))
+                                          : Padding(
+                                              padding: const EdgeInsets.only(right: 15.0),
+                                              child: SizedBox(
+                                                  width: 15,
+                                                  height: 35,
+                                                  child: Icon(
+                                                    Icons.check,
+                                                    color: Theme.of(context).disabledColor,
+                                                  ))),
+                                      appState.showFeedIcons
+                                          ? Padding(
+                                              padding: const EdgeInsets.only(right: 5.0),
+                                              child: news.getFeedIcon(16.0, context))
+                                          : const SizedBox.shrink(),
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 0.0),
+                                          child: Text(
+                                            news.feedTitle,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: news.status == FluxNewsState.unreadNewsStatus
+                                                ? Theme.of(context).textTheme.bodyMedium
+                                                : Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium!
+                                                    .copyWith(color: Theme.of(context).disabledColor),
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 8.0),
+                                        child: Text(
+                                          context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
+                                          style: news.status == FluxNewsState.unreadNewsStatus
+                                              ? Theme.of(context).textTheme.bodyMedium
+                                              : Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium!
+                                                  .copyWith(color: Theme.of(context).disabledColor),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 40,
+                                        height: 35,
+                                        child: news.starred
+                                            ? Icon(
+                                                Icons.star,
+                                                color: news.status == FluxNewsState.unreadNewsStatus
+                                                    ? Theme.of(context).primaryIconTheme.color
+                                                    : Theme.of(context).disabledColor,
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                          // here is the news text, the Opacity decide between read and unread
+                          NewsContent(
+                            news: news,
                           ),
                         ],
-                      )),
+                      ))
                 ],
               ),
             ),

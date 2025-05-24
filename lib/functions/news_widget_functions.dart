@@ -383,3 +383,28 @@ Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext cont
     );
   }
 }
+
+Future<bool> openUrlAction(String url, BuildContext context) async {
+  if (Platform.isAndroid) {
+    AndroidUrlLauncher.launchUrl(context, url);
+  } else if (Platform.isIOS) {
+    // catch exception if no app is installed to handle the url
+    final bool nativeAppLaunchSucceeded = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalNonBrowserApplication,
+    );
+    //if exception is caught, open the app in web-view
+    if (!nativeAppLaunchSucceeded) {
+      await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.inAppWebView,
+      );
+    }
+  } else if (Platform.isMacOS) {
+    await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+  return true;
+}

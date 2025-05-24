@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,8 @@ class News {
       this.preferAttachmentImage,
       this.manualAdaptLightModeToIcon,
       this.manualAdaptDarkModeToIcon,
-      this.openMinifluxEntry});
+      this.openMinifluxEntry,
+      this.expandedWithFulltext});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -62,6 +64,8 @@ class News {
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
+  bool? expandedWithFulltext = false;
+  bool expanded = false;
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -130,7 +134,8 @@ class News {
         preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
-        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
+        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false;
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -217,6 +222,19 @@ class News {
     return text;
   }
 
+  // define the method to extract the text from the html content
+  // the text is first searched in the raw text
+  // if no text is found the empty string is returned
+  // if there is no raw text the text is searched in the p tags
+  String getFullText(FluxNewsState appState) {
+    final document = parse(content);
+    String? text = '';
+    text = parse(document.body?.text).documentElement?.text;
+    text ??= '';
+
+    return text;
+  }
+
   Attachment getFirstImageAttachment() {
     Attachment imageAttachment = Attachment(attachmentID: -1, newsID: -1, attachmentURL: "", attachmentMimeType: "");
 
@@ -288,9 +306,9 @@ class News {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
+    } else if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     manualAdaptLightModeToIcon ??= false;
@@ -480,7 +498,8 @@ class Feed {
       this.preferAttachmentImage,
       this.manualAdaptLightModeToIcon,
       this.manualAdaptDarkModeToIcon,
-      this.openMinifluxEntry});
+      this.openMinifluxEntry,
+      this.expandedWithFulltext});
 
   // define the properties
   int feedID = 0;
@@ -497,6 +516,8 @@ class Feed {
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
+  bool? expandedWithFulltext = false;
+  int? categoryID;
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -523,7 +544,8 @@ class Feed {
       'preferAttachmentImage': preferAttachmentImage,
       'manualAdaptLightModeToIcon': manualAdaptLightModeToIcon,
       'manualAdaptDarkModeToIcon': manualAdaptDarkModeToIcon,
-      'openMinifluxEntry': openMinifluxEntry
+      'openMinifluxEntry': openMinifluxEntry,
+      'expandedWithFulltext': expandedWithFulltext,
     };
   }
 
@@ -540,7 +562,9 @@ class Feed {
         preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
-        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
+        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false,
+        categoryID = res['categoryID'];
 
   // define the method to get the feed icon as a widget
   // the icon could be a svg or a png image
@@ -550,9 +574,9 @@ class Feed {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
+    } else if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
       darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     manualAdaptLightModeToIcon ??= false;

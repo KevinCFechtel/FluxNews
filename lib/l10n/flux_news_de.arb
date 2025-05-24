@@ -94,5 +94,16 @@
     "manualAdaptLightModeToIcon": "Passe ein durchsichtiges Feed Icon manuell an den Light Mode an",
     "manualAdaptDarkModeToIcon": "Passe  ein durchsichtiges Feed Icon manuell an den Dark Mode an",
     "openMinifluxEntry": "Öffne die Nachricht im Miniflux Webinterface",
-    "openMinifluxShort": "Öffnen in Miniflux"
+    "openMinifluxShort": "Öffnen in Miniflux",
+    "scrollHorizontal": "Horizontal scrollen",
+    "open": "Öffnen",
+    "floatingActionButton": "Nutze einen extra Button um alle Nachrichten als gelesen zu markieren",
+    "useBlackMode": "Aktiviere den Black Mode speziell für OLED Displays",
+    "expand": "Erweitern",
+    "menu": "Aktionsmenü",
+    "tabActionSettings": "Wählen Sie die Aktion, die bei einem Tab auf die News ausgeführt werden soll",
+    "longPressActionSettings": "Wählen Sie die Aktion, die bei einem Long Press auf die News ausgeführt werden soll",
+    "expandedWithFulltext": "Zeige nur Text statt HTML bei der Erweiterung des News Inhalts",
+    "showHeadlineOnTop": "Zeige die Überschrift der News über dem Bild",
+    "showOnlyFeedCategoriesWithNewNews": "Zeige nur die Kategorien und Feeds an, die neue Nachrichten besitzen"
 }

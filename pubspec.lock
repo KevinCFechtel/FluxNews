@@ -437,6 +437,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_widget_from_html_core:
+    dependency: "direct main"
+    description:
+      name: flutter_widget_from_html_core
+      sha256: f77ea1aa1ba29a38fcce04483f44f12382f541b9e8c2150df37166c23bbbd30f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.16.0"
   font_awesome_flutter:
     dependency: "direct main"
     description:
@@ -809,10 +817,10 @@ packages:
     dependency: "direct main"
     description:
       name: scrollview_observer
-      sha256: "437c930927c5a3240ed2d40398f99d96eaca58f861817ff44f6d0c60113bcf9d"
+      sha256: "174d4efe7b79459a07662175c4db42c9862dcf78d3978e6e9c2d6c0d8137f4ca"
       url: "https://pub.dev"
     source: hosted
-    version: "1.26.0"
+    version: "1.26.1"
   share_plus:
     dependency: "direct main"
     description:

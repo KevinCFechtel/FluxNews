@@ -6,6 +6,8 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/news_items.dart';
 import 'package:provider/provider.dart';
 
 // here we define the appearance of the news cards
@@ -23,16 +25,17 @@ class NewsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     List<Widget> rightSwipeActions = [];
     List<Widget> leftSwipeActions = [];
     Widget bookmarkSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95),
           child: Column(
@@ -60,11 +63,11 @@ class NewsRow extends StatelessWidget {
     Widget readSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 172)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 145),
           child: Column(
@@ -94,11 +97,11 @@ class NewsRow extends StatelessWidget {
     Widget saveSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255),
           child: Column(
@@ -122,11 +125,11 @@ class NewsRow extends StatelessWidget {
     Widget openMinifluxAction = Expanded(
       child: InkWell(
         child: Card(
-          color: appState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245)
-              : appState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245),
           child: Column(
@@ -245,10 +248,19 @@ class NewsRow extends StatelessWidget {
               child: InkWell(
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
-                  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                    openNewsAction(news, appState, context, true);
+                  if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                    if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+                      openNewsAction(news, appState, context, true);
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else {
-                    openNewsAction(news, appState, context, false);
+                    if (news.expanded) {
+                      news.expanded = false;
+                    } else {
+                      news.expanded = true;
+                    }
+                    appState.refreshView();
                   }
                 },
                 // on tap get the actual position of the list on tab
@@ -257,7 +269,16 @@ class NewsRow extends StatelessWidget {
                   getTapPosition(details, context, appState);
                 },
                 onLongPress: () {
-                  showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                  if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
+                    showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                  } else {
+                    if (news.expanded) {
+                      news.expanded = false;
+                    } else {
+                      news.expanded = true;
+                    }
+                    appState.refreshView();
+                  }
                 },
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,17 +392,8 @@ class NewsRow extends StatelessWidget {
                               ),
                             ),
                             // here is the news text, the Opacity decide between read and unread
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2.0, bottom: 10),
-                              child: Text(
-                                news.getText(appState),
-                                style: news.status == FluxNewsState.unreadNewsStatus
-                                    ? Theme.of(context).textTheme.bodyMedium
-                                    : Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(color: Theme.of(context).disabledColor),
-                              ),
+                            NewsContent(
+                              news: news,
                             ),
                           ],
                         ),
