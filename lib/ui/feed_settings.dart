@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/feed_settings_list.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +21,7 @@ class FeedSettings extends StatelessWidget {
 
     return FluxNewsFeedSettingsStatefulWrapper(onInit: () {
       initConfig(context, appState);
-      appState.feedSettingsList = queryFeedsFromDB(appState, context);
+      appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
     }, child: OrientationBuilder(builder: (context, orientation) {
       appState.orientation = orientation;
       return feedSettingsLayout(context, appState);
@@ -56,8 +59,55 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    FluxNewsState appState = context.watch<FluxNewsState>();
     // return the body of the feed settings
-    return const FeedSettingsList();
+    return Column(children: [
+      TextField(
+        controller: appState.searchController,
+        style: Theme.of(context).textTheme.bodyLarge,
+        decoration: InputDecoration(
+          hintText: AppLocalizations.of(context)!.searchHint,
+          hintStyle: Theme.of(context).textTheme.bodyLarge,
+          border: UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
+          suffixIcon: IconButton(
+            onPressed: () {
+              appState.searchController.clear();
+              appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
+              appState.refreshView();
+            },
+            icon: const Icon(Icons.clear),
+          ),
+        ),
+
+        // on change of the search text field, fetch the news list
+        onChanged: (value) async {
+          if (value != '') {
+            // fetch the news list from the backend with the search text
+            Future<List<Feed>> searchFeedListResult =
+                queryFeedsFromDB(appState, context, value).onError((error, stackTrace) {
+              logThis('fetchSearchedNews', 'Caught an error in fetchSearchedNews function! : ${error.toString()}',
+                  LogLevel.ERROR);
+              if (context.mounted) {
+                if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+                  appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+                  appState.newError = true;
+                  appState.refreshView();
+                }
+              }
+              return [];
+            });
+            // set the state with the fetched news list
+            appState.feedSettingsList = searchFeedListResult;
+            appState.refreshView();
+          } else {
+            // if search text is empty, set the state with an empty list
+            appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
+            appState.refreshView();
+          }
+        },
+      ),
+      Expanded(child: const FeedSettingsList())
+    ]);
   }
 }
 

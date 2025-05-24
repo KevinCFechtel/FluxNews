@@ -83,6 +83,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageTabActionKey = 'tabAction';
   static const String secureStorageLongPressActionKey = 'LongPressAction';
   static const String secureStorageShowHeadlineOnTopKey = 'showHeadlineOnTop';
+  static const String secureStorageShowOnlyFeedCategoriesWithNewNeKey = 'showOnlyFeedCategoriesWithNewNews';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -132,6 +133,7 @@ class FluxNewsState extends ChangeNotifier {
   List<int>? feedIDs;
   String selectedCategoryElementType = 'all';
   Categories? actualCategoryList;
+  bool showOnlyFeedCategoriesWithNewNews = true;
 
   // vars for main view
   bool syncProcess = false;
@@ -987,6 +989,17 @@ class FluxNewsState extends ChangeNotifier {
             showHeadlineOnTop = true;
           } else {
             showHeadlineOnTop = false;
+          }
+        }
+      }
+
+      // assign the show headline on top selection from persistent saved config
+      if (key == FluxNewsState.secureStorageShowOnlyFeedCategoriesWithNewNeKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            showOnlyFeedCategoriesWithNewNews = true;
+          } else {
+            showOnlyFeedCategoriesWithNewNews = false;
           }
         }
       }

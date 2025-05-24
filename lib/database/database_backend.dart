@@ -902,7 +902,7 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
 }
 
 // get the categories from the database and calculate the news count of this categories
-Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context) async {
+Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context, String searchString) async {
   if (appState.debugMode) {
     logThis('queryFeedsFromDB', 'Starting querying feeds from DB', LogLevel.INFO);
   }
@@ -925,7 +925,8 @@ Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context
                                                           expandedWithFulltext,
                                                           categoryID 
                                                       FROM feeds
-                                                      ORDER BY feedID ASC''');
+                                                      WHERE title LIKE ?
+                                                      ORDER BY UPPER(title) ASC''', ['%$searchString%']);
     for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
       feed.icon = appState.readFeedIconFile(feed.feedID);
       feedList.add(feed);

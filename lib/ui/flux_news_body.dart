@@ -295,7 +295,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             child: Column(
               children: [
                 Padding(
-                    padding: const EdgeInsets.only(top: 75.0),
+                    padding: const EdgeInsets.only(top: 75.0, bottom: 40.0),
                     child: Row(children: [
                       const Padding(
                           padding: EdgeInsets.only(left: 30.0),
@@ -309,23 +309,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                             style: Theme.of(context).textTheme.headlineMedium,
                           ))
                     ])),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: ListTile(
-                    title: Text(
-                      AppLocalizations.of(context)!.minifluxServer,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    subtitle: appState.minifluxURL == null
-                        ? const SizedBox.shrink()
-                        : Text(
-                            appState.minifluxURL!,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            softWrap: true,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                  ),
-                ),
                 const CategoryList(),
               ],
             )));
@@ -949,9 +932,6 @@ class CategoryList extends StatelessWidget {
                                 allNewsOnClick(appState, context);
                               },
                             ),
-                            // we iterate over the category list
-                            for (Category category in snapshot.data!.categories)
-                              showCategory(category, snapshot.data!, context),
                             // we add a static category of "Bookmarked" to the list of categories
                             ListTile(
                               leading: const Icon(
@@ -969,6 +949,13 @@ class CategoryList extends StatelessWidget {
                                 bookmarkedOnClick(appState, context);
                               },
                             ),
+                            // we iterate over the category list
+                            for (Category category in snapshot.data!.categories)
+                              appState.showOnlyFeedCategoriesWithNewNews
+                                  ? category.newsCount > 0
+                                      ? showCategory(category, snapshot.data!, context)
+                                      : const SizedBox.shrink()
+                                  : showCategory(category, snapshot.data!, context),
                           ])
                     : const SizedBox.shrink();
               }
@@ -1111,52 +1098,101 @@ class FeedTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    return ListTile(
-      title: Padding(
-        padding: const EdgeInsets.only(left: 8.0),
-        child: Row(children: [
-          // if the option is enabled, show the feed icon
-          appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
-          Expanded(
-              child: Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: Text(
-              feed.title,
-              style: Theme.of(context).textTheme.labelLarge,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ))
-        ]),
-      ),
-      // show the news count of this feed
-      trailing: Text(
-        '${feed.newsCount}',
-        style: Theme.of(context).textTheme.labelLarge,
-      ),
-      onTap: () {
-        // on tab we want to show only the news of this feed in the news list.
-        // set the feed id of the selected feed in the feedIDs filter
-        appState.feedIDs = [feed.feedID];
-        appState.selectedCategoryElementType = FluxNewsState.feedElementType;
-        // reload the news list with the new filter
-        appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-          appState.jumpToItem(0);
-        });
-        // set the feed title as app bar title
-        // and update the news count in the app bar, if the function is activated.
-        appState.appBarText = feed.title;
-        appState.selectedID = feed.feedID;
-        categories.renewNewsCount(appState, context);
-        // update the view after changing the values
-        appState.refreshView();
+    return appState.showOnlyFeedCategoriesWithNewNews
+        ? feed.newsCount > 0
+            ? ListTile(
+                title: Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Row(children: [
+                    // if the option is enabled, show the feed icon
+                    appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.only(left: 10.0),
+                      child: Text(
+                        feed.title,
+                        style: Theme.of(context).textTheme.labelLarge,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ))
+                  ]),
+                ),
+                // show the news count of this feed
+                trailing: Text(
+                  '${feed.newsCount}',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                onTap: () {
+                  // on tab we want to show only the news of this feed in the news list.
+                  // set the feed id of the selected feed in the feedIDs filter
+                  appState.feedIDs = [feed.feedID];
+                  appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+                  // reload the news list with the new filter
+                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                    appState.jumpToItem(0);
+                  });
+                  // set the feed title as app bar title
+                  // and update the news count in the app bar, if the function is activated.
+                  appState.appBarText = feed.title;
+                  appState.selectedID = feed.feedID;
+                  categories.renewNewsCount(appState, context);
+                  // update the view after changing the values
+                  appState.refreshView();
 
-        // if the device is a smartphone, close the drawer after selecting a category or feed
-        // if the device is a tablet, no drawer is used.
-        if (!appState.isTablet) {
-          Navigator.pop(context);
-        }
-      },
-    );
+                  // if the device is a smartphone, close the drawer after selecting a category or feed
+                  // if the device is a tablet, no drawer is used.
+                  if (!appState.isTablet) {
+                    Navigator.pop(context);
+                  }
+                },
+              )
+            : const SizedBox.shrink()
+        : ListTile(
+            title: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Row(children: [
+                // if the option is enabled, show the feed icon
+                appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
+                Expanded(
+                    child: Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: Text(
+                    feed.title,
+                    style: Theme.of(context).textTheme.labelLarge,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ))
+              ]),
+            ),
+            // show the news count of this feed
+            trailing: Text(
+              '${feed.newsCount}',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            onTap: () {
+              // on tab we want to show only the news of this feed in the news list.
+              // set the feed id of the selected feed in the feedIDs filter
+              appState.feedIDs = [feed.feedID];
+              appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+              // reload the news list with the new filter
+              appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.jumpToItem(0);
+              });
+              // set the feed title as app bar title
+              // and update the news count in the app bar, if the function is activated.
+              appState.appBarText = feed.title;
+              appState.selectedID = feed.feedID;
+              categories.renewNewsCount(appState, context);
+              // update the view after changing the values
+              appState.refreshView();
+
+              // if the device is a smartphone, close the drawer after selecting a category or feed
+              // if the device is a tablet, no drawer is used.
+              if (!appState.isTablet) {
+                Navigator.pop(context);
+              }
+            },
+          );
   }
 }
 
