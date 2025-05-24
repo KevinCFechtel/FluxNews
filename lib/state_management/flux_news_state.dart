@@ -468,11 +468,11 @@ class FluxNewsState extends ChangeNotifier {
                         newsCount,
                         crawler,
                         manualTruncate,
-                        0 AS preferParagraph,
-                        0 AS preferAttachmentImage,
-                        0 AS manualAdaptLightModeToIcon,
-                        0 AS manualAdaptDarkModeToIcon,
-                        0 AS openMinifluxEntry,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
                         0 AS expandedWithFulltext,
                         categoryID  
                   from feeds;''');
