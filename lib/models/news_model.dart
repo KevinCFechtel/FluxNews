@@ -36,7 +36,8 @@ class News {
       this.preferAttachmentImage,
       this.manualAdaptLightModeToIcon,
       this.manualAdaptDarkModeToIcon,
-      this.openMinifluxEntry});
+      this.openMinifluxEntry,
+      this.expandedWithFulltext});
   // define the properties
   int newsID = 0;
   int feedID = 0;
@@ -63,6 +64,7 @@ class News {
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
+  bool? expandedWithFulltext = false;
   bool expanded = false;
 
   // define the method to convert the json to the model
@@ -132,7 +134,8 @@ class News {
         preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
-        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false;
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
+        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false;
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -215,6 +218,19 @@ class News {
           break;
       }
     }
+
+    return text;
+  }
+
+  // define the method to extract the text from the html content
+  // the text is first searched in the raw text
+  // if no text is found the empty string is returned
+  // if there is no raw text the text is searched in the p tags
+  String getFullText(FluxNewsState appState) {
+    final document = parse(content);
+    String? text = '';
+    text = parse(document.body?.text).documentElement?.text;
+    text ??= '';
 
     return text;
   }
@@ -482,7 +498,8 @@ class Feed {
       this.preferAttachmentImage,
       this.manualAdaptLightModeToIcon,
       this.manualAdaptDarkModeToIcon,
-      this.openMinifluxEntry});
+      this.openMinifluxEntry,
+      this.expandedWithFulltext});
 
   // define the properties
   int feedID = 0;
@@ -499,6 +516,7 @@ class Feed {
   bool? manualAdaptLightModeToIcon = false;
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
+  bool? expandedWithFulltext = false;
   int? categoryID;
 
   // define the method to convert the model from json
@@ -526,7 +544,8 @@ class Feed {
       'preferAttachmentImage': preferAttachmentImage,
       'manualAdaptLightModeToIcon': manualAdaptLightModeToIcon,
       'manualAdaptDarkModeToIcon': manualAdaptDarkModeToIcon,
-      'openMinifluxEntry': openMinifluxEntry
+      'openMinifluxEntry': openMinifluxEntry,
+      'expandedWithFulltext': expandedWithFulltext,
     };
   }
 
@@ -544,6 +563,7 @@ class Feed {
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
         openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
+        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false,
         categoryID = res['categoryID'];
 
   // define the method to get the feed icon as a widget

@@ -307,6 +307,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         feeds.manualAdaptLightModeToIcon,
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
+                        feeds.expandedWithFulltext,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                   FROM news 
@@ -340,6 +341,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         feeds.manualAdaptLightModeToIcon,
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
+                        feeds.expandedWithFulltext,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                     FROM news 
@@ -375,6 +377,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
                         feeds.manualAdaptLightModeToIcon,
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
+                        feeds.expandedWithFulltext,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                 FROM news 
@@ -518,6 +521,24 @@ Future<void> updateOpenMinifluxEntryStatusOfFeedInDB(int feedID, bool openMinifl
   if (appState.debugMode) {
     logThis('updateOpenMinifluxEntryStatusOfFeedInDB',
         'Finished updating manual Adapt Light Mode to Icon Flag of feed in DB', LogLevel.INFO);
+  }
+}
+
+// update the manual Adapt Light Mode to Icon Flag of the feed in the database
+Future<void> updateExpandedWithFulltextStatusOfFeedInDB(
+    int feedID, bool expandedWithFulltext, FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('updateExpandedWithFulltextStatusOfFeedInDB', 'Starting updating expand with fulltext Flag of feed in DB',
+        LogLevel.INFO);
+  }
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    await appState.db!.rawUpdate(
+        'UPDATE feeds SET expandedWithFulltext = ? WHERE feedID = ?', [expandedWithFulltext ? 1 : 0, feedID]);
+  }
+  if (appState.debugMode) {
+    logThis('updateExpandedWithFulltextStatusOfFeedInDB', 'Finished updating expand with fulltext Flag of feed in DB',
+        LogLevel.INFO);
   }
 }
 
@@ -706,8 +727,9 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                                       manualAdaptLightModeToIcon,
                                                                       manualAdaptDarkModeToIcon,
                                                                       openMinifluxEntry,
+                                                                      expandedWithFulltext,
                                                                       categoryID) 
-                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', [
+                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', [
             feed.feedID,
             feed.title,
             feed.siteUrl,
@@ -792,6 +814,7 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
+                                                          expandedWithFulltext,
                                                           categoryID 
                                                       FROM feeds
                                                       ORDER BY feedID ASC''');
@@ -852,6 +875,7 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
+                                                          expandedWithFulltext,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?
@@ -898,6 +922,7 @@ Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
+                                                          expandedWithFulltext,
                                                           categoryID 
                                                       FROM feeds
                                                       ORDER BY feedID ASC''');
@@ -996,6 +1021,7 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           manualAdaptLightModeToIcon INTEGER,
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
                           categoryID INTEGER)''',
     );
     // create the table attachments
@@ -1109,6 +1135,7 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
                                                           manualAdaptLightModeToIcon,
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
+                                                          expandedWithFulltext,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?

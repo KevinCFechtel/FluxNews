@@ -257,6 +257,37 @@ class FeedSettingsList extends StatelessWidget {
             ),
           ],
         ),
+        const Divider(),
+        Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              child: const Icon(
+                Icons.text_snippet,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.expandedWithFulltext,
+                style: Theme.of(context).textTheme.titleMedium,
+                overflow: TextOverflow.visible,
+              ),
+            ),
+            Switch.adaptive(
+              value: feed.expandedWithFulltext == null ? false : feed.expandedWithFulltext!,
+              onChanged: (bool value) async {
+                feed.expandedWithFulltext = value;
+                await updateExpandedWithFulltextStatusOfFeedInDB(feed.feedID, value, appState);
+
+                // reload the news list with the new filter
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.jumpToItem(0);
+                });
+                appState.refreshView();
+              },
+            ),
+          ],
+        ),
       ],
     );
   }

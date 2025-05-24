@@ -355,6 +355,38 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // this row contains the selection if the headline is shown on top of the news
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.vertical_align_top,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.showHeadlineOnTop,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.showHeadlineOnTop,
+                      onChanged: (bool value) {
+                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.showHeadlineOnTop = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageShowHeadlineOnTopKey, value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
                 // this row contains the selection if the button to mark as read is turned on
                 Row(
                   children: [

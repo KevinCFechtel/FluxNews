@@ -102,5 +102,7 @@
     "expand": "Erweitern",
     "menu": "Aktionsmenü",
     "tabActionSettings": "Wählen Sie die Aktion, die bei einem Tab auf die News ausgeführt werden soll",
-    "longPressActionSettings": "Wählen Sie die Aktion, die bei einem Long Press auf die News ausgeführt werden soll"
+    "longPressActionSettings": "Wählen Sie die Aktion, die bei einem Long Press auf die News ausgeführt werden soll",
+    "expandedWithFulltext": "Zeige nur Text statt HTML bei der Erweiterung des News Inhalts",
+    "showHeadlineOnTop": "Zeige die Überschrift der News über dem Bild"
 }
