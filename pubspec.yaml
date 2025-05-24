@@ -38,7 +38,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.5
   provider: ^6.0.5
-  sqflite: ^2.2.6
   path: ^1.8.2
   http: ^1.1.0
   html: ^0.15.2
@@ -62,6 +61,7 @@ dependencies:
   super_sliver_list: ^0.4.1
   flutter_slidable: ^4.0.0
   flutter_widget_from_html_core: ^0.16.0
+  sqflite_common_ffi: ^2.3.5
 
 dev_dependencies:
   flutter_test:
@@ -76,7 +76,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   mockito: ^5.4.0
   build_runner: ^2.3.3
-  sqflite_common_ffi: ^2.2.4
 
 
 # For information on the generic Dart part of this file, see the

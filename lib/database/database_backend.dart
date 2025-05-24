@@ -4,7 +4,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../state_management/flux_news_state.dart';
 import '../miniflux/miniflux_backend.dart';
@@ -587,9 +587,10 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   int? starredNewsCount;
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
-    starredNewsCount =
-        Sqflite.firstIntValue(await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE starred = ?', [1]));
+    List<Map<String, Object?>> result = await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE starred = ?', [1]);
+    starredNewsCount = result.first.entries.first.value as int?;
   }
+
   starredNewsCount ??= 0;
   // assign the count of bookmarked news to the app state variable
   appCounterState.starredCount = starredNewsCount;
@@ -955,8 +956,9 @@ Future<void> renewAllNewsCount(FluxNewsState appState, BuildContext context) asy
     } else {
       status = appState.newsStatus;
     }
-    allNewsCount =
-        Sqflite.firstIntValue(await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE status LIKE ?', [status]));
+    List<Map<String, Object?>> result =
+        await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE status LIKE ?', [status]);
+    allNewsCount = result.first.entries.first.value as int?;
     allNewsCount ??= 0;
   }
 
@@ -1060,7 +1062,7 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
         actualFeed = feed;
       }
       if (actualFeed != null) {
-        nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feeds.feedID) as feedID
+        List<Map<String, Object?>> result = await appState.db!.rawQuery('''SELECT MIN(feeds.feedID) as feedID
                                                                       FROM feeds
                                                                       LEFT OUTER JOIN news ON feeds.feedID = news.feedID
                                                                       WHERE feeds.feedID > ? 
@@ -1069,7 +1071,8 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
                                                                             FROM news 
                                                                             WHERE news.feedID = feeds.feedID 
                                                                               AND news.status LIKE ?) > 0''',
-            [actualFeed.feedID, actualFeed.categoryID, FluxNewsState.unreadNewsStatus]));
+            [actualFeed.feedID, actualFeed.categoryID, FluxNewsState.unreadNewsStatus]);
+        nextFeedID = result.first.entries.first.value as int?;
         nextFeedID ??= appState.selectedID;
         // get the categories from the database
         List<Map<String, Object?>> queryResult =
@@ -1080,7 +1083,8 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
         }
         if (nextFeed != null) {
           if (actualFeed.feedID == nextFeed.feedID) {
-            int? nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery(
+            int? nextCategoryID;
+            List<Map<String, Object?>> result = await appState.db!.rawQuery(
                 '''SELECT MIN(categories.categoryID) as categoryID
                                                                       FROM categories
                                                                       LEFT OUTER JOIN feeds ON categories.categoryID = feeds.categoryID
@@ -1089,11 +1093,13 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
                                                                             FROM news 
                                                                             WHERE news.feedID = feeds.feedID 
                                                                               AND news.status LIKE ?) > 0''',
-                [actualFeed.categoryID, FluxNewsState.unreadNewsStatus]));
+                [actualFeed.categoryID, FluxNewsState.unreadNewsStatus]);
+            nextCategoryID = result.first.entries.first.value as int?;
             if (nextCategoryID != null) {
-              nextFeedID = Sqflite.firstIntValue(await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
+              List<Map<String, Object?>> result = await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
                                                                       FROM feeds WHERE categoryID = ?''',
-                  [nextCategoryID]));
+                  [nextCategoryID]);
+              nextFeedID = result.first.entries.first.value as int?;
               nextFeedID ??= appState.selectedID;
               // get the categories from the database
               List<Map<String, Object?>> queryResult =
@@ -1126,8 +1132,7 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     if (appState.selectedID != null) {
-      nextCategoryID = Sqflite.firstIntValue(await appState.db!.rawQuery(
-          '''SELECT MIN(categories.categoryID) as categoryID
+      List<Map<String, Object?>> result = await appState.db!.rawQuery('''SELECT MIN(categories.categoryID) as categoryID
                                                                       FROM categories
                                                                       LEFT OUTER JOIN feeds ON categories.categoryID = feeds.categoryID
                                                                       WHERE categories.categoryID > ?
@@ -1135,7 +1140,8 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
                                                                             FROM news 
                                                                             WHERE news.feedID = feeds.feedID 
                                                                               AND news.status LIKE ?) > 0''',
-          [appState.selectedID, FluxNewsState.unreadNewsStatus]));
+          [appState.selectedID, FluxNewsState.unreadNewsStatus]);
+      nextCategoryID = result.first.entries.first.value as int?;
       nextCategoryID ??= appState.selectedID;
       // get the categories from the database
       List<Map<String, Object?>> queryResult =

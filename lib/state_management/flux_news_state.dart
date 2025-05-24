@@ -13,7 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import '../models/news_model.dart';
@@ -276,6 +276,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptLightModeToIcon INTEGER,
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
                           categoryID INTEGER)''',
         );
         // create the table attachments

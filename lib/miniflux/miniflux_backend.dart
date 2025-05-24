@@ -7,7 +7,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
@@ -697,8 +696,9 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
             // iterate over the feeds list and query the database for the news count of the feed
             for (Feed feed in feedList) {
               int? count;
-              count = Sqflite.firstIntValue(
-                  await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]));
+              List<Map<String, Object?>> result =
+                  await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]);
+              count = result.first.entries.first.value as int?;
               count ??= 0;
 
               // add the news count to the feed object

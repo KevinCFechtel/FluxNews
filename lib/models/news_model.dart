@@ -8,7 +8,6 @@ import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../state_management/flux_news_state.dart';
 
@@ -807,8 +806,9 @@ class Categories {
         int? categoryNewsCount = 0;
         for (Feed feed in category.feeds) {
           int? feedNewsCount;
-          feedNewsCount = Sqflite.firstIntValue(await appState.db!
-              .rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?', [feed.feedID, status]));
+          List<Map<String, Object?>> result = await appState.db!
+              .rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?', [feed.feedID, status]);
+          feedNewsCount = result.isNotEmpty ? result.first.values.first as int? : 0;
           feedNewsCount ??= 0;
           categoryNewsCount ??= 0;
           categoryNewsCount = categoryNewsCount + feedNewsCount;
