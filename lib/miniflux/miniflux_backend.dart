@@ -698,7 +698,12 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
               int? count;
               List<Map<String, Object?>> result =
                   await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]);
-              count = result.first.entries.first.value as int?;
+              if (result.isNotEmpty) {
+                if (result.first.entries.isNotEmpty) {
+                  count = result.first.entries.first.value as int?;
+                }
+              }
+
               count ??= 0;
 
               // add the news count to the feed object
@@ -707,8 +712,14 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
               // if the feed icon id is not null and not 0, request the feed icon from the miniflux server
               if (feed.feedIconID != null && feed.feedIconID != 0) {
                 if (appState.checkIfFeedIconFileExists(feed.feedID)) {
-                  if (appState.debugMode) {
-                    logThis('fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
+                  result = await appState.db!.rawQuery('''SELECT iconMimeType
+                                                      FROM feeds 
+                                                      WHERE feedID = ?''', [feed.feedID]);
+                  if (result.isNotEmpty) {
+                    if (result.first.entries.isNotEmpty) {
+                      feed.iconMimeType = result.first.entries.first.value as String;
+                      feed.icon = appState.readFeedIconFile(feed.feedID);
+                    }
                   }
                 } else {
                   response = await client.get(

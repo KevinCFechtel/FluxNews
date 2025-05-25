@@ -588,7 +588,11 @@ void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     List<Map<String, Object?>> result = await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE starred = ?', [1]);
-    starredNewsCount = result.first.entries.first.value as int?;
+    if (result.isNotEmpty) {
+      if (result.first.entries.isNotEmpty) {
+        starredNewsCount = result.first.entries.first.value as int?;
+      }
+    }
   }
 
   starredNewsCount ??= 0;
@@ -958,7 +962,11 @@ Future<void> renewAllNewsCount(FluxNewsState appState, BuildContext context) asy
     }
     List<Map<String, Object?>> result =
         await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE status LIKE ?', [status]);
-    allNewsCount = result.first.entries.first.value as int?;
+    if (result.isNotEmpty) {
+      if (result.first.entries.isNotEmpty) {
+        allNewsCount = result.first.entries.first.value as int?;
+      }
+    }
     allNewsCount ??= 0;
   }
 
@@ -1072,7 +1080,11 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
                                                                             WHERE news.feedID = feeds.feedID 
                                                                               AND news.status LIKE ?) > 0''',
             [actualFeed.feedID, actualFeed.categoryID, FluxNewsState.unreadNewsStatus]);
-        nextFeedID = result.first.entries.first.value as int?;
+        if (result.isNotEmpty) {
+          if (result.first.entries.isNotEmpty) {
+            nextFeedID = result.first.entries.first.value as int?;
+          }
+        }
         nextFeedID ??= appState.selectedID;
         // get the categories from the database
         List<Map<String, Object?>> queryResult =
@@ -1094,12 +1106,20 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
                                                                             WHERE news.feedID = feeds.feedID 
                                                                               AND news.status LIKE ?) > 0''',
                 [actualFeed.categoryID, FluxNewsState.unreadNewsStatus]);
-            nextCategoryID = result.first.entries.first.value as int?;
+            if (result.isNotEmpty) {
+              if (result.first.entries.isNotEmpty) {
+                nextCategoryID = result.first.entries.first.value as int?;
+              }
+            }
             if (nextCategoryID != null) {
               List<Map<String, Object?>> result = await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
                                                                       FROM feeds WHERE categoryID = ?''',
                   [nextCategoryID]);
-              nextFeedID = result.first.entries.first.value as int?;
+              if (result.isNotEmpty) {
+                if (result.first.entries.isNotEmpty) {
+                  nextFeedID = result.first.entries.first.value as int?;
+                }
+              }
               nextFeedID ??= appState.selectedID;
               // get the categories from the database
               List<Map<String, Object?>> queryResult =
@@ -1141,7 +1161,11 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
                                                                             WHERE news.feedID = feeds.feedID 
                                                                               AND news.status LIKE ?) > 0''',
           [appState.selectedID, FluxNewsState.unreadNewsStatus]);
-      nextCategoryID = result.first.entries.first.value as int?;
+      if (result.isNotEmpty) {
+        if (result.first.entries.isNotEmpty) {
+          nextCategoryID = result.first.entries.first.value as int?;
+        }
+      }
       nextCategoryID ??= appState.selectedID;
       // get the categories from the database
       List<Map<String, Object?>> queryResult =

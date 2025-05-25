@@ -141,6 +141,7 @@ class NewsCard extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.openMinifluxShort,
                 style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -155,7 +156,7 @@ class NewsCard extends StatelessWidget {
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
       rightSwipeActions.add(bookmarkSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
-      rightSwipeActions.add(saveSlidableAction);
+      rightSwipeActions.add(openMinifluxAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
     }
