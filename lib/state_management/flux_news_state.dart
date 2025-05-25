@@ -78,6 +78,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
+  static const String secureStorageSecondLeftSwipeActionKey = 'secondLeftSwipeAction';
+  static const String secureStorageSecondRightSwipeActionKey = 'secondRightSwipeAction';
   static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
   static const String secureStorageUseBlackModeKey = 'useBlackMode';
   static const String secureStorageTabActionKey = 'tabAction';
@@ -99,6 +101,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
   static const String swipeActionOpenMinifluxString = 'openMiniflux';
+  static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
   static const String longPressActionMenuString = 'menu';
@@ -180,6 +183,8 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? amountOfCharactersToTruncateLimitSelection;
   KeyValueRecordType? leftSwipeActionSelection;
   KeyValueRecordType? rightSwipeActionSelection;
+  KeyValueRecordType? secondLeftSwipeActionSelection;
+  KeyValueRecordType? secondRightSwipeActionSelection;
   KeyValueRecordType? tabActionSelection;
   KeyValueRecordType? longPressActionSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
@@ -197,6 +202,7 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
   List<KeyValueRecordType>? recordTypesAmountOfCharactersToTruncateLimit;
   List<KeyValueRecordType>? recordTypesSwipeActions;
+  List<KeyValueRecordType>? recordTypesSecondSwipeActions;
   List<KeyValueRecordType>? recordTypesTabActions;
   List<KeyValueRecordType>? recordTypesLongPressActions;
   bool activateTruncate = false;
@@ -206,6 +212,8 @@ class FluxNewsState extends ChangeNotifier {
   bool activateSwipeGestures = true;
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
+  String secondLeftSwipeAction = FluxNewsState.swipeActionNoneString;
+  String secondRightSwipeAction = FluxNewsState.swipeActionNoneString;
   String tabAction = FluxNewsState.tabActionOpenString;
   String longPressAction = FluxNewsState.longPressActionMenuString;
   bool showHeadlineOnTop = false;
@@ -622,6 +630,16 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
         ];
+        recordTypesSecondSwipeActions = <KeyValueRecordType>[
+          KeyValueRecordType(key: FluxNewsState.swipeActionNoneString, value: AppLocalizations.of(context)!.none),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
+          KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
+        ];
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
           KeyValueRecordType(key: FluxNewsState.tabActionExpandString, value: AppLocalizations.of(context)!.expand),
@@ -637,6 +655,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
         recordTypesBrightnessMode = <KeyValueRecordType>[];
         recordTypesSwipeActions = <KeyValueRecordType>[];
+        recordTypesSecondSwipeActions = <KeyValueRecordType>[];
         recordTypesTabActions = <KeyValueRecordType>[];
         recordTypesLongPressActions = <KeyValueRecordType>[];
       }
@@ -646,6 +665,7 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
       recordTypesBrightnessMode = <KeyValueRecordType>[];
       recordTypesSwipeActions = <KeyValueRecordType>[];
+      recordTypesSecondSwipeActions = <KeyValueRecordType>[];
       recordTypesTabActions = <KeyValueRecordType>[];
       recordTypesLongPressActions = <KeyValueRecordType>[];
     }
@@ -689,6 +709,20 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesSwipeActions != null) {
       if (recordTypesSwipeActions!.isNotEmpty) {
         rightSwipeActionSelection = recordTypesSwipeActions![1];
+      }
+    }
+
+    // init the second left Swipe action selection with the first value of the above generated maps
+    if (recordTypesSecondSwipeActions != null) {
+      if (recordTypesSecondSwipeActions!.isNotEmpty) {
+        secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![0];
+      }
+    }
+
+    // init the second right Swipe action selection with the first value of the above generated maps
+    if (recordTypesSecondSwipeActions != null) {
+      if (recordTypesSecondSwipeActions!.isNotEmpty) {
+        secondRightSwipeActionSelection = recordTypesSecondSwipeActions![0];
       }
     }
 
@@ -943,6 +977,30 @@ class FluxNewsState extends ChangeNotifier {
           for (KeyValueRecordType recordSet in recordTypesSwipeActions!) {
             if (value == recordSet.key) {
               rightSwipeActionSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the second left Swipe Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSecondLeftSwipeActionKey) {
+        if (value != '') {
+          secondLeftSwipeAction = value;
+          for (KeyValueRecordType recordSet in recordTypesSecondSwipeActions!) {
+            if (value == recordSet.key) {
+              secondLeftSwipeActionSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the second right Swipe Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSecondRightSwipeActionKey) {
+        if (value != '') {
+          secondRightSwipeAction = value;
+          for (KeyValueRecordType recordSet in recordTypesSecondSwipeActions!) {
+            if (value == recordSet.key) {
+              secondRightSwipeActionSelection = recordSet;
             }
           }
         }

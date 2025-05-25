@@ -85,6 +85,8 @@
     "unreadShort": "Unread",
     "leftSwipeSelectionOption": "Select action for swiping to the left",
     "rightSwipeSelectionOption": "Select action for swiping to the right",
+    "secondLeftSwipeSelectionOption": "Select second action for swiping to the left",
+    "secondRightSwipeSelectionOption": "Select second action for swiping to the right",
     "deleteBookmarkShort": "Delete bookmark",
     "activateSwiping": "Activate swipe gestures",
     "feedSettings": "Feed settings",
@@ -105,5 +107,6 @@
     "longPressActionSettings": "Select action for long press on a news item",
     "expandedWithFulltext": "Show only text instead of HTML when expanding the news content",
     "showHeadlineOnTop": "Show the headline of the news above the image",
-    "showOnlyFeedCategoriesWithNewNews": "Only show the categories and feeds that have new messages"
+    "showOnlyFeedCategoriesWithNewNews": "Only show the categories and feeds that have new messages",
+    "none": "None"
 }

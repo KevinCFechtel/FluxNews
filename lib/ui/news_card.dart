@@ -151,6 +151,17 @@ class NewsCard extends StatelessWidget {
         },
       ),
     );
+
+    if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+      leftSwipeActions.add(readSlidableAction);
+    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+      leftSwipeActions.add(bookmarkSlidableAction);
+    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionSaveString) {
+      leftSwipeActions.add(saveSlidableAction);
+    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+      leftSwipeActions.add(openMinifluxAction);
+    }
+
     if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
       rightSwipeActions.add(readSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
@@ -158,6 +169,16 @@ class NewsCard extends StatelessWidget {
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
       rightSwipeActions.add(openMinifluxAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+      rightSwipeActions.add(openMinifluxAction);
+    }
+
+    if (appState.secondRightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+      rightSwipeActions.add(readSlidableAction);
+    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+      rightSwipeActions.add(bookmarkSlidableAction);
+    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionSaveString) {
+      rightSwipeActions.add(openMinifluxAction);
+    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
     }
 

@@ -85,6 +85,8 @@
     "unreadShort": "Ungelesen",
     "leftSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nach links ausgeführt werden soll",
     "rightSwipeSelectionOption": "Wählen Sie die Aktion, die bei einem Wisch nachrechts ausgeführt werden soll",
+    "secondLeftSwipeSelectionOption": "Wählen Sie die zweite Aktion, die bei einem Wisch nach links ausgeführt werden soll",
+    "secondRightSwipeSelectionOption": "Wählen Sie die zweite Aktion, die bei einem Wisch nachrechts ausgeführt werden soll",
     "deleteBookmarkShort": "Lesezeichen entfernen",
     "activateSwiping": "Aktiviere Wischgesten",
     "feedSettings": "Feed Einstellungen",
@@ -105,5 +107,6 @@
     "longPressActionSettings": "Wählen Sie die Aktion, die bei einem Long Press auf die News ausgeführt werden soll",
     "expandedWithFulltext": "Zeige nur Text statt HTML bei der Erweiterung des News Inhalts",
     "showHeadlineOnTop": "Zeige die Überschrift der News über dem Bild",
-    "showOnlyFeedCategoriesWithNewNews": "Zeige nur die Kategorien und Feeds an, die neue Nachrichten besitzen"
+    "showOnlyFeedCategoriesWithNewNews": "Zeige nur die Kategorien und Feeds an, die neue Nachrichten besitzen",
+    "none": "Keine"
 }
