@@ -1020,6 +1020,13 @@ class FluxNewsState extends ChangeNotifier {
     return readFile(filename);
   }
 
+  bool checkIfFeedIconFileExists(int feedID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+    String filePath = externalDirectory!.path + filename;
+    final file = File(filePath);
+    return file.existsSync();
+  }
+
   void deleteFeedIconFile(int feedID) {
     String filename = "${FluxNewsState.feedIconFilePath}$feedID";
     deleteFile(filename);
