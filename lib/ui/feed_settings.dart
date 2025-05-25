@@ -62,49 +62,52 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     // return the body of the feed settings
     return Column(children: [
-      TextField(
-        controller: appState.searchController,
-        style: Theme.of(context).textTheme.bodyLarge,
-        decoration: InputDecoration(
-          hintText: AppLocalizations.of(context)!.searchHint,
-          hintStyle: Theme.of(context).textTheme.bodyLarge,
-          border: UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
-          suffixIcon: IconButton(
-            onPressed: () {
-              appState.searchController.clear();
+      Padding(
+        padding: EdgeInsets.only(left: 10, right: 10),
+        child: TextField(
+          controller: appState.searchController,
+          style: Theme.of(context).textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)!.searchHint,
+            hintStyle: Theme.of(context).textTheme.bodyLarge,
+            border: UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
+            suffixIcon: IconButton(
+              onPressed: () {
+                appState.searchController.clear();
+                appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
+                appState.refreshView();
+              },
+              icon: const Icon(Icons.clear),
+            ),
+          ),
+
+          // on change of the search text field, fetch the news list
+          onChanged: (value) async {
+            if (value != '') {
+              // fetch the news list from the backend with the search text
+              Future<List<Feed>> searchFeedListResult =
+                  queryFeedsFromDB(appState, context, value).onError((error, stackTrace) {
+                logThis('fetchSearchedNews', 'Caught an error in fetchSearchedNews function! : ${error.toString()}',
+                    LogLevel.ERROR);
+                if (context.mounted) {
+                  if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
+                    appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+                    appState.newError = true;
+                    appState.refreshView();
+                  }
+                }
+                return [];
+              });
+              // set the state with the fetched news list
+              appState.feedSettingsList = searchFeedListResult;
+              appState.refreshView();
+            } else {
+              // if search text is empty, set the state with an empty list
               appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
               appState.refreshView();
-            },
-            icon: const Icon(Icons.clear),
-          ),
+            }
+          },
         ),
-
-        // on change of the search text field, fetch the news list
-        onChanged: (value) async {
-          if (value != '') {
-            // fetch the news list from the backend with the search text
-            Future<List<Feed>> searchFeedListResult =
-                queryFeedsFromDB(appState, context, value).onError((error, stackTrace) {
-              logThis('fetchSearchedNews', 'Caught an error in fetchSearchedNews function! : ${error.toString()}',
-                  LogLevel.ERROR);
-              if (context.mounted) {
-                if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-                  appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
-                  appState.newError = true;
-                  appState.refreshView();
-                }
-              }
-              return [];
-            });
-            // set the state with the fetched news list
-            appState.feedSettingsList = searchFeedListResult;
-            appState.refreshView();
-          } else {
-            // if search text is empty, set the state with an empty list
-            appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
-            appState.refreshView();
-          }
-        },
       ),
       Expanded(child: const FeedSettingsList())
     ]);

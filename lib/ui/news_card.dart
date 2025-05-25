@@ -260,7 +260,7 @@ class NewsCard extends StatelessWidget {
                   } else {
                     news.expanded = true;
                   }
-                  appState.refreshView();
+                  markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                 }
               },
               // on tap get the actual position of the list on tab
@@ -277,7 +277,7 @@ class NewsCard extends StatelessWidget {
                   } else {
                     news.expanded = true;
                   }
-                  appState.refreshView();
+                  markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                 }
               },
               child: Column(

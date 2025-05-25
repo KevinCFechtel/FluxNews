@@ -119,9 +119,7 @@ class NewsContent extends StatelessWidget {
                       enableCaching: true,
                       textStyle: TextStyle(
                         fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize,
-                        color: news.status == FluxNewsState.unreadNewsStatus
-                            ? Theme.of(context).textTheme.bodyMedium!.color
-                            : Theme.of(context).disabledColor,
+                        color: Theme.of(context).textTheme.bodyMedium!.color,
                       ),
                       onTapUrl: (url) async {
                         return await openUrlAction(url, context);
@@ -132,9 +130,7 @@ class NewsContent extends StatelessWidget {
                   enableCaching: true,
                   textStyle: TextStyle(
                     fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize,
-                    color: news.status == FluxNewsState.unreadNewsStatus
-                        ? Theme.of(context).textTheme.bodyMedium!.color
-                        : Theme.of(context).disabledColor,
+                    color: Theme.of(context).textTheme.bodyMedium!.color,
                   ),
                   onTapUrl: (url) async {
                     return await openUrlAction(url, context);

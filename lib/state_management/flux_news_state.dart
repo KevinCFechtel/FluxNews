@@ -561,8 +561,8 @@ class FluxNewsState extends ChangeNotifier {
       }
     }
     var brightnessModeStoredValue = await storage.read(key: FluxNewsState.secureStorageBrightnessModeKey);
-    if (brightnessModeStoredValue != '') {
-      themeState.brightnessMode = brightnessModeStoredValue!;
+    if (brightnessModeStoredValue != '' && brightnessModeStoredValue != null) {
+      themeState.brightnessMode = brightnessModeStoredValue;
     }
     themeState.refreshView();
 
@@ -1019,6 +1019,13 @@ class FluxNewsState extends ChangeNotifier {
   Uint8List? readFeedIconFile(int feedID) {
     String filename = "${FluxNewsState.feedIconFilePath}$feedID";
     return readFile(filename);
+  }
+
+  bool checkIfFeedIconFileExists(int feedID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+    String filePath = externalDirectory!.path + filename;
+    final file = File(filePath);
+    return file.existsSync();
   }
 
   void deleteFeedIconFile(int feedID) {
