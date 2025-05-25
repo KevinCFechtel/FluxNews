@@ -560,8 +560,8 @@ class FluxNewsState extends ChangeNotifier {
       }
     }
     var brightnessModeStoredValue = await storage.read(key: FluxNewsState.secureStorageBrightnessModeKey);
-    if (brightnessModeStoredValue != '') {
-      themeState.brightnessMode = brightnessModeStoredValue!;
+    if (brightnessModeStoredValue != '' && brightnessModeStoredValue != null) {
+      themeState.brightnessMode = brightnessModeStoredValue;
     }
     themeState.refreshView();
 

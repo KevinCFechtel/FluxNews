@@ -298,7 +298,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     padding: const EdgeInsets.only(top: 75.0, bottom: 40.0),
                     child: Row(children: [
                       const Padding(
-                          padding: EdgeInsets.only(left: 30.0),
+                          padding: EdgeInsets.only(left: 18.0),
                           child: Icon(
                             FontAwesomeIcons.bookOpen,
                           )),
