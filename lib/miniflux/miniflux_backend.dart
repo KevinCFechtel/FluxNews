@@ -706,29 +706,35 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
 
               // if the feed icon id is not null and not 0, request the feed icon from the miniflux server
               if (feed.feedIconID != null && feed.feedIconID != 0) {
-                response = await client.get(
-                  Uri.parse('${appState.minifluxURL!}feeds/${feed.feedID}/icon'),
-                  headers: header,
-                );
-                if (response.statusCode != 200) {
-                  if (response.statusCode == 404) {
-                    if (appState.debugMode) {
-                      logThis(
-                          'fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
-                    }
-                    // This feed has no feed icon, do nothing.
-                  } else {
-                    logThis(
-                        'fetchCategoryInformation',
-                        'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
-                        LogLevel.ERROR);
-                    // if the response code is not 200, throw an error
-                    throw FluxNewsState.httpUnexpectedResponseErrorString;
+                if (appState.checkIfFeedIconFileExists(feed.feedID)) {
+                  if (appState.debugMode) {
+                    logThis('fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
                   }
                 } else {
-                  FeedIcon feedIcon = FeedIcon.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-                  feed.icon = feedIcon.getIcon();
-                  feed.iconMimeType = feedIcon.iconMimeType;
+                  response = await client.get(
+                    Uri.parse('${appState.minifluxURL!}feeds/${feed.feedID}/icon'),
+                    headers: header,
+                  );
+                  if (response.statusCode != 200) {
+                    if (response.statusCode == 404) {
+                      if (appState.debugMode) {
+                        logThis(
+                            'fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
+                      }
+                      // This feed has no feed icon, do nothing.
+                    } else {
+                      logThis(
+                          'fetchCategoryInformation',
+                          'Got unexpected response from miniflux server: ${response.statusCode} while fetching feeds icons for feed ${feed.feedID}',
+                          LogLevel.ERROR);
+                      // if the response code is not 200, throw an error
+                      throw FluxNewsState.httpUnexpectedResponseErrorString;
+                    }
+                  } else {
+                    FeedIcon feedIcon = FeedIcon.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+                    feed.icon = feedIcon.getIcon();
+                    feed.iconMimeType = feedIcon.iconMimeType;
+                  }
                 }
               } else {
                 if (appState.debugMode) {
