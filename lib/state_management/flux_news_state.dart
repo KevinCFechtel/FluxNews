@@ -136,7 +136,7 @@ class FluxNewsState extends ChangeNotifier {
   List<int>? feedIDs;
   String selectedCategoryElementType = 'all';
   Categories? actualCategoryList;
-  bool showOnlyFeedCategoriesWithNewNews = true;
+  bool showOnlyFeedCategoriesWithNewNews = false;
 
   // vars for main view
   bool syncProcess = false;

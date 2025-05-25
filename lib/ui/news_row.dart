@@ -166,7 +166,7 @@ class NewsRow extends StatelessWidget {
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
       rightSwipeActions.add(bookmarkSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
-      rightSwipeActions.add(openMinifluxAction);
+      rightSwipeActions.add(saveSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
     }
@@ -176,7 +176,7 @@ class NewsRow extends StatelessWidget {
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
       rightSwipeActions.add(bookmarkSlidableAction);
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionSaveString) {
-      rightSwipeActions.add(openMinifluxAction);
+      rightSwipeActions.add(saveSlidableAction);
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
     }
