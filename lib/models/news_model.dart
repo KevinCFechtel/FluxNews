@@ -26,6 +26,7 @@ class News {
       required this.readingTime,
       required this.starred,
       required this.feedTitle,
+      this.feedIconID,
       this.attachments,
       this.attachmentURL,
       this.attachmentMimeType,
@@ -53,6 +54,7 @@ class News {
   String? syncStatus = FluxNewsState.notSyncedSyncStatus;
   Uint8List? icon;
   String? iconMimeType = '';
+  int? feedIconID;
   List<Attachment>? attachments;
   String? attachmentURL = '';
   String? attachmentMimeType = '';
@@ -81,6 +83,7 @@ class News {
       readingTime: json['reading_time'],
       starred: json['starred'],
       feedTitle: json['feed']?['title'],
+      feedIconID: json['feed']?['icon']?['icon_id'],
     );
 
     if (json['enclosures'] != null) {
@@ -125,6 +128,7 @@ class News {
         feedTitle = res['feedTitle'],
         syncStatus = res['syncStatus'],
         iconMimeType = res['iconMimeType'],
+        feedIconID = res['iconID'],
         attachmentURL = res['attachmentURL'],
         attachmentMimeType = res['attachmentMimeType'],
         crawler = res['crawler'] == 1 ? true : false,
@@ -536,6 +540,7 @@ class Feed {
       'title': title,
       'site_url': siteUrl,
       'iconMimeType': iconMimeType,
+      'iconID': feedIconID,
       'newsCount': newsCount,
       'crawler': crawler,
       'manualTruncate': manualTruncate,
@@ -554,6 +559,7 @@ class Feed {
         title = res['title'],
         siteUrl = res['site_url'],
         iconMimeType = res['iconMimeType'],
+        feedIconID = res['iconID'],
         newsCount = res['newsCount'],
         crawler = res['crawler'] == 1 ? true : false,
         manualTruncate = res['manualTruncate'] == 1 ? true : false,

@@ -110,7 +110,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
-  static const String feedIconFilePath = "/FeedIcons/";
+  static const String feedIconFilePath = "/FeedIcons/icon_";
   static const int minifluxSaveMinVersion = 2047;
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
@@ -276,6 +276,7 @@ class FluxNewsState extends ChangeNotifier {
                           title TEXT, 
                           site_url TEXT, 
                           iconMimeType TEXT,
+                          iconID INTEGER,
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
@@ -446,6 +447,7 @@ class FluxNewsState extends ChangeNotifier {
                           title TEXT, 
                           site_url TEXT, 
                           iconMimeType TEXT,
+                          iconID INTEGER,
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
@@ -462,6 +464,7 @@ class FluxNewsState extends ChangeNotifier {
                                         title,
                                         site_url, 
                                         iconMimeType,
+                                        iconID,
                                         newsCount,
                                         crawler,
                                         manualTruncate,
@@ -476,6 +479,7 @@ class FluxNewsState extends ChangeNotifier {
                         title,
                         site_url, 
                         iconMimeType,
+                        0 AS iconID,
                         newsCount,
                         crawler,
                         manualTruncate,
@@ -495,6 +499,7 @@ class FluxNewsState extends ChangeNotifier {
                           title TEXT, 
                           site_url TEXT, 
                           iconMimeType TEXT,
+                          iconID INTEGER,
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
@@ -511,6 +516,7 @@ class FluxNewsState extends ChangeNotifier {
                                         title,
                                         site_url, 
                                         iconMimeType,
+                                        iconID,
                                         newsCount,
                                         crawler,
                                         manualTruncate,
@@ -525,6 +531,112 @@ class FluxNewsState extends ChangeNotifier {
                         title,
                         site_url, 
                         iconMimeType,
+                        iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        expandedWithFulltext,
+                        categoryID  
+                  from tempFeeds;''');
+          await db.execute('DROP TABLE IF EXISTS tempFeeds');
+        } else if (oldVersion == 6) {
+          logThis('upgradeDB', 'Upgrading DB from version 6', LogLevel.INFO);
+
+          await db.execute(
+            '''CREATE TABLE tempFeeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into tempFeeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        0 AS iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        0 AS expandedWithFulltext,
+                        categoryID  
+                  from feeds;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into feeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        iconID,
                         newsCount,
                         crawler,
                         manualTruncate,
@@ -538,9 +650,10 @@ class FluxNewsState extends ChangeNotifier {
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
         }
+
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 6,
+      version: 7,
     );
   }
 
@@ -1069,25 +1182,25 @@ class FluxNewsState extends ChangeNotifier {
     return true;
   }
 
-  Future<void> saveFeedIconFile(int feedID, Uint8List? bytes) async {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  Future<void> saveFeedIconFile(int feedIconID, Uint8List? bytes) async {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     await saveFile(filename, bytes);
   }
 
-  Uint8List? readFeedIconFile(int feedID) {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  Uint8List? readFeedIconFile(int feedIconID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     return readFile(filename);
   }
 
-  bool checkIfFeedIconFileExists(int feedID) {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  bool checkIfFeedIconFileExists(int feedIconID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     String filePath = externalDirectory!.path + filename;
     final file = File(filePath);
     return file.existsSync();
   }
 
-  void deleteFeedIconFile(int feedID) {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  void deleteFeedIconFile(int feedIconID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     deleteFile(filename);
   }
 

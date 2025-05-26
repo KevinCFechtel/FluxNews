@@ -252,22 +252,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             flex: 4,
             child: ListView(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: ListTile(
-                    title: Text(
-                      AppLocalizations.of(context)!.minifluxServer,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    subtitle: appState.minifluxURL == null
-                        ? const SizedBox.shrink()
-                        : Text(
-                            appState.minifluxURL!,
-                            softWrap: true,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                  ),
-                ),
                 const CategoryList(),
               ],
             ),
