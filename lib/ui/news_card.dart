@@ -38,21 +38,24 @@ class NewsCard extends StatelessWidget {
               : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                news.starred ? Icons.star_outline : Icons.star,
-              ),
-              Text(
-                news.starred
-                    ? AppLocalizations.of(context)!.deleteBookmarkShort
-                    : AppLocalizations.of(context)!.addBookmarkShort,
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.visible,
-              ),
-            ],
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                Icon(
+                  news.starred ? Icons.star_outline : Icons.star,
+                ),
+                Text(
+                  news.starred
+                      ? AppLocalizations.of(context)!.deleteBookmarkShort
+                      : AppLocalizations.of(context)!.addBookmarkShort,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
           ),
         ),
         onTap: () {
@@ -70,19 +73,22 @@ class NewsCard extends StatelessWidget {
               : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 145),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
-              ),
-              Text(
-                news.status == FluxNewsState.readNewsStatus
-                    ? AppLocalizations.of(context)!.unreadShort
-                    : AppLocalizations.of(context)!.readShort,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                Icon(
+                  news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
+                ),
+                Text(
+                  news.status == FluxNewsState.readNewsStatus
+                      ? AppLocalizations.of(context)!.unreadShort
+                      : AppLocalizations.of(context)!.readShort,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ),
         onTap: () {
@@ -104,17 +110,20 @@ class NewsCard extends StatelessWidget {
               : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.save,
-              ),
-              Text(
-                AppLocalizations.of(context)!.saveShort,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.save,
+                ),
+                Text(
+                  AppLocalizations.of(context)!.saveShort,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ),
         onTap: () {
@@ -132,18 +141,21 @@ class NewsCard extends StatelessWidget {
               : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.open_in_browser,
-              ),
-              Text(
-                AppLocalizations.of(context)!.openMinifluxShort,
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.open_in_browser,
+                ),
+                Text(
+                  AppLocalizations.of(context)!.openMinifluxShort,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
         onTap: () {
