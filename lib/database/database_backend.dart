@@ -914,6 +914,7 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
                                                       WHERE categoryID = ?
                                                       ORDER BY feedID ASC''', [category.categoryID]);
       for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
+        logThis("FeedAddToList", "Addedd!!!", LogLevel.ERROR);
         if (feed.feedIconID != null && feed.feedIconID != 0) {
           // if the feed has an icon, fetch the icon from the local file system
           feed.icon = appState.readFeedIconFile(feed.feedIconID!);

@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
@@ -810,6 +812,7 @@ class Categories {
       }
       for (Category category in categories) {
         int? categoryNewsCount = 0;
+        logThis("FEEDCOUNT", "Categorie: ${category.feeds.length}", LogLevel.ERROR);
         for (Feed feed in category.feeds) {
           int? feedNewsCount;
           List<Map<String, Object?>> result = await appState.db!
@@ -822,6 +825,7 @@ class Categories {
           if (appState.appBarText == feed.title) {
             appCounterState.appBarNewsCount = feedNewsCount;
           }
+          logThis("FEEDCOUNT", "News Count: $feedNewsCount", LogLevel.ERROR);
         }
         categoryNewsCount ??= 0;
         category.newsCount = categoryNewsCount;
