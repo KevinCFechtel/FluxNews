@@ -42,7 +42,7 @@ dependencies:
   http: ^1.1.0
   html: ^0.15.2
   cached_network_image: ^3.2.3
-  intl: ^0.19.0
+  intl: ^0.20.2
   flutter_secure_storage: ^10.0.0-beta.4
   font_awesome_flutter: ^10.4.0
   flutter_launcher_icons: ^0.14.3
@@ -60,7 +60,7 @@ dependencies:
   scrollview_observer: ^1.21.0
   super_sliver_list: ^0.4.1
   flutter_slidable: ^4.0.0
-  flutter_widget_from_html_core: ^0.16.0
+  flutter_widget_from_html_core: ^0.17.0
   sqflite_common_ffi: ^2.3.5
 
 dev_dependencies:
@@ -73,7 +73,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   mockito: ^5.4.0
   build_runner: ^2.3.3
 
