@@ -662,7 +662,8 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
                                       WHERE starred = 0 AND newsID NOT IN 
                                         (SELECT newsID 
                                           FROM news 
-                                          WHERE starred = 0
+                                          WHERE starred = 0 
+                                            AND status = '${FluxNewsState.unreadNewsStatus}'
                                           ORDER BY publishedAt DESC
                                           LIMIT ${appState.amountOfSavedNews})''');
   }
