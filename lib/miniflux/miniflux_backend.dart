@@ -7,7 +7,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
@@ -374,9 +373,12 @@ Future<List<News>> fetchSearchedNews(FluxNewsState appState, String searchString
     if (appState.db != null) {
       List<Feed> feedList = [];
       List<Map<String, Object?>> queryResult = await appState.db!
-          .rawQuery('SELECT feedID, title, site_url, NULL AS icon, iconMimeType, newsCount, categoryID FROM feeds');
+          .rawQuery('SELECT feedID, title, site_url, iconMimeType, iconID, newsCount, categoryID FROM feeds');
       for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
-        feed.icon = appState.readFeedIconFile(feed.feedID);
+        if (feed.feedIconID != null && feed.feedIconID != 0) {
+          feed.icon = appState.readFeedIconFile(feed.feedIconID!);
+        }
+
         feedList.add(feed);
       }
       // for each news in the list, get the feed icon from the database
@@ -697,8 +699,14 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
             // iterate over the feeds list and query the database for the news count of the feed
             for (Feed feed in feedList) {
               int? count;
-              count = Sqflite.firstIntValue(
-                  await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]));
+              List<Map<String, Object?>> result =
+                  await appState.db!.rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ?', [feed.feedID]);
+              if (result.isNotEmpty) {
+                if (result.first.entries.isNotEmpty) {
+                  count = result.first.entries.first.value as int?;
+                }
+              }
+
               count ??= 0;
 
               // add the news count to the feed object
@@ -706,13 +714,20 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
 
               // if the feed icon id is not null and not 0, request the feed icon from the miniflux server
               if (feed.feedIconID != null && feed.feedIconID != 0) {
-                if (appState.checkIfFeedIconFileExists(feed.feedID)) {
-                  if (appState.debugMode) {
-                    logThis('fetchCategoryInformation', 'No feed icon for feed with id ${feed.feedID}', LogLevel.INFO);
+                if (appState.checkIfFeedIconFileExists(feed.feedIconID!)) {
+                  result = await appState.db!.rawQuery('''SELECT DISTINCT(iconMimeType)
+                                                      FROM feeds 
+                                                      WHERE iconID = ?''', [feed.feedIconID!]);
+                  if (result.isNotEmpty) {
+                    if (result.first.entries.isNotEmpty) {
+                      feed.iconMimeType = result.first.entries.first.value as String;
+                      // read the feed icon from the file system
+                      feed.icon = appState.readFeedIconFile(feed.feedIconID!);
+                    }
                   }
                 } else {
                   response = await client.get(
-                    Uri.parse('${appState.minifluxURL!}feeds/${feed.feedID}/icon'),
+                    Uri.parse('${appState.minifluxURL!}icons/${feed.feedIconID}'),
                     headers: header,
                   );
                   if (response.statusCode != 200) {
@@ -759,7 +774,7 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
 }
 
 // fetch the feed icon from the miniflux server
-Future<FeedIcon?> getFeedIcon(FluxNewsState appState, int feedID) async {
+Future<FeedIcon?> getFeedIcon(FluxNewsState appState, int feedIconID) async {
   if (appState.debugMode) {
     logThis('getFeedIcon', 'Starting getting feed icon from miniflux server', LogLevel.INFO);
   }
@@ -783,18 +798,20 @@ Future<FeedIcon?> getFeedIcon(FluxNewsState appState, int feedID) async {
         FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
       response = await client.get(
-        Uri.parse('${appState.minifluxURL!}feeds/$feedID/icon'),
+        Uri.parse('${appState.minifluxURL!}icons/$feedIconID'),
         headers: header,
       );
       if (response.statusCode != 200) {
         if (response.statusCode == 404) {
           if (appState.debugMode) {
-            logThis('getFeedIcon', 'No feed icon for feed with id $feedID', LogLevel.INFO);
+            logThis('getFeedIcon', 'No feed icon for icon with id $feedIconID', LogLevel.INFO);
           }
           // This feed has no feed icon, do nothing
         } else {
-          logThis('getFeedIcon',
-              'Got unexpected response from miniflux server: ${response.statusCode} for feed $feedID', LogLevel.ERROR);
+          logThis(
+              'getFeedIcon',
+              'Got unexpected response from miniflux server: ${response.statusCode} for feed icon $feedIconID',
+              LogLevel.ERROR);
 
           // if the response code is not 200, throw an error
           throw FluxNewsState.httpUnexpectedResponseErrorString;

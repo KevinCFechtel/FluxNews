@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/functions/logging.dart';
@@ -13,7 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import '../models/news_model.dart';
@@ -78,6 +78,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
+  static const String secureStorageSecondLeftSwipeActionKey = 'secondLeftSwipeAction';
+  static const String secureStorageSecondRightSwipeActionKey = 'secondRightSwipeAction';
   static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
   static const String secureStorageUseBlackModeKey = 'useBlackMode';
   static const String secureStorageTabActionKey = 'tabAction';
@@ -99,6 +101,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
   static const String swipeActionOpenMinifluxString = 'openMiniflux';
+  static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
   static const String longPressActionMenuString = 'menu';
@@ -107,7 +110,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
   static const String logsExportDirectoryName = "FluxNewsLogs/Exported";
-  static const String feedIconFilePath = "/FeedIcons/";
+  static const String feedIconFilePath = "/FeedIcons/icon_";
   static const int minifluxSaveMinVersion = 2047;
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
@@ -133,7 +136,7 @@ class FluxNewsState extends ChangeNotifier {
   List<int>? feedIDs;
   String selectedCategoryElementType = 'all';
   Categories? actualCategoryList;
-  bool showOnlyFeedCategoriesWithNewNews = true;
+  bool showOnlyFeedCategoriesWithNewNews = false;
 
   // vars for main view
   bool syncProcess = false;
@@ -180,6 +183,8 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? amountOfCharactersToTruncateLimitSelection;
   KeyValueRecordType? leftSwipeActionSelection;
   KeyValueRecordType? rightSwipeActionSelection;
+  KeyValueRecordType? secondLeftSwipeActionSelection;
+  KeyValueRecordType? secondRightSwipeActionSelection;
   KeyValueRecordType? tabActionSelection;
   KeyValueRecordType? longPressActionSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
@@ -197,6 +202,7 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
   List<KeyValueRecordType>? recordTypesAmountOfCharactersToTruncateLimit;
   List<KeyValueRecordType>? recordTypesSwipeActions;
+  List<KeyValueRecordType>? recordTypesSecondSwipeActions;
   List<KeyValueRecordType>? recordTypesTabActions;
   List<KeyValueRecordType>? recordTypesLongPressActions;
   bool activateTruncate = false;
@@ -206,6 +212,8 @@ class FluxNewsState extends ChangeNotifier {
   bool activateSwipeGestures = true;
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
+  String secondLeftSwipeAction = FluxNewsState.swipeActionNoneString;
+  String secondRightSwipeAction = FluxNewsState.swipeActionNoneString;
   String tabAction = FluxNewsState.tabActionOpenString;
   String longPressAction = FluxNewsState.longPressActionMenuString;
   bool showHeadlineOnTop = false;
@@ -268,6 +276,7 @@ class FluxNewsState extends ChangeNotifier {
                           title TEXT, 
                           site_url TEXT, 
                           iconMimeType TEXT,
+                          iconID INTEGER,
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
@@ -438,6 +447,7 @@ class FluxNewsState extends ChangeNotifier {
                           title TEXT, 
                           site_url TEXT, 
                           iconMimeType TEXT,
+                          iconID INTEGER,
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
@@ -454,6 +464,7 @@ class FluxNewsState extends ChangeNotifier {
                                         title,
                                         site_url, 
                                         iconMimeType,
+                                        iconID,
                                         newsCount,
                                         crawler,
                                         manualTruncate,
@@ -468,6 +479,7 @@ class FluxNewsState extends ChangeNotifier {
                         title,
                         site_url, 
                         iconMimeType,
+                        0 AS iconID,
                         newsCount,
                         crawler,
                         manualTruncate,
@@ -487,6 +499,7 @@ class FluxNewsState extends ChangeNotifier {
                           title TEXT, 
                           site_url TEXT, 
                           iconMimeType TEXT,
+                          iconID INTEGER,
                           newsCount INTEGER,
                           crawler INTEGER,
                           manualTruncate INTEGER,
@@ -503,6 +516,7 @@ class FluxNewsState extends ChangeNotifier {
                                         title,
                                         site_url, 
                                         iconMimeType,
+                                        iconID,
                                         newsCount,
                                         crawler,
                                         manualTruncate,
@@ -517,6 +531,112 @@ class FluxNewsState extends ChangeNotifier {
                         title,
                         site_url, 
                         iconMimeType,
+                        iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        expandedWithFulltext,
+                        categoryID  
+                  from tempFeeds;''');
+          await db.execute('DROP TABLE IF EXISTS tempFeeds');
+        } else if (oldVersion == 6) {
+          logThis('upgradeDB', 'Upgrading DB from version 6', LogLevel.INFO);
+
+          await db.execute(
+            '''CREATE TABLE tempFeeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into tempFeeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        0 AS iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        0 AS expandedWithFulltext,
+                        categoryID  
+                  from feeds;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into feeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        iconID,
                         newsCount,
                         crawler,
                         manualTruncate,
@@ -530,9 +650,10 @@ class FluxNewsState extends ChangeNotifier {
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
         }
+
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 6,
+      version: 7,
     );
   }
 
@@ -622,6 +743,16 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
         ];
+        recordTypesSecondSwipeActions = <KeyValueRecordType>[
+          KeyValueRecordType(key: FluxNewsState.swipeActionNoneString, value: AppLocalizations.of(context)!.none),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
+          KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
+        ];
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
           KeyValueRecordType(key: FluxNewsState.tabActionExpandString, value: AppLocalizations.of(context)!.expand),
@@ -637,6 +768,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
         recordTypesBrightnessMode = <KeyValueRecordType>[];
         recordTypesSwipeActions = <KeyValueRecordType>[];
+        recordTypesSecondSwipeActions = <KeyValueRecordType>[];
         recordTypesTabActions = <KeyValueRecordType>[];
         recordTypesLongPressActions = <KeyValueRecordType>[];
       }
@@ -646,6 +778,7 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[];
       recordTypesBrightnessMode = <KeyValueRecordType>[];
       recordTypesSwipeActions = <KeyValueRecordType>[];
+      recordTypesSecondSwipeActions = <KeyValueRecordType>[];
       recordTypesTabActions = <KeyValueRecordType>[];
       recordTypesLongPressActions = <KeyValueRecordType>[];
     }
@@ -689,6 +822,20 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesSwipeActions != null) {
       if (recordTypesSwipeActions!.isNotEmpty) {
         rightSwipeActionSelection = recordTypesSwipeActions![1];
+      }
+    }
+
+    // init the second left Swipe action selection with the first value of the above generated maps
+    if (recordTypesSecondSwipeActions != null) {
+      if (recordTypesSecondSwipeActions!.isNotEmpty) {
+        secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![0];
+      }
+    }
+
+    // init the second right Swipe action selection with the first value of the above generated maps
+    if (recordTypesSecondSwipeActions != null) {
+      if (recordTypesSecondSwipeActions!.isNotEmpty) {
+        secondRightSwipeActionSelection = recordTypesSecondSwipeActions![0];
       }
     }
 
@@ -948,6 +1095,30 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
+      // assign the second left Swipe Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSecondLeftSwipeActionKey) {
+        if (value != '') {
+          secondLeftSwipeAction = value;
+          for (KeyValueRecordType recordSet in recordTypesSecondSwipeActions!) {
+            if (value == recordSet.key) {
+              secondLeftSwipeActionSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the second right Swipe Action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSecondRightSwipeActionKey) {
+        if (value != '') {
+          secondRightSwipeAction = value;
+          for (KeyValueRecordType recordSet in recordTypesSecondSwipeActions!) {
+            if (value == recordSet.key) {
+              secondRightSwipeActionSelection = recordSet;
+            }
+          }
+        }
+      }
+
       // assign the floating action Button visibility selection from persistent saved config
       if (key == FluxNewsState.secureStorageFloatingButtonVisibleKey) {
         if (value != '') {
@@ -1011,25 +1182,25 @@ class FluxNewsState extends ChangeNotifier {
     return true;
   }
 
-  Future<void> saveFeedIconFile(int feedID, Uint8List? bytes) async {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  Future<void> saveFeedIconFile(int feedIconID, Uint8List? bytes) async {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     await saveFile(filename, bytes);
   }
 
-  Uint8List? readFeedIconFile(int feedID) {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  Uint8List? readFeedIconFile(int feedIconID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     return readFile(filename);
   }
 
-  bool checkIfFeedIconFileExists(int feedID) {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  bool checkIfFeedIconFileExists(int feedIconID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     String filePath = externalDirectory!.path + filename;
     final file = File(filePath);
     return file.existsSync();
   }
 
-  void deleteFeedIconFile(int feedID) {
-    String filename = "${FluxNewsState.feedIconFilePath}$feedID";
+  void deleteFeedIconFile(int feedIconID) {
+    String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     deleteFile(filename);
   }
 

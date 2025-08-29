@@ -8,7 +8,6 @@ import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../state_management/flux_news_state.dart';
 
@@ -27,6 +26,7 @@ class News {
       required this.readingTime,
       required this.starred,
       required this.feedTitle,
+      this.feedIconID,
       this.attachments,
       this.attachmentURL,
       this.attachmentMimeType,
@@ -54,6 +54,7 @@ class News {
   String? syncStatus = FluxNewsState.notSyncedSyncStatus;
   Uint8List? icon;
   String? iconMimeType = '';
+  int? feedIconID;
   List<Attachment>? attachments;
   String? attachmentURL = '';
   String? attachmentMimeType = '';
@@ -82,6 +83,7 @@ class News {
       readingTime: json['reading_time'],
       starred: json['starred'],
       feedTitle: json['feed']?['title'],
+      feedIconID: json['feed']?['icon']?['icon_id'],
     );
 
     if (json['enclosures'] != null) {
@@ -126,6 +128,7 @@ class News {
         feedTitle = res['feedTitle'],
         syncStatus = res['syncStatus'],
         iconMimeType = res['iconMimeType'],
+        feedIconID = res['iconID'],
         attachmentURL = res['attachmentURL'],
         attachmentMimeType = res['attachmentMimeType'],
         crawler = res['crawler'] == 1 ? true : false,
@@ -537,6 +540,7 @@ class Feed {
       'title': title,
       'site_url': siteUrl,
       'iconMimeType': iconMimeType,
+      'iconID': feedIconID,
       'newsCount': newsCount,
       'crawler': crawler,
       'manualTruncate': manualTruncate,
@@ -555,6 +559,7 @@ class Feed {
         title = res['title'],
         siteUrl = res['site_url'],
         iconMimeType = res['iconMimeType'],
+        feedIconID = res['iconID'],
         newsCount = res['newsCount'],
         crawler = res['crawler'] == 1 ? true : false,
         manualTruncate = res['manualTruncate'] == 1 ? true : false,
@@ -807,8 +812,9 @@ class Categories {
         int? categoryNewsCount = 0;
         for (Feed feed in category.feeds) {
           int? feedNewsCount;
-          feedNewsCount = Sqflite.firstIntValue(await appState.db!
-              .rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?', [feed.feedID, status]));
+          List<Map<String, Object?>> result = await appState.db!
+              .rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?', [feed.feedID, status]);
+          feedNewsCount = result.isNotEmpty ? result.first.values.first as int? : 0;
           feedNewsCount ??= 0;
           categoryNewsCount ??= 0;
           categoryNewsCount = categoryNewsCount + feedNewsCount;

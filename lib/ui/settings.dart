@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -626,9 +626,8 @@ class Settings extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const Divider(),
-
+                // this row contains the selection of the tab action
                 Row(
                   children: [
                     Padding(
@@ -667,6 +666,7 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // this row contains the selection of the long press action
                 Row(
                   children: [
                     Padding(
@@ -781,7 +781,51 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
-                // this row contains the selection of left swipe action
+                // this row contains the selection of second left swipe action
+                // there are the choices of none, read, bookmark and save
+                appState.activateSwipeGestures
+                    ? Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
+                              Icons.swipe_left,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.secondLeftSwipeSelectionOption,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                          DropdownButton<KeyValueRecordType>(
+                            value: appState.secondLeftSwipeActionSelection,
+                            elevation: 16,
+                            underline: Container(
+                              height: 2,
+                            ),
+                            alignment: AlignmentDirectional.centerEnd,
+                            onChanged: (KeyValueRecordType? value) {
+                              if (value != null) {
+                                appState.secondLeftSwipeAction = value.key;
+                                appState.secondLeftSwipeActionSelection = value;
+                                appState.storage
+                                    .write(key: FluxNewsState.secureStorageSecondLeftSwipeActionKey, value: value.key);
+                                appState.refreshView();
+                              }
+                            },
+                            items: appState.recordTypesSecondSwipeActions!
+                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                    DropdownMenuItem<KeyValueRecordType>(
+                                        value: recordType, child: Text(recordType.value)))
+                                .toList(),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+                // this row contains the selection of right swipe action
                 // there are the choices of read, bookmark and save
                 appState.activateSwipeGestures
                     ? Row(
@@ -825,7 +869,50 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
-
+                // this row contains the selection of second right swipe action
+                // there are the choices of none, read, bookmark and save
+                appState.activateSwipeGestures
+                    ? Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                            child: const Icon(
+                              Icons.swipe_right,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.secondRightSwipeSelectionOption,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                          DropdownButton<KeyValueRecordType>(
+                            value: appState.secondRightSwipeActionSelection,
+                            elevation: 16,
+                            underline: Container(
+                              height: 2,
+                            ),
+                            alignment: AlignmentDirectional.centerEnd,
+                            onChanged: (KeyValueRecordType? value) {
+                              if (value != null) {
+                                appState.secondRightSwipeAction = value.key;
+                                appState.secondRightSwipeActionSelection = value;
+                                appState.storage
+                                    .write(key: FluxNewsState.secureStorageSecondRightSwipeActionKey, value: value.key);
+                                appState.refreshView();
+                              }
+                            },
+                            items: appState.recordTypesSecondSwipeActions!
+                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                    DropdownMenuItem<KeyValueRecordType>(
+                                        value: recordType, child: Text(recordType.value)))
+                                .toList(),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
                 // this list tile contains feed settings
                 // it is clickable and opens the feed settings
                 ListTile(

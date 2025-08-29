@@ -5,7 +5,8 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+//import 'package:flutter_gen/gen_l10n/flux_news_localizations.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -151,7 +152,7 @@ class FluxNews extends StatelessWidget {
                 color: Colors.black54,
               ),
             ),
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
@@ -188,7 +189,7 @@ class FluxNews extends StatelessWidget {
             popupMenuTheme: PopupMenuThemeData(
               color: themeState.useBlackMode ? Colors.black : null,
             ),
-            dialogTheme: DialogTheme(
+            dialogTheme: DialogThemeData(
               backgroundColor: themeState.useBlackMode ? Colors.black : null,
             ),
             appBarTheme: AppBarTheme(
@@ -202,7 +203,7 @@ class FluxNews extends StatelessWidget {
               ),
               foregroundColor: Colors.white70,
             ),
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
