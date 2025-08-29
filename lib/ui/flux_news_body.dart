@@ -153,19 +153,35 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                             actions: <Widget>[
                               TextButton(
                                 child: Text(AppLocalizations.of(context)!.ok),
-                                onPressed: () {
+                                onPressed: () async {
                                   // mark news as read
                                   markNewsAsReadInDB(appState);
-                                  // refresh news list with the all news state
-                                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                                    appState.jumpToItem(0);
-                                  });
+                                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                                    await queryNextCategoryFromDB(appState, context).then((value) {
+                                      if (context.mounted) {
+                                        setNextCategory(value, appState, context);
+                                      }
+                                    });
+                                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                                    await queryNextFeedFromDB(appState, context).then((value) {
+                                      if (context.mounted) {
+                                        setNextFeed(value, appState, context);
+                                      }
+                                    });
+                                  } else {
+                                    // refresh news list with the all news state
+                                    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                                      appState.jumpToItem(0);
+                                    });
 
-                                  // notify the categories to update the news count
-                                  appCounterState.listUpdated = true;
-                                  appCounterState.refreshView();
-                                  appState.refreshView();
-                                  Navigator.of(context).pop();
+                                    // notify the categories to update the news count
+                                    appCounterState.listUpdated = true;
+                                    appCounterState.refreshView();
+                                    appState.refreshView();
+                                  }
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop();
+                                  }
                                 },
                               ),
                               TextButton(
@@ -211,23 +227,22 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
-              onLongPress: () {
+              onLongPress: () async {
                 // mark news as read
                 markNewsAsReadInDB(appState);
-                // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-              },
-              child: FloatingActionButton(
-                onPressed: () {
-                  // mark news as read
-                  markNewsAsReadInDB(appState);
+                if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                  await queryNextCategoryFromDB(appState, context).then((value) {
+                    if (context.mounted) {
+                      setNextCategory(value, appState, context);
+                    }
+                  });
+                } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                  await queryNextFeedFromDB(appState, context).then((value) {
+                    if (context.mounted) {
+                      setNextFeed(value, appState, context);
+                    }
+                  });
+                } else {
                   // refresh news list with the all news state
                   appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
                     appState.jumpToItem(0);
@@ -237,6 +252,57 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   appCounterState.listUpdated = true;
                   appCounterState.refreshView();
                   appState.refreshView();
+                }
+              },
+              child: FloatingActionButton(
+                onPressed: () {
+                  showDialog<String>(
+                      context: context,
+                      builder: (BuildContext context) => AlertDialog.adaptive(
+                            title: Text(AppLocalizations.of(context)!.markAsRead),
+                            content: Text('${AppLocalizations.of(context)!.markAllAsRead}?'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text(AppLocalizations.of(context)!.ok),
+                                onPressed: () async {
+                                  // mark news as read
+                                  markNewsAsReadInDB(appState);
+                                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                                    await queryNextCategoryFromDB(appState, context).then((value) {
+                                      if (context.mounted) {
+                                        setNextCategory(value, appState, context);
+                                      }
+                                    });
+                                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                                    await queryNextFeedFromDB(appState, context).then((value) {
+                                      if (context.mounted) {
+                                        setNextFeed(value, appState, context);
+                                      }
+                                    });
+                                  } else {
+                                    // refresh news list with the all news state
+                                    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                                      appState.jumpToItem(0);
+                                    });
+
+                                    // notify the categories to update the news count
+                                    appCounterState.listUpdated = true;
+                                    appCounterState.refreshView();
+                                    appState.refreshView();
+                                  }
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                              ),
+                              TextButton(
+                                child: Text(AppLocalizations.of(context)!.cancel),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          ));
                 },
                 child: const Icon(Icons.check_circle_outline),
               ))
@@ -458,7 +524,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               ),
             ];
           },
-          onSelected: (value) {
+          onSelected: (value) async {
             if (value == 0) {
               // navigate to the search page
               Navigator.pushNamed(context, FluxNewsState.searchRouteString);
@@ -543,15 +609,29 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             } else if (value == 3) {
               // mark news as read
               markNewsAsReadInDB(appState);
-              // refresh news list with the all news state
-              appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
-                appState.jumpToItem(0);
-              });
+              if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                await queryNextCategoryFromDB(appState, context).then((value) {
+                  if (context.mounted) {
+                    setNextCategory(value, appState, context);
+                  }
+                });
+              } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                await queryNextFeedFromDB(appState, context).then((value) {
+                  if (context.mounted) {
+                    setNextFeed(value, appState, context);
+                  }
+                });
+              } else {
+                // refresh news list with the all news state
+                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.jumpToItem(0);
+                });
 
-              // notify the categories to update the news count
-              appCounterState.listUpdated = true;
-              appCounterState.refreshView();
-              appState.refreshView();
+                // notify the categories to update the news count
+                appCounterState.listUpdated = true;
+                appCounterState.refreshView();
+                appState.refreshView();
+              }
             } else if (value == 4) {
               // navigate to the settings page
               Navigator.pushNamed(context, FluxNewsState.settingsRouteString);

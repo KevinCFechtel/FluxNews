@@ -1149,9 +1149,15 @@ Future<Feed?> queryNextFeedFromDB(FluxNewsState appState, BuildContext context) 
               }
             }
             if (nextCategoryID != null) {
-              List<Map<String, Object?>> result = await appState.db!.rawQuery('''SELECT MIN(feedID) as feedID
-                                                                      FROM feeds WHERE categoryID = ?''',
-                  [nextCategoryID]);
+              List<Map<String, Object?>> result = await appState.db!.rawQuery('''SELECT MIN(feeds.feedID) as feedID
+                                                                      FROM feeds
+                                                                      LEFT OUTER JOIN news ON feeds.feedID = news.feedID
+                                                                      WHERE feeds.categoryID = ?
+                                                                        AND (SELECT COUNT(news.newsID)
+                                                                            FROM news 
+                                                                            WHERE news.feedID = feeds.feedID 
+                                                                              AND news.status LIKE ?) > 0''',
+                  [nextCategoryID, FluxNewsState.unreadNewsStatus]);
               if (result.isNotEmpty) {
                 if (result.first.entries.isNotEmpty) {
                   nextFeedID = result.first.entries.first.value as int?;
