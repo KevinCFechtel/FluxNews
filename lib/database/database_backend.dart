@@ -659,13 +659,16 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawDelete('''DELETE FROM news 
-                                      WHERE starred = 0 AND newsID NOT IN 
+                                      WHERE starred != 1 AND 
+                                        status = ? AND
+                                        newsID NOT IN 
                                         (SELECT newsID 
                                           FROM news 
-                                          WHERE starred = 0 
-                                            AND status = '${FluxNewsState.unreadNewsStatus}'
+                                          WHERE starred != 1
+                                            AND status = ?
                                           ORDER BY publishedAt DESC
-                                          LIMIT ${appState.amountOfSavedNews})''');
+                                          LIMIT ?)''',
+        [FluxNewsState.readNewsStatus, FluxNewsState.readNewsStatus, appState.amountOfSavedNews]);
   }
 
   if (appState.debugMode) {
@@ -690,7 +693,7 @@ Future<void> cleanStarredNews(FluxNewsState appState) async {
                                           FROM news 
                                           WHERE starred = 1
                                           ORDER BY publishedAt DESC
-                                          LIMIT ${appState.amountOfSavedStarredNews})''');
+                                          LIMIT ?)''', [appState.amountOfSavedStarredNews]);
   }
 
   if (appState.debugMode) {
