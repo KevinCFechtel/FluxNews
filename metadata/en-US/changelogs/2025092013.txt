@@ -1,0 +1,4 @@
+The following features have been added:
+ • A true black mode for OLED displays
+ • The full article text can now be displayed in the app
+ • A floating button can be enabled to simplify marking all messages as read
