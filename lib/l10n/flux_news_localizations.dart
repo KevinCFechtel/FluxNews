@@ -761,6 +761,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get none;
+
+  /// No description provided for @syncInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync in progress...'**
+  String get syncInProgress;
 }
 
 class _AppLocalizationsDelegate

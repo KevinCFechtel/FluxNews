@@ -362,4 +362,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get none => 'None';
+
+  @override
+  String get syncInProgress => 'Sync in progress...';
 }

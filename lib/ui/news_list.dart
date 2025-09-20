@@ -36,14 +36,18 @@ class BodyNewsList extends StatelessWidget {
                   // show empty dialog if list is null
                   ? Center(
                       child: Text(
-                      AppLocalizations.of(context)!.noNewEntries,
+                      appState.syncProcess
+                          ? AppLocalizations.of(context)!.syncInProgress
+                          : AppLocalizations.of(context)!.noNewEntries,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ))
                   // show empty dialog if list is empty
                   : snapshot.data!.isEmpty
                       ? Center(
                           child: Text(
-                          AppLocalizations.of(context)!.noNewEntries,
+                          appState.syncProcess
+                              ? AppLocalizations.of(context)!.syncInProgress
+                              : AppLocalizations.of(context)!.noNewEntries,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ))
                       // otherwise create list view with ScrollablePositionedList
