@@ -31,6 +31,8 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
   // also resetting the error string for new errors occurring within this sync
   appState.errorString = '';
 
+  // remove the native splash after updating the list view
+  FlutterNativeSplash.remove();
   // check the miniflux credentials to enable the sync
   bool authCheck = await checkMinifluxCredentials(appState.minifluxURL, appState.minifluxAPIKey, appState)
       .onError((error, stackTrace) {
@@ -162,7 +164,8 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       appState.refreshView();
     }
     // remove the native splash after updating the list view
-    FlutterNativeSplash.remove();
+    // Moved to the beginning of sync
+    //FlutterNativeSplash.remove();
 
     NewsList starredNews = NewsList(news: [], newsCount: 0);
     if (!appState.longSyncAborted) {
@@ -259,7 +262,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
           // set the list view position to the top
           appState.jumpToItem(0);
         } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
-          if (appState.feedIDs?.first == -1) {
+          if (appState.feedIDs != null && appState.feedIDs!.isNotEmpty && appState.feedIDs?.first == -1) {
             // if new news exists and the "Bookmarked" category is selected,
             // set the list view position to the top
             appState.jumpToItem(0);
@@ -276,7 +279,8 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     appState.syncProcess = false;
     appState.refreshView();
     // remove the native splash after updating the list view
-    FlutterNativeSplash.remove();
+    // Moved to the beginning of sync
+    //FlutterNativeSplash.remove();
   }
   if (appState.debugMode) {
     // Debugging execution time with many news

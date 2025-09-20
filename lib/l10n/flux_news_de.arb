@@ -108,5 +108,6 @@
     "expandedWithFulltext": "Zeige nur Text statt HTML bei der Erweiterung des News Inhalts",
     "showHeadlineOnTop": "Zeige die Überschrift der News über dem Bild",
     "showOnlyFeedCategoriesWithNewNews": "Zeige nur die Kategorien und Feeds an, die neue Nachrichten besitzen",
-    "none": "Keine"
+    "none": "Keine",
+    "syncInProgress": "Sync wird gerade ausgeführt..."
 }

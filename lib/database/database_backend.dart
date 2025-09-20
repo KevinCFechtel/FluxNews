@@ -293,7 +293,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
 
     if (feedIDs != null) {
       // if the feed id is not null a category, a feed or the bookmarked news ar selected
-      if (appState.feedIDs != null && appState.feedIDs?.first == -1) {
+      if (appState.feedIDs != null && appState.feedIDs!.isNotEmpty && appState.feedIDs?.first == -1) {
         // if the feed id is -1 the bookmarked news are selected
         List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
                     SELECT news.newsID, 

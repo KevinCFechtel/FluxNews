@@ -373,4 +373,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get none => 'Keine';
+
+  @override
+  String get syncInProgress => 'Sync wird gerade ausgeführt...';
 }
