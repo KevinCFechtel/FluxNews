@@ -789,7 +789,7 @@ abstract class AppLocalizations {
   /// No description provided for @startupCategorieCategorie.
   ///
   /// In en, this message translates to:
-  /// **'Choose a Categorie as default for startup'**
+  /// **'Choose a categorie as default for startup'**
   String get startupCategorieCategorie;
 
   /// No description provided for @startupCategorieFeed.
@@ -797,6 +797,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a feed as default for startup'**
   String get startupCategorieFeed;
+
+  /// No description provided for @startupCategorieCategorieSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a categorie as default for startup'**
+  String get startupCategorieCategorieSelection;
+
+  /// No description provided for @startupCategorieFeedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a feed as default for startup'**
+  String get startupCategorieFeedSelection;
 }
 
 class _AppLocalizationsDelegate

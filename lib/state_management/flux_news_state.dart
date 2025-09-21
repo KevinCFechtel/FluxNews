@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.8.1';
+  static const String applicationVersion = '1.8.2';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -87,6 +87,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageShowHeadlineOnTopKey = 'showHeadlineOnTop';
   static const String secureStorageShowOnlyFeedCategoriesWithNewNeKey = 'showOnlyFeedCategoriesWithNewNews';
   static const String secureStorageStartupCategorieKey = 'startupCategorie';
+  static const String secureStorageStartupCategorieSelectionKey = 'startupCategorieSelection';
+  static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -223,6 +225,9 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesStartupFeeds;
   KeyValueRecordType? startupCategorieSelection;
   KeyValueRecordType? startupFeedSelection;
+  int? startupCategorieSelectionKey;
+  int? startupFeedSelectionKey;
+  bool categorieStartup = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1186,6 +1191,20 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageStartupCategorieKey) {
         if (value != '') {
           startupCategorie = int.parse(value);
+        }
+      }
+
+      // assign the startup categorie selection from persistent saved config
+      if (key == FluxNewsState.secureStorageStartupCategorieSelectionKey) {
+        if (value != '') {
+          startupCategorieSelectionKey = int.parse(value);
+        }
+      }
+
+      // assign the startup feed selection from persistent saved config
+      if (key == FluxNewsState.secureStorageStartupFeedSelectionKey) {
+        if (value != '') {
+          startupFeedSelectionKey = int.parse(value);
         }
       }
     });

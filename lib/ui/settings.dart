@@ -1157,6 +1157,92 @@ class Settings extends StatelessWidget {
                         value: 3,
                       )
                     ])),
+                appState.startupCategorie == 2
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                              child: const Icon(
+                                Icons.feed,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context)!.startupCategorieCategorieSelection,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                overflow: TextOverflow.visible,
+                              ),
+                            ),
+                            DropdownButton<KeyValueRecordType>(
+                              value: appState.startupCategorieSelection,
+                              elevation: 16,
+                              underline: Container(
+                                height: 2,
+                              ),
+                              alignment: AlignmentDirectional.centerEnd,
+                              onChanged: (KeyValueRecordType? value) {
+                                if (value != null) {
+                                  appState.startupCategorieSelectionKey = int.parse(value.key);
+                                  appState.startupCategorieSelection = value;
+                                  appState.storage.write(
+                                      key: FluxNewsState.secureStorageStartupCategorieSelectionKey, value: value.key);
+                                  appState.refreshView();
+                                }
+                              },
+                              items: appState.recordTypesStartupCategories!
+                                  .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType, child: Text(recordType.value)))
+                                  .toList(),
+                            ),
+                          ],
+                        ))
+                    : const SizedBox.shrink(),
+                appState.startupCategorie == 3
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                              child: const Icon(
+                                Icons.feed,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context)!.startupCategorieFeedSelection,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                overflow: TextOverflow.visible,
+                              ),
+                            ),
+                            DropdownButton<KeyValueRecordType>(
+                              value: appState.startupFeedSelection,
+                              elevation: 16,
+                              underline: Container(
+                                height: 2,
+                              ),
+                              alignment: AlignmentDirectional.centerEnd,
+                              onChanged: (KeyValueRecordType? value) {
+                                if (value != null) {
+                                  appState.startupFeedSelectionKey = int.parse(value.key);
+                                  appState.startupFeedSelection = value;
+                                  appState.storage
+                                      .write(key: FluxNewsState.secureStorageStartupFeedSelectionKey, value: value.key);
+                                  appState.refreshView();
+                                }
+                              },
+                              items: appState.recordTypesStartupFeeds!
+                                  .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType, child: Text(recordType.value)))
+                                  .toList(),
+                            ),
+                          ],
+                        ))
+                    : const SizedBox.shrink(),
                 const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
@@ -1285,12 +1371,40 @@ class Settings extends StatelessWidget {
   // It also initializes the database connection.
   Future<void> initConfig(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
+    appState.recordTypesStartupCategories = <KeyValueRecordType>[];
+    appState.recordTypesStartupFeeds = <KeyValueRecordType>[];
     await appState.readConfigValues();
     if (context.mounted) {
       appState.readConfig(context);
       appState.readThemeConfigValues(context);
     }
     appState.db = await appState.initializeDB();
+    Categories? actualCategoryList;
+    if (context.mounted) {
+      actualCategoryList = await queryCategoriesFromDB(appState, context);
+    }
+    if (actualCategoryList != null) {
+      for (Category category in actualCategoryList.categories) {
+        appState.recordTypesStartupCategories!.add(
+          KeyValueRecordType(key: category.categoryID.toString(), value: category.title),
+        );
+        if (category.categoryID == appState.startupCategorieSelectionKey) {
+          appState.startupCategorieSelection =
+              KeyValueRecordType(key: category.categoryID.toString(), value: category.title);
+        }
+      }
+
+      for (Category category in actualCategoryList.categories) {
+        for (Feed feed in category.feeds) {
+          appState.recordTypesStartupFeeds!.add(
+            KeyValueRecordType(key: feed.feedID.toString(), value: feed.title),
+          );
+          if (feed.feedID == appState.startupFeedSelectionKey) {
+            appState.startupFeedSelection = KeyValueRecordType(key: feed.feedID.toString(), value: feed.title);
+          }
+        }
+      }
+    }
     appState.refreshView();
   }
 

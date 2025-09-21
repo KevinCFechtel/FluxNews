@@ -31,6 +31,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     return FluxNewsBodyStatefulWrapper(onInit: () {
       initConfig(context, appState);
       appState.categoryList = queryCategoriesFromDB(appState, context);
+
       appState.newsList = Future<List<News>>.value([]);
       WidgetsBinding.instance.addObserver(this);
     }, child: OrientationBuilder(
@@ -73,12 +74,58 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             appState.appBarText = AppLocalizations.of(context)!.bookmarked;
           }
           appState.selectedID = -1;
-        } else if (appState.startupCategorie == 2) {
-          // a categorie is selected as startup categorie
-          appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
-        } else if (appState.startupCategorie == 3) {
-          // a feed is selected as startup categorie
-          appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+        } else {
+          Categories? actualCategoryList;
+          if (context.mounted) {
+            actualCategoryList = await queryCategoriesFromDB(appState, context);
+          }
+          if (actualCategoryList != null) {
+            if (appState.startupCategorie == 2) {
+              if (appState.startupCategorieSelectionKey != null) {
+                for (Category category in actualCategoryList.categories) {
+                  if (category.categoryID == appState.startupCategorieSelectionKey) {
+                    // add the according feeds of this category as a filter
+                    appState.feedIDs = category.getFeedIDs();
+                    appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
+                    // reload the news list with the new filter
+                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.jumpToItem(0);
+                    });
+                    // set the category title as app bar title
+                    // and update the news count in the app bar, if the function is activated.
+                    appState.appBarText = category.title;
+                    appState.selectedID = category.categoryID;
+                    if (context.mounted) {
+                      actualCategoryList.renewNewsCount(appState, context);
+                    }
+                  }
+                }
+              }
+            } else if (appState.startupCategorie == 3) {
+              if (appState.startupFeedSelectionKey != null) {
+                for (Category category in actualCategoryList.categories) {
+                  for (Feed feed in category.feeds) {
+                    if (feed.feedID == appState.startupFeedSelectionKey) {
+                      appState.feedIDs = [feed.feedID];
+                      appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+                      // reload the news list with the new filter
+                      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                        appState.jumpToItem(0);
+                      });
+                      // set the feed title as app bar title
+                      // and update the news count in the app bar, if the function is activated.
+                      appState.appBarText = feed.title;
+                      appState.selectedID = feed.feedID;
+                      if (context.mounted) {
+                        actualCategoryList.renewNewsCount(appState, context);
+                      }
+                    }
+                  }
+                }
+              }
+              appState.categorieStartup = false;
+            }
+          }
         }
       }
 

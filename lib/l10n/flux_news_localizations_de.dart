@@ -388,8 +388,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get startupCategorieCategorie =>
-      'Wähle eine besteimmte Kategroei zum Start';
+      'Wähle eine bestimmte Kategorie zum Start';
 
   @override
   String get startupCategorieFeed => 'Wähle einen bestimmten Feed zum Start';
+
+  @override
+  String get startupCategorieCategorieSelection =>
+      'Wähle die Kategorie zum Start aus';
+
+  @override
+  String get startupCategorieFeedSelection => 'Wähle den Feed zum Start aus';
 }
