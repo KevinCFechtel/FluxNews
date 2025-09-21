@@ -86,6 +86,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageLongPressActionKey = 'LongPressAction';
   static const String secureStorageShowHeadlineOnTopKey = 'showHeadlineOnTop';
   static const String secureStorageShowOnlyFeedCategoriesWithNewNeKey = 'showOnlyFeedCategoriesWithNewNews';
+  static const String secureStorageStartupCategorieKey = 'startupCategorie';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -217,6 +218,11 @@ class FluxNewsState extends ChangeNotifier {
   String tabAction = FluxNewsState.tabActionOpenString;
   String longPressAction = FluxNewsState.longPressActionMenuString;
   bool showHeadlineOnTop = false;
+  int startupCategorie = 0;
+  List<KeyValueRecordType>? recordTypesStartupCategories;
+  List<KeyValueRecordType>? recordTypesStartupFeeds;
+  KeyValueRecordType? startupCategorieSelection;
+  KeyValueRecordType? startupFeedSelection;
 
   // vars for app bar text
   String appBarText = '';
@@ -1173,6 +1179,13 @@ class FluxNewsState extends ChangeNotifier {
           } else {
             showOnlyFeedCategoriesWithNewNews = false;
           }
+        }
+      }
+
+      // assign the startup categorie from persistent saved config
+      if (key == FluxNewsState.secureStorageStartupCategorieKey) {
+        if (value != '') {
+          startupCategorie = int.parse(value);
         }
       }
     });

@@ -994,10 +994,7 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateTruncate
-                    ? RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.truncateModeAll,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 0,
+                    ? RadioGroup<int>(
                         groupValue: appState.truncateMode,
                         onChanged: (int? value) {
                           if (value != null) {
@@ -1007,40 +1004,25 @@ class Settings extends StatelessWidget {
                             appState.refreshView();
                           }
                         },
-                      )
+                        child: Column(children: [
+                          RadioListTile<int>(
+                            title: Text(AppLocalizations.of(context)!.truncateModeAll,
+                                style: Theme.of(context).textTheme.titleMedium),
+                            value: 0,
+                          ),
+                          RadioListTile<int>(
+                            title: Text(AppLocalizations.of(context)!.truncateModeScraper,
+                                style: Theme.of(context).textTheme.titleMedium),
+                            value: 1,
+                          ),
+                          RadioListTile<int>(
+                            title: Text(AppLocalizations.of(context)!.truncateModeManual,
+                                style: Theme.of(context).textTheme.titleMedium),
+                            value: 2,
+                          )
+                        ]))
                     : const SizedBox.shrink(),
-                appState.activateTruncate
-                    ? RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.truncateModeScraper,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 1,
-                        groupValue: appState.truncateMode,
-                        onChanged: (int? value) {
-                          if (value != null) {
-                            appState.truncateMode = value;
-                            appState.storage
-                                .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
-                            appState.refreshView();
-                          }
-                        },
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateTruncate
-                    ? RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.truncateModeManual,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 2,
-                        groupValue: appState.truncateMode,
-                        onChanged: (int? value) {
-                          if (value != null) {
-                            appState.truncateMode = value;
-                            appState.storage
-                                .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
-                            appState.refreshView();
-                          }
-                        },
-                      )
-                    : const SizedBox.shrink(),
+
                 appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
                 appState.activateTruncate
                     ? Row(
@@ -1130,7 +1112,52 @@ class Settings extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
                 appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
-
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context)!.startupCategorie,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.normal,
+                          )),
+                    ],
+                  ),
+                ),
+                RadioGroup<int>(
+                    groupValue: appState.startupCategorie,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        appState.startupCategorie = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageStartupCategorieKey, value: value.toString());
+                        appState.refreshView();
+                      }
+                    },
+                    child: Column(children: [
+                      RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.startupCategorieAll,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 0,
+                      ),
+                      RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.startupCategorieBookmarks,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 1,
+                      ),
+                      RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.startupCategorieCategorie,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 2,
+                      ),
+                      RadioListTile<int>(
+                        title: Text(AppLocalizations.of(context)!.startupCategorieFeed,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        value: 3,
+                      )
+                    ])),
+                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(

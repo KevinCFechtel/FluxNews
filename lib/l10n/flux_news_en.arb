@@ -109,5 +109,10 @@
     "showHeadlineOnTop": "Show the headline of the news above the image",
     "showOnlyFeedCategoriesWithNewNews": "Only show the categories and feeds that have new messages",
     "none": "None",
-    "syncInProgress": "Sync in progress..."
+    "syncInProgress": "Sync in progress...",
+    "startupCategorie": "Choose Categorie for startup",
+    "startupCategorieAll": "Show all news on startup",
+    "startupCategorieBookmarks": "Show the bookmark categorie on startup",
+    "startupCategorieCategorie": "Choose a Categorie as default for startup",
+    "startupCategorieFeed": "Choose a feed as default for startup"
 }

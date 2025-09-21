@@ -63,6 +63,25 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         appState.readThemeConfigValues(context);
       }
 
+      // set the startup categorie if configured
+      if (appState.startupCategorie != 0) {
+        if (appState.startupCategorie == 1) {
+          // bookmarks selected as startup categorie
+          appState.feedIDs = [-1];
+          appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
+          if (context.mounted) {
+            appState.appBarText = AppLocalizations.of(context)!.bookmarked;
+          }
+          appState.selectedID = -1;
+        } else if (appState.startupCategorie == 2) {
+          // a categorie is selected as startup categorie
+          appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
+        } else if (appState.startupCategorie == 3) {
+          // a feed is selected as startup categorie
+          appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+        }
+      }
+
       if (appState.syncOnStart) {
         // sync on startup
         if (context.mounted) {
