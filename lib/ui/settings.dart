@@ -1117,11 +1117,13 @@ class Settings extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text(AppLocalizations.of(context)!.startupCategorie,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.normal,
-                          )),
+                      Expanded(
+                          child: Text(AppLocalizations.of(context)!.startupCategorie,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.normal,
+                                overflow: TextOverflow.visible,
+                              ))),
                     ],
                   ),
                 ),
@@ -1157,6 +1159,7 @@ class Settings extends StatelessWidget {
                         value: 3,
                       )
                     ])),
+                appState.startupCategorie == 2 ? const Divider() : const SizedBox.shrink(),
                 appState.startupCategorie == 2
                     ? Padding(
                         padding: const EdgeInsets.only(top: 12.0),
@@ -1200,6 +1203,7 @@ class Settings extends StatelessWidget {
                           ],
                         ))
                     : const SizedBox.shrink(),
+                appState.startupCategorie == 3 ? const Divider() : const SizedBox.shrink(),
                 appState.startupCategorie == 3
                     ? Padding(
                         padding: const EdgeInsets.only(top: 12.0),
