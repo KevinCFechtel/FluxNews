@@ -910,6 +910,79 @@ class Version {
   }
 }
 
+// define the model for a feed export
+class FeedExport {
+  FeedExport(
+      {required this.feedID,
+      required this.title,
+      this.manualTruncate,
+      this.preferParagraph,
+      this.preferAttachmentImage,
+      this.manualAdaptLightModeToIcon,
+      this.manualAdaptDarkModeToIcon,
+      this.openMinifluxEntry,
+      this.expandedWithFulltext});
+
+  // define the properties
+  int feedID = 0;
+  String title = '';
+  bool? manualTruncate = false;
+  bool? preferParagraph = false;
+  bool? preferAttachmentImage = false;
+  bool? manualAdaptLightModeToIcon = false;
+  bool? manualAdaptDarkModeToIcon = false;
+  bool? openMinifluxEntry = false;
+  bool? expandedWithFulltext = false;
+
+  // define the method to convert the model from json
+  factory FeedExport.fromJson(Map<String, dynamic> json) {
+    return FeedExport(
+      feedID: json['id'],
+      title: json['title'],
+      manualTruncate: json['manual_truncate'],
+      preferParagraph: json['prefer_paragraph'],
+      preferAttachmentImage: json['prefer_attachment_image'],
+      manualAdaptLightModeToIcon: json['manual_adapt_light_mode_to_icon'],
+      manualAdaptDarkModeToIcon: json['manual_adapt_dark_mode_to_icon'],
+      openMinifluxEntry: json['open_miniflux_entry'],
+      expandedWithFulltext: json['expanded_with_fulltext'],
+    );
+  }
+
+  // define the method to convert the model to json
+  Map<String, dynamic> toJson() => {
+        'id': feedID,
+        'title': title,
+        'manual_truncate': manualTruncate,
+        'prefer_paragraph': preferParagraph,
+        'prefer_attachment_image': preferAttachmentImage,
+        'manual_adapt_light_mode_to_icon': manualAdaptLightModeToIcon,
+        'manual_adapt_dark_mode_to_icon': manualAdaptDarkModeToIcon,
+        'open_miniflux_entry': openMinifluxEntry,
+        'expanded_with_fulltext': expandedWithFulltext
+      };
+
+  // define the method to convert the model from database
+  FeedExport.fromMap(Map<String, dynamic> res)
+      : feedID = res['feedID'],
+        title = res['title'],
+        manualTruncate = res['manualTruncate'] == 1 ? true : false,
+        preferParagraph = res['preferParagraph'] == 1 ? true : false,
+        preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
+        manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
+        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
+        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false;
+}
+
+// define the model for a categories list
+class FeedSettingsExportList {
+  FeedSettingsExportList({required this.feedSettings});
+
+  // define the properties
+  List<FeedExport> feedSettings = [];
+}
+
 // this is a helper function to get the actual tab position
 // this position is used to open the context menu of the news card here
 String truncateText(String text, int characterLimit) {
