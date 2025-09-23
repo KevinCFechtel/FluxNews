@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -9,7 +10,10 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:io' show Platform;
 
 import '../state_management/flux_news_state.dart';
@@ -1247,6 +1251,61 @@ class Settings extends StatelessWidget {
                           ],
                         ))
                     : const SizedBox.shrink(),
+                const Divider(),
+                // this list tile contains the ability to export the collected logs
+                ListTile(
+                  leading: const Icon(
+                    Icons.settings_backup_restore,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.exportSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () async {
+                    if (Platform.isAndroid || Platform.isIOS) {
+                      List<FeedExport> feedSettingsList = await queryFeedSettingsForExportFromDB(appState, context);
+                      FeedSettingsExportList feedSettingsExportList = FeedSettingsExportList(
+                          feedSettings: feedSettingsList, brightnessModeSelection: themeState.brightnessMode);
+                      String jsonExport = jsonEncode(feedSettingsExportList);
+                      final DateTime now = DateTime.now();
+                      final DateFormat formatter = DateFormat('yyyy-MM-dd-HH-mm-ss-SSS');
+                      final String formattedDate = formatter.format(now);
+                      String fileName = "fluxnews_settings_$formattedDate.json";
+
+                      Directory? externalDirectory;
+
+                      if (Platform.isIOS) {
+                        externalDirectory = await getApplicationDocumentsDirectory();
+                      } else {
+                        externalDirectory = await getExternalStorageDirectory();
+                      }
+
+                      File file = File("${externalDirectory!.path}/$fileName");
+                      file.writeAsStringSync(jsonExport);
+                      if (file.existsSync()) {
+                        if (Platform.isAndroid) {
+                          SharePlus.instance.share(ShareParams(files: [XFile("${externalDirectory.path}/$fileName")]));
+                        } else {
+                          if (context.mounted) {
+                            final box = context.findRenderObject() as RenderBox?;
+                            SharePlus.instance.share(ShareParams(
+                                files: [XFile("${externalDirectory.path}/$fileName")],
+                                sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+                          }
+                        }
+                      } else {
+                        if (Platform.isAndroid || Platform.isIOS) {
+                          FlutterLogs.logError(FluxNewsState.logTag, "existsSync", "File not found in storage.");
+                        }
+                      }
+                    }
+                  },
+                ),
                 const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),

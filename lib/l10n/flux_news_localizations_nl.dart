@@ -392,4 +392,7 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get startupCategorieFeedSelection =>
       'Select a feed as default for startup';
+
+  @override
+  String get exportSettings => 'Export der Einstellungen';
 }

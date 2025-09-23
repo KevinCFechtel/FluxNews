@@ -809,6 +809,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a feed as default for startup'**
   String get startupCategorieFeedSelection;
+
+  /// No description provided for @exportSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Export der Einstellungen'**
+  String get exportSettings;
 }
 
 class _AppLocalizationsDelegate

@@ -1256,3 +1256,32 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
   }
   return nextCategory;
 }
+
+// get the categories from the database and calculate the news count of this categories
+Future<List<FeedExport>> queryFeedSettingsForExportFromDB(FluxNewsState appState, BuildContext context) async {
+  if (appState.debugMode) {
+    logThis('queryFeedSettingsForExportFromDB', 'Starting querying feed Settings from DB', LogLevel.INFO);
+  }
+
+  List<FeedExport> feedSettingsList = [];
+  appState.db ??= await appState.initializeDB();
+  if (appState.db != null) {
+    // get the categories from the database
+    List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''SELECT feedID, 
+                                                          title, 
+                                                          manualTruncate,
+                                                          preferParagraph,
+                                                          preferAttachmentImage,
+                                                          manualAdaptLightModeToIcon,
+                                                          manualAdaptDarkModeToIcon,
+                                                          openMinifluxEntry,
+                                                          expandedWithFulltext
+                                                      FROM feeds 
+                                                      ORDER BY feedID ASC''');
+    feedSettingsList = queryResult.map((e) => FeedExport.fromMap(e)).toList();
+  }
+  if (appState.debugMode) {
+    logThis('queryFeedSettingsForExportFromDB', 'Finished querying feed Settings from DB', LogLevel.INFO);
+  }
+  return feedSettingsList;
+}

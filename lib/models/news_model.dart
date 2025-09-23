@@ -977,10 +977,17 @@ class FeedExport {
 
 // define the model for a categories list
 class FeedSettingsExportList {
-  FeedSettingsExportList({required this.feedSettings});
+  FeedSettingsExportList({required this.feedSettings, required this.brightnessModeSelection});
 
   // define the properties
   List<FeedExport> feedSettings = [];
+  String brightnessModeSelection;
+
+  // define the method to convert the model to json
+  Map<String, dynamic> toJson() => {
+        'brightness_mode_selection': brightnessModeSelection,
+        'feedSettings': feedSettings.map((feed) => feed.toJson()).toList(),
+      };
 }
 
 // this is a helper function to get the actual tab position

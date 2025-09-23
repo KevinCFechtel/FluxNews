@@ -399,4 +399,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get startupCategorieFeedSelection => 'Wähle den Feed zum Start aus';
+
+  @override
+  String get exportSettings => 'Export der Einstellungen';
 }
