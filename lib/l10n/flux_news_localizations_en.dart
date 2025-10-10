@@ -364,4 +364,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncInProgress => 'Sync in progress...';
+
+  @override
+  String get startupCategorie => 'Choose Categorie for startup';
+
+  @override
+  String get startupCategorieAll => 'Show all news on startup';
+
+  @override
+  String get startupCategorieBookmarks =>
+      'Show the bookmark categorie on startup';
+
+  @override
+  String get startupCategorieCategorie =>
+      'Choose a categorie as default for startup';
+
+  @override
+  String get startupCategorieFeed => 'Choose a feed as default for startup';
+
+  @override
+  String get startupCategorieCategorieSelection =>
+      'Select a categorie as default for startup';
+
+  @override
+  String get startupCategorieFeedSelection =>
+      'Select a feed as default for startup';
 }

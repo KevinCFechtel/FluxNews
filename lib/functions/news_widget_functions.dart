@@ -181,14 +181,14 @@ Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext cont
   if (context.mounted) {
     if (appState.appBarText == AppLocalizations.of(context)!.bookmarked) {
       appState.feedIDs = [-1];
-      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
         appState.jumpToItem(0);
       });
       appState.refreshView();
     } else {
       if (searchView) {
         // update the news list of the main view
-        appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
+        appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
           logThis(
               'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
           if (context.mounted) {
@@ -256,7 +256,7 @@ Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContex
           'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
     }
     // update the news list of the main view
-    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
+    appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
       logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
       if (context.mounted) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
@@ -302,7 +302,7 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
           'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
     }
     // update the news list of the main view
-    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).onError((error, stackTrace) {
+    appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
       logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
       if (context.mounted) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;

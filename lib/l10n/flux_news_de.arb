@@ -109,5 +109,12 @@
     "showHeadlineOnTop": "Zeige die Überschrift der News über dem Bild",
     "showOnlyFeedCategoriesWithNewNews": "Zeige nur die Kategorien und Feeds an, die neue Nachrichten besitzen",
     "none": "Keine",
-    "syncInProgress": "Sync wird gerade ausgeführt..."
+    "syncInProgress": "Sync wird gerade ausgeführt...",
+    "startupCategorie": "Wähle die Standardkategorie zum Start aus",
+    "startupCategorieAll": "Starte mit allen News",
+    "startupCategorieBookmarks": "Starte mit den Lesezeichen",
+    "startupCategorieCategorie": "Wähle eine bestimmte Kategorie zum Start",
+    "startupCategorieFeed": "Wähle einen bestimmten Feed zum Start",
+    "startupCategorieCategorieSelection": "Wähle die Kategorie zum Start aus",
+    "startupCategorieFeedSelection": "Wähle den Feed zum Start aus"
 }

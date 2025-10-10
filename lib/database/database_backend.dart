@@ -266,7 +266,7 @@ Future<int> markNotFetchedNewsAsRead(NewsList newNewsList, FluxNewsState appStat
 }
 
 // get the local saved news from the database
-Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) async {
+Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
   if (appState.debugMode) {
     logThis('queryNewsFromDB', 'Starting querying news from DB', LogLevel.INFO);
   }
@@ -291,9 +291,9 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
       }
     }
 
-    if (feedIDs != null) {
+    if (appState.feedIDs != null) {
       // if the feed id is not null a category, a feed or the bookmarked news ar selected
-      if (appState.feedIDs != null && appState.feedIDs!.isNotEmpty && appState.feedIDs?.first == -1) {
+      if (appState.feedIDs!.isNotEmpty && appState.feedIDs?.first == -1) {
         // if the feed id is -1 the bookmarked news are selected
         List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
                     SELECT news.newsID, 
@@ -329,7 +329,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState, List<int>? feedIDs) a
         newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
       } else {
         // if the feed id is not -1 a feed or a category with multiple feeds is selected
-        for (int feedID in feedIDs) {
+        for (int feedID in appState.feedIDs!) {
           List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
                     SELECT news.newsID, 
                         news.feedID, 

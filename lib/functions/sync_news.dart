@@ -148,7 +148,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // after inserting the news, renew the list view with the new news
       appState.scrollPosition = 0;
       appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
-      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
         appState.jumpToItem(0);
       });
     }

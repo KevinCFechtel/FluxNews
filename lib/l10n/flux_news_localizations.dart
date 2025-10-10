@@ -767,6 +767,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync in progress...'**
   String get syncInProgress;
+
+  /// No description provided for @startupCategorie.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Categorie for startup'**
+  String get startupCategorie;
+
+  /// No description provided for @startupCategorieAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all news on startup'**
+  String get startupCategorieAll;
+
+  /// No description provided for @startupCategorieBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the bookmark categorie on startup'**
+  String get startupCategorieBookmarks;
+
+  /// No description provided for @startupCategorieCategorie.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a categorie as default for startup'**
+  String get startupCategorieCategorie;
+
+  /// No description provided for @startupCategorieFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a feed as default for startup'**
+  String get startupCategorieFeed;
+
+  /// No description provided for @startupCategorieCategorieSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a categorie as default for startup'**
+  String get startupCategorieCategorieSelection;
+
+  /// No description provided for @startupCategorieFeedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a feed as default for startup'**
+  String get startupCategorieFeedSelection;
 }
 
 class _AppLocalizationsDelegate

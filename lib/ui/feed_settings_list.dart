@@ -89,7 +89,7 @@ class FeedSettingsList extends StatelessWidget {
                       feed.manualTruncate = value;
                       await updateManualTruncateStatusOfFeedInDB(feed.feedID, value, appState);
                       // reload the news list with the new filter
-                      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                         appState.jumpToItem(0);
                       });
                       appState.refreshView();
@@ -120,7 +120,7 @@ class FeedSettingsList extends StatelessWidget {
                 feed.preferParagraph = value;
                 await updatePreferParagraphStatusOfFeedInDB(feed.feedID, value, appState);
                 // reload the news list with the new filter
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
                 appState.refreshView();
@@ -150,7 +150,7 @@ class FeedSettingsList extends StatelessWidget {
                 feed.preferAttachmentImage = value;
                 await updatePreferAttachmentImageStatusOfFeedInDB(feed.feedID, value, appState);
                 // reload the news list with the new filter
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
                 appState.refreshView();
@@ -184,7 +184,7 @@ class FeedSettingsList extends StatelessWidget {
                 }
 
                 // reload the news list with the new filter
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
                 appState.refreshView();
@@ -218,7 +218,7 @@ class FeedSettingsList extends StatelessWidget {
                 }
 
                 // reload the news list with the new filter
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
                 appState.refreshView();
@@ -249,7 +249,7 @@ class FeedSettingsList extends StatelessWidget {
                 await updateOpenMinifluxEntryStatusOfFeedInDB(feed.feedID, value, appState);
 
                 // reload the news list with the new filter
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
                 appState.refreshView();
@@ -280,7 +280,7 @@ class FeedSettingsList extends StatelessWidget {
                 await updateExpandedWithFulltextStatusOfFeedInDB(feed.feedID, value, appState);
 
                 // reload the news list with the new filter
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
                 appState.refreshView();

@@ -31,6 +31,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     return FluxNewsBodyStatefulWrapper(onInit: () {
       initConfig(context, appState);
       appState.categoryList = queryCategoriesFromDB(appState, context);
+
       appState.newsList = Future<List<News>>.value([]);
       WidgetsBinding.instance.addObserver(this);
     }, child: OrientationBuilder(
@@ -63,6 +64,71 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         appState.readThemeConfigValues(context);
       }
 
+      // set the startup categorie if configured
+      if (appState.startupCategorie != 0) {
+        if (appState.startupCategorie == 1) {
+          // bookmarks selected as startup categorie
+          appState.feedIDs = [-1];
+          appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
+          if (context.mounted) {
+            appState.appBarText = AppLocalizations.of(context)!.bookmarked;
+          }
+          appState.selectedID = -1;
+        } else {
+          Categories? actualCategoryList;
+          if (context.mounted) {
+            actualCategoryList = await queryCategoriesFromDB(appState, context);
+          }
+          if (actualCategoryList != null) {
+            if (appState.startupCategorie == 2) {
+              if (appState.startupCategorieSelectionKey != null) {
+                for (Category category in actualCategoryList.categories) {
+                  if (category.categoryID == appState.startupCategorieSelectionKey) {
+                    // add the according feeds of this category as a filter
+                    appState.feedIDs = category.getFeedIDs();
+                    appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
+                    // reload the news list with the new filter
+                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.jumpToItem(0);
+                    });
+                    // set the category title as app bar title
+                    // and update the news count in the app bar, if the function is activated.
+                    appState.appBarText = category.title;
+                    appState.selectedID = category.categoryID;
+                    if (context.mounted) {
+                      actualCategoryList.renewNewsCount(appState, context);
+                    }
+                  }
+                }
+              }
+            } else if (appState.startupCategorie == 3) {
+              if (appState.startupFeedSelectionKey != null) {
+                for (Category category in actualCategoryList.categories) {
+                  for (Feed feed in category.feeds) {
+                    if (feed.feedID == appState.startupFeedSelectionKey) {
+                      appState.feedIDs = [feed.feedID];
+                      appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+                      // reload the news list with the new filter
+                      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                        appState.jumpToItem(0);
+                      });
+                      // set the feed title as app bar title
+                      // and update the news count in the app bar, if the function is activated.
+                      appState.appBarText = feed.title;
+                      appState.selectedID = feed.feedID;
+                      if (context.mounted) {
+                        actualCategoryList.renewNewsCount(appState, context);
+                      }
+                    }
+                  }
+                }
+              }
+              appState.categorieStartup = false;
+            }
+          }
+        }
+      }
+
       if (appState.syncOnStart) {
         // sync on startup
         if (context.mounted) {
@@ -71,7 +137,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       } else {
         // normal startup, read existing news from database and generate list view
         try {
-          appState.newsList = queryNewsFromDB(appState, null);
+          appState.newsList = queryNewsFromDB(appState);
           if (context.mounted) {
             updateStarredCounter(appState, context);
             await renewAllNewsCount(appState, context);
@@ -133,7 +199,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   });
                 } else {
                   // refresh news list with the all news state
-                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                     appState.jumpToItem(0);
                   });
 
@@ -170,7 +236,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                                     });
                                   } else {
                                     // refresh news list with the all news state
-                                    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                                       appState.jumpToItem(0);
                                     });
 
@@ -244,7 +310,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   });
                 } else {
                   // refresh news list with the all news state
-                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                     appState.jumpToItem(0);
                   });
 
@@ -281,7 +347,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                                     });
                                   } else {
                                     // refresh news list with the all news state
-                                    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                                       appState.jumpToItem(0);
                                     });
 
@@ -540,7 +606,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     .write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.allNewsString);
 
                 // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
 
@@ -558,7 +624,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     .write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.unreadNewsStatus);
 
                 // refresh news list with the only unread news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
 
@@ -579,7 +645,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     key: FluxNewsState.secureStorageSortOrderKey, value: FluxNewsState.sortOrderOldestFirstString);
 
                 // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
 
@@ -597,7 +663,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     key: FluxNewsState.secureStorageSortOrderKey, value: FluxNewsState.sortOrderNewestFirstString);
 
                 // refresh news list with the only unread news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
 
@@ -623,7 +689,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 });
               } else {
                 // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
                 });
 
@@ -648,7 +714,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       appState.feedIDs = category.getFeedIDs();
       appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
       // reload the news list with the new filter
-      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
         appState.jumpToItem(0);
       });
       // set the category title as app bar title
@@ -672,7 +738,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       appState.feedIDs = [feed.feedID];
       appState.selectedCategoryElementType = FluxNewsState.feedElementType;
       // reload the news list with the new filter
-      appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
         appState.jumpToItem(0);
       });
       // set the feed title as app bar title
@@ -1071,7 +1137,7 @@ class CategoryList extends StatelessWidget {
     appState.feedIDs = category.getFeedIDs();
     appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
     // reload the news list with the new filter
-    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
       appState.jumpToItem(0);
     });
     // set the category title as app bar title
@@ -1096,7 +1162,7 @@ class CategoryList extends StatelessWidget {
     appState.feedIDs = null;
     appState.selectedCategoryElementType = FluxNewsState.allNewsElementType;
     // reload the news list with the new filter (empty)
-    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
       appState.jumpToItem(0);
     });
     // set the "All News" title as app bar title
@@ -1126,7 +1192,7 @@ class CategoryList extends StatelessWidget {
     appState.feedIDs = [-1];
     appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
-    appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
       appState.jumpToItem(0);
     });
     // set the "Bookmarked" title as app bar title
@@ -1192,7 +1258,7 @@ class FeedTile extends StatelessWidget {
                   appState.feedIDs = [feed.feedID];
                   appState.selectedCategoryElementType = FluxNewsState.feedElementType;
                   // reload the news list with the new filter
-                  appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                     appState.jumpToItem(0);
                   });
                   // set the feed title as app bar title
@@ -1239,7 +1305,7 @@ class FeedTile extends StatelessWidget {
               appState.feedIDs = [feed.feedID];
               appState.selectedCategoryElementType = FluxNewsState.feedElementType;
               // reload the news list with the new filter
-              appState.newsList = queryNewsFromDB(appState, appState.feedIDs).whenComplete(() {
+              appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                 appState.jumpToItem(0);
               });
               // set the feed title as app bar title
