@@ -112,7 +112,7 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
               ),
               Expanded(
                 child: Text(
-                  AppLocalizations.of(context)!.openMinifluxEntry,
+                  AppLocalizations.of(context)!.open,
                   overflow: TextOverflow.visible,
                 ),
               )
@@ -132,7 +132,7 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       saveToThirdPartyAction(news, appState, context);
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
-      openNewsAction(news, appState, context, true);
+      openNewsAction(news, appState, context);
       break;
   }
 }
@@ -319,7 +319,7 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
   }
 }
 
-Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext context, bool openMiniflux) async {
+Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext context) async {
   // on tab we update the status of the news to read and open the news
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
@@ -347,7 +347,7 @@ Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext cont
   // by an installed app, if not then the link is opened in a web-view within the app.
   // on macos we open directly the web-view within the app.
   String url = news.url;
-  if (openMiniflux) {
+  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
     if (appState.minifluxURL != null) {
       String minifluxBaseURL = appState.minifluxURL!;
       if (minifluxBaseURL.endsWith('/v1/')) {

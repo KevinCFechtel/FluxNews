@@ -159,7 +159,7 @@ class NewsRow extends StatelessWidget {
           ),
         ),
         onTap: () {
-          openNewsAction(news, appState, context, true);
+          openNewsAction(news, appState, context);
         },
       ),
     );
@@ -228,7 +228,7 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    openNewsAction(news, appState, context);
                   }
                   return false;
                 },
@@ -262,7 +262,7 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    openNewsAction(news, appState, context);
                   }
                   return false;
                 },
@@ -282,11 +282,7 @@ class NewsRow extends StatelessWidget {
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
                   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
-                    if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                      openNewsAction(news, appState, context, true);
-                    } else {
-                      openNewsAction(news, appState, context, false);
-                    }
+                    openNewsAction(news, appState, context);
                   } else {
                     if (news.expanded) {
                       news.expanded = false;

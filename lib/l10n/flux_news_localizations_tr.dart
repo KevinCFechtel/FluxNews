@@ -320,7 +320,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get openMinifluxEntry => 'Open news in miniflux webinterface';
 
   @override
-  String get openMinifluxShort => 'Open in miniflux';
+  String get openMinifluxShort => 'Open';
 
   @override
   String get scrollHorizontal => 'Scroll horizontal';

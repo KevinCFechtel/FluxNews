@@ -96,7 +96,7 @@
     "manualAdaptLightModeToIcon": "Manual adapt the light mode to a transparent feed icon",
     "manualAdaptDarkModeToIcon": "Manual adapt the dark mode to a transparent feed icon",
     "openMinifluxEntry": "Open news in miniflux webinterface",
-    "openMinifluxShort": "Open in miniflux",
+    "openMinifluxShort": "Open",
     "scrollHorizontal": "Scroll horizontal",
     "open": "Open",
     "floatingActionButton": "Use an extra button to mark all messages as read",
