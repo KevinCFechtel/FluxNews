@@ -390,4 +390,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get startupCategorieFeedSelection =>
       'Select a feed as default for startup';
+
+  @override
+  String get share => 'Share';
 }
