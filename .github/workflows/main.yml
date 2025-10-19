@@ -71,3 +71,4 @@ jobs:
           tag: v${{ env.VERSION }}
           name: ${{ env.VERSION }}
           body_path: metadata/en-US/changelogs/${{ env.VERSIONCODE }}1.txt
+          token: ${{ secrets.TOKEN }}
