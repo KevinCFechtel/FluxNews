@@ -1,0 +1,4 @@
+The following features have been added:
+ • Added the option to choose a default categorie or feed at startup.
+ • Added the option to share the URL.
+ • Added the option to open the news instead of only open in miniflux.
