@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
@@ -9,6 +11,7 @@ import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/news_items.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 // here we define the appearance of the news cards
 class NewsRow extends StatelessWidget {
@@ -159,7 +162,52 @@ class NewsRow extends StatelessWidget {
           ),
         ),
         onTap: () {
-          openNewsAction(news, appState, context, true);
+          openNewsAction(news, appState, context);
+        },
+      ),
+    );
+
+    Widget shareSlidableAction = Expanded(
+      child: InkWell(
+        child: Card(
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+              ? MediaQuery.of(context).platformBrightness == Brightness.dark
+                  ? const Color.fromARGB(204, 44, 56, 189)
+                  : const Color.fromARGB(197, 119, 131, 255)
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                  ? const Color.fromARGB(204, 44, 56, 189)
+                  : const Color.fromARGB(197, 119, 131, 255),
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.share,
+                ),
+                Text(
+                  AppLocalizations.of(context)!.share,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
+          ),
+        ),
+        onTap: () {
+          if (Platform.isAndroid) {
+            SharePlus.instance.share(ShareParams(
+              uri: Uri.parse(news.url),
+            ));
+          } else {
+            if (context.mounted) {
+              final box = context.findRenderObject() as RenderBox?;
+              SharePlus.instance.share(ShareParams(
+                  uri: Uri.parse(news.url),
+                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+            }
+          }
         },
       ),
     );
@@ -171,6 +219,8 @@ class NewsRow extends StatelessWidget {
       leftSwipeActions.add(saveSlidableAction);
     } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       leftSwipeActions.add(openMinifluxAction);
+    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionShareString) {
+      leftSwipeActions.add(shareSlidableAction);
     }
 
     if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -181,6 +231,8 @@ class NewsRow extends StatelessWidget {
       rightSwipeActions.add(saveSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
+    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionShareString) {
+      rightSwipeActions.add(shareSlidableAction);
     }
 
     if (appState.secondRightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -191,6 +243,8 @@ class NewsRow extends StatelessWidget {
       rightSwipeActions.add(saveSlidableAction);
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
+    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionShareString) {
+      rightSwipeActions.add(shareSlidableAction);
     }
 
     if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -201,6 +255,8 @@ class NewsRow extends StatelessWidget {
       leftSwipeActions.add(saveSlidableAction);
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
       leftSwipeActions.add(openMinifluxAction);
+    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionShareString) {
+      leftSwipeActions.add(shareSlidableAction);
     }
     return ClipRect(
         clipBehavior: Clip.none,
@@ -228,7 +284,7 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    openNewsAction(news, appState, context);
                   }
                   return false;
                 },
@@ -262,7 +318,7 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    openNewsAction(news, appState, context);
                   }
                   return false;
                 },
@@ -282,11 +338,7 @@ class NewsRow extends StatelessWidget {
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
                   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
-                    if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
-                      openNewsAction(news, appState, context, true);
-                    } else {
-                      openNewsAction(news, appState, context, false);
-                    }
+                    openNewsAction(news, appState, context);
                   } else {
                     if (news.expanded) {
                       news.expanded = false;

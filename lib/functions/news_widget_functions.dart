@@ -12,6 +12,7 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // this is a helper function to get the actual tab position
@@ -112,7 +113,24 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
               ),
               Expanded(
                 child: Text(
-                  AppLocalizations.of(context)!.openMinifluxEntry,
+                  AppLocalizations.of(context)!.open,
+                  overflow: TextOverflow.visible,
+                ),
+              )
+            ])),
+        // share the news link
+        PopupMenuItem(
+            value: FluxNewsState.swipeActionShareString,
+            child: Row(children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.share,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.share,
                   overflow: TextOverflow.visible,
                 ),
               )
@@ -132,7 +150,20 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       saveToThirdPartyAction(news, appState, context);
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
-      openNewsAction(news, appState, context, true);
+      openNewsAction(news, appState, context);
+      break;
+    case FluxNewsState.swipeActionShareString:
+      if (Platform.isAndroid) {
+        SharePlus.instance.share(ShareParams(
+          uri: Uri.parse(news.url),
+        ));
+      } else {
+        if (context.mounted) {
+          final box = context.findRenderObject() as RenderBox?;
+          SharePlus.instance.share(ShareParams(
+              uri: Uri.parse(news.url), sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+        }
+      }
       break;
   }
 }
@@ -319,7 +350,7 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
   }
 }
 
-Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext context, bool openMiniflux) async {
+Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext context) async {
   // on tab we update the status of the news to read and open the news
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
@@ -347,7 +378,7 @@ Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext cont
   // by an installed app, if not then the link is opened in a web-view within the app.
   // on macos we open directly the web-view within the app.
   String url = news.url;
-  if (openMiniflux) {
+  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
     if (appState.minifluxURL != null) {
       String minifluxBaseURL = appState.minifluxURL!;
       if (minifluxBaseURL.endsWith('/v1/')) {

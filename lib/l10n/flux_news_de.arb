@@ -96,7 +96,7 @@
     "manualAdaptLightModeToIcon": "Passe ein durchsichtiges Feed Icon manuell an den Light Mode an",
     "manualAdaptDarkModeToIcon": "Passe  ein durchsichtiges Feed Icon manuell an den Dark Mode an",
     "openMinifluxEntry": "Öffne die Nachricht im Miniflux Webinterface",
-    "openMinifluxShort": "Öffnen in Miniflux",
+    "openMinifluxShort": "Öffnen",
     "scrollHorizontal": "Horizontal scrollen",
     "open": "Öffnen",
     "floatingActionButton": "Nutze einen extra Button um alle Nachrichten als gelesen zu markieren",
@@ -116,5 +116,6 @@
     "startupCategorieCategorie": "Wähle eine bestimmte Kategorie zum Start",
     "startupCategorieFeed": "Wähle einen bestimmten Feed zum Start",
     "startupCategorieCategorieSelection": "Wähle die Kategorie zum Start aus",
-    "startupCategorieFeedSelection": "Wähle den Feed zum Start aus"
+    "startupCategorieFeedSelection": "Wähle den Feed zum Start aus",
+    "share": "Teilen"
 }

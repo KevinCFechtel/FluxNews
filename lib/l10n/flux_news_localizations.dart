@@ -687,7 +687,7 @@ abstract class AppLocalizations {
   /// No description provided for @openMinifluxShort.
   ///
   /// In en, this message translates to:
-  /// **'Open in miniflux'**
+  /// **'Open'**
   String get openMinifluxShort;
 
   /// No description provided for @scrollHorizontal.
@@ -809,6 +809,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a feed as default for startup'**
   String get startupCategorieFeedSelection;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
 }
 
 class _AppLocalizationsDelegate
