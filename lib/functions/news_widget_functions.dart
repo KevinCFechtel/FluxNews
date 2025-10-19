@@ -12,6 +12,7 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // this is a helper function to get the actual tab position
@@ -117,6 +118,23 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
                 ),
               )
             ])),
+        // share the news link
+        PopupMenuItem(
+            value: FluxNewsState.swipeActionShareString,
+            child: Row(children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.share,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.share,
+                  overflow: TextOverflow.visible,
+                ),
+              )
+            ])),
       ]);
   switch (result) {
     case FluxNewsState.contextMenuBookmarkString:
@@ -133,6 +151,19 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
       openNewsAction(news, appState, context);
+      break;
+    case FluxNewsState.swipeActionShareString:
+      if (Platform.isAndroid) {
+        SharePlus.instance.share(ShareParams(
+          uri: Uri.parse(news.url),
+        ));
+      } else {
+        if (context.mounted) {
+          final box = context.findRenderObject() as RenderBox?;
+          SharePlus.instance.share(ShareParams(
+              uri: Uri.parse(news.url), sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+        }
+      }
       break;
   }
 }
