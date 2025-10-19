@@ -1,0 +1,15 @@
+name: Build
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    name: Build & Release 
+    runs-on: ubuntu-latest
+
+    steps:
+        #1 Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
