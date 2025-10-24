@@ -24,10 +24,10 @@ jobs:
           java-version: '21'
 
         #3 Setup Flutter
-      #- name: Set Up Flutter
-      #  uses: subosito/flutter-action@v2
-      #  with:
-      #    channel: 'stable'
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
 
         #4 Install Dependencies
       - name: Install Dependencies
