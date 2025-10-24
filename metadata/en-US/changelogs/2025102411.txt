@@ -1,0 +1,2 @@
+The following features have been added:
+ • Added the option to open the news explicit in miniflux and to open the news with the according feed setting

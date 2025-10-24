@@ -113,6 +113,23 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
               ),
               Expanded(
                 child: Text(
+                  AppLocalizations.of(context)!.openMinifluxShort,
+                  overflow: TextOverflow.visible,
+                ),
+              )
+            ])),
+        // save the news to third party service
+        PopupMenuItem(
+            value: FluxNewsState.contextMenuOpenString,
+            child: Row(children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.open_in_browser,
+                ),
+              ),
+              Expanded(
+                child: Text(
                   AppLocalizations.of(context)!.open,
                   overflow: TextOverflow.visible,
                 ),
@@ -150,7 +167,10 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       saveToThirdPartyAction(news, appState, context);
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
-      openNewsAction(news, appState, context);
+      openNewsAction(news, appState, context, true);
+      break;
+    case FluxNewsState.contextMenuOpenString:
+      openNewsAction(news, appState, context, false);
       break;
     case FluxNewsState.swipeActionShareString:
       if (Platform.isAndroid) {
@@ -350,7 +370,8 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
   }
 }
 
-Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext context) async {
+Future<void> openNewsAction(
+    News news, FluxNewsState appState, BuildContext context, bool overwriteOpenInMiniflux) async {
   // on tab we update the status of the news to read and open the news
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
@@ -378,7 +399,7 @@ Future<void> openNewsAction(News news, FluxNewsState appState, BuildContext cont
   // by an installed app, if not then the link is opened in a web-view within the app.
   // on macos we open directly the web-view within the app.
   String url = news.url;
-  if (news.openMinifluxEntry != null && news.openMinifluxEntry!) {
+  if ((news.openMinifluxEntry != null && news.openMinifluxEntry!) || overwriteOpenInMiniflux) {
     if (appState.minifluxURL != null) {
       String minifluxBaseURL = appState.minifluxURL!;
       if (minifluxBaseURL.endsWith('/v1/')) {
