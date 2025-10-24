@@ -329,7 +329,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Öffne die Nachricht im Miniflux Webinterface';
 
   @override
-  String get openMinifluxShort => 'Öffnen';
+  String get openMinifluxShort => 'Öffnen in Miniflux';
 
   @override
   String get scrollHorizontal => 'Horizontal scrollen';

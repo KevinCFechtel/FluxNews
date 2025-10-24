@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.9.1';
+  static const String applicationVersion = '1.9.2';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -100,11 +100,13 @@ class FluxNewsState extends ChangeNotifier {
   static const String contextMenuBookmarkString = 'bookmark';
   static const String contextMenuSaveString = 'saveToThirdParty';
   static const String contextMenuOpenMinifluxString = 'openMiniflux';
+  static const String contextMenuOpenString = 'open';
   static const String swipeActionSaveString = 'saveToThirdParty';
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
   static const String swipeActionOpenMinifluxString = 'openMiniflux';
   static const String swipeActionShareString = 'share';
+  static const String swipeActionOpenString = 'open';
   static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
@@ -755,6 +757,7 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
+          KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
         ];
         recordTypesSecondSwipeActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.swipeActionNoneString, value: AppLocalizations.of(context)!.none),
@@ -766,6 +769,7 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
+          KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
         ];
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),

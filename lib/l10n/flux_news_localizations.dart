@@ -687,7 +687,7 @@ abstract class AppLocalizations {
   /// No description provided for @openMinifluxShort.
   ///
   /// In en, this message translates to:
-  /// **'Open'**
+  /// **'Open in miniflux'**
   String get openMinifluxShort;
 
   /// No description provided for @scrollHorizontal.
