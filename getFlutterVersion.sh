@@ -4,7 +4,6 @@ MANIFEST_BASE_URL="${FLUTTER_STORAGE_BASE_URL:-https://storage.googleapis.com}/f
 MANIFEST_JSON_PATH="releases_$OS_NAME.json"
 MANIFEST_URL="$MANIFEST_BASE_URL/$MANIFEST_JSON_PATH"
 CHANNEL=stable
-GIT_SOURCE="https://github.com/flutter/flutter.git"
 VERSION="$1"
 
 filter_by_channel() {
