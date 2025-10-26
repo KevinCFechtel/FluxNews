@@ -13,8 +13,8 @@ jobs:
         #1 Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
-      #  with:
-      #    submodules: recursive
+        with:
+          submodules: recursive
         
         #2 Setup Java
       - name: Set Up Java
@@ -22,18 +22,25 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+      
+        #3 Get Flutter version from submodule 
+      - name: Get Flutter version from submodule
+        run: |
+          flutter_version=$(git rev-parse --short @:./vendor/flutter)
+          echo "FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
 
-        #3 Setup Flutter
+        #4 Setup Flutter
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
 
-        #4 Install Dependencies
+        #5 Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
           
-        #5 Setup Keystore
+        #6 Setup Keystore
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
@@ -45,7 +52,7 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=keystore.jks" >> android/key.properties
         
-       #6 Building APK
+        #7 Building APK
       - name: Build APK
         run: flutter build apk --release --split-per-abi --dart-define=cronetHttpNoPlay=true && flutter build apk --release --dart-define=cronetHttpNoPlay=true
 
