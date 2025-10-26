@@ -25,8 +25,9 @@ jobs:
       
         #3 Get Flutter version from submodule 
       - name: Get Flutter version from submodule
+        working-directory: vendor/flutter
         run: |
-          flutter_version=$(cat ./vendor/flutter/version)
+          flutter_version=$(cat ./version)
           echo "FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
 
         #4 Setup Flutter
