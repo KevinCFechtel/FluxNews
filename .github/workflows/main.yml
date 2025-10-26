@@ -1,8 +1,8 @@
 name: Build
 on:
   push:
-    branches:
-      - TestWorkflow
+    tags:
+      - v*
 
 jobs:
   build:
@@ -58,26 +58,26 @@ jobs:
         run: flutter build apk --release --split-per-abi --dart-define=cronetHttpNoPlay=true && flutter build apk --release --dart-define=cronetHttpNoPlay=true
 
         #8 Upload Artifacts
-      #- name: Upload Artifacts
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    path: build/app/outputs/flutter-apk/*
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: build/app/outputs/flutter-apk/*
 
         #9 Extract Version
-      #- name: Extract version and release from pubspec.yaml
-      #  id: extract_version
-      #  run: |
-      #    version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r' | cut -d+ -f 1)
-      #    echo "VERSION=$version" >> $GITHUB_ENV
-      #    versioncode=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r' | cut -d+ -f 2)
-      #    echo "VERSIONCODE=$versioncode" >> $GITHUB_ENV
+      - name: Extract version and release from pubspec.yaml
+        id: extract_version
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r' | cut -d+ -f 1)
+          echo "VERSION=$version" >> $GITHUB_ENV
+          versioncode=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r' | cut -d+ -f 2)
+          echo "VERSIONCODE=$versioncode" >> $GITHUB_ENV
         
         #10 Create Release
-      #- name: Create Release
-      #  uses: ncipollo/release-action@v1
-      #  with:
-      #    artifacts: "build/app/outputs/flutter-apk/*"
-      #    tag: v${{ env.VERSION }}
-      #    name: ${{ env.VERSION }}
-      #    bodyFile: metadata/en-US/changelogs/${{ env.VERSIONCODE }}1.txt
-      #    token: ${{ secrets.TOKEN }}
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/*"
+          tag: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          bodyFile: metadata/en-US/changelogs/${{ env.VERSIONCODE }}1.txt
+          token: ${{ secrets.TOKEN }}
