@@ -27,8 +27,7 @@ jobs:
       - name: Get Flutter version from submodule
         working-directory: vendor/flutter
         run: |
-          ls -la # list files to debug
-          flutter_version=$(cat version)
+          flutter_version=$(bin/flutter --version | grep Flutter | cut -d ' '  -f 2)
           echo "FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
 
         #4 Setup Flutter
