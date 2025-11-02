@@ -395,4 +395,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get share => 'Share';
+
+  @override
+  String get openComments => 'Open Comments';
 }

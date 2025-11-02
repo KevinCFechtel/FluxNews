@@ -117,5 +117,6 @@
     "startupCategorieFeed": "Wähle einen bestimmten Feed zum Start",
     "startupCategorieCategorieSelection": "Wähle die Kategorie zum Start aus",
     "startupCategorieFeedSelection": "Wähle den Feed zum Start aus",
-    "share": "Teilen"
+    "share": "Teilen",
+    "openComments": "Öffne Kommentare"
 }

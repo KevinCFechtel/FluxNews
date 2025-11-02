@@ -423,6 +423,8 @@ Future<void> toggleNewsAsRead(FluxNewsState appState) async {
                     news.feedID, 
                     substr(news.title, 1, 1000000) as title, 
                     substr(news.url, 1, 1000000) as url, 
+                    substr(news.commentsUrl, 1, 1000000) as commentsUrl,
+                    substr(news.shareCode, 1, 1000000) as shareCode,
                     substr(news.content, 1, 1000000) as content, 
                     news.hash, 
                     news.publishedAt, 

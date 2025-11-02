@@ -118,7 +118,7 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
                 ),
               )
             ])),
-        // save the news to third party service
+        // open News
         PopupMenuItem(
             value: FluxNewsState.contextMenuOpenString,
             child: Row(children: [
@@ -131,6 +131,24 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
               Expanded(
                 child: Text(
                   AppLocalizations.of(context)!.open,
+                  overflow: TextOverflow.visible,
+                ),
+              )
+            ])),
+        // open News Comments
+        PopupMenuItem(
+            value: FluxNewsState.swipeActionOpenCommentsString,
+            enabled: news.commentsUrl.isNotEmpty,
+            child: Row(children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.comment,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.openComments,
                   overflow: TextOverflow.visible,
                 ),
               )
@@ -171,6 +189,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       break;
     case FluxNewsState.contextMenuOpenString:
       openNewsAction(news, appState, context, false);
+      break;
+    case FluxNewsState.swipeActionOpenCommentsString:
+      openNewsCommentsAction(news, context);
       break;
     case FluxNewsState.swipeActionShareString:
       if (Platform.isAndroid) {
@@ -433,6 +454,36 @@ Future<void> openNewsAction(
       Uri.parse(url),
       mode: LaunchMode.externalApplication,
     );
+  }
+}
+
+Future<void> openNewsCommentsAction(News news, BuildContext context) async {
+  // there are difference on launching the news url between the platforms
+  // on android and ios it's preferred to check first if the link can be opened
+  // by an installed app, if not then the link is opened in a web-view within the app.
+  // on macos we open directly the web-view within the app.
+  if (news.commentsUrl.isNotEmpty) {
+    if (Platform.isAndroid) {
+      AndroidUrlLauncher.launchUrl(context, news.commentsUrl);
+    } else if (Platform.isIOS) {
+      // catch exception if no app is installed to handle the url
+      final bool nativeAppLaunchSucceeded = await launchUrl(
+        Uri.parse(news.commentsUrl),
+        mode: LaunchMode.externalNonBrowserApplication,
+      );
+      //if exception is caught, open the app in web-view
+      if (!nativeAppLaunchSucceeded) {
+        await launchUrl(
+          Uri.parse(news.commentsUrl),
+          mode: LaunchMode.inAppWebView,
+        );
+      }
+    } else if (Platform.isMacOS) {
+      await launchUrl(
+        Uri.parse(news.commentsUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    }
   }
 }
 

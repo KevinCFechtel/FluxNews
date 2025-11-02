@@ -815,6 +815,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get share;
+
+  /// No description provided for @openComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Comments'**
+  String get openComments;
 }
 
 class _AppLocalizationsDelegate

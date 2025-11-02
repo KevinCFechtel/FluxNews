@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.9.2';
+  static const String applicationVersion = '1.10.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -101,6 +101,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String contextMenuSaveString = 'saveToThirdParty';
   static const String contextMenuOpenMinifluxString = 'openMiniflux';
   static const String contextMenuOpenString = 'open';
+  static const String swipeActionOpenCommentsString = 'openComments';
   static const String swipeActionSaveString = 'saveToThirdParty';
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
@@ -266,7 +267,9 @@ class FluxNewsState extends ChangeNotifier {
           '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
                           feedID INTEGER, 
                           title TEXT, 
-                          url TEXT, 
+                          url TEXT,
+                          commentsUrl TEXT,
+                          shareCode TEXT, 
                           content TEXT, 
                           hash TEXT, 
                           publishedAt TEXT, 
@@ -453,6 +456,109 @@ class FluxNewsState extends ChangeNotifier {
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
+
+          await db.execute(
+            '''CREATE TABLE tempNews(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into tempNews (newsID, 
+                                                    feedID, 
+                                                    title, 
+                                                    url,
+                                                    commentsUrl,
+                                                    shareCode, 
+                                                    content, 
+                                                    hash, 
+                                                    publishedAt, 
+                                                    createdAt, 
+                                                    status, 
+                                                    readingTime, 
+                                                    starred, 
+                                                    feedTitle, 
+                                                    syncStatus) 
+                 select newsID, 
+                            feedID, 
+                            title, 
+                            url,
+                            '' AS commentsUrl,
+                            '' AS shareCode, 
+                            content, 
+                            hash, 
+                            publishedAt, 
+                            createdAt, 
+                            status, 
+                            readingTime, 
+                            starred, 
+                            feedTitle, 
+                            syncStatus  
+                  from news;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS news');
+          await db.execute(
+            '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into news (newsID, 
+                                                feedID, 
+                                                title, 
+                                                url,
+                                                commentsUrl,
+                                                shareCode, 
+                                                content, 
+                                                hash, 
+                                                publishedAt, 
+                                                createdAt, 
+                                                status, 
+                                                readingTime, 
+                                                starred, 
+                                                feedTitle, 
+                                                syncStatus) 
+                 select newsID, 
+                        feedID, 
+                        title, 
+                        url,
+                        commentsUrl,
+                        shareCode, 
+                        content, 
+                        hash, 
+                        publishedAt, 
+                        createdAt, 
+                        status, 
+                        readingTime, 
+                        starred, 
+                        feedTitle, 
+                        syncStatus 
+                  from tempNews;''');
+          await db.execute('DROP TABLE IF EXISTS tempNews');
         } else if (oldVersion == 5) {
           logThis('upgradeDB', 'Upgrading DB from version 5', LogLevel.INFO);
 
@@ -558,6 +664,109 @@ class FluxNewsState extends ChangeNotifier {
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
+
+          await db.execute(
+            '''CREATE TABLE tempNews(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into tempNews (newsID, 
+                                                    feedID, 
+                                                    title, 
+                                                    url,
+                                                    commentsUrl,
+                                                    shareCode, 
+                                                    content, 
+                                                    hash, 
+                                                    publishedAt, 
+                                                    createdAt, 
+                                                    status, 
+                                                    readingTime, 
+                                                    starred, 
+                                                    feedTitle, 
+                                                    syncStatus) 
+                 select newsID, 
+                            feedID, 
+                            title, 
+                            url,
+                            '' AS commentsUrl,
+                            '' AS shareCode, 
+                            content, 
+                            hash, 
+                            publishedAt, 
+                            createdAt, 
+                            status, 
+                            readingTime, 
+                            starred, 
+                            feedTitle, 
+                            syncStatus  
+                  from news;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS news');
+          await db.execute(
+            '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into news (newsID, 
+                                                feedID, 
+                                                title, 
+                                                url,
+                                                commentsUrl,
+                                                shareCode, 
+                                                content, 
+                                                hash, 
+                                                publishedAt, 
+                                                createdAt, 
+                                                status, 
+                                                readingTime, 
+                                                starred, 
+                                                feedTitle, 
+                                                syncStatus) 
+                 select newsID, 
+                        feedID, 
+                        title, 
+                        url,
+                        commentsUrl,
+                        shareCode, 
+                        content, 
+                        hash, 
+                        publishedAt, 
+                        createdAt, 
+                        status, 
+                        readingTime, 
+                        starred, 
+                        feedTitle, 
+                        syncStatus 
+                  from tempNews;''');
+          await db.execute('DROP TABLE IF EXISTS tempNews');
         } else if (oldVersion == 6) {
           logThis('upgradeDB', 'Upgrading DB from version 6', LogLevel.INFO);
 
@@ -663,11 +872,219 @@ class FluxNewsState extends ChangeNotifier {
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
+
+          await db.execute(
+            '''CREATE TABLE tempNews(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into tempNews (newsID, 
+                                                    feedID, 
+                                                    title, 
+                                                    url,
+                                                    commentsUrl,
+                                                    shareCode, 
+                                                    content, 
+                                                    hash, 
+                                                    publishedAt, 
+                                                    createdAt, 
+                                                    status, 
+                                                    readingTime, 
+                                                    starred, 
+                                                    feedTitle, 
+                                                    syncStatus) 
+                 select newsID, 
+                            feedID, 
+                            title, 
+                            url,
+                            '' AS commentsUrl,
+                            '' AS shareCode, 
+                            content, 
+                            hash, 
+                            publishedAt, 
+                            createdAt, 
+                            status, 
+                            readingTime, 
+                            starred, 
+                            feedTitle, 
+                            syncStatus  
+                  from news;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS news');
+          await db.execute(
+            '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into news (newsID, 
+                                                feedID, 
+                                                title, 
+                                                url,
+                                                commentsUrl,
+                                                shareCode, 
+                                                content, 
+                                                hash, 
+                                                publishedAt, 
+                                                createdAt, 
+                                                status, 
+                                                readingTime, 
+                                                starred, 
+                                                feedTitle, 
+                                                syncStatus) 
+                 select newsID, 
+                        feedID, 
+                        title, 
+                        url,
+                        commentsUrl,
+                        shareCode, 
+                        content, 
+                        hash, 
+                        publishedAt, 
+                        createdAt, 
+                        status, 
+                        readingTime, 
+                        starred, 
+                        feedTitle, 
+                        syncStatus 
+                  from tempNews;''');
+          await db.execute('DROP TABLE IF EXISTS tempNews');
+        } else if (oldVersion == 7) {
+          logThis('upgradeDB', 'Upgrading DB from version 7', LogLevel.INFO);
+
+          await db.execute(
+            '''CREATE TABLE tempNews(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into tempNews (newsID, 
+                                                    feedID, 
+                                                    title, 
+                                                    url,
+                                                    commentsUrl,
+                                                    shareCode, 
+                                                    content, 
+                                                    hash, 
+                                                    publishedAt, 
+                                                    createdAt, 
+                                                    status, 
+                                                    readingTime, 
+                                                    starred, 
+                                                    feedTitle, 
+                                                    syncStatus) 
+                 select newsID, 
+                            feedID, 
+                            title, 
+                            url,
+                            '' AS commentsUrl,
+                            '' AS shareCode, 
+                            content, 
+                            hash, 
+                            publishedAt, 
+                            createdAt, 
+                            status, 
+                            readingTime, 
+                            starred, 
+                            feedTitle, 
+                            syncStatus  
+                  from news;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS news');
+          await db.execute(
+            '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
+          );
+
+          await db.execute('''insert into news (newsID, 
+                                                feedID, 
+                                                title, 
+                                                url,
+                                                commentsUrl,
+                                                shareCode, 
+                                                content, 
+                                                hash, 
+                                                publishedAt, 
+                                                createdAt, 
+                                                status, 
+                                                readingTime, 
+                                                starred, 
+                                                feedTitle, 
+                                                syncStatus) 
+                 select newsID, 
+                        feedID, 
+                        title, 
+                        url,
+                        commentsUrl,
+                        shareCode, 
+                        content, 
+                        hash, 
+                        publishedAt, 
+                        createdAt, 
+                        status, 
+                        readingTime, 
+                        starred, 
+                        feedTitle, 
+                        syncStatus 
+                  from tempNews;''');
+          await db.execute('DROP TABLE IF EXISTS tempNews');
         }
 
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 7,
+      version: 8,
     );
   }
 
@@ -758,6 +1175,8 @@ class FluxNewsState extends ChangeNotifier {
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesSecondSwipeActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.swipeActionNoneString, value: AppLocalizations.of(context)!.none),
@@ -770,6 +1189,8 @@ class FluxNewsState extends ChangeNotifier {
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
