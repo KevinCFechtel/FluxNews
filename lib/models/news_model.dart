@@ -18,6 +18,8 @@ class News {
       required this.feedID,
       required this.title,
       required this.url,
+      required this.commentsUrl,
+      required this.shareCode,
       required this.content,
       required this.hash,
       required this.publishedAt,
@@ -43,6 +45,8 @@ class News {
   int feedID = 0;
   String title = '';
   String url = '';
+  String commentsUrl = '';
+  String shareCode = '';
   String content = '';
   String hash = '';
   String publishedAt = '';
@@ -75,6 +79,8 @@ class News {
       feedID: json['feed_id'],
       title: json['title'],
       url: json['url'],
+      commentsUrl: json['comments_url'],
+      shareCode: json['share_code'],
       content: json['content'],
       hash: json['hash'],
       publishedAt: json['published_at'],
@@ -100,6 +106,8 @@ class News {
       'feedID': feedID,
       'title': title,
       'url': url,
+      'commentsUrl': commentsUrl,
+      'shareCode': shareCode,
       'content': content,
       'hash': hash,
       'publishedAt': publishedAt,
@@ -118,6 +126,8 @@ class News {
         feedID = res['feedID'],
         title = res['title'],
         url = res['url'],
+        commentsUrl = res['commentsUrl'],
+        shareCode = res['shareCode'],
         content = res['content'],
         hash = res['hash'],
         publishedAt = res['publishedAt'],

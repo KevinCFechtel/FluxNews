@@ -40,6 +40,8 @@ void main() {
         feedID: 1,
         title: "Test",
         url: "https://test.de",
+        commentsUrl: "https://test.de/comments",
+        shareCode: "1234",
         content: "Test",
         hash: "Test",
         publishedAt: "2023-04-24T19:38:05+02:00",
