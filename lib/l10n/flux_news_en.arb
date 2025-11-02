@@ -117,5 +117,6 @@
     "startupCategorieFeed": "Choose a feed as default for startup",
     "startupCategorieCategorieSelection": "Select a categorie as default for startup",
     "startupCategorieFeedSelection": "Select a feed as default for startup",
-    "share": "Share"
+    "share": "Share",
+    "openComments": "Open Comments"
 }

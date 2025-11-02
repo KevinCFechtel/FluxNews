@@ -101,6 +101,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String contextMenuSaveString = 'saveToThirdParty';
   static const String contextMenuOpenMinifluxString = 'openMiniflux';
   static const String contextMenuOpenString = 'open';
+  static const String swipeActionOpenCommentsString = 'openComments';
   static const String swipeActionSaveString = 'saveToThirdParty';
   static const String swipeActionBookmarkString = 'bookmark';
   static const String swipeActionReadUnreadString = 'readUnread';
@@ -1174,6 +1175,8 @@ class FluxNewsState extends ChangeNotifier {
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesSecondSwipeActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.swipeActionNoneString, value: AppLocalizations.of(context)!.none),
@@ -1186,6 +1189,8 @@ class FluxNewsState extends ChangeNotifier {
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),

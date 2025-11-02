@@ -198,6 +198,38 @@ class NewsCard extends StatelessWidget {
         },
       ),
     );
+    Widget openCommentsAction = Expanded(
+      child: InkWell(
+        child: Card(
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+              ? MediaQuery.of(context).platformBrightness == Brightness.dark
+                  ? const Color.fromARGB(130, 147, 59, 215)
+                  : const Color.fromARGB(199, 179, 95, 244)
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                  ? const Color.fromARGB(130, 147, 59, 215)
+                  : const Color.fromARGB(199, 179, 95, 244),
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.comment,
+                ),
+                Text(
+                  AppLocalizations.of(context)!.openComments,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+        onTap: () {
+          openNewsCommentsAction(news, context);
+        },
+      ),
+    );
     Widget shareSlidableAction = Expanded(
       child: InkWell(
         child: Card(
@@ -255,6 +287,8 @@ class NewsCard extends StatelessWidget {
       leftSwipeActions.add(shareSlidableAction);
     } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenString) {
       leftSwipeActions.add(openAction);
+    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+      leftSwipeActions.add(openCommentsAction);
     }
 
     if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -269,6 +303,8 @@ class NewsCard extends StatelessWidget {
       rightSwipeActions.add(shareSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
       rightSwipeActions.add(openAction);
+    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+      rightSwipeActions.add(openCommentsAction);
     }
 
     if (appState.secondRightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -283,6 +319,8 @@ class NewsCard extends StatelessWidget {
       rightSwipeActions.add(shareSlidableAction);
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenString) {
       rightSwipeActions.add(openAction);
+    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+      rightSwipeActions.add(openCommentsAction);
     }
 
     if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
@@ -297,6 +335,8 @@ class NewsCard extends StatelessWidget {
       leftSwipeActions.add(shareSlidableAction);
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
       leftSwipeActions.add(openAction);
+    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+      leftSwipeActions.add(openCommentsAction);
     }
     return ClipRect(
       clipBehavior: Clip.none,
@@ -340,6 +380,8 @@ class NewsCard extends StatelessWidget {
                   }
                 } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
                   openNewsAction(news, appState, context, false);
+                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+                  openNewsCommentsAction(news, context);
                 }
                 return false;
               },
@@ -389,6 +431,8 @@ class NewsCard extends StatelessWidget {
                   }
                 } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
                   openNewsAction(news, appState, context, false);
+                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+                  openNewsCommentsAction(news, context);
                 }
                 return false;
               },

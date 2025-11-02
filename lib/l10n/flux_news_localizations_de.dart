@@ -402,4 +402,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get share => 'Teilen';
+
+  @override
+  String get openComments => 'Öffne Kommentare';
 }
