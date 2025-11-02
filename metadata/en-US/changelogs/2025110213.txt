@@ -1,0 +1,2 @@
+The following features have been added:
+ • The option to open news comments when Miniflux has extracted the URL has been added.
