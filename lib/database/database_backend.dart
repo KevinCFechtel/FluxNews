@@ -331,7 +331,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
                         feeds.expandedWithFulltext,
-                        feeds.truncateExpandedFulltext,
+                        feeds.expandedFulltextLimit,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                   FROM news 
@@ -369,7 +369,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
                         feeds.expandedWithFulltext,
-                        feeds.truncateExpandedFulltext,
+                        feeds.expandedFulltextLimit,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                     FROM news 
@@ -409,7 +409,7 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
                         feeds.expandedWithFulltext,
-                        feeds.truncateExpandedFulltext,
+                        feeds.expandedFulltextLimit,
                         substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
                         attachments.attachmentMimeType
                 FROM news 
@@ -569,7 +569,7 @@ Future<void> updateExpandedWithFulltextStatusOfFeedInDB(
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!.rawUpdate(
-        'UPDATE feeds SET truncateExpandedFulltext = ? WHERE feedID = ?', [expandedWithFulltext ? 1 : 0, feedID]);
+        'UPDATE feeds SET expandedWithFulltext = ? WHERE feedID = ?', [expandedWithFulltext ? 1 : 0, feedID]);
   }
   if (appState.debugMode) {
     logThis('updateExpandedWithFulltextStatusOfFeedInDB', 'Finished updating expand with fulltext Flag of feed in DB',
@@ -587,7 +587,7 @@ Future<void> updateExpandedFulltextLimitOfFeedInDB(
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     await appState.db!
-        .rawUpdate('UPDATE feeds SET truncateExpandedFulltext = ? WHERE feedID = ?', [expandedFulltextLimit, feedID]);
+        .rawUpdate('UPDATE feeds SET expandedFulltextLimit = ? WHERE feedID = ?', [expandedFulltextLimit, feedID]);
   }
   if (appState.debugMode) {
     logThis('updateExpandedFulltextLimitOfFeedInDB', 'Finished updating expand fulltext limit of feed in DB',
@@ -791,7 +791,7 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                                       manualAdaptDarkModeToIcon,
                                                                       openMinifluxEntry,
                                                                       expandedWithFulltext,
-                                                                      truncateExpandedFulltext,
+                                                                      expandedFulltextLimit,
                                                                       categoryID) 
                                                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', [
             feed.feedID,
@@ -888,7 +888,7 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
                                                           expandedWithFulltext,
-                                                          truncateExpandedFulltext,
+                                                          expandedFulltextLimit,
                                                           categoryID 
                                                       FROM feeds
                                                       ORDER BY feedID ASC''');
@@ -954,7 +954,7 @@ Future<Categories> queryCategoriesFromDB(FluxNewsState appState, BuildContext co
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
                                                           expandedWithFulltext,
-                                                          truncateExpandedFulltext,
+                                                          expandedFulltextLimit,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?
@@ -1006,7 +1006,7 @@ Future<List<Feed>> queryFeedsFromDB(FluxNewsState appState, BuildContext context
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
                                                           expandedWithFulltext,
-                                                          truncateExpandedFulltext,
+                                                          expandedFulltextLimit,
                                                           categoryID 
                                                       FROM feeds
                                                       WHERE title LIKE ?
@@ -1118,7 +1118,7 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
     );
     // create the table attachments
@@ -1281,7 +1281,7 @@ Future<Category?> queryNextCategoryFromDB(FluxNewsState appState, BuildContext c
                                                           manualAdaptDarkModeToIcon,
                                                           openMinifluxEntry,
                                                           expandedWithFulltext,
-                                                          truncateExpandedFulltext,
+                                                          expandedFulltextLimit,
                                                           categoryID 
                                                       FROM feeds 
                                                       WHERE categoryID = ?

@@ -741,7 +741,7 @@ abstract class AppLocalizations {
   /// No description provided for @expandedWithFulltext.
   ///
   /// In en, this message translates to:
-  /// **'Show only text instead of HTML when expanding the news content'**
+  /// **'Show formatted text instead of full HTML when expanding the news content'**
   String get expandedWithFulltext;
 
   /// No description provided for @showHeadlineOnTop.

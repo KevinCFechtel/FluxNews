@@ -578,7 +578,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -596,7 +596,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -612,7 +612,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         0 AS expandedWithFulltext,
-                        0 AS truncateExpandedFulltext,
+                        0 AS expandedFulltextLimit,
                         categoryID  
                   from feeds;''');
 
@@ -633,7 +633,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -651,7 +651,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -667,7 +667,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
-                        truncateExpandedFulltext,
+                        expandedFulltextLimit,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
@@ -792,7 +792,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -810,7 +810,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -826,7 +826,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         0 AS expandedWithFulltext,
-                        0 AS truncateExpandedFulltext,
+                        0 AS expandedFulltextLimit,
                         categoryID  
                   from feeds;''');
 
@@ -847,7 +847,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -865,7 +865,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -881,7 +881,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
-                        truncateExpandedFulltext,
+                        expandedFulltextLimit,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
@@ -1006,7 +1006,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -1024,7 +1024,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -1040,7 +1040,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
-                        0 AS truncateExpandedFulltext,
+                        0 AS expandedFulltextLimit,
                         categoryID  
                   from feeds;''');
 
@@ -1061,7 +1061,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -1079,7 +1079,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -1095,7 +1095,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
-                        truncateExpandedFulltext,
+                        expandedFulltextLimit,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
@@ -1220,7 +1220,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -1238,7 +1238,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -1254,7 +1254,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
-                        0 AS truncateExpandedFulltext,
+                        0 AS expandedFulltextLimit,
                         categoryID  
                   from feeds;''');
 
@@ -1275,7 +1275,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
-                          truncateExpandedFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -1293,7 +1293,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
-                                        truncateExpandedFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -1309,7 +1309,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
-                        truncateExpandedFulltext,
+                        expandedFulltextLimit,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');

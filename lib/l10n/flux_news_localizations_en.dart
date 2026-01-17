@@ -349,7 +349,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expandedWithFulltext =>
-      'Show only text instead of HTML when expanding the news content';
+      'Show formatted text instead of full HTML when expanding the news content';
 
   @override
   String get showHeadlineOnTop =>

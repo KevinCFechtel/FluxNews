@@ -105,7 +105,7 @@
     "menu": "Aktionsmenü",
     "tabActionSettings": "Wählen Sie die Aktion, die bei einem Tab auf die News ausgeführt werden soll",
     "longPressActionSettings": "Wählen Sie die Aktion, die bei einem Long Press auf die News ausgeführt werden soll",
-    "expandedWithFulltext": "Zeige nur Text statt HTML bei der Erweiterung des News Inhalts",
+    "expandedWithFulltext": "Zeige nur formatierten Text statt dem kompletten HTML bei der Erweiterung des News Inhalts",
     "showHeadlineOnTop": "Zeige die Überschrift der News über dem Bild",
     "showOnlyFeedCategoriesWithNewNews": "Zeige nur die Kategorien und Feeds an, die neue Nachrichten besitzen",
     "none": "Keine",
