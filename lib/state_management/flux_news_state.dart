@@ -1664,6 +1664,15 @@ class FluxNewsState extends ChangeNotifier {
     deleteFile(filename);
   }
 
+  Future<void> deleteAllFeedIconFiles() async {
+    final dir = Directory(FluxNewsState.feedIconFilePath);
+    final List<FileSystemEntity> entities = await dir.list().toList();
+    final Iterable<File> files = entities.whereType<File>();
+    for (final file in files) {
+      file.deleteSync();
+    }
+  }
+
   Future<void> saveFile(String filename, Uint8List? bytes) async {
     if (externalDirectory != null && bytes != null) {
       // Create an image name

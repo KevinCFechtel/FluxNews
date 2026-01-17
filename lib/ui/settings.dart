@@ -1641,6 +1641,7 @@ class Settings extends StatelessWidget {
                       isDestructiveAction: true,
                       onPressed: () {
                         deleteLocalNewsCache(appState, context);
+                        appState.deleteAllFeedIconFiles();
                         appState.newsList = Future<List<News>>.value([]);
                         appState.categoryList = Future<Categories>.value(Categories(categories: []));
                         context.read<FluxNewsCounterState>().allNewsCount = 0;
