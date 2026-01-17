@@ -821,6 +821,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Comments'**
   String get openComments;
+
+  /// No description provided for @splitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Splitted'**
+  String get splitted;
+
+  /// No description provided for @splittedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link'**
+  String get splittedDescription;
 }
 
 class _AppLocalizationsDelegate

@@ -405,4 +405,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get openComments => 'Öffne Kommentare';
+
+  @override
+  String get splitted => 'Geteilt';
+
+  @override
+  String get splittedDescription =>
+      'Geteilt bedeutet, dass ein Klick auf den Text diesen Erweitert, ein Klick auf den Titel oder das Bild öffnet den Link';
 }

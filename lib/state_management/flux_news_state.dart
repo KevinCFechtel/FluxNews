@@ -111,6 +111,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
+  static const String tabActionSplittedString = 'splitted';
   static const String longPressActionMenuString = 'menu';
   static const String longPressActionExpandString = 'expand';
   static const String cancelContextString = 'Cancel';
@@ -1195,6 +1196,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
           KeyValueRecordType(key: FluxNewsState.tabActionExpandString, value: AppLocalizations.of(context)!.expand),
+          KeyValueRecordType(key: FluxNewsState.tabActionSplittedString, value: AppLocalizations.of(context)!.splitted),
         ];
         recordTypesLongPressActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.longPressActionMenuString, value: AppLocalizations.of(context)!.menu),

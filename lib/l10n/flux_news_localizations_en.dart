@@ -395,4 +395,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openComments => 'Open Comments';
+
+  @override
+  String get splitted => 'Splitted';
+
+  @override
+  String get splittedDescription =>
+      'Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link';
 }
