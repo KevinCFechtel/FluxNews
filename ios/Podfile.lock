@@ -16,7 +16,7 @@ PODS:
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
-  - system_date_time_format (0.0.1):
+  - system_date_time_format (1.4.0):
     - Flutter
   - url_launcher_ios (0.0.1):
     - Flutter
@@ -58,17 +58,17 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_logs: 30a36079651dcdfb260dbff875bf882bbbcaa22e
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
-  flutter_secure_storage_darwin: ce237a8775b39723566dc72571190a3769d70468
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
-  system_date_time_format: d2ff596217fdbb6f04710511579fd3c36c6db598
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  system_date_time_format: 4950715a9763e67af54dae2bac8a1f20152c8705
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
 
-PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
+PODFILE CHECKSUM: 0dbd5a87e0ace00c9610d2037ac22083a01f861d
 
 COCOAPODS: 1.16.2
