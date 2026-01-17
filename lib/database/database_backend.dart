@@ -1103,6 +1103,7 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           attachmentMimeType TEXT)''',
     );
   }
+  await appState.deleteAllFeedIconFiles();
   if (appState.debugMode) {
     logThis('deleteLocalNewsCache', 'Finished deleting the local news cache', LogLevel.INFO);
   }
