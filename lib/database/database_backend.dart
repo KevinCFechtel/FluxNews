@@ -1054,18 +1054,20 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
     await appState.db!.execute('DROP TABLE IF EXISTS news');
     await appState.db!.execute(
       '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
-                          feedID INTEGER, 
-                          title TEXT, 
-                          url TEXT, 
-                          content TEXT, 
-                          hash TEXT, 
-                          publishedAt TEXT, 
-                          createdAt TEXT, 
-                          status TEXT, 
-                          readingTime INTEGER, 
-                          starred INTEGER, 
-                          feedTitle TEXT, 
-                          syncStatus TEXT)''',
+                            feedID INTEGER, 
+                            title TEXT, 
+                            url TEXT,
+                            commentsUrl TEXT,
+                            shareCode TEXT, 
+                            content TEXT, 
+                            hash TEXT, 
+                            publishedAt TEXT, 
+                            createdAt TEXT, 
+                            status TEXT, 
+                            readingTime INTEGER, 
+                            starred INTEGER, 
+                            feedTitle TEXT, 
+                            syncStatus TEXT)''',
     );
     // create the table categories
     await appState.db!.execute('DROP TABLE IF EXISTS categories');
@@ -1101,6 +1103,7 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
                           attachmentMimeType TEXT)''',
     );
   }
+  await appState.deleteAllFeedIconFiles();
   if (appState.debugMode) {
     logThis('deleteLocalNewsCache', 'Finished deleting the local news cache', LogLevel.INFO);
   }
