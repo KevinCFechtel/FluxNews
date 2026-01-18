@@ -833,6 +833,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link'**
   String get splittedDescription;
+
+  /// No description provided for @amountOfCharactersToTruncateExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount of characters to which the expanded formatted text is truncated'**
+  String get amountOfCharactersToTruncateExpand;
 }
 
 class _AppLocalizationsDelegate

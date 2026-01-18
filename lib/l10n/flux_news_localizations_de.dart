@@ -412,4 +412,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get splittedDescription =>
       'Geteilt bedeutet, dass ein Klick auf den Text diesen Erweitert, ein Klick auf den Titel oder das Bild öffnet den Link';
+
+  @override
+  String get amountOfCharactersToTruncateExpand =>
+      'Anzahl der Zeichen auf die der formatierte Text gekürzt wird';
 }

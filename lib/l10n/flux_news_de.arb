@@ -120,5 +120,6 @@
     "share": "Teilen",
     "openComments": "Öffne Kommentare",
     "splitted": "Geteilt",
-    "splittedDescription": "Geteilt bedeutet, dass ein Klick auf den Text diesen Erweitert, ein Klick auf den Titel oder das Bild öffnet den Link"
+    "splittedDescription": "Geteilt bedeutet, dass ein Klick auf den Text diesen Erweitert, ein Klick auf den Titel oder das Bild öffnet den Link",
+    "amountOfCharactersToTruncateExpand": "Anzahl der Zeichen auf die der formatierte Text gekürzt wird"
 }

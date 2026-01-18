@@ -120,5 +120,6 @@
     "share": "Share",
     "openComments": "Open Comments",
     "splitted": "Splitted",
-    "splittedDescription": "Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link"
+    "splittedDescription": "Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link",
+    "amountOfCharactersToTruncateExpand": "Amount of characters to which the expanded formatted text is truncated"
 }

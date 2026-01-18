@@ -296,12 +296,12 @@ class FeedSettingsList extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
-                Icons.manage_search,
+                Icons.cut_outlined,
               ),
             ),
             Expanded(
               child: Text(
-                AppLocalizations.of(context)!.amountOfSearchedNews,
+                AppLocalizations.of(context)!.amountOfCharactersToTruncateExpand,
                 style: Theme.of(context).textTheme.titleMedium,
                 overflow: TextOverflow.visible,
               ),

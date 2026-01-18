@@ -402,4 +402,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get splittedDescription =>
       'Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link';
+
+  @override
+  String get amountOfCharactersToTruncateExpand =>
+      'Amount of characters to which the expanded formatted text is truncated';
 }
