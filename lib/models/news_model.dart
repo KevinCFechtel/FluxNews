@@ -3,13 +3,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:html2md/html2md.dart' as html2md;
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../state_management/flux_news_state.dart';
@@ -262,14 +262,20 @@ class News {
   // if there is no raw text the text is searched in the p tags
   Widget getFullTextWidget(FluxNewsState appState) {
     var markdown = html2md.convert(content, ignore: ['img']);
-    print("expandedFulltextLimit: " + expandedFulltextLimit.toString());
     if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
       markdown = truncateText(markdown, expandedFulltextLimit!);
     }
-    return MarkdownBody(
+    return MarkdownBlock(
       data: markdown,
-      shrinkWrap: true,
-      fitContent: true,
+      selectable: false,
+      config: MarkdownConfig(configs: [
+        LinkConfig(
+          style: TextStyle(), // empty style to use default
+          onTap: (url) {
+            //Do not open Links
+          },
+        ),
+      ]),
     );
   }
 
