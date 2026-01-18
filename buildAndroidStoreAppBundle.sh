@@ -1,0 +1,1 @@
+vendor/flutter/bin/flutter build appbundle --dart-define=cronetHttpNoPlay=true

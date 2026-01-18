@@ -637,11 +637,20 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.tabActionSettings,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
+                      child: Column(children: [
+                        Text(
+                          AppLocalizations.of(context)!.tabActionSettings,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          overflow: TextOverflow.visible,
+                        ),
+                        appState.tabAction == FluxNewsState.tabActionSplittedString
+                            ? Text(
+                                AppLocalizations.of(context)!.splittedDescription,
+                                style: Theme.of(context).textTheme.titleMedium!.copyWith(fontStyle: FontStyle.italic),
+                                overflow: TextOverflow.visible,
+                              )
+                            : SizedBox.shrink(),
+                      ]),
                     ),
                     DropdownButton<KeyValueRecordType>(
                       value: appState.tabActionSelection,

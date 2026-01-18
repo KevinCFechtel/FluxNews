@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.10.1';
+  static const String applicationVersion = '1.11.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -111,6 +111,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
+  static const String tabActionSplittedString = 'splitted';
   static const String longPressActionMenuString = 'menu';
   static const String longPressActionExpandString = 'expand';
   static const String cancelContextString = 'Cancel';
@@ -577,6 +578,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -594,6 +596,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -609,6 +612,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         0 AS expandedWithFulltext,
+                        0 AS expandedFulltextLimit,
                         categoryID  
                   from feeds;''');
 
@@ -629,6 +633,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -646,6 +651,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -661,6 +667,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
+                        expandedFulltextLimit,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
@@ -785,6 +792,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -802,6 +810,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -817,6 +826,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         0 AS expandedWithFulltext,
+                        0 AS expandedFulltextLimit,
                         categoryID  
                   from feeds;''');
 
@@ -837,6 +847,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
           );
 
@@ -854,6 +865,7 @@ class FluxNewsState extends ChangeNotifier {
                                         manualAdaptDarkModeToIcon,
                                         openMinifluxEntry,
                                         expandedWithFulltext,
+                                        expandedFulltextLimit,
                                         categoryID) 
                  select feedID, 
                         title,
@@ -869,6 +881,7 @@ class FluxNewsState extends ChangeNotifier {
                         manualAdaptDarkModeToIcon,
                         openMinifluxEntry,
                         expandedWithFulltext,
+                        expandedFulltextLimit,
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
@@ -979,6 +992,115 @@ class FluxNewsState extends ChangeNotifier {
           logThis('upgradeDB', 'Upgrading DB from version 7', LogLevel.INFO);
 
           await db.execute(
+            '''CREATE TABLE tempFeeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into tempFeeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        expandedFulltextLimit,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        expandedWithFulltext,
+                        0 AS expandedFulltextLimit,
+                        categoryID  
+                  from feeds;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into feeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        expandedFulltextLimit,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        expandedWithFulltext,
+                        expandedFulltextLimit,
+                        categoryID  
+                  from tempFeeds;''');
+          await db.execute('DROP TABLE IF EXISTS tempFeeds');
+
+          await db.execute(
             '''CREATE TABLE tempNews(newsID INTEGER PRIMARY KEY, 
                             feedID INTEGER, 
                             title TEXT, 
@@ -1028,7 +1150,7 @@ class FluxNewsState extends ChangeNotifier {
                             syncStatus  
                   from news;''');
 
-          // create the table feeds
+          // create the table news
           await db.execute('DROP TABLE IF EXISTS news');
           await db.execute(
             '''CREATE TABLE news(newsID INTEGER PRIMARY KEY, 
@@ -1080,11 +1202,122 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+        } else if (oldVersion == 8) {
+          logThis('upgradeDB', 'Upgrading DB from version 8', LogLevel.INFO);
+
+          await db.execute(
+            '''CREATE TABLE tempFeeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into tempFeeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        expandedFulltextLimit,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        expandedWithFulltext,
+                        0 AS expandedFulltextLimit,
+                        categoryID  
+                  from feeds;''');
+
+          // create the table feeds
+          await db.execute('DROP TABLE IF EXISTS feeds');
+          await db.execute(
+            '''CREATE TABLE feeds(feedID INTEGER PRIMARY KEY, 
+                          title TEXT, 
+                          site_url TEXT, 
+                          iconMimeType TEXT,
+                          iconID INTEGER,
+                          newsCount INTEGER,
+                          crawler INTEGER,
+                          manualTruncate INTEGER,
+                          preferParagraph INTEGER,
+                          preferAttachmentImage INTEGER,
+                          manualAdaptLightModeToIcon INTEGER,
+                          manualAdaptDarkModeToIcon INTEGER,
+                          openMinifluxEntry INTEGER,
+                          expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
+                          categoryID INTEGER)''',
+          );
+
+          await db.execute('''insert into feeds (feedID, 
+                                        title,
+                                        site_url, 
+                                        iconMimeType,
+                                        iconID,
+                                        newsCount,
+                                        crawler,
+                                        manualTruncate,
+                                        preferParagraph,
+                                        preferAttachmentImage,
+                                        manualAdaptLightModeToIcon,
+                                        manualAdaptDarkModeToIcon,
+                                        openMinifluxEntry,
+                                        expandedWithFulltext,
+                                        expandedFulltextLimit,
+                                        categoryID) 
+                 select feedID, 
+                        title,
+                        site_url, 
+                        iconMimeType,
+                        iconID,
+                        newsCount,
+                        crawler,
+                        manualTruncate,
+                        preferParagraph,
+                        preferAttachmentImage,
+                        manualAdaptLightModeToIcon,
+                        manualAdaptDarkModeToIcon,
+                        openMinifluxEntry,
+                        expandedWithFulltext,
+                        expandedFulltextLimit,
+                        categoryID  
+                  from tempFeeds;''');
+          await db.execute('DROP TABLE IF EXISTS tempFeeds');
         }
 
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 8,
+      version: 9,
     );
   }
 
@@ -1195,6 +1428,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesTabActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
           KeyValueRecordType(key: FluxNewsState.tabActionExpandString, value: AppLocalizations.of(context)!.expand),
+          KeyValueRecordType(key: FluxNewsState.tabActionSplittedString, value: AppLocalizations.of(context)!.splitted),
         ];
         recordTypesLongPressActions = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.longPressActionMenuString, value: AppLocalizations.of(context)!.menu),
@@ -1243,7 +1477,7 @@ class FluxNewsState extends ChangeNotifier {
       }
     }
 
-    // init the amount of searched news selection with the first value of the above generated maps
+    // init the amount of characters to truncate limit selection with the first value of the above generated maps
     if (recordTypesAmountOfCharactersToTruncateLimit != null) {
       if (recordTypesAmountOfCharactersToTruncateLimit!.isNotEmpty) {
         amountOfCharactersToTruncateLimitSelection = recordTypesAmountOfCharactersToTruncateLimit![0];

@@ -3,10 +3,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
+import 'package:html2md/html2md.dart' as html2md;
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../state_management/flux_news_state.dart';
@@ -70,6 +73,7 @@ class News {
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
   bool? expandedWithFulltext = false;
+  int? expandedFulltextLimit = 0;
   bool expanded = false;
 
   // define the method to convert the json to the model
@@ -148,7 +152,8 @@ class News {
         manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
         openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
-        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false;
+        expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false,
+        expandedFulltextLimit = res['expandedFulltextLimit'];
 
   // define the method to extract the text from the html content
   // the text is first searched in the raw text
@@ -244,8 +249,34 @@ class News {
     String? text = '';
     text = parse(document.body?.text).documentElement?.text;
     text ??= '';
+    if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
+      text = truncateText(text, expandedFulltextLimit!);
+    }
 
     return text;
+  }
+
+  // define the method to extract the text from the html content
+  // the text is first searched in the raw text
+  // if no text is found the empty string is returned
+  // if there is no raw text the text is searched in the p tags
+  Widget getFullTextWidget(FluxNewsState appState) {
+    var markdown = html2md.convert(content, ignore: ['img']);
+    if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
+      markdown = truncateText(markdown, expandedFulltextLimit!);
+    }
+    return MarkdownBlock(
+      data: markdown,
+      selectable: false,
+      config: MarkdownConfig(configs: [
+        LinkConfig(
+          style: TextStyle(), // empty style to use default
+          onTap: (url) {
+            //Do not open Links
+          },
+        ),
+      ]),
+    );
   }
 
   Attachment getFirstImageAttachment() {
@@ -530,7 +561,45 @@ class Feed {
   bool? manualAdaptDarkModeToIcon = false;
   bool? openMinifluxEntry = false;
   bool? expandedWithFulltext = false;
+  int? expandedFulltextLimit = 0;
   int? categoryID;
+
+  List<KeyValueRecordType> getAmountOfCharactersToTruncateExpandRecordTypes(BuildContext context) {
+    if (AppLocalizations.of(context) != null) {
+      List<KeyValueRecordType> recordTypesAmountOfCharactersToTruncateExpand = <KeyValueRecordType>[
+        KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+        const KeyValueRecordType(key: "500", value: "500"),
+        const KeyValueRecordType(key: "600", value: "600"),
+        const KeyValueRecordType(key: "700", value: "700"),
+        const KeyValueRecordType(key: "800", value: "800"),
+        const KeyValueRecordType(key: "900", value: "900"),
+        const KeyValueRecordType(key: "1000", value: "1000"),
+        const KeyValueRecordType(key: "1500", value: "1500"),
+        const KeyValueRecordType(key: "2000", value: "2000"),
+      ];
+
+      return recordTypesAmountOfCharactersToTruncateExpand;
+    } else {
+      return <KeyValueRecordType>[];
+    }
+  }
+
+  KeyValueRecordType getAmountOfCharactersToTruncateExpandSelection(BuildContext context) {
+    List<KeyValueRecordType> recordTypesAmountOfCharactersToTruncateExpand =
+        getAmountOfCharactersToTruncateExpandRecordTypes(context);
+    KeyValueRecordType amountOfCharactersToTruncateExpandSelection = recordTypesAmountOfCharactersToTruncateExpand[0];
+    // init the amount of characters to truncate expand selection with the first value of the above generated maps
+    if (recordTypesAmountOfCharactersToTruncateExpand.isNotEmpty) {
+      if (expandedFulltextLimit != null) {
+        for (KeyValueRecordType recordSet in recordTypesAmountOfCharactersToTruncateExpand) {
+          if (expandedFulltextLimit == int.parse(recordSet.key)) {
+            amountOfCharactersToTruncateExpandSelection = recordSet;
+          }
+        }
+      }
+    }
+    return amountOfCharactersToTruncateExpandSelection;
+  }
 
   // define the method to convert the model from json
   factory Feed.fromJson(Map<String, dynamic> json) {
@@ -560,6 +629,7 @@ class Feed {
       'manualAdaptDarkModeToIcon': manualAdaptDarkModeToIcon,
       'openMinifluxEntry': openMinifluxEntry,
       'expandedWithFulltext': expandedWithFulltext,
+      'expandedFulltextLimit': expandedFulltextLimit
     };
   }
 
@@ -579,6 +649,7 @@ class Feed {
         manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
         openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
         expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false,
+        expandedFulltextLimit = res['expandedFulltextLimit'],
         categoryID = res['categoryID'];
 
   // define the method to get the feed icon as a widget

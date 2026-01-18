@@ -451,7 +451,7 @@ class NewsCard extends StatelessWidget {
             child: InkWell(
               splashFactory: NoSplash.splashFactory,
               onTap: () async {
-                if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                if (appState.tabAction != FluxNewsState.tabActionExpandString) {
                   openNewsAction(news, appState, context, false);
                 } else {
                   if (news.expanded) {
@@ -587,9 +587,25 @@ class NewsCard extends StatelessWidget {
                                 )
                               : const SizedBox.shrink(),
                           // here is the news text, the Opacity decide between read and unread
-                          NewsContent(
-                            news: news,
-                          ),
+                          InkWell(
+                            splashFactory: NoSplash.splashFactory,
+                            onTap: () {
+                              if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                                openNewsAction(news, appState, context, false);
+                              } else {
+                                if (news.expanded) {
+                                  news.expanded = false;
+                                } else {
+                                  news.expanded = true;
+                                }
+                                markNewsAsReadAction(
+                                    news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                              }
+                            },
+                            child: NewsContent(
+                              news: news,
+                            ),
+                          )
                         ],
                       ))
                 ],

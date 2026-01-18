@@ -288,6 +288,55 @@ class FeedSettingsList extends StatelessWidget {
             ),
           ],
         ),
+        const Divider(),
+        // this row contains the selection of the amount of searched news
+        // there are the choices of all, 1000, 2000, 5000 and 10000
+        Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              child: const Icon(
+                Icons.manage_search,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.amountOfSearchedNews,
+                style: Theme.of(context).textTheme.titleMedium,
+                overflow: TextOverflow.visible,
+              ),
+            ),
+            DropdownButton<KeyValueRecordType>(
+              value: feed.getAmountOfCharactersToTruncateExpandSelection(context),
+              elevation: 16,
+              underline: Container(
+                height: 2,
+              ),
+              alignment: AlignmentDirectional.centerEnd,
+              onChanged: (KeyValueRecordType? value) async {
+                if (value != null) {
+                  feed.expandedFulltextLimit = int.parse(value.key);
+                  await updateExpandedFulltextLimitOfFeedInDB(feed.feedID, int.parse(value.key), appState);
+
+                  // reload the news list with the new filter
+                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                    appState.jumpToItem(0);
+                  });
+                  appState.refreshView();
+                }
+              },
+              items: feed
+                  .getAmountOfCharactersToTruncateExpandRecordTypes(context)
+                  .map<DropdownMenuItem<KeyValueRecordType>>((recordType) => DropdownMenuItem<KeyValueRecordType>(
+                        value: recordType,
+                        child: Text(
+                          recordType.value,
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ],
+        ),
       ],
     );
   }

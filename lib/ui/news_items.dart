@@ -108,12 +108,7 @@ class NewsContent extends StatelessWidget {
       child: news.expanded
           ? news.expandedWithFulltext != null
               ? news.expandedWithFulltext!
-                  ? Text(
-                      news.getFullText(appState),
-                      style: news.status == FluxNewsState.unreadNewsStatus
-                          ? Theme.of(context).textTheme.bodyMedium
-                          : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
-                    )
+                  ? news.getFullTextWidget(appState)
                   : HtmlWidget(
                       news.content,
                       enableCaching: true,

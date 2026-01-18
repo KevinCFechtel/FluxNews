@@ -352,7 +352,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get expandedWithFulltext =>
-      'Show only text instead of HTML when expanding the news content';
+      'Show formatted text instead of full HTML when expanding the news content';
 
   @override
   String get showHeadlineOnTop =>
@@ -398,4 +398,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get openComments => 'Open Comments';
+
+  @override
+  String get splitted => 'Splitted';
+
+  @override
+  String get splittedDescription =>
+      'Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link';
 }
