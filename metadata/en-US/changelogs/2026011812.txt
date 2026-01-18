@@ -1,0 +1,6 @@
+The following items have been implemented:
+ •	There is now a split action for the tab actions: tapping the text expands it, tapping the title or the image opens the article link.
+ •	The full text can now be truncated after X words.
+ •	Rendering of the full text has been optimized.
+ •	The confirmation dialog for marking all news as read is now shown everywhere.
+ •	The button to clear the local news cache has been fixed.
