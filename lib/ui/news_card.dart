@@ -20,10 +20,14 @@ class NewsCard extends StatelessWidget {
     required this.news,
     required this.context,
     required this.searchView,
+    required this.itemIndex,
+    required this.newsList,
   });
   final News news;
   final BuildContext context;
   final bool searchView;
+  final int itemIndex;
+  final List<News>? newsList;
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +104,8 @@ class NewsCard extends StatelessWidget {
           } else {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           }
+          newsList?.removeAt(itemIndex);
+          print("Removed item at index $itemIndex");
         },
       ),
     );
