@@ -1,0 +1,3 @@
+The following items have been implemented:
+ •	Optimized rendering of HTML news when they are expanded.
+ •	Fixed a bug in the database creation on fresh installations.

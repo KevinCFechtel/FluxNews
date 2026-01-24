@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flux_news/functions/android_url_launcher.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
@@ -11,6 +13,7 @@ import 'package:html/parser.dart';
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../state_management/flux_news_state.dart';
 
@@ -273,6 +276,43 @@ class News {
           style: TextStyle(), // empty style to use default
           onTap: (url) {
             //Do not open Links
+          },
+        ),
+      ]),
+    );
+  }
+
+  // define the method to extract the text from the html content
+  // the text is first searched in the raw text
+  // if no text is found the empty string is returned
+  // if there is no raw text the text is searched in the p tags
+  Widget getFullRenderedWidget(FluxNewsState appState, BuildContext context) {
+    var markdown = html2md.convert(content);
+    if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
+      markdown = truncateText(markdown, expandedFulltextLimit!);
+    }
+    return MarkdownBlock(
+      data: markdown,
+      selectable: false,
+      config: MarkdownConfig(configs: [
+        LinkConfig(
+          onTap: (url) async {
+            if (Platform.isAndroid) {
+              AndroidUrlLauncher.launchUrl(context, url);
+            } else if (Platform.isIOS) {
+              // catch exception if no app is installed to handle the url
+              final bool nativeAppLaunchSucceeded = await launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalNonBrowserApplication,
+              );
+              //if exception is caught, open the app in web-view
+              if (!nativeAppLaunchSucceeded) {
+                await launchUrl(
+                  Uri.parse(url),
+                  mode: LaunchMode.inAppWebView,
+                );
+              }
+            }
           },
         ),
       ]),
