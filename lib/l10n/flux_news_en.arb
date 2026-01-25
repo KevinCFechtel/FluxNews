@@ -65,7 +65,7 @@
     "markBookmarkedAsRead" : "Mark bookmarked news as read",
     "markCategoryAsRead" : "Mark category as read",
     "markFeedAsRead" : "Mark feed as read",
-    "amountOfSyncedNews": "Amount of News which should be synced",
+    "amountOfSyncedNews": "Amount of unread News which should be synced",
     "amountOfSearchedNews": "Amount of News which should be searched",
     "debugSettings": "Debug Settings",
     "truncateSettings": "Truncate Settings",
@@ -121,5 +121,7 @@
     "openComments": "Open Comments",
     "splitted": "Splitted",
     "splittedDescription": "Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link",
-    "amountOfCharactersToTruncateExpand": "Amount of characters to which the expanded formatted text is truncated"
+    "amountOfCharactersToTruncateExpand": "Amount of characters to which the expanded formatted text is truncated",
+    "syncSettings": "Sync Settings",
+    "newsItemSettings": "News Item Settings"
 }

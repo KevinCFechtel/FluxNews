@@ -407,4 +407,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get amountOfCharactersToTruncateExpand =>
       'Amount of characters to which the expanded formatted text is truncated';
+
+  @override
+  String get syncSettings => 'Sync Settings';
+
+  @override
+  String get newsItemSettings => 'News Item Settings';
 }

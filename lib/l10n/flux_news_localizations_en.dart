@@ -216,7 +216,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markFeedAsRead => 'Mark feed as read';
 
   @override
-  String get amountOfSyncedNews => 'Amount of News which should be synced';
+  String get amountOfSyncedNews =>
+      'Amount of unread News which should be synced';
 
   @override
   String get amountOfSearchedNews => 'Amount of News which should be searched';
@@ -406,4 +407,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get amountOfCharactersToTruncateExpand =>
       'Amount of characters to which the expanded formatted text is truncated';
+
+  @override
+  String get syncSettings => 'Sync Settings';
+
+  @override
+  String get newsItemSettings => 'News Item Settings';
 }

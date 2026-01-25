@@ -7,10 +7,10 @@ import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
-import 'package:flux_news/ui/feed_settings_list.dart';
+import 'package:flux_news/ui/settings/feed_settings_list.dart';
 import 'package:provider/provider.dart';
 
-import '../state_management/flux_news_state.dart';
+import '../../state_management/flux_news_state.dart';
 
 class FeedSettings extends StatelessWidget {
   const FeedSettings({super.key});

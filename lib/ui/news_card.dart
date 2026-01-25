@@ -103,9 +103,10 @@ class NewsCard extends StatelessWidget {
             markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           } else {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            if (appState.removeNewsFromListWhenRead) {
+              newsList?.removeAt(itemIndex);
+            }
           }
-          newsList?.removeAt(itemIndex);
-          print("Removed item at index $itemIndex");
         },
       ),
     );
@@ -364,6 +365,9 @@ class NewsCard extends StatelessWidget {
                     markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   } else {
                     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    if (appState.removeNewsFromListWhenRead) {
+                      newsList?.removeAt(itemIndex);
+                    }
                   }
                 } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
                   bookmarkAction(news, appState, context, searchView);
@@ -415,6 +419,9 @@ class NewsCard extends StatelessWidget {
                     markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   } else {
                     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    if (appState.removeNewsFromListWhenRead) {
+                      newsList?.removeAt(itemIndex);
+                    }
                   }
                 } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
                   bookmarkAction(news, appState, context, searchView);
@@ -466,6 +473,9 @@ class NewsCard extends StatelessWidget {
                     news.expanded = true;
                   }
                   markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                  if (appState.removeNewsFromListWhenRead) {
+                    newsList?.removeAt(itemIndex);
+                  }
                 }
               },
               // on tap get the actual position of the list on tab
@@ -483,6 +493,9 @@ class NewsCard extends StatelessWidget {
                     news.expanded = true;
                   }
                   markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                  if (appState.removeNewsFromListWhenRead) {
+                    newsList?.removeAt(itemIndex);
+                  }
                 }
               },
               child: Column(
@@ -606,6 +619,9 @@ class NewsCard extends StatelessWidget {
                                 }
                                 markNewsAsReadAction(
                                     news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                                if (appState.removeNewsFromListWhenRead) {
+                                  newsList?.removeAt(itemIndex);
+                                }
                               }
                             },
                             child: NewsContent(

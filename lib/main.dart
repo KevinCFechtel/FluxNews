@@ -11,7 +11,11 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
-import 'package:flux_news/ui/feed_settings.dart';
+import 'package:flux_news/ui/settings/feed_settings.dart';
+import 'package:flux_news/ui/settings/general_settings.dart';
+import 'package:flux_news/ui/settings/news_item_settings.dart';
+import 'package:flux_news/ui/settings/sync_settings.dart';
+import 'package:flux_news/ui/settings/truncate_settings.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -231,6 +235,10 @@ class FluxNews extends StatelessWidget {
           FluxNewsState.settingsRouteString: (context) => const Settings(),
           FluxNewsState.searchRouteString: (context) => const Search(),
           FluxNewsState.feedSettingsRouteString: (context) => const FeedSettings(),
+          FluxNewsState.generalSettingsRouteString: (context) => const GeneralSettings(),
+          FluxNewsState.syncSettingsRouteString: (context) => const SyncSettings(),
+          FluxNewsState.newsItemSettingsRouteString: (context) => const NewsItemSettings(),
+          FluxNewsState.truncateSettingsRouteString: (context) => const TruncateSettings(),
         },
         // define localization with english as fallback
         localizationsDelegates: AppLocalizations.localizationsDelegates,

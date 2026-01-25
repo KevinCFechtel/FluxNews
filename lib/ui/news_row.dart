@@ -20,10 +20,14 @@ class NewsRow extends StatelessWidget {
     required this.news,
     required this.context,
     required this.searchView,
+    required this.itemIndex,
+    required this.newsList,
   });
   final News news;
   final BuildContext context;
   final bool searchView;
+  final int itemIndex;
+  final List<News>? newsList;
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +103,9 @@ class NewsRow extends StatelessWidget {
             markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           } else {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            if (appState.removeNewsFromListWhenRead) {
+              newsList?.removeAt(itemIndex);
+            }
           }
         },
       ),
@@ -358,6 +365,9 @@ class NewsRow extends StatelessWidget {
                       markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                     } else {
                       markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                      if (appState.removeNewsFromListWhenRead) {
+                        newsList?.removeAt(itemIndex);
+                      }
                     }
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
                     bookmarkAction(news, appState, context, searchView);
@@ -409,6 +419,9 @@ class NewsRow extends StatelessWidget {
                       markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                     } else {
                       markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                      if (appState.removeNewsFromListWhenRead) {
+                        newsList?.removeAt(itemIndex);
+                      }
                     }
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
                     bookmarkAction(news, appState, context, searchView);
