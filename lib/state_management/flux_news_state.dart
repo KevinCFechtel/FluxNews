@@ -310,6 +310,7 @@ class FluxNewsState extends ChangeNotifier {
                           manualAdaptDarkModeToIcon INTEGER,
                           openMinifluxEntry INTEGER,
                           expandedWithFulltext INTEGER,
+                          expandedFulltextLimit INTEGER,
                           categoryID INTEGER)''',
         );
         // create the table attachments

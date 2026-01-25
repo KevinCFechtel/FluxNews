@@ -1,7 +1,5 @@
 // here we define the appearance of the news cards
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:provider/provider.dart';
@@ -109,7 +107,9 @@ class NewsContent extends StatelessWidget {
           ? news.expandedWithFulltext != null
               ? news.expandedWithFulltext!
                   ? news.getFullTextWidget(appState)
-                  : HtmlWidget(
+                  : news.getFullRenderedWidget(appState, context)
+              /*
+                  HtmlWidget(
                       news.content,
                       enableCaching: true,
                       textStyle: TextStyle(
@@ -120,7 +120,10 @@ class NewsContent extends StatelessWidget {
                         return await openUrlAction(url, context);
                       },
                     )
-              : HtmlWidget(
+                    */
+              : news.getFullRenderedWidget(appState, context)
+          /*
+              HtmlWidget(
                   news.content,
                   enableCaching: true,
                   textStyle: TextStyle(
@@ -131,6 +134,7 @@ class NewsContent extends StatelessWidget {
                     return await openUrlAction(url, context);
                   },
                 )
+                */
           : Text(
               news.getText(appState),
               style: news.status == FluxNewsState.unreadNewsStatus
