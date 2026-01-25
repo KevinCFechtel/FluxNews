@@ -221,7 +221,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get amountOfSyncedNews =>
-      'Anzahl der Nachrichten die synchronisiert werden';
+      'Anzahl der ungelesenen Nachrichten die synchronisiert werden';
 
   @override
   String get amountOfSearchedNews =>
@@ -416,4 +416,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get amountOfCharactersToTruncateExpand =>
       'Anzahl der Zeichen auf die der formatierte Text gekürzt wird';
+
+  @override
+  String get syncSettings => 'Synchronisations Einstellungen';
+
+  @override
+  String get newsItemSettings => 'News Einstellungen';
+
+  @override
+  String get removeNewsFromListWhenRead =>
+      'Entferne die News aus der Liste, wenn sie als gelesen markiert wird';
 }

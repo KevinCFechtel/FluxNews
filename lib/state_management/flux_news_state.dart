@@ -39,6 +39,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
   static const String feedSettingsRouteString = '/feedSettings';
+  static const String generalSettingsRouteString = '/generalSettings';
+  static const String syncSettingsRouteString = '/syncSettings';
+  static const String newsItemSettingsRouteString = '/newsItemSettings';
+  static const String truncateSettingsRouteString = '/truncateSettings';
   static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
@@ -89,6 +93,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupCategorieKey = 'startupCategorie';
   static const String secureStorageStartupCategorieSelectionKey = 'startupCategorieSelection';
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
+  static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -233,6 +238,7 @@ class FluxNewsState extends ChangeNotifier {
   int? startupCategorieSelectionKey;
   int? startupFeedSelectionKey;
   bool categorieStartup = false;
+  bool removeNewsFromListWhenRead = true;
 
   // vars for app bar text
   String appBarText = '';

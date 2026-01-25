@@ -20,10 +20,14 @@ class NewsCard extends StatelessWidget {
     required this.news,
     required this.context,
     required this.searchView,
+    required this.itemIndex,
+    required this.newsList,
   });
   final News news;
   final BuildContext context;
   final bool searchView;
+  final int itemIndex;
+  final List<News>? newsList;
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +103,9 @@ class NewsCard extends StatelessWidget {
             markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           } else {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
           }
         },
       ),
@@ -358,6 +365,9 @@ class NewsCard extends StatelessWidget {
                     markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   } else {
                     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    if (appState.removeNewsFromListWhenRead && !searchView) {
+                      newsList?.removeAt(itemIndex);
+                    }
                   }
                 } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
                   bookmarkAction(news, appState, context, searchView);
@@ -409,6 +419,9 @@ class NewsCard extends StatelessWidget {
                     markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   } else {
                     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    if (appState.removeNewsFromListWhenRead && !searchView) {
+                      newsList?.removeAt(itemIndex);
+                    }
                   }
                 } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
                   bookmarkAction(news, appState, context, searchView);
@@ -453,6 +466,9 @@ class NewsCard extends StatelessWidget {
               onTap: () async {
                 if (appState.tabAction != FluxNewsState.tabActionExpandString) {
                   openNewsAction(news, appState, context, false);
+                  if (appState.removeNewsFromListWhenRead && !searchView) {
+                    newsList?.removeAt(itemIndex);
+                  }
                 } else {
                   if (news.expanded) {
                     news.expanded = false;
@@ -477,6 +493,9 @@ class NewsCard extends StatelessWidget {
                     news.expanded = true;
                   }
                   markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                  if (appState.removeNewsFromListWhenRead && !searchView) {
+                    newsList?.removeAt(itemIndex);
+                  }
                 }
               },
               child: Column(
@@ -592,6 +611,9 @@ class NewsCard extends StatelessWidget {
                             onTap: () {
                               if (appState.tabAction == FluxNewsState.tabActionOpenString) {
                                 openNewsAction(news, appState, context, false);
+                                if (appState.removeNewsFromListWhenRead && !searchView) {
+                                  newsList?.removeAt(itemIndex);
+                                }
                               } else {
                                 if (news.expanded) {
                                   news.expanded = false;

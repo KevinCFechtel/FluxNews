@@ -65,7 +65,7 @@
     "markBookmarkedAsRead" : "Lesezeichen als gelesen markieren",
     "markCategoryAsRead" : "Kategorie als gelesen markieren",
     "markFeedAsRead" : "Feed als gelesen markieren",
-    "amountOfSyncedNews": "Anzahl der Nachrichten die synchronisiert werden",
+    "amountOfSyncedNews": "Anzahl der ungelesenen Nachrichten die synchronisiert werden",
     "amountOfSearchedNews": "Anzahl der Nachrichten die durchsucht werden",
     "debugSettings": "Debug Einstellungen",
     "truncateSettings": "Truncate Einstellungen",
@@ -121,5 +121,8 @@
     "openComments": "Öffne Kommentare",
     "splitted": "Geteilt",
     "splittedDescription": "Geteilt bedeutet, dass ein Klick auf den Text diesen Erweitert, ein Klick auf den Titel oder das Bild öffnet den Link",
-    "amountOfCharactersToTruncateExpand": "Anzahl der Zeichen auf die der formatierte Text gekürzt wird"
+    "amountOfCharactersToTruncateExpand": "Anzahl der Zeichen auf die der formatierte Text gekürzt wird",
+    "syncSettings": "Synchronisations Einstellungen",
+    "newsItemSettings": "News Einstellungen",
+    "removeNewsFromListWhenRead": "Entferne die News aus der Liste, wenn sie als gelesen markiert wird"
 }

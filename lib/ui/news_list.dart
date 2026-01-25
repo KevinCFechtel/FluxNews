@@ -65,8 +65,20 @@ class BodyNewsList extends StatelessWidget {
                               listController: appState.listController,
                               itemBuilder: (context, i) {
                                 return appState.orientation == Orientation.landscape
-                                    ? NewsRow(news: snapshot.data![i], context: context, searchView: searchView)
-                                    : NewsCard(news: snapshot.data![i], context: context, searchView: searchView);
+                                    ? NewsRow(
+                                        news: snapshot.data![i],
+                                        context: context,
+                                        searchView: searchView,
+                                        itemIndex: i,
+                                        newsList: snapshot.data,
+                                      )
+                                    : NewsCard(
+                                        news: snapshot.data![i],
+                                        context: context,
+                                        searchView: searchView,
+                                        itemIndex: i,
+                                        newsList: snapshot.data,
+                                      );
                               }),
                           onObserve: (resultModel) {
                             int lastItem = 0;

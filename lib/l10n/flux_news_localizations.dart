@@ -501,7 +501,7 @@ abstract class AppLocalizations {
   /// No description provided for @amountOfSyncedNews.
   ///
   /// In en, this message translates to:
-  /// **'Amount of News which should be synced'**
+  /// **'Amount of unread News which should be synced'**
   String get amountOfSyncedNews;
 
   /// No description provided for @amountOfSearchedNews.
@@ -839,6 +839,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount of characters to which the expanded formatted text is truncated'**
   String get amountOfCharactersToTruncateExpand;
+
+  /// No description provided for @syncSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Settings'**
+  String get syncSettings;
+
+  /// No description provided for @newsItemSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'News Item Settings'**
+  String get newsItemSettings;
+
+  /// No description provided for @removeNewsFromListWhenRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the news from the list when marked as read'**
+  String get removeNewsFromListWhenRead;
 }
 
 class _AppLocalizationsDelegate

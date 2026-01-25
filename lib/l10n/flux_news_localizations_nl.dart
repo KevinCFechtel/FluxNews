@@ -409,4 +409,14 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get amountOfCharactersToTruncateExpand =>
       'Amount of characters to which the expanded formatted text is truncated';
+
+  @override
+  String get syncSettings => 'Sync Settings';
+
+  @override
+  String get newsItemSettings => 'News Item Settings';
+
+  @override
+  String get removeNewsFromListWhenRead =>
+      'Remove the news from the list when marked as read';
 }

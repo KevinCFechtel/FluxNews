@@ -18,11 +18,6 @@ import '../miniflux/miniflux_backend.dart';
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
-  // define the selection lists for the settings of saved news and starred news
-  static const List<int> amountOfSavedNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  static const List<int> amountOfSavedStarredNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  static const List<int> amountOfCharactersToTruncate = <int>[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
-
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
@@ -134,794 +129,82 @@ class Settings extends StatelessWidget {
                         ),
                       )
                     : const SizedBox.shrink(),
-                // this headline indicate the general settings section
-                Padding(
-                  padding: const EdgeInsets.only(top: 50.0, bottom: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(AppLocalizations.of(context)!.generalSettings,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.normal,
-                          )),
-                    ],
+                const Divider(),
+                // this list tile contains general settings
+                // it is clickable and opens the general settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.settings_applications,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.generalSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.generalSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
                   ),
                 ),
-                // this row contains the selection of brightness mode
-                // there are the choices of light, dark and system
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.light_mode,
-                      ),
+                const Divider(),
+
+                // this list tile contains sync settings
+                // it is clickable and opens the sync settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.sync,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.syncSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.brightnesMode,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    DropdownButton<KeyValueRecordType>(
-                      value: appState.brightnessModeSelection,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (KeyValueRecordType? value) {
-                        if (value != null) {
-                          themeState.brightnessMode = value.key;
-                          appState.brightnessModeSelection = value;
-                          appState.storage.write(key: FluxNewsState.secureStorageBrightnessModeKey, value: value.key);
-                          appState.refreshView();
-                          themeState.refreshView();
-                        }
-                      },
-                      items: appState.recordTypesBrightnessMode!
-                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
-                          .toList(),
-                    ),
-                  ],
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.syncSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
+                  ),
                 ),
                 const Divider(),
-                // this row contains the selection if the black mode is turned on
-                themeState.brightnessMode != FluxNewsState.brightnessModeLightString
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.settings_display_rounded,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.useBlackMode,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          Switch.adaptive(
-                            value: themeState.useBlackMode,
-                            onChanged: (bool value) {
-                              String stringValue = FluxNewsState.secureStorageFalseString;
-                              if (value == true) {
-                                stringValue = FluxNewsState.secureStorageTrueString;
-                              }
-                              themeState.useBlackMode = value;
-                              appState.storage
-                                  .write(key: FluxNewsState.secureStorageUseBlackModeKey, value: stringValue);
-                              appState.refreshView();
-                              themeState.refreshView();
-                            },
-                          ),
-                        ],
-                      )
-                    : SizedBox.shrink(),
-                themeState.brightnessMode != FluxNewsState.brightnessModeLightString
-                    ? const Divider()
-                    : SizedBox.shrink(),
-                // this row contains the selection of the mark as read on scroll over
-                // if it is turned on, a news is marked as read if it is scrolled over
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.check,
-                      ),
+
+                // this list tile contains news item settings
+                // it is clickable and opens the news item settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.article,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.newsItemSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.markAsReadOnScrollover,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.markAsReadOnScrollOver,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.markAsReadOnScrollOver = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageMarkAsReadOnScrollOverKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.newsItemSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
+                  ),
                 ),
                 const Divider(),
-                // this row contains the selection of the sync on start
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.refresh,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.syncOnStart,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.syncOnStart,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.syncOnStart = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageSyncOnStartKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if only feeds and categories with new news are shown
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.numbers,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.showOnlyFeedCategoriesWithNewNews,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.showOnlyFeedCategoriesWithNewNews,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.showOnlyFeedCategoriesWithNewNews = value;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageShowOnlyFeedCategoriesWithNewNeKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if the app bar text is multiline
-                // is turned on, the app bar text is showing the news count in the second line
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.numbers,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.multilineAppBarTextSetting,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.multilineAppBarText,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.multilineAppBarText = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageMultilineAppBarTextKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if the feed icon is shown
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.image,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.showFeedIconsTextSettings,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.showFeedIcons,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.showFeedIcons = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageShowFeedIconsTextKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if the headline is shown on top of the news
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.vertical_align_top,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.showHeadlineOnTop,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.showHeadlineOnTop,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.showHeadlineOnTop = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageShowHeadlineOnTopKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if the button to mark as read is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.check_circle_outline,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.floatingActionButton,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.floatingButtonVisible,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.floatingButtonVisible = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of the amount of saved news
-                // if the news exceeds the amount, the oldest news were deleted
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.save_alt,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.amountSaved,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    DropdownButton<int>(
-                      value: appState.amountOfSavedNews,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (int? value) {
-                        if (value != null) {
-                          appState.amountOfSavedNews = value;
-                          appState.storage
-                              .write(key: FluxNewsState.secureStorageAmountOfSavedNewsKey, value: value.toString());
-                          appState.refreshView();
-                        }
-                      },
-                      items: amountOfSavedNewsList.map<DropdownMenuItem<int>>((int value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text(value.toString()),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of the amount of saved starred news
-                // if the news exceeds the amount, the oldest news were deleted
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.star,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.amountSavedStarred,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    DropdownButton<int>(
-                      value: appState.amountOfSavedStarredNews,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (int? value) {
-                        if (value != null) {
-                          appState.amountOfSavedStarredNews = value;
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageAmountOfSavedStarredNewsKey, value: value.toString());
-                          appState.refreshView();
-                        }
-                      },
-                      items: amountOfSavedStarredNewsList.map<DropdownMenuItem<int>>((int value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text(value.toString()),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of the amount of synced news
-                // there are the choices of all, 1000, 2000, 5000 and 10000
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.repeat_one,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.amountOfSyncedNews,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    DropdownButton<KeyValueRecordType>(
-                      value: appState.amontOfSyncedNewsSelection,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (KeyValueRecordType? value) {
-                        if (value != null) {
-                          appState.amountOfSyncedNews = int.parse(value.key);
-                          appState.amontOfSyncedNewsSelection = value;
-                          appState.storage
-                              .write(key: FluxNewsState.secureStorageAmountOfSyncedNewsKey, value: value.key);
-                          appState.refreshView();
-                        }
-                      },
-                      items: appState.recordTypesAmountOfSyncedNews!
-                          .map<DropdownMenuItem<KeyValueRecordType>>(
-                              (recordType) => DropdownMenuItem<KeyValueRecordType>(
-                                    value: recordType,
-                                    child: Text(
-                                      recordType.value,
-                                    ),
-                                  ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of the amount of searched news
-                // there are the choices of all, 1000, 2000, 5000 and 10000
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.manage_search,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.amountOfSearchedNews,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    DropdownButton<KeyValueRecordType>(
-                      value: appState.amontOfSearchedNewsSelection,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (KeyValueRecordType? value) {
-                        if (value != null) {
-                          appState.amountOfSearchedNews = int.parse(value.key);
-                          appState.amontOfSearchedNewsSelection = value;
-                          appState.storage
-                              .write(key: FluxNewsState.secureStorageAmountOfSearchedNewsKey, value: value.key);
-                          appState.refreshView();
-                        }
-                      },
-                      items: appState.recordTypesAmountOfSearchedNews!
-                          .map<DropdownMenuItem<KeyValueRecordType>>(
-                              (recordType) => DropdownMenuItem<KeyValueRecordType>(
-                                    value: recordType,
-                                    child: Text(
-                                      recordType.value,
-                                    ),
-                                  ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of the tab action
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.touch_app,
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(children: [
-                        Text(
-                          AppLocalizations.of(context)!.tabActionSettings,
-                          style: Theme.of(context).textTheme.titleMedium,
-                          overflow: TextOverflow.visible,
-                        ),
-                        appState.tabAction == FluxNewsState.tabActionSplittedString
-                            ? Text(
-                                AppLocalizations.of(context)!.splittedDescription,
-                                style: Theme.of(context).textTheme.titleMedium!.copyWith(fontStyle: FontStyle.italic),
-                                overflow: TextOverflow.visible,
-                              )
-                            : SizedBox.shrink(),
-                      ]),
-                    ),
-                    DropdownButton<KeyValueRecordType>(
-                      value: appState.tabActionSelection,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (KeyValueRecordType? value) {
-                        if (value != null) {
-                          appState.tabAction = value.key;
-                          appState.tabActionSelection = value;
-                          appState.storage.write(key: FluxNewsState.secureStorageTabActionKey, value: value.key);
-                          appState.refreshView();
-                        }
-                      },
-                      items: appState.recordTypesTabActions!
-                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
-                          .toList(),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of the long press action
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.touch_app_outlined,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.longPressActionSettings,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    DropdownButton<KeyValueRecordType>(
-                      value: appState.longPressActionSelection,
-                      elevation: 16,
-                      underline: Container(
-                        height: 2,
-                      ),
-                      alignment: AlignmentDirectional.centerEnd,
-                      onChanged: (KeyValueRecordType? value) {
-                        if (value != null) {
-                          appState.longPressAction = value.key;
-                          appState.longPressActionSelection = value;
-                          appState.storage.write(key: FluxNewsState.secureStorageLongPressActionKey, value: value.key);
-                          appState.refreshView();
-                        }
-                      },
-                      items: appState.recordTypesLongPressActions!
-                          .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                              DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
-                          .toList(),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection if swiping is enabled
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.swipe,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.activateSwiping,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.activateSwipeGestures,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.activateSwipeGestures = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageActivateSwipeGesturesKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // this row contains the selection of left swipe action
-                // there are the choices of read, bookmark and save
-                appState.activateSwipeGestures
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.swipe_left,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.leftSwipeSelectionOption,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          DropdownButton<KeyValueRecordType>(
-                            value: appState.leftSwipeActionSelection,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                            ),
-                            alignment: AlignmentDirectional.centerEnd,
-                            onChanged: (KeyValueRecordType? value) {
-                              if (value != null) {
-                                appState.leftSwipeAction = value.key;
-                                appState.leftSwipeActionSelection = value;
-                                appState.storage
-                                    .write(key: FluxNewsState.secureStorageLeftSwipeActionKey, value: value.key);
-                                appState.refreshView();
-                              }
-                            },
-                            items: appState.recordTypesSwipeActions!
-                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                    DropdownMenuItem<KeyValueRecordType>(
-                                        value: recordType, child: Text(recordType.value)))
-                                .toList(),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
-                // this row contains the selection of second left swipe action
-                // there are the choices of none, read, bookmark and save
-                appState.activateSwipeGestures
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.swipe_left,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.secondLeftSwipeSelectionOption,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          DropdownButton<KeyValueRecordType>(
-                            value: appState.secondLeftSwipeActionSelection,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                            ),
-                            alignment: AlignmentDirectional.centerEnd,
-                            onChanged: (KeyValueRecordType? value) {
-                              if (value != null) {
-                                appState.secondLeftSwipeAction = value.key;
-                                appState.secondLeftSwipeActionSelection = value;
-                                appState.storage
-                                    .write(key: FluxNewsState.secureStorageSecondLeftSwipeActionKey, value: value.key);
-                                appState.refreshView();
-                              }
-                            },
-                            items: appState.recordTypesSecondSwipeActions!
-                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                    DropdownMenuItem<KeyValueRecordType>(
-                                        value: recordType, child: Text(recordType.value)))
-                                .toList(),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
-                // this row contains the selection of right swipe action
-                // there are the choices of read, bookmark and save
-                appState.activateSwipeGestures
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.swipe_right,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.rightSwipeSelectionOption,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          DropdownButton<KeyValueRecordType>(
-                            value: appState.rightSwipeActionSelection,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                            ),
-                            alignment: AlignmentDirectional.centerEnd,
-                            onChanged: (KeyValueRecordType? value) {
-                              if (value != null) {
-                                appState.rightSwipeAction = value.key;
-                                appState.rightSwipeActionSelection = value;
-                                appState.storage
-                                    .write(key: FluxNewsState.secureStorageRightSwipeActionKey, value: value.key);
-                                appState.refreshView();
-                              }
-                            },
-                            items: appState.recordTypesSwipeActions!
-                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                    DropdownMenuItem<KeyValueRecordType>(
-                                        value: recordType, child: Text(recordType.value)))
-                                .toList(),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
-                // this row contains the selection of second right swipe action
-                // there are the choices of none, read, bookmark and save
-                appState.activateSwipeGestures
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.swipe_right,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.secondRightSwipeSelectionOption,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          DropdownButton<KeyValueRecordType>(
-                            value: appState.secondRightSwipeActionSelection,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                            ),
-                            alignment: AlignmentDirectional.centerEnd,
-                            onChanged: (KeyValueRecordType? value) {
-                              if (value != null) {
-                                appState.secondRightSwipeAction = value.key;
-                                appState.secondRightSwipeActionSelection = value;
-                                appState.storage
-                                    .write(key: FluxNewsState.secureStorageSecondRightSwipeActionKey, value: value.key);
-                                appState.refreshView();
-                              }
-                            },
-                            items: appState.recordTypesSecondSwipeActions!
-                                .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                    DropdownMenuItem<KeyValueRecordType>(
-                                        value: recordType, child: Text(recordType.value)))
-                                .toList(),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+
                 // this list tile contains feed settings
                 // it is clickable and opens the feed settings
                 ListTile(
@@ -941,321 +224,36 @@ class Settings extends StatelessWidget {
                     // navigate to the search page
                     Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
                   },
-                ),
-                const Divider(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(AppLocalizations.of(context)!.truncateSettings,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.normal,
-                          )),
-                    ],
+                  trailing: const Icon(
+                    Icons.arrow_right,
                   ),
                 ),
-                // this sections contains the truncate options
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.cut_outlined,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.activateTruncate,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.activateTruncate,
-                      onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.activateTruncate = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageActivateTruncateKey, value: stringValue);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
                 const Divider(),
-                appState.activateTruncate
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 12.0, left: 20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(AppLocalizations.of(context)!.truncateMode,
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.normal,
-                                )),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateTruncate
-                    ? RadioGroup<int>(
-                        groupValue: appState.truncateMode,
-                        onChanged: (int? value) {
-                          if (value != null) {
-                            appState.truncateMode = value;
-                            appState.storage
-                                .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
-                            appState.refreshView();
-                          }
-                        },
-                        child: Column(children: [
-                          RadioListTile<int>(
-                            title: Text(AppLocalizations.of(context)!.truncateModeAll,
-                                style: Theme.of(context).textTheme.titleMedium),
-                            value: 0,
-                          ),
-                          RadioListTile<int>(
-                            title: Text(AppLocalizations.of(context)!.truncateModeScraper,
-                                style: Theme.of(context).textTheme.titleMedium),
-                            value: 1,
-                          ),
-                          RadioListTile<int>(
-                            title: Text(AppLocalizations.of(context)!.truncateModeManual,
-                                style: Theme.of(context).textTheme.titleMedium),
-                            value: 2,
-                          )
-                        ]))
-                    : const SizedBox.shrink(),
 
-                appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
-                appState.activateTruncate
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.cut_outlined,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.charactersToTruncate,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          DropdownButton<int>(
-                            value: appState.charactersToTruncate,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                            ),
-                            alignment: AlignmentDirectional.centerEnd,
-                            onChanged: (int? value) {
-                              if (value != null) {
-                                appState.charactersToTruncate = value;
-                                appState.storage.write(
-                                    key: FluxNewsState.secureStorageCharactersToTruncateKey, value: value.toString());
-                                appState.refreshView();
-                              }
-                            },
-                            items: amountOfCharactersToTruncate.map<DropdownMenuItem<int>>((int value) {
-                              return DropdownMenuItem<int>(
-                                value: value,
-                                child: Text(value.toString()),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
-                appState.activateTruncate
-                    ? Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                            child: const Icon(
-                              Icons.cut_outlined,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.charactersToTruncateLimit,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              overflow: TextOverflow.visible,
-                            ),
-                          ),
-                          DropdownButton<KeyValueRecordType>(
-                            value: appState.amountOfCharactersToTruncateLimitSelection,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                            ),
-                            alignment: AlignmentDirectional.centerEnd,
-                            onChanged: (KeyValueRecordType? value) {
-                              if (value != null) {
-                                appState.charactersToTruncateLimit = int.parse(value.key);
-                                appState.amountOfCharactersToTruncateLimitSelection = value;
-                                appState.storage.write(
-                                    key: FluxNewsState.secureStorageCharactersToTruncateLimitKey, value: value.key);
-                                appState.refreshView();
-                              }
-                            },
-                            items: appState.recordTypesAmountOfCharactersToTruncateLimit!
-                                .map<DropdownMenuItem<KeyValueRecordType>>(
-                                    (recordType) => DropdownMenuItem<KeyValueRecordType>(
-                                          value: recordType,
-                                          child: Text(
-                                            recordType.value,
-                                          ),
-                                        ))
-                                .toList(),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-                appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Expanded(
-                          child: Text(AppLocalizations.of(context)!.startupCategorie,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.normal,
-                                overflow: TextOverflow.visible,
-                              ))),
-                    ],
+                // this list tile contains truncate settings
+                // it is clickable and opens the truncate settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.cut_outlined,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.truncateMode,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.truncateSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
                   ),
                 ),
-                RadioGroup<int>(
-                    groupValue: appState.startupCategorie,
-                    onChanged: (int? value) {
-                      if (value != null) {
-                        appState.startupCategorie = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageStartupCategorieKey, value: value.toString());
-                        appState.refreshView();
-                      }
-                    },
-                    child: Column(children: [
-                      RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.startupCategorieAll,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 0,
-                      ),
-                      RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.startupCategorieBookmarks,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 1,
-                      ),
-                      RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.startupCategorieCategorie,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 2,
-                      ),
-                      RadioListTile<int>(
-                        title: Text(AppLocalizations.of(context)!.startupCategorieFeed,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        value: 3,
-                      )
-                    ])),
-                appState.startupCategorie == 2 ? const Divider() : const SizedBox.shrink(),
-                appState.startupCategorie == 2
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 12.0),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                              child: const Icon(
-                                Icons.feed,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                AppLocalizations.of(context)!.startupCategorieCategorieSelection,
-                                style: Theme.of(context).textTheme.titleMedium,
-                                overflow: TextOverflow.visible,
-                              ),
-                            ),
-                            DropdownButton<KeyValueRecordType>(
-                              value: appState.startupCategorieSelection,
-                              elevation: 16,
-                              underline: Container(
-                                height: 2,
-                              ),
-                              alignment: AlignmentDirectional.centerEnd,
-                              onChanged: (KeyValueRecordType? value) {
-                                if (value != null) {
-                                  appState.startupCategorieSelectionKey = int.parse(value.key);
-                                  appState.startupCategorieSelection = value;
-                                  appState.storage.write(
-                                      key: FluxNewsState.secureStorageStartupCategorieSelectionKey, value: value.key);
-                                  appState.refreshView();
-                                }
-                              },
-                              items: appState.recordTypesStartupCategories!
-                                  .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                      DropdownMenuItem<KeyValueRecordType>(
-                                          value: recordType, child: Text(recordType.value)))
-                                  .toList(),
-                            ),
-                          ],
-                        ))
-                    : const SizedBox.shrink(),
-                appState.startupCategorie == 3 ? const Divider() : const SizedBox.shrink(),
-                appState.startupCategorie == 3
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 12.0),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                              child: const Icon(
-                                Icons.feed,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                AppLocalizations.of(context)!.startupCategorieFeedSelection,
-                                style: Theme.of(context).textTheme.titleMedium,
-                                overflow: TextOverflow.visible,
-                              ),
-                            ),
-                            DropdownButton<KeyValueRecordType>(
-                              value: appState.startupFeedSelection,
-                              elevation: 16,
-                              underline: Container(
-                                height: 2,
-                              ),
-                              alignment: AlignmentDirectional.centerEnd,
-                              onChanged: (KeyValueRecordType? value) {
-                                if (value != null) {
-                                  appState.startupFeedSelectionKey = int.parse(value.key);
-                                  appState.startupFeedSelection = value;
-                                  appState.storage
-                                      .write(key: FluxNewsState.secureStorageStartupFeedSelectionKey, value: value.key);
-                                  appState.refreshView();
-                                }
-                              },
-                              items: appState.recordTypesStartupFeeds!
-                                  .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                      DropdownMenuItem<KeyValueRecordType>(
-                                          value: recordType, child: Text(recordType.value)))
-                                  .toList(),
-                            ),
-                          ],
-                        ))
-                    : const SizedBox.shrink(),
+
                 const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
