@@ -1918,6 +1918,28 @@ class FluxNewsState extends ChangeNotifier {
           startupFeedSelectionKey = int.parse(value);
         }
       }
+
+      // assign the remove news from list on read selection from persistent saved config
+      if (key == FluxNewsState.secureStorageRemoveNewsFromListWhenReadKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            removeNewsFromListWhenRead = true;
+          } else {
+            removeNewsFromListWhenRead = false;
+          }
+        }
+      }
+
+      // assign the sync read news selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSyncReadNewsKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            syncReadNews = true;
+          } else {
+            syncReadNews = false;
+          }
+        }
+      }
     });
     logThis('readConfig', 'Finished read config', LogLevel.INFO);
 

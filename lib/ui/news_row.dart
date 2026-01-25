@@ -365,7 +365,7 @@ class NewsRow extends StatelessWidget {
                       markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                     } else {
                       markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                      if (appState.removeNewsFromListWhenRead) {
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
                         newsList?.removeAt(itemIndex);
                       }
                     }
@@ -419,7 +419,7 @@ class NewsRow extends StatelessWidget {
                       markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                     } else {
                       markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                      if (appState.removeNewsFromListWhenRead) {
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
                         newsList?.removeAt(itemIndex);
                       }
                     }
@@ -466,13 +466,18 @@ class NewsRow extends StatelessWidget {
                 onTap: () async {
                   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
                     openNewsAction(news, appState, context, false);
+                    if (appState.removeNewsFromListWhenRead && !searchView) {
+                      if (news.status == FluxNewsState.unreadNewsStatus) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    }
                   } else {
                     if (news.expanded) {
                       news.expanded = false;
                     } else {
                       news.expanded = true;
                     }
-                    appState.refreshView();
+                    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   }
                 },
                 // on tap get the actual position of the list on tab
@@ -489,7 +494,7 @@ class NewsRow extends StatelessWidget {
                     } else {
                       news.expanded = true;
                     }
-                    appState.refreshView();
+                    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   }
                 },
                 child: Row(
@@ -604,8 +609,29 @@ class NewsRow extends StatelessWidget {
                               ),
                             ),
                             // here is the news text, the Opacity decide between read and unread
-                            NewsContent(
-                              news: news,
+                            InkWell(
+                              splashFactory: NoSplash.splashFactory,
+                              onTap: () {
+                                if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                                  openNewsAction(news, appState, context, false);
+                                  if (appState.removeNewsFromListWhenRead && !searchView) {
+                                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                                      newsList?.removeAt(itemIndex);
+                                    }
+                                  }
+                                } else {
+                                  if (news.expanded) {
+                                    news.expanded = false;
+                                  } else {
+                                    news.expanded = true;
+                                  }
+                                  markNewsAsReadAction(
+                                      news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                                }
+                              },
+                              child: NewsContent(
+                                news: news,
+                              ),
                             ),
                           ],
                         ),

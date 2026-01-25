@@ -467,7 +467,9 @@ class NewsCard extends StatelessWidget {
                 if (appState.tabAction != FluxNewsState.tabActionExpandString) {
                   openNewsAction(news, appState, context, false);
                   if (appState.removeNewsFromListWhenRead && !searchView) {
-                    newsList?.removeAt(itemIndex);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      newsList?.removeAt(itemIndex);
+                    }
                   }
                 } else {
                   if (news.expanded) {
@@ -493,9 +495,6 @@ class NewsCard extends StatelessWidget {
                     news.expanded = true;
                   }
                   markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                  if (appState.removeNewsFromListWhenRead && !searchView) {
-                    newsList?.removeAt(itemIndex);
-                  }
                 }
               },
               child: Column(
@@ -612,7 +611,9 @@ class NewsCard extends StatelessWidget {
                               if (appState.tabAction == FluxNewsState.tabActionOpenString) {
                                 openNewsAction(news, appState, context, false);
                                 if (appState.removeNewsFromListWhenRead && !searchView) {
-                                  newsList?.removeAt(itemIndex);
+                                  if (news.status == FluxNewsState.unreadNewsStatus) {
+                                    newsList?.removeAt(itemIndex);
+                                  }
                                 }
                               } else {
                                 if (news.expanded) {
