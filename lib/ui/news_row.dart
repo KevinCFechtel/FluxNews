@@ -169,7 +169,14 @@ class NewsRow extends StatelessWidget {
           ),
         ),
         onTap: () {
-          openNewsAction(news, appState, context, true);
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, true);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, true);
+          }
         },
       ),
     );
@@ -202,7 +209,14 @@ class NewsRow extends StatelessWidget {
           ),
         ),
         onTap: () {
-          openNewsAction(news, appState, context, false);
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, false);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, false);
+          }
         },
       ),
     );
@@ -374,9 +388,23 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, true);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, true);
+                    }
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
-                    openNewsAction(news, appState, context, false);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, false);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionShareString) {
                     if (Platform.isAndroid) {
                       SharePlus.instance.share(ShareParams(
@@ -428,9 +456,23 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, true);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, true);
+                    }
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
-                    openNewsAction(news, appState, context, false);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, false);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionShareString) {
                     if (Platform.isAndroid) {
                       SharePlus.instance.share(ShareParams(
