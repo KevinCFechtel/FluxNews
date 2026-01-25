@@ -465,10 +465,28 @@ class NewsCard extends StatelessWidget {
               splashFactory: NoSplash.splashFactory,
               onTap: () async {
                 if (appState.tabAction != FluxNewsState.tabActionExpandString) {
-                  openNewsAction(news, appState, context, false);
-                  if (appState.removeNewsFromListWhenRead && !searchView) {
-                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                  if (news.status == FluxNewsState.unreadNewsStatus) {
+                    if (news.openMinifluxEntry != null) {
+                      if (news.openMinifluxEntry!) {
+                        openNewsAction(news, appState, context, true);
+                      } else {
+                        openNewsAction(news, appState, context, false);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
+                    if (appState.removeNewsFromListWhenRead && !searchView) {
                       newsList?.removeAt(itemIndex);
+                    }
+                  } else {
+                    if (news.openMinifluxEntry != null) {
+                      if (news.openMinifluxEntry!) {
+                        openNewsAction(news, appState, context, true);
+                      } else {
+                        openNewsAction(news, appState, context, false);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, false);
                     }
                   }
                 } else {
@@ -487,7 +505,8 @@ class NewsCard extends StatelessWidget {
               },
               onLongPress: () {
                 if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
-                  showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                  showContextMenu(
+                      news, context, searchView, appState, context.read<FluxNewsCounterState>(), itemIndex, newsList);
                 } else {
                   if (news.expanded) {
                     news.expanded = false;
@@ -609,10 +628,28 @@ class NewsCard extends StatelessWidget {
                             splashFactory: NoSplash.splashFactory,
                             onTap: () {
                               if (appState.tabAction == FluxNewsState.tabActionOpenString) {
-                                openNewsAction(news, appState, context, false);
-                                if (appState.removeNewsFromListWhenRead && !searchView) {
-                                  if (news.status == FluxNewsState.unreadNewsStatus) {
+                                if (news.status == FluxNewsState.unreadNewsStatus) {
+                                  if (news.openMinifluxEntry != null) {
+                                    if (news.openMinifluxEntry!) {
+                                      openNewsAction(news, appState, context, true);
+                                    } else {
+                                      openNewsAction(news, appState, context, false);
+                                    }
+                                  } else {
+                                    openNewsAction(news, appState, context, false);
+                                  }
+                                  if (appState.removeNewsFromListWhenRead && !searchView) {
                                     newsList?.removeAt(itemIndex);
+                                  }
+                                } else {
+                                  if (news.openMinifluxEntry != null) {
+                                    if (news.openMinifluxEntry!) {
+                                      openNewsAction(news, appState, context, true);
+                                    } else {
+                                      openNewsAction(news, appState, context, false);
+                                    }
+                                  } else {
+                                    openNewsAction(news, appState, context, false);
                                   }
                                 }
                               } else {
