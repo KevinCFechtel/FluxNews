@@ -857,6 +857,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove the news from the list when marked as read'**
   String get removeNewsFromListWhenRead;
+
+  /// No description provided for @syncReadNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Also synchronize read news'**
+  String get syncReadNews;
+
+  /// No description provided for @syncReadNewsAfterDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronize read news from the last days: '**
+  String get syncReadNewsAfterDays;
 }
 
 class _AppLocalizationsDelegate

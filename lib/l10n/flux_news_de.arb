@@ -124,5 +124,7 @@
     "amountOfCharactersToTruncateExpand": "Anzahl der Zeichen auf die der formatierte Text gekürzt wird",
     "syncSettings": "Synchronisations Einstellungen",
     "newsItemSettings": "News Einstellungen",
-    "removeNewsFromListWhenRead": "Entferne die News aus der Liste, wenn sie als gelesen markiert wird"
+    "removeNewsFromListWhenRead": "Entferne die News aus der Liste, wenn sie als gelesen markiert wird",
+    "syncReadNews": "Synchronisiere ebenfalls die gelesenen News",
+    "syncReadNewsAfterDays": "Synchronisieren die gelesenen News für die letzten Tage: "
 }

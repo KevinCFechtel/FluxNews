@@ -78,6 +78,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageTruncateModeKey = 'truncateMode';
   static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
   static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
+  static const String secureStorageSyncReadNewsKey = 'syncReadNewsAfterDays';
+  static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
@@ -218,6 +220,7 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesSecondSwipeActions;
   List<KeyValueRecordType>? recordTypesTabActions;
   List<KeyValueRecordType>? recordTypesLongPressActions;
+  List<KeyValueRecordType>? recordTypesSyncReadNewsAfterDays;
   bool activateTruncate = false;
   int truncateMode = 0;
   int charactersToTruncate = 100;
@@ -239,6 +242,9 @@ class FluxNewsState extends ChangeNotifier {
   int? startupFeedSelectionKey;
   bool categorieStartup = false;
   bool removeNewsFromListWhenRead = true;
+  bool syncReadNews = false;
+  int syncReadNewsAfterDays = 0;
+  KeyValueRecordType? syncReadNewsAfterDaysSelection;
 
   // vars for app bar text
   String appBarText = '';
@@ -1399,6 +1405,16 @@ class FluxNewsState extends ChangeNotifier {
           const KeyValueRecordType(key: "900", value: "900"),
           const KeyValueRecordType(key: "1000", value: "1000"),
         ];
+        recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[
+          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          const KeyValueRecordType(key: "7", value: "7"),
+          const KeyValueRecordType(key: "14", value: "14"),
+          const KeyValueRecordType(key: "30", value: "30"),
+          const KeyValueRecordType(key: "60", value: "60"),
+          const KeyValueRecordType(key: "90", value: "90"),
+          const KeyValueRecordType(key: "180", value: "180"),
+          const KeyValueRecordType(key: "365", value: "365"),
+        ];
         recordTypesBrightnessMode = <KeyValueRecordType>[
           KeyValueRecordType(
               key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
@@ -1451,6 +1467,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesSecondSwipeActions = <KeyValueRecordType>[];
         recordTypesTabActions = <KeyValueRecordType>[];
         recordTypesLongPressActions = <KeyValueRecordType>[];
+        recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
       }
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -1461,6 +1478,7 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesSecondSwipeActions = <KeyValueRecordType>[];
       recordTypesTabActions = <KeyValueRecordType>[];
       recordTypesLongPressActions = <KeyValueRecordType>[];
+      recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -1713,6 +1731,23 @@ class FluxNewsState extends ChangeNotifier {
           for (KeyValueRecordType recordSet in recordTypesAmountOfCharactersToTruncateLimit!) {
             if (value == recordSet.key) {
               amountOfCharactersToTruncateLimitSelection = recordSet;
+            }
+          }
+        }
+      }
+
+      // assign the truncate mode from persistent saved config
+      if (key == FluxNewsState.secureStorageSyncReadNewsAfterDaysKey) {
+        if (value != '') {
+          if (int.tryParse(value) != null) {
+            syncReadNewsAfterDays = int.parse(value);
+          } else {
+            syncReadNewsAfterDays = 0;
+          }
+
+          for (KeyValueRecordType recordSet in recordTypesSyncReadNewsAfterDays!) {
+            if (value == recordSet.key) {
+              syncReadNewsAfterDaysSelection = recordSet;
             }
           }
         }

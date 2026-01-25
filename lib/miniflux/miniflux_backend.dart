@@ -83,10 +83,19 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
     // and to request the unread news again until the list size is lower as the maximum
     // of news provided by a response.
     // this is a kind of pagination.
+    String newsStatusToSync = '&status=unread';
+    if (appState.syncReadNews) {
+      newsStatusToSync = '';
+      if (appState.syncReadNewsAfterDays > 0) {
+        DateTime syncDate = DateTime.now().subtract(Duration(days: appState.syncReadNewsAfterDays));
+        int syncDateTimestamp = (syncDate.toUtc().millisecondsSinceEpoch / 1000).round();
+        newsStatusToSync = '$newsStatusToSync&after=$syncDateTimestamp';
+      }
+    }
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       if (!appState.longSyncAborted) {
         requestString =
-            '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=$sortOrder&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset';
+            '${appState.minifluxURL!}entries?order=published_at$newsStatusToSync&direction=$sortOrder&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset';
         // request the unread news with the parameter, how many news should be provided by
         // one response (limit) and the amount of news which should be skipped, because
         // they were already transferred (offset).

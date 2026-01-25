@@ -124,5 +124,7 @@
     "amountOfCharactersToTruncateExpand": "Amount of characters to which the expanded formatted text is truncated",
     "syncSettings": "Sync Settings",
     "newsItemSettings": "News Item Settings",
-    "removeNewsFromListWhenRead": "Remove the news from the list when marked as read"
+    "removeNewsFromListWhenRead": "Remove the news from the list when marked as read",
+    "syncReadNews": "Also synchronize read news",
+    "syncReadNewsAfterDays": "Synchronize read news from the last days: "
 }
