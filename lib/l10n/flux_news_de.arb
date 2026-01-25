@@ -123,5 +123,6 @@
     "splittedDescription": "Geteilt bedeutet, dass ein Klick auf den Text diesen Erweitert, ein Klick auf den Titel oder das Bild öffnet den Link",
     "amountOfCharactersToTruncateExpand": "Anzahl der Zeichen auf die der formatierte Text gekürzt wird",
     "syncSettings": "Synchronisations Einstellungen",
-    "newsItemSettings": "News Einstellungen"
+    "newsItemSettings": "News Einstellungen",
+    "removeNewsFromListWhenRead": "Entferne die News aus der Liste, wenn sie als gelesen markiert wird"
 }

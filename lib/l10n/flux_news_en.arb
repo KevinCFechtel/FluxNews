@@ -123,5 +123,6 @@
     "splittedDescription": "Splitted means that clicking on the text expands the text, and clicking on the title or the image opens the link",
     "amountOfCharactersToTruncateExpand": "Amount of characters to which the expanded formatted text is truncated",
     "syncSettings": "Sync Settings",
-    "newsItemSettings": "News Item Settings"
+    "newsItemSettings": "News Item Settings",
+    "removeNewsFromListWhenRead": "Remove the news from the list when marked as read"
 }

@@ -103,7 +103,7 @@ class NewsCard extends StatelessWidget {
             markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           } else {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-            if (appState.removeNewsFromListWhenRead) {
+            if (appState.removeNewsFromListWhenRead && !searchView) {
               newsList?.removeAt(itemIndex);
             }
           }
@@ -365,7 +365,7 @@ class NewsCard extends StatelessWidget {
                     markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   } else {
                     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                    if (appState.removeNewsFromListWhenRead) {
+                    if (appState.removeNewsFromListWhenRead && !searchView) {
                       newsList?.removeAt(itemIndex);
                     }
                   }
@@ -419,7 +419,7 @@ class NewsCard extends StatelessWidget {
                     markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   } else {
                     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                    if (appState.removeNewsFromListWhenRead) {
+                    if (appState.removeNewsFromListWhenRead && !searchView) {
                       newsList?.removeAt(itemIndex);
                     }
                   }
@@ -466,6 +466,9 @@ class NewsCard extends StatelessWidget {
               onTap: () async {
                 if (appState.tabAction != FluxNewsState.tabActionExpandString) {
                   openNewsAction(news, appState, context, false);
+                  if (appState.removeNewsFromListWhenRead && !searchView) {
+                    newsList?.removeAt(itemIndex);
+                  }
                 } else {
                   if (news.expanded) {
                     news.expanded = false;
@@ -473,9 +476,6 @@ class NewsCard extends StatelessWidget {
                     news.expanded = true;
                   }
                   markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                  if (appState.removeNewsFromListWhenRead) {
-                    newsList?.removeAt(itemIndex);
-                  }
                 }
               },
               // on tap get the actual position of the list on tab
@@ -493,7 +493,7 @@ class NewsCard extends StatelessWidget {
                     news.expanded = true;
                   }
                   markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                  if (appState.removeNewsFromListWhenRead) {
+                  if (appState.removeNewsFromListWhenRead && !searchView) {
                     newsList?.removeAt(itemIndex);
                   }
                 }
@@ -611,6 +611,9 @@ class NewsCard extends StatelessWidget {
                             onTap: () {
                               if (appState.tabAction == FluxNewsState.tabActionOpenString) {
                                 openNewsAction(news, appState, context, false);
+                                if (appState.removeNewsFromListWhenRead && !searchView) {
+                                  newsList?.removeAt(itemIndex);
+                                }
                               } else {
                                 if (news.expanded) {
                                   news.expanded = false;
@@ -619,9 +622,6 @@ class NewsCard extends StatelessWidget {
                                 }
                                 markNewsAsReadAction(
                                     news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                                if (appState.removeNewsFromListWhenRead) {
-                                  newsList?.removeAt(itemIndex);
-                                }
                               }
                             },
                             child: NewsContent(

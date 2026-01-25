@@ -156,6 +156,38 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
+                      Icons.remove,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.removeNewsFromListWhenRead,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.removeNewsFromListWhenRead,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.removeNewsFromListWhenRead = value;
+                      appState.storage
+                          .write(key: FluxNewsState.secureStorageRemoveNewsFromListWhenReadKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
+              // this row contains the selection if swiping is enabled
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
                       Icons.swipe,
                     ),
                   ),

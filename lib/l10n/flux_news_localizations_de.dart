@@ -422,4 +422,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get newsItemSettings => 'News Einstellungen';
+
+  @override
+  String get removeNewsFromListWhenRead =>
+      'Entferne die News aus der Liste, wenn sie als gelesen markiert wird';
 }

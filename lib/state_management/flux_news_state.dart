@@ -93,6 +93,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupCategorieKey = 'startupCategorie';
   static const String secureStorageStartupCategorieSelectionKey = 'startupCategorieSelection';
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
+  static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';

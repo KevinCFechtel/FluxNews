@@ -851,6 +851,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'News Item Settings'**
   String get newsItemSettings;
+
+  /// No description provided for @removeNewsFromListWhenRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the news from the list when marked as read'**
+  String get removeNewsFromListWhenRead;
 }
 
 class _AppLocalizationsDelegate
