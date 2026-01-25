@@ -241,7 +241,7 @@ class FluxNewsState extends ChangeNotifier {
   int? startupCategorieSelectionKey;
   int? startupFeedSelectionKey;
   bool categorieStartup = false;
-  bool removeNewsFromListWhenRead = true;
+  bool removeNewsFromListWhenRead = false;
   bool syncReadNews = false;
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
@@ -1548,6 +1548,13 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesLongPressActions != null) {
       if (recordTypesLongPressActions!.isNotEmpty) {
         longPressActionSelection = recordTypesLongPressActions![0];
+      }
+    }
+
+    // init the amount of characters to truncate limit selection with the first value of the above generated maps
+    if (recordTypesSyncReadNewsAfterDays != null) {
+      if (recordTypesSyncReadNewsAfterDays!.isNotEmpty) {
+        syncReadNewsAfterDaysSelection = recordTypesSyncReadNewsAfterDays![0];
       }
     }
 

@@ -156,7 +156,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
-                      Icons.remove,
+                      Icons.remove_from_queue,
                     ),
                   ),
                   Expanded(
