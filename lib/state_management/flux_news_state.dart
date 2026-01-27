@@ -78,7 +78,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageTruncateModeKey = 'truncateMode';
   static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
   static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
-  static const String secureStorageSyncReadNewsKey = 'syncReadNewsAfterDays';
+  static const String secureStorageSyncReadNewsKey = 'syncReadNews';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
@@ -96,6 +96,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupCategorieSelectionKey = 'startupCategorieSelection';
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
   static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
+  static const String secureStorageSkipLongSyncKey = 'skipLongSync';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -245,6 +246,7 @@ class FluxNewsState extends ChangeNotifier {
   bool syncReadNews = false;
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
+  bool skipLongSync = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1937,6 +1939,17 @@ class FluxNewsState extends ChangeNotifier {
             syncReadNews = true;
           } else {
             syncReadNews = false;
+          }
+        }
+      }
+
+      // assign the skip long sync selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSkipLongSyncKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            skipLongSync = true;
+          } else {
+            skipLongSync = false;
           }
         }
       }

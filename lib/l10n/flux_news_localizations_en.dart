@@ -424,4 +424,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get syncReadNewsAfterDays =>
       'Synchronize read news from the last days: ';
+
+  @override
+  String get skipLongSync => 'Skip long sync dialog';
 }

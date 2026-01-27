@@ -123,7 +123,9 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
                 if (!appState.longSync && !appState.longSyncAlerted) {
                   // remove the native splash after updating the list view
                   FlutterNativeSplash.remove();
-                  appState.longSync = true;
+                  if (!appState.skipLongSync) {
+                    appState.longSync = true;
+                  }
                   appState.refreshView();
                 }
               }

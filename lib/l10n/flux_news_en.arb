@@ -126,5 +126,6 @@
     "newsItemSettings": "News Item Settings",
     "removeNewsFromListWhenRead": "Remove the news from the list when marked as read",
     "syncReadNews": "Also synchronize read news",
-    "syncReadNewsAfterDays": "Synchronize read news from the last days: "
+    "syncReadNewsAfterDays": "Synchronize read news from the last days: ",
+    "skipLongSync": "Skip long sync dialog"
 }

@@ -126,5 +126,6 @@
     "newsItemSettings": "News Einstellungen",
     "removeNewsFromListWhenRead": "Entferne die News aus der Liste, wenn sie als gelesen markiert wird",
     "syncReadNews": "Synchronisiere ebenfalls die gelesenen News",
-    "syncReadNewsAfterDays": "Synchronisieren die gelesenen News für die letzten Tage: "
+    "syncReadNewsAfterDays": "Synchronisieren die gelesenen News für die letzten Tage: ",
+    "skipLongSync": "Unterdrücke den Dialog zur langsamen Synchronisation"
 }

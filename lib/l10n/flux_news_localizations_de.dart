@@ -433,4 +433,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get syncReadNewsAfterDays =>
       'Synchronisieren die gelesenen News für die letzten Tage: ';
+
+  @override
+  String get skipLongSync =>
+      'Unterdrücke den Dialog zur langsamen Synchronisation';
 }
