@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.11.2';
+  static const String applicationVersion = '1.12.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -78,6 +78,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageTruncateModeKey = 'truncateMode';
   static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
   static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
+  static const String secureStorageSyncReadNewsKey = 'syncReadNews';
+  static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
@@ -94,6 +96,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupCategorieSelectionKey = 'startupCategorieSelection';
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
   static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
+  static const String secureStorageSkipLongSyncKey = 'skipLongSync';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -218,6 +221,7 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesSecondSwipeActions;
   List<KeyValueRecordType>? recordTypesTabActions;
   List<KeyValueRecordType>? recordTypesLongPressActions;
+  List<KeyValueRecordType>? recordTypesSyncReadNewsAfterDays;
   bool activateTruncate = false;
   int truncateMode = 0;
   int charactersToTruncate = 100;
@@ -238,7 +242,11 @@ class FluxNewsState extends ChangeNotifier {
   int? startupCategorieSelectionKey;
   int? startupFeedSelectionKey;
   bool categorieStartup = false;
-  bool removeNewsFromListWhenRead = true;
+  bool removeNewsFromListWhenRead = false;
+  bool syncReadNews = false;
+  int syncReadNewsAfterDays = 0;
+  KeyValueRecordType? syncReadNewsAfterDaysSelection;
+  bool skipLongSync = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1399,6 +1407,16 @@ class FluxNewsState extends ChangeNotifier {
           const KeyValueRecordType(key: "900", value: "900"),
           const KeyValueRecordType(key: "1000", value: "1000"),
         ];
+        recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[
+          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          const KeyValueRecordType(key: "7", value: "7"),
+          const KeyValueRecordType(key: "14", value: "14"),
+          const KeyValueRecordType(key: "30", value: "30"),
+          const KeyValueRecordType(key: "60", value: "60"),
+          const KeyValueRecordType(key: "90", value: "90"),
+          const KeyValueRecordType(key: "180", value: "180"),
+          const KeyValueRecordType(key: "365", value: "365"),
+        ];
         recordTypesBrightnessMode = <KeyValueRecordType>[
           KeyValueRecordType(
               key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
@@ -1451,6 +1469,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesSecondSwipeActions = <KeyValueRecordType>[];
         recordTypesTabActions = <KeyValueRecordType>[];
         recordTypesLongPressActions = <KeyValueRecordType>[];
+        recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
       }
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -1461,6 +1480,7 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesSecondSwipeActions = <KeyValueRecordType>[];
       recordTypesTabActions = <KeyValueRecordType>[];
       recordTypesLongPressActions = <KeyValueRecordType>[];
+      recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -1530,6 +1550,13 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesLongPressActions != null) {
       if (recordTypesLongPressActions!.isNotEmpty) {
         longPressActionSelection = recordTypesLongPressActions![0];
+      }
+    }
+
+    // init the amount of characters to truncate limit selection with the first value of the above generated maps
+    if (recordTypesSyncReadNewsAfterDays != null) {
+      if (recordTypesSyncReadNewsAfterDays!.isNotEmpty) {
+        syncReadNewsAfterDaysSelection = recordTypesSyncReadNewsAfterDays![0];
       }
     }
 
@@ -1718,6 +1745,23 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
+      // assign the truncate mode from persistent saved config
+      if (key == FluxNewsState.secureStorageSyncReadNewsAfterDaysKey) {
+        if (value != '') {
+          if (int.tryParse(value) != null) {
+            syncReadNewsAfterDays = int.parse(value);
+          } else {
+            syncReadNewsAfterDays = 0;
+          }
+
+          for (KeyValueRecordType recordSet in recordTypesSyncReadNewsAfterDays!) {
+            if (value == recordSet.key) {
+              syncReadNewsAfterDaysSelection = recordSet;
+            }
+          }
+        }
+      }
+
       // assign the mark as read on scroll over selection from persistent saved config
       if (key == FluxNewsState.secureStorageActivateTruncateKey) {
         if (value != '') {
@@ -1874,6 +1918,39 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageStartupFeedSelectionKey) {
         if (value != '') {
           startupFeedSelectionKey = int.parse(value);
+        }
+      }
+
+      // assign the remove news from list on read selection from persistent saved config
+      if (key == FluxNewsState.secureStorageRemoveNewsFromListWhenReadKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            removeNewsFromListWhenRead = true;
+          } else {
+            removeNewsFromListWhenRead = false;
+          }
+        }
+      }
+
+      // assign the sync read news selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSyncReadNewsKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            syncReadNews = true;
+          } else {
+            syncReadNews = false;
+          }
+        }
+      }
+
+      // assign the skip long sync selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSkipLongSyncKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            skipLongSync = true;
+          } else {
+            skipLongSync = false;
+          }
         }
       }
     });

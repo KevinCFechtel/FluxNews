@@ -426,4 +426,15 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get removeNewsFromListWhenRead =>
       'Entferne die News aus der Liste, wenn sie als gelesen markiert wird';
+
+  @override
+  String get syncReadNews => 'Synchronisiere ebenfalls die gelesenen News';
+
+  @override
+  String get syncReadNewsAfterDays =>
+      'Synchronisieren die gelesenen News für die letzten Tage: ';
+
+  @override
+  String get skipLongSync =>
+      'Unterdrücke den Dialog zur langsamen Synchronisation';
 }

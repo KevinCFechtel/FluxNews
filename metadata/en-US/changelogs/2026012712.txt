@@ -1,0 +1,6 @@
+The following items have been implemented:
+ •	The option to synchronize read news has been added.
+ •	The option to choose the number of days for synchronizing read news has been added.
+ •	The option to remove news directly from the list when they are marked as read has been added.
+ •	The settings have been revised and grouped for better clarity.
+ •	There is now an option to skip the slow synchronization dialog.

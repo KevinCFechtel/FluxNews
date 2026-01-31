@@ -169,7 +169,14 @@ class NewsRow extends StatelessWidget {
           ),
         ),
         onTap: () {
-          openNewsAction(news, appState, context, true);
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, true);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, true);
+          }
         },
       ),
     );
@@ -202,7 +209,14 @@ class NewsRow extends StatelessWidget {
           ),
         ),
         onTap: () {
-          openNewsAction(news, appState, context, false);
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, false);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, false);
+          }
         },
       ),
     );
@@ -365,7 +379,7 @@ class NewsRow extends StatelessWidget {
                       markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                     } else {
                       markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                      if (appState.removeNewsFromListWhenRead) {
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
                         newsList?.removeAt(itemIndex);
                       }
                     }
@@ -374,9 +388,23 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, true);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, true);
+                    }
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
-                    openNewsAction(news, appState, context, false);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, false);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionShareString) {
                     if (Platform.isAndroid) {
                       SharePlus.instance.share(ShareParams(
@@ -419,7 +447,7 @@ class NewsRow extends StatelessWidget {
                       markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                     } else {
                       markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-                      if (appState.removeNewsFromListWhenRead) {
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
                         newsList?.removeAt(itemIndex);
                       }
                     }
@@ -428,9 +456,23 @@ class NewsRow extends StatelessWidget {
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
                     saveToThirdPartyAction(news, appState, context);
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
-                    openNewsAction(news, appState, context, true);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, true);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, true);
+                    }
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
-                    openNewsAction(news, appState, context, false);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      openNewsAction(news, appState, context, false);
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      openNewsAction(news, appState, context, false);
+                    }
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionShareString) {
                     if (Platform.isAndroid) {
                       SharePlus.instance.share(ShareParams(
@@ -465,14 +507,37 @@ class NewsRow extends StatelessWidget {
                 splashFactory: NoSplash.splashFactory,
                 onTap: () async {
                   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
-                    openNewsAction(news, appState, context, false);
+                    if (news.status == FluxNewsState.unreadNewsStatus) {
+                      if (news.openMinifluxEntry != null) {
+                        if (news.openMinifluxEntry!) {
+                          openNewsAction(news, appState, context, true);
+                        } else {
+                          openNewsAction(news, appState, context, false);
+                        }
+                      } else {
+                        openNewsAction(news, appState, context, false);
+                      }
+                      if (appState.removeNewsFromListWhenRead && !searchView) {
+                        newsList?.removeAt(itemIndex);
+                      }
+                    } else {
+                      if (news.openMinifluxEntry != null) {
+                        if (news.openMinifluxEntry!) {
+                          openNewsAction(news, appState, context, true);
+                        } else {
+                          openNewsAction(news, appState, context, false);
+                        }
+                      } else {
+                        openNewsAction(news, appState, context, false);
+                      }
+                    }
                   } else {
                     if (news.expanded) {
                       news.expanded = false;
                     } else {
                       news.expanded = true;
                     }
-                    appState.refreshView();
+                    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   }
                 },
                 // on tap get the actual position of the list on tab
@@ -482,14 +547,15 @@ class NewsRow extends StatelessWidget {
                 },
                 onLongPress: () {
                   if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
-                    showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>());
+                    showContextMenu(
+                        news, context, searchView, appState, context.read<FluxNewsCounterState>(), itemIndex, newsList);
                   } else {
                     if (news.expanded) {
                       news.expanded = false;
                     } else {
                       news.expanded = true;
                     }
-                    appState.refreshView();
+                    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                   }
                 },
                 child: Row(
@@ -604,8 +670,47 @@ class NewsRow extends StatelessWidget {
                               ),
                             ),
                             // here is the news text, the Opacity decide between read and unread
-                            NewsContent(
-                              news: news,
+                            InkWell(
+                              splashFactory: NoSplash.splashFactory,
+                              onTap: () {
+                                if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+                                  if (news.status == FluxNewsState.unreadNewsStatus) {
+                                    if (news.openMinifluxEntry != null) {
+                                      if (news.openMinifluxEntry!) {
+                                        openNewsAction(news, appState, context, true);
+                                      } else {
+                                        openNewsAction(news, appState, context, false);
+                                      }
+                                    } else {
+                                      openNewsAction(news, appState, context, false);
+                                    }
+                                    if (appState.removeNewsFromListWhenRead && !searchView) {
+                                      newsList?.removeAt(itemIndex);
+                                    }
+                                  } else {
+                                    if (news.openMinifluxEntry != null) {
+                                      if (news.openMinifluxEntry!) {
+                                        openNewsAction(news, appState, context, true);
+                                      } else {
+                                        openNewsAction(news, appState, context, false);
+                                      }
+                                    } else {
+                                      openNewsAction(news, appState, context, false);
+                                    }
+                                  }
+                                } else {
+                                  if (news.expanded) {
+                                    news.expanded = false;
+                                  } else {
+                                    news.expanded = true;
+                                  }
+                                  markNewsAsReadAction(
+                                      news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                                }
+                              },
+                              child: NewsContent(
+                                news: news,
+                              ),
                             ),
                           ],
                         ),

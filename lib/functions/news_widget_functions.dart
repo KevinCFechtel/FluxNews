@@ -24,7 +24,7 @@ void getTapPosition(TapDownDetails details, BuildContext context, FluxNewsState 
 // here is the function to show the context menu
 // this menu give the option to mark a news as read or unread and to bookmark a news
 void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsState appState,
-    FluxNewsCounterState appCounterState) async {
+    FluxNewsCounterState appCounterState, int itemIndex, List<News>? newsList) async {
   //Offset offset = details.globalPosition;
   final RenderObject overlay = Overlay.of(context).context.findRenderObject()!;
 
@@ -180,15 +180,32 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       break;
     case FluxNewsState.readNewsStatus:
       markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+      if (appState.removeNewsFromListWhenRead && !searchView) {
+        newsList?.removeAt(itemIndex);
+      }
       break;
     case FluxNewsState.contextMenuSaveString:
       saveToThirdPartyAction(news, appState, context);
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
-      openNewsAction(news, appState, context, true);
+      if (news.status == FluxNewsState.unreadNewsStatus) {
+        openNewsAction(news, appState, context, true);
+        if (appState.removeNewsFromListWhenRead && !searchView) {
+          newsList?.removeAt(itemIndex);
+        }
+      } else {
+        openNewsAction(news, appState, context, true);
+      }
       break;
     case FluxNewsState.contextMenuOpenString:
-      openNewsAction(news, appState, context, false);
+      if (news.status == FluxNewsState.unreadNewsStatus) {
+        openNewsAction(news, appState, context, false);
+        if (appState.removeNewsFromListWhenRead && !searchView) {
+          newsList?.removeAt(itemIndex);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
       break;
     case FluxNewsState.swipeActionOpenCommentsString:
       openNewsCommentsAction(news, context);
@@ -420,7 +437,7 @@ Future<void> openNewsAction(
   // by an installed app, if not then the link is opened in a web-view within the app.
   // on macos we open directly the web-view within the app.
   String url = news.url;
-  if ((news.openMinifluxEntry != null && news.openMinifluxEntry!) || overwriteOpenInMiniflux) {
+  if (overwriteOpenInMiniflux) {
     if (appState.minifluxURL != null) {
       String minifluxBaseURL = appState.minifluxURL!;
       if (minifluxBaseURL.endsWith('/v1/')) {
