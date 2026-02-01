@@ -76,6 +76,9 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
     // miniflux server.

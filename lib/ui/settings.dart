@@ -93,6 +93,30 @@ class Settings extends StatelessWidget {
                   },
                 ),
                 const Divider(),
+                // this list tile contains sync settings
+                // it is clickable and opens the sync settings
+                ListTile(
+                  leading: const Icon(
+                    Icons.code,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.headerSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    // navigate to the search page
+                    Navigator.pushNamed(context, FluxNewsState.headerSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
+                  ),
+                ),
+                const Divider(),
                 ListTile(
                   leading: const Icon(
                     Icons.numbers,

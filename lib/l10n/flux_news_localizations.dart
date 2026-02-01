@@ -875,6 +875,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip long sync dialog'**
   String get skipLongSync;
+
+  /// No description provided for @headerSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Set additional custom headers for accessing Miniflux'**
+  String get headerSettings;
+
+  /// No description provided for @headerKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Header Name: '**
+  String get headerKey;
+
+  /// No description provided for @headerValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Header Value: '**
+  String get headerValue;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @headers.
+  ///
+  /// In en, this message translates to:
+  /// **'Headers'**
+  String get headers;
 }
 
 class _AppLocalizationsDelegate

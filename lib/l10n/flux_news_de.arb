@@ -127,5 +127,10 @@
     "removeNewsFromListWhenRead": "Entferne die News aus der Liste, wenn sie als gelesen markiert wird",
     "syncReadNews": "Synchronisiere ebenfalls die gelesenen News",
     "syncReadNewsAfterDays": "Synchronisieren die gelesenen News für die letzten Tage: ",
-    "skipLongSync": "Unterdrücke den Dialog zur langsamen Synchronisation"
+    "skipLongSync": "Unterdrücke den Dialog zur langsamen Synchronisation",
+    "headerSettings": "Setze zusätzliche Header für den Miniflux Zugriff",
+    "headerKey": "Header Name: ",
+    "headerValue": "Header Inhalt: ",
+    "delete": "Löschen",
+    "headers": "Headers"
 }

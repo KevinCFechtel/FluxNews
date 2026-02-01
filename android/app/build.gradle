@@ -30,7 +30,7 @@ if (flutterVersionName == null) {
 
 android {
     compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -71,14 +71,14 @@ android {
             // minifyEnabled false
             // shrinkResources false
             // proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig = signingConfigs.release
         }
     }
-    namespace 'de.circle_dev.flux_news'
+    namespace = 'de.circle_dev.flux_news'
 }
 
 flutter {
-    source '../..'
+    source = '../..'
 }
 
 dependencies {
