@@ -1,0 +1,2 @@
+The following has been added:
+ •	It is now possible to define custom headers for communication with the Miniflux server.
