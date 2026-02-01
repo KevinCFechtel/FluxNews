@@ -437,4 +437,20 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get skipLongSync =>
       'Unterdrücke den Dialog zur langsamen Synchronisation';
+
+  @override
+  String get headerSettings =>
+      'Setze zusätzliche Header für den Miniflux Zugriff';
+
+  @override
+  String get headerKey => 'Header Name: ';
+
+  @override
+  String get headerValue => 'Header Inhalt: ';
+
+  @override
+  String get delete => 'Löschen';
+
+  @override
+  String get headers => 'Headers';
 }

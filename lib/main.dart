@@ -12,6 +12,7 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/feed_settings.dart';
 import 'package:flux_news/ui/settings/general_settings.dart';
+import 'package:flux_news/ui/settings/header_settings.dart';
 import 'package:flux_news/ui/settings/news_item_settings.dart';
 import 'package:flux_news/ui/settings/sync_settings.dart';
 import 'package:flux_news/ui/settings/truncate_settings.dart';
@@ -238,6 +239,7 @@ class FluxNews extends StatelessWidget {
           FluxNewsState.syncSettingsRouteString: (context) => const SyncSettings(),
           FluxNewsState.newsItemSettingsRouteString: (context) => const NewsItemSettings(),
           FluxNewsState.truncateSettingsRouteString: (context) => const TruncateSettings(),
+          FluxNewsState.headerSettingsRouteString: (context) => const HeaderSettings(),
         },
         // define localization with english as fallback
         localizationsDelegates: AppLocalizations.localizationsDelegates,

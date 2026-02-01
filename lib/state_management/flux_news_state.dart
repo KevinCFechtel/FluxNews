@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.12.1';
+  static const String applicationVersion = '1.13.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -43,6 +43,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String syncSettingsRouteString = '/syncSettings';
   static const String newsItemSettingsRouteString = '/newsItemSettings';
   static const String truncateSettingsRouteString = '/truncateSettings';
+  static const String headerSettingsRouteString = '/headerSettings';
   static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
@@ -97,6 +98,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
   static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
   static const String secureStorageSkipLongSyncKey = 'skipLongSync';
+  static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
+  static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -247,6 +250,7 @@ class FluxNewsState extends ChangeNotifier {
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
+  Map<String, String> customHeaders = {};
 
   // vars for app bar text
   String appBarText = '';
@@ -1954,6 +1958,31 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
     });
+
+    // iterate through all persistent saved values to assign the saved headers
+    var headerCounter = 0;
+    var headerFound = true;
+    var noKeyFound = true;
+    do {
+      noKeyFound = true;
+      storageValues.forEach((key, value) {
+        if (key == '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter') {
+          var headerName = value;
+          var headerValue = storageValues['${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter'];
+          headerValue ??= '';
+          var header = {
+            headerName: headerValue,
+          };
+          customHeaders.addAll(header);
+          noKeyFound = false;
+          headerCounter++;
+        }
+      });
+      if (noKeyFound) {
+        headerFound = false;
+      }
+    } while (headerFound);
+
     logThis('readConfig', 'Finished read config', LogLevel.INFO);
 
     // return true if everything was read
@@ -2062,6 +2091,35 @@ class FluxNewsState extends ChangeNotifier {
     }
 
     return completer.future;
+  }
+
+  void saveCustomHeadersToStorage() {
+    // first delete all existing headers in the storage
+    var headerCounter = 0;
+    var headerFound = true;
+    var noKeyFound = true;
+    do {
+      noKeyFound = true;
+      storageValues.forEach((key, value) {
+        if (key == '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter') {
+          storage.delete(key: key);
+          storage.delete(key: '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter');
+          noKeyFound = false;
+          headerCounter++;
+        }
+      });
+      if (noKeyFound) {
+        headerFound = false;
+      }
+    } while (headerFound);
+
+    // now save all current headers to the storage
+    headerCounter = 0;
+    customHeaders.forEach((key, value) {
+      storage.write(key: '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter', value: key);
+      storage.write(key: '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter', value: value);
+      headerCounter++;
+    });
   }
 
   // notify the listeners of FluxNewsState to refresh views

@@ -127,5 +127,10 @@
     "removeNewsFromListWhenRead": "Remove the news from the list when marked as read",
     "syncReadNews": "Also synchronize read news",
     "syncReadNewsAfterDays": "Synchronize read news from the last days: ",
-    "skipLongSync": "Skip long sync dialog"
+    "skipLongSync": "Skip long sync dialog",
+    "headerSettings": "Set additional custom headers for accessing Miniflux",
+    "headerKey": "Header Name: ",
+    "headerValue": "Header Value: ",
+    "delete": "Delete",
+    "headers": "Headers"
 }
