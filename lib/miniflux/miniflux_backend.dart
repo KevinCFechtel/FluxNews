@@ -220,6 +220,9 @@ Future<NewsList> fetchStarredNews(FluxNewsState appState) async {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
     while (listSize == FluxNewsState.amountOfNewlyCaughtNews) {
       requestString =
           '${appState.minifluxURL!}entries?starred=true&order=published_at&direction=$sortOrder&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset';
@@ -316,6 +319,9 @@ Future<List<News>> fetchSearchedNews(FluxNewsState appState, String searchString
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
     // while the list size of the response is equal the defined maximum of news
     // which will be provided by a response, there are more unread news at the
     // miniflux server.
@@ -471,6 +477,9 @@ Future<void> toggleNewsAsRead(FluxNewsState appState) async {
           FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
           FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
         };
+        if (appState.customHeaders.isNotEmpty) {
+          header.addAll(appState.customHeaders);
+        }
         // send the ReadNewsList object to the miniflux server to mark the news as read
         final response = await client.put(Uri.parse('${appState.minifluxURL!}entries'),
             headers: header, body: jsonEncode(newReadNewsList));
@@ -524,6 +533,9 @@ Future<void> toggleOneNewsAsRead(FluxNewsState appState, News news) async {
       FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
     };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
     // send the ReadNewsList object to the miniflux server to mark the news as read
     final response = await client.put(Uri.parse('${appState.minifluxURL!}entries'),
         headers: header, body: jsonEncode(newReadNewsList));
@@ -563,6 +575,9 @@ Future<void> toggleBookmark(FluxNewsState appState, News news) async {
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       };
+      if (appState.customHeaders.isNotEmpty) {
+        header.addAll(appState.customHeaders);
+      }
       // toggle the bookmark status of the news at the miniflux server
       final response = await client.put(
         Uri.parse('${appState.minifluxURL!}entries/${news.newsID}/bookmark'),
@@ -613,6 +628,9 @@ Future<void> saveNewsToThirdPartyService(FluxNewsState appState, News news) asyn
       final header = {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
       };
+      if (appState.customHeaders.isNotEmpty) {
+        header.addAll(appState.customHeaders);
+      }
       // saving news to third party service on miniflux server
       final response = await client.post(
         Uri.parse('${appState.minifluxURL!}entries/${news.newsID}/save'),
@@ -674,6 +692,9 @@ Future<Categories> fetchCategoryInformation(FluxNewsState appState) async {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
         FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
+      if (appState.customHeaders.isNotEmpty) {
+        header.addAll(appState.customHeaders);
+      }
       // then request the categories from the miniflux server
       response = await client.get(
         Uri.parse('${appState.minifluxURL!}categories'),
@@ -813,6 +834,9 @@ Future<FeedIcon?> getFeedIcon(FluxNewsState appState, int feedIconID) async {
         FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
         FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
       };
+      if (appState.customHeaders.isNotEmpty) {
+        header.addAll(appState.customHeaders);
+      }
       response = await client.get(
         Uri.parse('${appState.minifluxURL!}icons/$feedIconID'),
         headers: header,
@@ -865,6 +889,9 @@ Future<bool> checkMinifluxCredentials(String? miniFluxUrl, String? miniFluxApiKe
       FluxNewsState.httpMinifluxAuthHeaderString: miniFluxApiKey,
       FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
     };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
     // then request the user information from the miniflux server
     Response response = await client.get(Uri.parse('${miniFluxUrl}me'), headers: header);
     if (response.statusCode == 200) {

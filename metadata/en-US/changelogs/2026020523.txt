@@ -1,0 +1,1 @@
+A bug in the implementation of the custom headers has been fixed.
