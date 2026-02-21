@@ -132,5 +132,6 @@
     "headerKey": "Header Name: ",
     "headerValue": "Header Value: ",
     "delete": "Delete",
-    "headers": "Headers"
+    "headers": "Headers",
+    "scrolloverAppBar": "The app bar is collapsible on scroll"
 }

@@ -502,6 +502,38 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   ),
                 ],
               ),
+              const Divider(),
+              // this row contains the selection if the app bar text is multiline
+              // is turned on, the app bar text is showing the news count in the second line
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.move_up,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.scrolloverAppBar,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.scrolloverAppBar,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.scrolloverAppBar = value;
+                      appState.storage.write(key: FluxNewsState.secureStorageScrolloverAppBarKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
             ])));
   }
 }

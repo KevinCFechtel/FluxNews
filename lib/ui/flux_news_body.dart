@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -217,25 +218,27 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 child: const Icon(Icons.check_circle_outline),
               ))
           : null,
-      appBar: AppBar(
-        forceMaterialTransparency: themeState.useBlackMode ? true : false,
-        toolbarHeight: 65,
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(
-                FontAwesomeIcons.bookOpen,
+      appBar: appState.scrolloverAppBar
+          ? null
+          : AppBar(
+              forceMaterialTransparency: themeState.useBlackMode ? true : false,
+              toolbarHeight: 65,
+              leading: Builder(
+                builder: (BuildContext context) {
+                  return IconButton(
+                    icon: const Icon(
+                      FontAwesomeIcons.bookOpen,
+                    ),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  );
+                },
               ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            );
-          },
-        ),
-        title: const AppBarTitle(),
-        actions: appBarButtons(context),
-      ),
+              title: const AppBarTitle(),
+              actions: appBarButtons(context),
+            ),
       drawer: getDrawer(context, appState),
       body: const FluxNewsBodyList(),
     );

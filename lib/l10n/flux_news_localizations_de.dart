@@ -453,4 +453,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get headers => 'Headers';
+
+  @override
+  String get scrolloverAppBar => 'Die Appbar verschwindet beim überscrollen';
 }

@@ -132,5 +132,6 @@
     "headerKey": "Header Name: ",
     "headerValue": "Header Inhalt: ",
     "delete": "Löschen",
-    "headers": "Headers"
+    "headers": "Headers",
+    "scrolloverAppBar": "Die Appbar verschwindet beim überscrollen"
 }

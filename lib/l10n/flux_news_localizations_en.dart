@@ -443,4 +443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get headers => 'Headers';
+
+  @override
+  String get scrolloverAppBar => 'The app bar is collapsible on scroll';
 }

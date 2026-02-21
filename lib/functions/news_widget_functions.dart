@@ -435,7 +435,6 @@ Future<void> openNewsAction(
   // there are difference on launching the news url between the platforms
   // on android and ios it's preferred to check first if the link can be opened
   // by an installed app, if not then the link is opened in a web-view within the app.
-  // on macos we open directly the web-view within the app.
   String url = news.url;
   if (overwriteOpenInMiniflux) {
     if (appState.minifluxURL != null) {
@@ -453,7 +452,7 @@ Future<void> openNewsAction(
 
   if (Platform.isAndroid) {
     AndroidUrlLauncher.launchUrl(context, url);
-  } else if (Platform.isIOS) {
+  } else {
     // catch exception if no app is installed to handle the url
     final bool nativeAppLaunchSucceeded = await launchUrl(
       Uri.parse(url),
@@ -466,11 +465,6 @@ Future<void> openNewsAction(
         mode: LaunchMode.inAppWebView,
       );
     }
-  } else if (Platform.isMacOS) {
-    await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-    );
   }
 }
 
@@ -478,11 +472,10 @@ Future<void> openNewsCommentsAction(News news, BuildContext context) async {
   // there are difference on launching the news url between the platforms
   // on android and ios it's preferred to check first if the link can be opened
   // by an installed app, if not then the link is opened in a web-view within the app.
-  // on macos we open directly the web-view within the app.
   if (news.commentsUrl.isNotEmpty) {
     if (Platform.isAndroid) {
       AndroidUrlLauncher.launchUrl(context, news.commentsUrl);
-    } else if (Platform.isIOS) {
+    } else {
       // catch exception if no app is installed to handle the url
       final bool nativeAppLaunchSucceeded = await launchUrl(
         Uri.parse(news.commentsUrl),
@@ -495,11 +488,6 @@ Future<void> openNewsCommentsAction(News news, BuildContext context) async {
           mode: LaunchMode.inAppWebView,
         );
       }
-    } else if (Platform.isMacOS) {
-      await launchUrl(
-        Uri.parse(news.commentsUrl),
-        mode: LaunchMode.externalApplication,
-      );
     }
   }
 }
@@ -507,7 +495,7 @@ Future<void> openNewsCommentsAction(News news, BuildContext context) async {
 Future<bool> openUrlAction(String url, BuildContext context) async {
   if (Platform.isAndroid) {
     AndroidUrlLauncher.launchUrl(context, url);
-  } else if (Platform.isIOS) {
+  } else {
     // catch exception if no app is installed to handle the url
     final bool nativeAppLaunchSucceeded = await launchUrl(
       Uri.parse(url),
@@ -520,11 +508,6 @@ Future<bool> openUrlAction(String url, BuildContext context) async {
         mode: LaunchMode.inAppWebView,
       );
     }
-  } else if (Platform.isMacOS) {
-    await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-    );
   }
   return true;
 }
@@ -623,5 +606,79 @@ Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext contex
     }
     // update the view after changing the values
     appState.refreshView();
+  }
+}
+
+void onTabCardAction(
+    FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (appState.tabAction != FluxNewsState.tabActionExpandString) {
+    if (news.status == FluxNewsState.unreadNewsStatus) {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+      if (appState.removeNewsFromListWhenRead && !searchView) {
+        newsList?.removeAt(itemIndex);
+      }
+    } else {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+    }
+  } else {
+    if (news.expanded) {
+      news.expanded = false;
+    } else {
+      news.expanded = true;
+    }
+    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+  }
+}
+
+void onTabCardContentAction(
+    FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+    if (news.status == FluxNewsState.unreadNewsStatus) {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+      if (appState.removeNewsFromListWhenRead && !searchView) {
+        newsList?.removeAt(itemIndex);
+      }
+    } else {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+    }
+  } else {
+    if (news.expanded) {
+      news.expanded = false;
+    } else {
+      news.expanded = true;
+    }
+    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
   }
 }

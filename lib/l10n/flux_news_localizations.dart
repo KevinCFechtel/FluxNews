@@ -905,6 +905,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Headers'**
   String get headers;
+
+  /// No description provided for @scrolloverAppBar.
+  ///
+  /// In en, this message translates to:
+  /// **'The app bar is collapsible on scroll'**
+  String get scrolloverAppBar;
 }
 
 class _AppLocalizationsDelegate

@@ -100,6 +100,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageSkipLongSyncKey = 'skipLongSync';
   static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
   static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
+  static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -251,6 +252,7 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
   Map<String, String> customHeaders = {};
+  bool scrolloverAppBar = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1954,6 +1956,17 @@ class FluxNewsState extends ChangeNotifier {
             skipLongSync = true;
           } else {
             skipLongSync = false;
+          }
+        }
+      }
+
+      // assign the scrollover app bar selection from persistent saved config
+      if (key == FluxNewsState.secureStorageScrolloverAppBarKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            scrolloverAppBar = true;
+          } else {
+            scrolloverAppBar = false;
           }
         }
       }
