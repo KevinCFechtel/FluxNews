@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -681,4 +682,141 @@ void onTabContentAction(
     }
     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
   }
+}
+
+List<Widget> getIOSContextMenuActions(
+    FluxNewsState appState, News news, BuildContext context, bool searchView, int itemIndex, List<News>? newsList) {
+  return [
+    CupertinoContextMenuAction(
+      onPressed: () {
+        bookmarkAction(news, appState, context, searchView);
+        Navigator.pop(context);
+      },
+      trailingIcon: news.starred ? Icons.star_outline : Icons.star,
+      child: news.starred
+          ? Text(
+              AppLocalizations.of(context)!.deleteBookmark,
+              overflow: TextOverflow.visible,
+            )
+          : Text(
+              AppLocalizations.of(context)!.addBookmark,
+              overflow: TextOverflow.visible,
+            ),
+    ),
+    CupertinoContextMenuAction(
+      onPressed: () {
+        if (news.status == FluxNewsState.readNewsStatus) {
+          markNewsAsUnreadAction(
+              news, context.read<FluxNewsState>(), context, searchView, context.read<FluxNewsCounterState>());
+        } else {
+          markNewsAsReadAction(
+              news, context.read<FluxNewsState>(), context, searchView, context.read<FluxNewsCounterState>());
+          if (context.read<FluxNewsState>().removeNewsFromListWhenRead && !searchView) {
+            newsList?.removeAt(itemIndex);
+          }
+        }
+        Navigator.pop(context);
+      },
+      trailingIcon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
+      child: news.status == FluxNewsState.readNewsStatus
+          ? Text(
+              AppLocalizations.of(context)!.markAsUnread,
+              overflow: TextOverflow.visible,
+            )
+          : Text(
+              AppLocalizations.of(context)!.markAsRead,
+              overflow: TextOverflow.visible,
+            ),
+    ),
+    appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
+        ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion
+            ? CupertinoContextMenuAction(
+                onPressed: () {
+                  saveToThirdPartyAction(news, context.read<FluxNewsState>(), context);
+                  Navigator.pop(context);
+                },
+                trailingIcon: Icons.save,
+                child: Text(
+                  AppLocalizations.of(context)!.contextSaveButton,
+                  overflow: TextOverflow.visible,
+                ))
+            : SizedBox.shrink()
+        : CupertinoContextMenuAction(
+            onPressed: () {
+              saveToThirdPartyAction(news, context.read<FluxNewsState>(), context);
+              Navigator.pop(context);
+            },
+            trailingIcon: Icons.save,
+            child: Text(
+              AppLocalizations.of(context)!.contextSaveButton,
+              overflow: TextOverflow.visible,
+            )),
+    CupertinoContextMenuAction(
+        onPressed: () {
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, true);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, true);
+          }
+          Navigator.pop(context);
+        },
+        trailingIcon: Icons.open_in_browser,
+        child: Text(
+          AppLocalizations.of(context)!.openMinifluxShort,
+          overflow: TextOverflow.visible,
+        )),
+    CupertinoContextMenuAction(
+        onPressed: () {
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, false);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, false);
+          }
+          Navigator.pop(context);
+        },
+        trailingIcon: Icons.open_in_browser,
+        child: Text(
+          AppLocalizations.of(context)!.open,
+          overflow: TextOverflow.visible,
+        )),
+    news.commentsUrl.isNotEmpty
+        ? CupertinoContextMenuAction(
+            onPressed: () {
+              openNewsCommentsAction(news, context);
+              Navigator.pop(context);
+            },
+            trailingIcon: Icons.comment,
+            child: Text(
+              AppLocalizations.of(context)!.openComments,
+              overflow: TextOverflow.visible,
+            ))
+        : SizedBox.shrink(),
+    CupertinoContextMenuAction(
+        onPressed: () {
+          if (Platform.isAndroid) {
+            SharePlus.instance.share(ShareParams(
+              uri: Uri.parse(news.url),
+            ));
+          } else {
+            if (context.mounted) {
+              final box = context.findRenderObject() as RenderBox?;
+              SharePlus.instance.share(ShareParams(
+                  uri: Uri.parse(news.url),
+                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+            }
+          }
+          Navigator.pop(context);
+        },
+        trailingIcon: Icons.share,
+        child: Text(
+          AppLocalizations.of(context)!.share,
+          overflow: TextOverflow.visible,
+        )),
+  ];
 }

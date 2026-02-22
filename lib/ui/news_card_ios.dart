@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
-import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -41,58 +40,33 @@ class NewsCardIOS extends StatelessWidget {
             }
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           },
-          child: newsCard(appState));
+          child: newsCard(appState, AlwaysStoppedAnimation(1)));
     } else {
-      return CupertinoContextMenu(actions: [
-        CupertinoContextMenuAction(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          trailingIcon: news.starred ? Icons.star_outline : Icons.star,
-          child: news.starred
-              ? Text(
-                  AppLocalizations.of(context)!.deleteBookmark,
-                  overflow: TextOverflow.visible,
-                )
-              : Text(
-                  AppLocalizations.of(context)!.addBookmark,
-                  overflow: TextOverflow.visible,
-                ),
-        ),
-        CupertinoContextMenuAction(
-          onPressed: () {
-            if (news.status == FluxNewsState.readNewsStatus) {
-              markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+      return CupertinoContextMenu.builder(
+          actions: getIOSContextMenuActions(appState, news, context, searchView, itemIndex, newsList),
+          builder: (context, animation) {
+            if (animation.status == AnimationStatus.completed) {
+              return Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                  ),
+                  child: newsCard(appState, animation));
             } else {
-              markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
-              if (appState.removeNewsFromListWhenRead && !searchView) {
-                newsList?.removeAt(itemIndex);
-              }
+              return newsCard(appState, animation);
             }
-            Navigator.pop(context);
-          },
-          trailingIcon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
-          child: news.status == FluxNewsState.readNewsStatus
-              ? Text(
-                  AppLocalizations.of(context)!.markAsUnread,
-                  overflow: TextOverflow.visible,
-                )
-              : Text(
-                  AppLocalizations.of(context)!.markAsRead,
-                  overflow: TextOverflow.visible,
-                ),
-        ),
-      ], child: newsCard(appState));
+          });
     }
   }
 
-  Widget newsCard(FluxNewsState appState) {
+  Widget newsCard(FluxNewsState appState, Animation<double> animation) {
     return Card(
         // inkwell is used for the onTab and onLongPress functions
         child: InkWell(
             splashFactory: NoSplash.splashFactory,
             onTap: () async {
-              onTabAction(appState, context, news, searchView, itemIndex, newsList);
+              if (animation.status != AnimationStatus.completed) {
+                onTabAction(appState, context, news, searchView, itemIndex, newsList);
+              }
             },
             child: Column(
               children: [
@@ -207,12 +181,14 @@ class NewsCardIOS extends StatelessWidget {
                             InkWell(
                               splashFactory: NoSplash.splashFactory,
                               onTap: () {
-                                onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
+                                if (animation.status != AnimationStatus.completed) {
+                                  onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
+                                }
                               },
                               child: NewsContent(
                                 news: news,
                               ),
-                            )
+                            ),
                           ],
                         )))
               ],
