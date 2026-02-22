@@ -7,7 +7,6 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/functions/logging.dart';
-import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/news_list.dart';
 import 'package:flux_news/functions/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -178,7 +177,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
-    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     // start the main view in portrait mode
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
@@ -220,7 +218,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       appBar: appState.scrolloverAppBar
           ? null
           : AppBar(
-              forceMaterialTransparency: themeState.useBlackMode ? true : false,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              elevation: 0,
+              scrolledUnderElevation: 0,
               toolbarHeight: 65,
               leading: Builder(
                 builder: (BuildContext context) {
@@ -245,7 +245,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
-    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
@@ -285,7 +284,6 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               ))
           : null,
       appBar: AppBar(
-        forceMaterialTransparency: themeState.useBlackMode ? true : false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
