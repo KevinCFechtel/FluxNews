@@ -324,7 +324,7 @@ class BodyNewsList extends StatelessWidget {
       // and navigate to the settings
       PopupMenuButton(
           icon: const Icon(Icons.more_vert),
-          color: Theme.of(context).primaryColor,
+          color: Theme.of(context).cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(8.0),
