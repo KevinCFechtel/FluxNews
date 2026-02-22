@@ -286,6 +286,9 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
           : null,
       appBar: AppBar(
         forceMaterialTransparency: themeState.useBlackMode ? true : false,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const AppBarTitle(),
         actions: appBarButtons(context),
       ),

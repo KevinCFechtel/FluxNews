@@ -7,7 +7,6 @@ import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
-import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:flux_news/ui/news_card.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -37,7 +36,6 @@ class BodyNewsList extends StatelessWidget {
             if (snapshot.hasError) {
               return const SizedBox.shrink();
             } else {
-              FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
               return snapshot.data == null
                   // show empty dialog if list is null
                   ? Center(
@@ -68,7 +66,9 @@ class BodyNewsList extends StatelessWidget {
                               ? appState.scrolloverAppBar
                                   ? CustomScrollView(slivers: <Widget>[
                                       SliverAppBar(
-                                        backgroundColor: themeState.useBlackMode ? Colors.black : null,
+                                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                                        elevation: 0,
+                                        scrolledUnderElevation: 0,
                                         floating: true,
                                         leading: Builder(
                                           builder: (BuildContext context) {
