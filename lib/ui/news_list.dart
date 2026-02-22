@@ -118,50 +118,54 @@ class BodyNewsList extends StatelessWidget {
                           },
                           child: !appState.isTablet
                               ? appState.scrolloverAppBar
-                                  ? CustomScrollView(slivers: <Widget>[
-                                      SliverAppBar(
-                                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                                        elevation: 0,
-                                        scrolledUnderElevation: 0,
-                                        floating: true,
-                                        leading: Builder(
-                                          builder: (BuildContext context) {
-                                            return IconButton(
-                                              icon: const Icon(
-                                                FontAwesomeIcons.bookOpen,
-                                              ),
-                                              onPressed: () {
-                                                Scaffold.of(context).openDrawer();
+                                  ? CustomScrollView(
+                                      controller: appState.scrollController,
+                                      physics: AlwaysScrollableScrollPhysics(),
+                                      slivers: <Widget>[
+                                          SliverAppBar(
+                                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                                            elevation: 0,
+                                            scrolledUnderElevation: 0,
+                                            floating: true,
+                                            snap: true,
+                                            leading: Builder(
+                                              builder: (BuildContext context) {
+                                                return IconButton(
+                                                  icon: const Icon(
+                                                    FontAwesomeIcons.bookOpen,
+                                                  ),
+                                                  onPressed: () {
+                                                    Scaffold.of(context).openDrawer();
+                                                  },
+                                                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                                                );
                                               },
-                                              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                                            );
-                                          },
-                                        ),
-                                        title: const AppBarTitle(),
-                                        actions: appBarButtons(context),
-                                      ),
-                                      SuperSliverList.builder(
-                                          key: const PageStorageKey<String>('NewsList'),
-                                          itemCount: snapshot.data!.length,
-                                          listController: appState.listController,
-                                          itemBuilder: (context, i) {
-                                            return appState.orientation == Orientation.landscape
-                                                ? NewsRow(
-                                                    news: snapshot.data![i],
-                                                    context: context,
-                                                    searchView: searchView,
-                                                    itemIndex: i,
-                                                    newsList: snapshot.data,
-                                                  )
-                                                : NewsCard(
-                                                    news: snapshot.data![i],
-                                                    context: context,
-                                                    searchView: searchView,
-                                                    itemIndex: i,
-                                                    newsList: snapshot.data,
-                                                  );
-                                          }),
-                                    ])
+                                            ),
+                                            title: const AppBarTitle(),
+                                            actions: appBarButtons(context),
+                                          ),
+                                          SuperSliverList.builder(
+                                              key: const PageStorageKey<String>('NewsList'),
+                                              itemCount: snapshot.data!.length,
+                                              listController: appState.listController,
+                                              itemBuilder: (context, i) {
+                                                return appState.orientation == Orientation.landscape
+                                                    ? NewsRow(
+                                                        news: snapshot.data![i],
+                                                        context: context,
+                                                        searchView: searchView,
+                                                        itemIndex: i,
+                                                        newsList: snapshot.data,
+                                                      )
+                                                    : NewsCard(
+                                                        news: snapshot.data![i],
+                                                        context: context,
+                                                        searchView: searchView,
+                                                        itemIndex: i,
+                                                        newsList: snapshot.data,
+                                                      );
+                                              }),
+                                        ])
                                   : SuperListView.builder(
                                       key: const PageStorageKey<String>('NewsList'),
                                       itemCount: snapshot.data!.length,
