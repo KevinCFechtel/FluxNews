@@ -177,6 +177,16 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
+    bool scrolloverAppBar = appState.scrolloverAppBar;
+    if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
+      scrolloverAppBar = false;
+    } else if (appState.errorString != '' && appState.newError) {
+      scrolloverAppBar = false;
+    } else if (appState.longSync) {
+      scrolloverAppBar = false;
+    } else if (appState.tooManyNews) {
+      scrolloverAppBar = false;
+    }
     // start the main view in portrait mode
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
@@ -215,7 +225,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 child: const Icon(Icons.check_circle_outline),
               ))
           : null,
-      appBar: appState.scrolloverAppBar
+      appBar: scrolloverAppBar
           ? null
           : AppBar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,

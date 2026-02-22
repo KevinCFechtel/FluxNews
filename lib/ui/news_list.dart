@@ -38,22 +38,76 @@ class BodyNewsList extends StatelessWidget {
             } else {
               return snapshot.data == null
                   // show empty dialog if list is null
-                  ? Center(
-                      child: Text(
-                      appState.syncProcess
-                          ? AppLocalizations.of(context)!.syncInProgress
-                          : AppLocalizations.of(context)!.noNewEntries,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ))
+                  ? CustomScrollView(slivers: <Widget>[
+                      SliverAppBar(
+                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                        elevation: 0,
+                        scrolledUnderElevation: 0,
+                        floating: true,
+                        leading: Builder(
+                          builder: (BuildContext context) {
+                            return IconButton(
+                              icon: const Icon(
+                                FontAwesomeIcons.bookOpen,
+                              ),
+                              onPressed: () {
+                                Scaffold.of(context).openDrawer();
+                              },
+                              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                            );
+                          },
+                        ),
+                        title: const AppBarTitle(),
+                        actions: appBarButtons(context),
+                      ),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Container(
+                            alignment: Alignment.center,
+                            child: Text(
+                              appState.syncProcess
+                                  ? AppLocalizations.of(context)!.syncInProgress
+                                  : AppLocalizations.of(context)!.noNewEntries,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            )),
+                      )
+                    ])
                   // show empty dialog if list is empty
                   : snapshot.data!.isEmpty
-                      ? Center(
-                          child: Text(
-                          appState.syncProcess
-                              ? AppLocalizations.of(context)!.syncInProgress
-                              : AppLocalizations.of(context)!.noNewEntries,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ))
+                      ? CustomScrollView(slivers: <Widget>[
+                          SliverAppBar(
+                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                            elevation: 0,
+                            scrolledUnderElevation: 0,
+                            floating: true,
+                            leading: Builder(
+                              builder: (BuildContext context) {
+                                return IconButton(
+                                  icon: const Icon(
+                                    FontAwesomeIcons.bookOpen,
+                                  ),
+                                  onPressed: () {
+                                    Scaffold.of(context).openDrawer();
+                                  },
+                                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                                );
+                              },
+                            ),
+                            title: const AppBarTitle(),
+                            actions: appBarButtons(context),
+                          ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Container(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  appState.syncProcess
+                                      ? AppLocalizations.of(context)!.syncInProgress
+                                      : AppLocalizations.of(context)!.noNewEntries,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                )),
+                          )
+                        ])
                       // otherwise create list view with ScrollablePositionedList
                       // to save scroll position persistent
                       : ListViewObserver(
