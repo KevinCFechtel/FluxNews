@@ -31,7 +31,7 @@ class NewsCardIOS extends StatelessWidget {
       return InkWell(
           splashFactory: NoSplash.splashFactory,
           onTap: () async {
-            onTabCardAction(appState, context, news, searchView, itemIndex, newsList);
+            onTabAction(appState, context, news, searchView, itemIndex, newsList);
           },
           onLongPress: () {
             if (news.expanded) {
@@ -92,7 +92,7 @@ class NewsCardIOS extends StatelessWidget {
         child: InkWell(
             splashFactory: NoSplash.splashFactory,
             onTap: () async {
-              onTabCardAction(appState, context, news, searchView, itemIndex, newsList);
+              onTabAction(appState, context, news, searchView, itemIndex, newsList);
             },
             child: Column(
               children: [
@@ -207,7 +207,7 @@ class NewsCardIOS extends StatelessWidget {
                             InkWell(
                               splashFactory: NoSplash.splashFactory,
                               onTap: () {
-                                onTabCardContentAction(appState, context, news, searchView, itemIndex, newsList);
+                                onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
                               },
                               child: NewsContent(
                                 news: news,

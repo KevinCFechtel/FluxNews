@@ -609,7 +609,7 @@ Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext contex
   }
 }
 
-void onTabCardAction(
+void onTabAction(
     FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
   if (appState.tabAction != FluxNewsState.tabActionExpandString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
@@ -646,7 +646,7 @@ void onTabCardAction(
   }
 }
 
-void onTabCardContentAction(
+void onTabContentAction(
     FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {

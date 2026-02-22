@@ -64,30 +64,54 @@ class BodyNewsList extends StatelessWidget {
                           customTargetRenderSliverType: (renderObj) {
                             return renderObj.runtimeType.toString() == 'RenderSuperSliverList';
                           },
-                          child: appState.scrolloverAppBar
-                              ? CustomScrollView(slivers: <Widget>[
-                                  SliverAppBar(
-                                    backgroundColor: themeState.useBlackMode ? Colors.black : null,
-                                    floating: true,
-                                    leading: Builder(
-                                      builder: (BuildContext context) {
-                                        return IconButton(
-                                          icon: const Icon(
-                                            FontAwesomeIcons.bookOpen,
-                                          ),
-                                          onPressed: () {
-                                            Scaffold.of(context).openDrawer();
+                          child: !appState.isTablet
+                              ? appState.scrolloverAppBar
+                                  ? CustomScrollView(slivers: <Widget>[
+                                      SliverAppBar(
+                                        backgroundColor: themeState.useBlackMode ? Colors.black : null,
+                                        floating: true,
+                                        leading: Builder(
+                                          builder: (BuildContext context) {
+                                            return IconButton(
+                                              icon: const Icon(
+                                                FontAwesomeIcons.bookOpen,
+                                              ),
+                                              onPressed: () {
+                                                Scaffold.of(context).openDrawer();
+                                              },
+                                              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                                            );
                                           },
-                                          tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                                        );
-                                      },
-                                    ),
-                                    title: const AppBarTitle(),
-                                    actions: appBarButtons(context),
-                                  ),
-                                  SuperSliverList.builder(
+                                        ),
+                                        title: const AppBarTitle(),
+                                        actions: appBarButtons(context),
+                                      ),
+                                      SuperSliverList.builder(
+                                          key: const PageStorageKey<String>('NewsList'),
+                                          itemCount: snapshot.data!.length,
+                                          listController: appState.listController,
+                                          itemBuilder: (context, i) {
+                                            return appState.orientation == Orientation.landscape
+                                                ? NewsRow(
+                                                    news: snapshot.data![i],
+                                                    context: context,
+                                                    searchView: searchView,
+                                                    itemIndex: i,
+                                                    newsList: snapshot.data,
+                                                  )
+                                                : NewsCard(
+                                                    news: snapshot.data![i],
+                                                    context: context,
+                                                    searchView: searchView,
+                                                    itemIndex: i,
+                                                    newsList: snapshot.data,
+                                                  );
+                                          }),
+                                    ])
+                                  : SuperListView.builder(
                                       key: const PageStorageKey<String>('NewsList'),
                                       itemCount: snapshot.data!.length,
+                                      controller: appState.scrollController,
                                       listController: appState.listController,
                                       itemBuilder: (context, i) {
                                         return appState.orientation == Orientation.landscape
@@ -105,8 +129,7 @@ class BodyNewsList extends StatelessWidget {
                                                 itemIndex: i,
                                                 newsList: snapshot.data,
                                               );
-                                      }),
-                                ])
+                                      })
                               : SuperListView.builder(
                                   key: const PageStorageKey<String>('NewsList'),
                                   itemCount: snapshot.data!.length,

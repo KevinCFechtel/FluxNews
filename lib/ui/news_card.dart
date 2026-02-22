@@ -510,7 +510,7 @@ class NewsCard extends StatelessWidget {
                   child: InkWell(
                     splashFactory: NoSplash.splashFactory,
                     onTap: () async {
-                      onTabCardAction(appState, context, news, searchView, itemIndex, newsList);
+                      onTabAction(appState, context, news, searchView, itemIndex, newsList);
                     },
                     // on tap get the actual position of the list on tab
                     // to place the context menu on this position
@@ -644,7 +644,7 @@ class NewsCard extends StatelessWidget {
                                 InkWell(
                                   splashFactory: NoSplash.splashFactory,
                                   onTap: () {
-                                    onTabCardContentAction(appState, context, news, searchView, itemIndex, newsList);
+                                    onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
                                   },
                                   child: NewsContent(
                                     news: news,
