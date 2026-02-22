@@ -324,6 +324,15 @@ class BodyNewsList extends StatelessWidget {
       // and navigate to the settings
       PopupMenuButton(
           icon: const Icon(Icons.more_vert),
+          color: Theme.of(context).primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(8.0),
+              bottomRight: Radius.circular(8.0),
+              topLeft: Radius.circular(8.0),
+              topRight: Radius.circular(8.0),
+            ),
+          ),
           itemBuilder: (context) {
             return [
               // the search button

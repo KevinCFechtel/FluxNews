@@ -43,6 +43,7 @@ class NewsCardIOS extends StatelessWidget {
           child: newsCard(appState, AlwaysStoppedAnimation(1)));
     } else {
       return CupertinoContextMenu.builder(
+          enableHapticFeedback: true,
           actions: getIOSContextMenuActions(appState, news, context, searchView, itemIndex, newsList),
           builder: (context, animation) {
             if (animation.status == AnimationStatus.completed) {
