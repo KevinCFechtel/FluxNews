@@ -99,7 +99,7 @@
     "openMinifluxShort": "Open in miniflux",
     "scrollHorizontal": "Scroll horizontal",
     "open": "Open",
-    "floatingActionButton": "Use an extra button to mark all messages as read",
+    "floatingActionButton": "Use an extra button for additional functions",
     "useBlackMode": "Enable black mode specifically for OLED displays",
     "expand": "Expand",
     "menu": "Action Menu",
@@ -133,5 +133,7 @@
     "headerValue": "Header Value: ",
     "delete": "Delete",
     "headers": "Headers",
-    "scrolloverAppBar": "The app bar is collapsible on scroll"
+    "scrolloverAppBar": "The app bar is collapsible on scroll",
+    "syncNews": "Sync News",
+    "floatingButtonAction": "Select the action for the extra button"
 }

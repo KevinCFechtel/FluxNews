@@ -478,7 +478,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
-                      Icons.check_circle_outline,
+                      Icons.smart_button,
                     ),
                   ),
                   Expanded(
@@ -504,6 +504,50 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
+              // this row contains the selection of brightness mode
+              // there are the choices of light, dark and system
+              appState.floatingButtonVisible
+                  ? Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0, top: 10),
+                          child: const Icon(
+                            Icons.smart_button,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.floatingButtonAction,
+                            style: Theme.of(context).textTheme.titleMedium,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                        DropdownButton<KeyValueRecordType>(
+                          value: appState.floatingButtonActionSelection,
+                          elevation: 16,
+                          underline: Container(
+                            height: 2,
+                          ),
+                          alignment: AlignmentDirectional.centerEnd,
+                          onChanged: (KeyValueRecordType? value) {
+                            if (value != null) {
+                              appState.floatingButtonAction = value.key;
+                              appState.floatingButtonActionSelection = value;
+                              appState.storage
+                                  .write(key: FluxNewsState.secureStorageFloatingButtonKey, value: value.key);
+                              appState.refreshView();
+                            }
+                          },
+                          items: appState.recordTypesFloatingButtonActions!
+                              .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                  DropdownMenuItem<KeyValueRecordType>(
+                                      value: recordType, child: Text(recordType.value)))
+                              .toList(),
+                        ),
+                      ],
+                    )
+                  : SizedBox.shrink(),
+              appState.floatingButtonVisible ? const Divider() : SizedBox.shrink(),
               // this row contains the selection if the app bar text is multiline
               // is turned on, the app bar text is showing the news count in the second line
               Row(

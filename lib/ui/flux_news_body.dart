@@ -192,37 +192,58 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
-                // mark news as read
-                markNewsAsReadInDB(appState);
-                if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                  await queryNextCategoryFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextCategory(value, appState, context);
-                    }
-                  });
-                } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
-                  await queryNextFeedFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextFeed(value, appState, context);
-                    }
-                  });
-                } else {
-                  // refresh news list with the all news state
-                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                    appState.jumpToItem(0);
-                  });
+                if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                  // mark news as read
+                  markNewsAsReadInDB(appState);
+                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextCategory(value, appState, context);
+                      }
+                    });
+                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                    await queryNextFeedFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextFeed(value, appState, context);
+                      }
+                    });
+                  } else {
+                    // refresh news list with the all news state
+                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.jumpToItem(0);
+                    });
 
-                  // notify the categories to update the news count
-                  appCounterState.listUpdated = true;
-                  appCounterState.refreshView();
-                  appState.refreshView();
+                    // notify the categories to update the news count
+                    appCounterState.listUpdated = true;
+                    appCounterState.refreshView();
+                    appState.refreshView();
+                  }
                 }
               },
               child: FloatingActionButton(
-                onPressed: () {
-                  showDeleteAllDialog(context, appState, appCounterState);
+                onPressed: () async {
+                  if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                    if (appState.syncProcess) {
+                      appState.longSyncAborted = true;
+                      appState.refreshView();
+                    } else {
+                      await syncNews(appState, context);
+                    }
+                  } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                    showDeleteAllDialog(context, appState, appCounterState);
+                  }
                 },
-                child: const Icon(Icons.check_circle_outline),
+                child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                    ? appState.syncProcess
+                        ? const SizedBox(
+                            height: 15.0,
+                            width: 15.0,
+                            child: CircularProgressIndicator.adaptive(),
+                          )
+                        : const Icon(
+                            Icons.refresh,
+                          )
+                    : const Icon(Icons.check_circle_outline),
               ))
           : null,
       appBar: scrolloverAppBar
@@ -260,37 +281,58 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
-                // mark news as read
-                markNewsAsReadInDB(appState);
-                if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                  await queryNextCategoryFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextCategory(value, appState, context);
-                    }
-                  });
-                } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
-                  await queryNextFeedFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextFeed(value, appState, context);
-                    }
-                  });
-                } else {
-                  // refresh news list with the all news state
-                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                    appState.jumpToItem(0);
-                  });
+                if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                  // mark news as read
+                  markNewsAsReadInDB(appState);
+                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextCategory(value, appState, context);
+                      }
+                    });
+                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                    await queryNextFeedFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextFeed(value, appState, context);
+                      }
+                    });
+                  } else {
+                    // refresh news list with the all news state
+                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.jumpToItem(0);
+                    });
 
-                  // notify the categories to update the news count
-                  appCounterState.listUpdated = true;
-                  appCounterState.refreshView();
-                  appState.refreshView();
+                    // notify the categories to update the news count
+                    appCounterState.listUpdated = true;
+                    appCounterState.refreshView();
+                    appState.refreshView();
+                  }
                 }
               },
               child: FloatingActionButton(
-                onPressed: () {
-                  showDeleteAllDialog(context, appState, appCounterState);
+                onPressed: () async {
+                  if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                    if (appState.syncProcess) {
+                      appState.longSyncAborted = true;
+                      appState.refreshView();
+                    } else {
+                      await syncNews(appState, context);
+                    }
+                  } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                    showDeleteAllDialog(context, appState, appCounterState);
+                  }
                 },
-                child: const Icon(Icons.check_circle_outline),
+                child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                    ? appState.syncProcess
+                        ? const SizedBox(
+                            height: 15.0,
+                            width: 15.0,
+                            child: CircularProgressIndicator.adaptive(),
+                          )
+                        : const Icon(
+                            Icons.refresh,
+                          )
+                    : const Icon(Icons.check_circle_outline),
               ))
           : null,
       appBar: AppBar(

@@ -330,7 +330,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get floatingActionButton =>
-      'Use an extra button to mark all messages as read';
+      'Use an extra button for additional functions';
 
   @override
   String get useBlackMode => 'Enable black mode specifically for OLED displays';
@@ -446,4 +446,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get scrolloverAppBar => 'The app bar is collapsible on scroll';
+
+  @override
+  String get syncNews => 'Sync News';
+
+  @override
+  String get floatingButtonAction => 'Select the action for the extra button';
 }

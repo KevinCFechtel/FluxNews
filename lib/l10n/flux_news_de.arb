@@ -99,7 +99,7 @@
     "openMinifluxShort": "Öffnen in Miniflux",
     "scrollHorizontal": "Horizontal scrollen",
     "open": "Öffnen",
-    "floatingActionButton": "Nutze einen extra Button um alle Nachrichten als gelesen zu markieren",
+    "floatingActionButton": "Nutze einen extra Button für zusätzliche Funktionen",
     "useBlackMode": "Aktiviere den Black Mode speziell für OLED Displays",
     "expand": "Erweitern",
     "menu": "Aktionsmenü",
@@ -133,5 +133,7 @@
     "headerValue": "Header Inhalt: ",
     "delete": "Löschen",
     "headers": "Headers",
-    "scrolloverAppBar": "Die Appbar verschwindet beim überscrollen"
+    "scrolloverAppBar": "Die Appbar verschwindet beim überscrollen",
+    "syncNews": "Sync News",
+    "floatingButtonAction": "Wähle die Aktion für den extra Button"
 }

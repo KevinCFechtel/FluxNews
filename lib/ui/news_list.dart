@@ -127,7 +127,7 @@ class BodyNewsList extends StatelessWidget {
                                             elevation: 0,
                                             scrolledUnderElevation: 0,
                                             floating: true,
-                                            snap: true,
+                                            //snap: true,
                                             leading: Builder(
                                               builder: (BuildContext context) {
                                                 return IconButton(
