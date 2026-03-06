@@ -1,0 +1,4 @@
+The following has been added:
+ •	The app bar hides on scroll.
+ •	The iOS implementation is improved.
+ •	You can now choose between 'Mark as Read' and 'Sync Messages' for the Floating Action Button.
