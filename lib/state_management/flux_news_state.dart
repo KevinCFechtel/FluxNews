@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.13.2';
+  static const String applicationVersion = '1.14.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -100,6 +100,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageSkipLongSyncKey = 'skipLongSync';
   static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
   static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
+  static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
+  static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -125,6 +127,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String tabActionSplittedString = 'splitted';
   static const String longPressActionMenuString = 'menu';
   static const String longPressActionExpandString = 'expand';
+  static const String floatingButtonSyncAction = 'sync';
+  static const String floatingButtonMarkAsReadAction = 'markAsRead';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -164,6 +168,7 @@ class FluxNewsState extends ChangeNotifier {
   final ScrollController scrollController = ScrollController();
   final ListController listController = ListController();
   bool floatingButtonVisible = false;
+  String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
@@ -206,6 +211,7 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? secondRightSwipeActionSelection;
   KeyValueRecordType? tabActionSelection;
   KeyValueRecordType? longPressActionSelection;
+  KeyValueRecordType? floatingButtonActionSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
@@ -225,6 +231,7 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesTabActions;
   List<KeyValueRecordType>? recordTypesLongPressActions;
   List<KeyValueRecordType>? recordTypesSyncReadNewsAfterDays;
+  List<KeyValueRecordType>? recordTypesFloatingButtonActions;
   bool activateTruncate = false;
   int truncateMode = 0;
   int charactersToTruncate = 100;
@@ -251,6 +258,7 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
   Map<String, String> customHeaders = {};
+  bool scrolloverAppBar = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1464,6 +1472,12 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.longPressActionExpandString, value: AppLocalizations.of(context)!.expand),
         ];
+        recordTypesFloatingButtonActions = <KeyValueRecordType>[
+          KeyValueRecordType(
+              key: FluxNewsState.floatingButtonMarkAsReadAction, value: AppLocalizations.of(context)!.markAllAsRead),
+          KeyValueRecordType(
+              key: FluxNewsState.floatingButtonSyncAction, value: AppLocalizations.of(context)!.syncNews),
+        ];
       } else {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
         recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
@@ -1474,6 +1488,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesTabActions = <KeyValueRecordType>[];
         recordTypesLongPressActions = <KeyValueRecordType>[];
         recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
+        recordTypesFloatingButtonActions = <KeyValueRecordType>[];
       }
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -1485,6 +1500,7 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesTabActions = <KeyValueRecordType>[];
       recordTypesLongPressActions = <KeyValueRecordType>[];
       recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
+      recordTypesFloatingButtonActions = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -1561,6 +1577,13 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesSyncReadNewsAfterDays != null) {
       if (recordTypesSyncReadNewsAfterDays!.isNotEmpty) {
         syncReadNewsAfterDaysSelection = recordTypesSyncReadNewsAfterDays![0];
+      }
+    }
+
+    // init the floating button action selection with the first value of the above generated maps
+    if (recordTypesFloatingButtonActions != null) {
+      if (recordTypesFloatingButtonActions!.isNotEmpty) {
+        floatingButtonActionSelection = recordTypesFloatingButtonActions![0];
       }
     }
 
@@ -1954,6 +1977,29 @@ class FluxNewsState extends ChangeNotifier {
             skipLongSync = true;
           } else {
             skipLongSync = false;
+          }
+        }
+      }
+
+      // assign the scrollover app bar selection from persistent saved config
+      if (key == FluxNewsState.secureStorageScrolloverAppBarKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            scrolloverAppBar = true;
+          } else {
+            scrolloverAppBar = false;
+          }
+        }
+      }
+
+      // assign the floating button action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageFloatingButtonKey) {
+        if (value != '') {
+          floatingButtonAction = value;
+          for (KeyValueRecordType recordSet in recordTypesFloatingButtonActions!) {
+            if (value == recordSet.key) {
+              floatingButtonActionSelection = recordSet;
+            }
           }
         }
       }

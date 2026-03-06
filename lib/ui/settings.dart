@@ -7,7 +7,6 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
-import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
@@ -21,7 +20,6 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
 
     return FluxNewsSettingsStatefulWrapper(onInit: () {
       initConfig(context);
@@ -29,7 +27,9 @@ class Settings extends StatelessWidget {
       appState.orientation = orientation;
       return Scaffold(
         appBar: AppBar(
-          forceMaterialTransparency: themeState.useBlackMode ? true : false,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+          scrolledUnderElevation: 0,
           // set the title of the settings page to the localized settings string
           title: Text(AppLocalizations.of(context)!.settings, style: Theme.of(context).textTheme.titleLarge),
         ),

@@ -705,7 +705,7 @@ abstract class AppLocalizations {
   /// No description provided for @floatingActionButton.
   ///
   /// In en, this message translates to:
-  /// **'Use an extra button to mark all messages as read'**
+  /// **'Use an extra button for additional functions'**
   String get floatingActionButton;
 
   /// No description provided for @useBlackMode.
@@ -905,6 +905,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Headers'**
   String get headers;
+
+  /// No description provided for @scrolloverAppBar.
+  ///
+  /// In en, this message translates to:
+  /// **'The app bar is collapsible on scroll'**
+  String get scrolloverAppBar;
+
+  /// No description provided for @syncNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync News'**
+  String get syncNews;
+
+  /// No description provided for @floatingButtonAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the action for the extra button'**
+  String get floatingButtonAction;
 }
 
 class _AppLocalizationsDelegate

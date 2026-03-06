@@ -35,10 +35,11 @@ class GeneralSettings extends StatelessWidget {
   }
 
   Scaffold generalSettingsLayout(BuildContext context, FluxNewsState appState) {
-    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     return Scaffold(
         appBar: AppBar(
-          forceMaterialTransparency: themeState.useBlackMode ? true : false,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+          scrolledUnderElevation: 0,
           // set the title of the search page to search text field
           title: Text(AppLocalizations.of(context)!.generalSettings),
         ),
@@ -477,7 +478,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
-                      Icons.check_circle_outline,
+                      Icons.smart_button,
                     ),
                   ),
                   Expanded(
@@ -497,6 +498,82 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       appState.floatingButtonVisible = value;
                       appState.storage
                           .write(key: FluxNewsState.secureStorageFloatingButtonVisibleKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
+              // this row contains the selection of brightness mode
+              // there are the choices of light, dark and system
+              appState.floatingButtonVisible
+                  ? Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0, top: 10),
+                          child: const Icon(
+                            Icons.smart_button,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.floatingButtonAction,
+                            style: Theme.of(context).textTheme.titleMedium,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                        DropdownButton<KeyValueRecordType>(
+                          value: appState.floatingButtonActionSelection,
+                          elevation: 16,
+                          underline: Container(
+                            height: 2,
+                          ),
+                          alignment: AlignmentDirectional.centerEnd,
+                          onChanged: (KeyValueRecordType? value) {
+                            if (value != null) {
+                              appState.floatingButtonAction = value.key;
+                              appState.floatingButtonActionSelection = value;
+                              appState.storage
+                                  .write(key: FluxNewsState.secureStorageFloatingButtonKey, value: value.key);
+                              appState.refreshView();
+                            }
+                          },
+                          items: appState.recordTypesFloatingButtonActions!
+                              .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                                  DropdownMenuItem<KeyValueRecordType>(
+                                      value: recordType, child: Text(recordType.value)))
+                              .toList(),
+                        ),
+                      ],
+                    )
+                  : SizedBox.shrink(),
+              appState.floatingButtonVisible ? const Divider() : SizedBox.shrink(),
+              // this row contains the selection if the app bar text is multiline
+              // is turned on, the app bar text is showing the news count in the second line
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.move_up,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.scrolloverAppBar,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.scrolloverAppBar,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.scrolloverAppBar = value;
+                      appState.storage.write(key: FluxNewsState.secureStorageScrolloverAppBarKey, value: stringValue);
                       appState.refreshView();
                     },
                   ),

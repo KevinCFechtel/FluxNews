@@ -7,7 +7,6 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/functions/logging.dart';
-import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/news_list.dart';
 import 'package:flux_news/functions/sync_news.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -178,64 +177,98 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
-    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
+    bool scrolloverAppBar = appState.scrolloverAppBar;
+    if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
+      scrolloverAppBar = false;
+    } else if (appState.errorString != '' && appState.newError) {
+      scrolloverAppBar = false;
+    } else if (appState.longSync) {
+      scrolloverAppBar = false;
+    } else if (appState.tooManyNews) {
+      scrolloverAppBar = false;
+    }
     // start the main view in portrait mode
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
-                // mark news as read
-                markNewsAsReadInDB(appState);
-                if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                  await queryNextCategoryFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextCategory(value, appState, context);
-                    }
-                  });
-                } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
-                  await queryNextFeedFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextFeed(value, appState, context);
-                    }
-                  });
-                } else {
-                  // refresh news list with the all news state
-                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                    appState.jumpToItem(0);
-                  });
+                if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                  // mark news as read
+                  markNewsAsReadInDB(appState);
+                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextCategory(value, appState, context);
+                      }
+                    });
+                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                    await queryNextFeedFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextFeed(value, appState, context);
+                      }
+                    });
+                  } else {
+                    // refresh news list with the all news state
+                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.jumpToItem(0);
+                    });
 
-                  // notify the categories to update the news count
-                  appCounterState.listUpdated = true;
-                  appCounterState.refreshView();
-                  appState.refreshView();
+                    // notify the categories to update the news count
+                    appCounterState.listUpdated = true;
+                    appCounterState.refreshView();
+                    appState.refreshView();
+                  }
                 }
               },
               child: FloatingActionButton(
-                onPressed: () {
-                  showDeleteAllDialog(context, appState, appCounterState);
+                onPressed: () async {
+                  if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                    if (appState.syncProcess) {
+                      appState.longSyncAborted = true;
+                      appState.refreshView();
+                    } else {
+                      await syncNews(appState, context);
+                    }
+                  } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                    showDeleteAllDialog(context, appState, appCounterState);
+                  }
                 },
-                child: const Icon(Icons.check_circle_outline),
+                child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                    ? appState.syncProcess
+                        ? const SizedBox(
+                            height: 15.0,
+                            width: 15.0,
+                            child: CircularProgressIndicator.adaptive(),
+                          )
+                        : const Icon(
+                            Icons.refresh,
+                          )
+                    : const Icon(Icons.check_circle_outline),
               ))
           : null,
-      appBar: AppBar(
-        forceMaterialTransparency: themeState.useBlackMode ? true : false,
-        toolbarHeight: 65,
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(
-                FontAwesomeIcons.bookOpen,
+      appBar: scrolloverAppBar
+          ? null
+          : AppBar(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              toolbarHeight: 65,
+              leading: Builder(
+                builder: (BuildContext context) {
+                  return IconButton(
+                    icon: const Icon(
+                      FontAwesomeIcons.bookOpen,
+                    ),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  );
+                },
               ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            );
-          },
-        ),
-        title: const AppBarTitle(),
-        actions: appBarButtons(context),
-      ),
+              title: const AppBarTitle(),
+              actions: appBarButtons(context),
+            ),
       drawer: getDrawer(context, appState),
       body: const FluxNewsBodyList(),
     );
@@ -243,47 +276,69 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
-    FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
-                // mark news as read
-                markNewsAsReadInDB(appState);
-                if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                  await queryNextCategoryFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextCategory(value, appState, context);
-                    }
-                  });
-                } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
-                  await queryNextFeedFromDB(appState, context).then((value) {
-                    if (context.mounted) {
-                      setNextFeed(value, appState, context);
-                    }
-                  });
-                } else {
-                  // refresh news list with the all news state
-                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                    appState.jumpToItem(0);
-                  });
+                if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                  // mark news as read
+                  markNewsAsReadInDB(appState);
+                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextCategory(value, appState, context);
+                      }
+                    });
+                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                    await queryNextFeedFromDB(appState, context).then((value) {
+                      if (context.mounted) {
+                        setNextFeed(value, appState, context);
+                      }
+                    });
+                  } else {
+                    // refresh news list with the all news state
+                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.jumpToItem(0);
+                    });
 
-                  // notify the categories to update the news count
-                  appCounterState.listUpdated = true;
-                  appCounterState.refreshView();
-                  appState.refreshView();
+                    // notify the categories to update the news count
+                    appCounterState.listUpdated = true;
+                    appCounterState.refreshView();
+                    appState.refreshView();
+                  }
                 }
               },
               child: FloatingActionButton(
-                onPressed: () {
-                  showDeleteAllDialog(context, appState, appCounterState);
+                onPressed: () async {
+                  if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                    if (appState.syncProcess) {
+                      appState.longSyncAborted = true;
+                      appState.refreshView();
+                    } else {
+                      await syncNews(appState, context);
+                    }
+                  } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                    showDeleteAllDialog(context, appState, appCounterState);
+                  }
                 },
-                child: const Icon(Icons.check_circle_outline),
+                child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                    ? appState.syncProcess
+                        ? const SizedBox(
+                            height: 15.0,
+                            width: 15.0,
+                            child: CircularProgressIndicator.adaptive(),
+                          )
+                        : const Icon(
+                            Icons.refresh,
+                          )
+                    : const Icon(Icons.check_circle_outline),
               ))
           : null,
       appBar: AppBar(
-        forceMaterialTransparency: themeState.useBlackMode ? true : false,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const AppBarTitle(),
         actions: appBarButtons(context),
       ),
@@ -371,6 +426,15 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       // and navigate to the settings
       PopupMenuButton(
           icon: const Icon(Icons.more_vert),
+          color: Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(8.0),
+              bottomRight: Radius.circular(8.0),
+              topLeft: Radius.circular(8.0),
+              topRight: Radius.circular(8.0),
+            ),
+          ),
           itemBuilder: (context) {
             return [
               // the search button

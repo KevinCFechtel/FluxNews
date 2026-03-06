@@ -339,7 +339,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get floatingActionButton =>
-      'Nutze einen extra Button um alle Nachrichten als gelesen zu markieren';
+      'Nutze einen extra Button für zusätzliche Funktionen';
 
   @override
   String get useBlackMode =>
@@ -453,4 +453,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get headers => 'Headers';
+
+  @override
+  String get scrolloverAppBar => 'Die Appbar verschwindet beim überscrollen';
+
+  @override
+  String get syncNews => 'Sync News';
+
+  @override
+  String get floatingButtonAction => 'Wähle die Aktion für den extra Button';
 }

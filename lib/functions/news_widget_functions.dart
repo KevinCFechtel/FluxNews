@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -435,7 +436,6 @@ Future<void> openNewsAction(
   // there are difference on launching the news url between the platforms
   // on android and ios it's preferred to check first if the link can be opened
   // by an installed app, if not then the link is opened in a web-view within the app.
-  // on macos we open directly the web-view within the app.
   String url = news.url;
   if (overwriteOpenInMiniflux) {
     if (appState.minifluxURL != null) {
@@ -453,7 +453,7 @@ Future<void> openNewsAction(
 
   if (Platform.isAndroid) {
     AndroidUrlLauncher.launchUrl(context, url);
-  } else if (Platform.isIOS) {
+  } else {
     // catch exception if no app is installed to handle the url
     final bool nativeAppLaunchSucceeded = await launchUrl(
       Uri.parse(url),
@@ -466,11 +466,6 @@ Future<void> openNewsAction(
         mode: LaunchMode.inAppWebView,
       );
     }
-  } else if (Platform.isMacOS) {
-    await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-    );
   }
 }
 
@@ -478,11 +473,10 @@ Future<void> openNewsCommentsAction(News news, BuildContext context) async {
   // there are difference on launching the news url between the platforms
   // on android and ios it's preferred to check first if the link can be opened
   // by an installed app, if not then the link is opened in a web-view within the app.
-  // on macos we open directly the web-view within the app.
   if (news.commentsUrl.isNotEmpty) {
     if (Platform.isAndroid) {
       AndroidUrlLauncher.launchUrl(context, news.commentsUrl);
-    } else if (Platform.isIOS) {
+    } else {
       // catch exception if no app is installed to handle the url
       final bool nativeAppLaunchSucceeded = await launchUrl(
         Uri.parse(news.commentsUrl),
@@ -495,11 +489,6 @@ Future<void> openNewsCommentsAction(News news, BuildContext context) async {
           mode: LaunchMode.inAppWebView,
         );
       }
-    } else if (Platform.isMacOS) {
-      await launchUrl(
-        Uri.parse(news.commentsUrl),
-        mode: LaunchMode.externalApplication,
-      );
     }
   }
 }
@@ -507,7 +496,7 @@ Future<void> openNewsCommentsAction(News news, BuildContext context) async {
 Future<bool> openUrlAction(String url, BuildContext context) async {
   if (Platform.isAndroid) {
     AndroidUrlLauncher.launchUrl(context, url);
-  } else if (Platform.isIOS) {
+  } else {
     // catch exception if no app is installed to handle the url
     final bool nativeAppLaunchSucceeded = await launchUrl(
       Uri.parse(url),
@@ -520,11 +509,6 @@ Future<bool> openUrlAction(String url, BuildContext context) async {
         mode: LaunchMode.inAppWebView,
       );
     }
-  } else if (Platform.isMacOS) {
-    await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-    );
   }
   return true;
 }
@@ -624,4 +608,215 @@ Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext contex
     // update the view after changing the values
     appState.refreshView();
   }
+}
+
+void onTabAction(
+    FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (appState.tabAction != FluxNewsState.tabActionExpandString) {
+    if (news.status == FluxNewsState.unreadNewsStatus) {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+      if (appState.removeNewsFromListWhenRead && !searchView) {
+        newsList?.removeAt(itemIndex);
+      }
+    } else {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+    }
+  } else {
+    if (news.expanded) {
+      news.expanded = false;
+    } else {
+      news.expanded = true;
+    }
+    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+  }
+}
+
+void onTabContentAction(
+    FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (appState.tabAction == FluxNewsState.tabActionOpenString) {
+    if (news.status == FluxNewsState.unreadNewsStatus) {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+      if (appState.removeNewsFromListWhenRead && !searchView) {
+        newsList?.removeAt(itemIndex);
+      }
+    } else {
+      if (news.openMinifluxEntry != null) {
+        if (news.openMinifluxEntry!) {
+          openNewsAction(news, appState, context, true);
+        } else {
+          openNewsAction(news, appState, context, false);
+        }
+      } else {
+        openNewsAction(news, appState, context, false);
+      }
+    }
+  } else {
+    if (news.expanded) {
+      news.expanded = false;
+    } else {
+      news.expanded = true;
+    }
+    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+  }
+}
+
+List<Widget> getIOSContextMenuActions(
+    FluxNewsState appState, News news, BuildContext context, bool searchView, int itemIndex, List<News>? newsList) {
+  return [
+    CupertinoContextMenuAction(
+      onPressed: () {
+        bookmarkAction(news, appState, context, searchView);
+        Navigator.pop(context);
+      },
+      trailingIcon: news.starred ? Icons.star_outline : Icons.star,
+      child: news.starred
+          ? Text(
+              AppLocalizations.of(context)!.deleteBookmark,
+              overflow: TextOverflow.visible,
+            )
+          : Text(
+              AppLocalizations.of(context)!.addBookmark,
+              overflow: TextOverflow.visible,
+            ),
+    ),
+    CupertinoContextMenuAction(
+      onPressed: () {
+        if (news.status == FluxNewsState.readNewsStatus) {
+          markNewsAsUnreadAction(
+              news, context.read<FluxNewsState>(), context, searchView, context.read<FluxNewsCounterState>());
+        } else {
+          markNewsAsReadAction(
+              news, context.read<FluxNewsState>(), context, searchView, context.read<FluxNewsCounterState>());
+          if (context.read<FluxNewsState>().removeNewsFromListWhenRead && !searchView) {
+            newsList?.removeAt(itemIndex);
+          }
+        }
+        Navigator.pop(context);
+      },
+      trailingIcon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
+      child: news.status == FluxNewsState.readNewsStatus
+          ? Text(
+              AppLocalizations.of(context)!.markAsUnread,
+              overflow: TextOverflow.visible,
+            )
+          : Text(
+              AppLocalizations.of(context)!.markAsRead,
+              overflow: TextOverflow.visible,
+            ),
+    ),
+    appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
+        ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion
+            ? CupertinoContextMenuAction(
+                onPressed: () {
+                  saveToThirdPartyAction(news, context.read<FluxNewsState>(), context);
+                  Navigator.pop(context);
+                },
+                trailingIcon: Icons.save,
+                child: Text(
+                  AppLocalizations.of(context)!.contextSaveButton,
+                  overflow: TextOverflow.visible,
+                ))
+            : SizedBox.shrink()
+        : CupertinoContextMenuAction(
+            onPressed: () {
+              saveToThirdPartyAction(news, context.read<FluxNewsState>(), context);
+              Navigator.pop(context);
+            },
+            trailingIcon: Icons.save,
+            child: Text(
+              AppLocalizations.of(context)!.contextSaveButton,
+              overflow: TextOverflow.visible,
+            )),
+    CupertinoContextMenuAction(
+        onPressed: () {
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, true);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, true);
+          }
+          Navigator.pop(context);
+        },
+        trailingIcon: Icons.open_in_browser,
+        child: Text(
+          AppLocalizations.of(context)!.openMinifluxShort,
+          overflow: TextOverflow.visible,
+        )),
+    CupertinoContextMenuAction(
+        onPressed: () {
+          if (news.status == FluxNewsState.unreadNewsStatus) {
+            openNewsAction(news, appState, context, false);
+            if (appState.removeNewsFromListWhenRead && !searchView) {
+              newsList?.removeAt(itemIndex);
+            }
+          } else {
+            openNewsAction(news, appState, context, false);
+          }
+          Navigator.pop(context);
+        },
+        trailingIcon: Icons.open_in_browser,
+        child: Text(
+          AppLocalizations.of(context)!.open,
+          overflow: TextOverflow.visible,
+        )),
+    news.commentsUrl.isNotEmpty
+        ? CupertinoContextMenuAction(
+            onPressed: () {
+              openNewsCommentsAction(news, context);
+              Navigator.pop(context);
+            },
+            trailingIcon: Icons.comment,
+            child: Text(
+              AppLocalizations.of(context)!.openComments,
+              overflow: TextOverflow.visible,
+            ))
+        : SizedBox.shrink(),
+    CupertinoContextMenuAction(
+        onPressed: () {
+          if (Platform.isAndroid) {
+            SharePlus.instance.share(ShareParams(
+              uri: Uri.parse(news.url),
+            ));
+          } else {
+            if (context.mounted) {
+              final box = context.findRenderObject() as RenderBox?;
+              SharePlus.instance.share(ShareParams(
+                  uri: Uri.parse(news.url),
+                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+            }
+          }
+          Navigator.pop(context);
+        },
+        trailingIcon: Icons.share,
+        child: Text(
+          AppLocalizations.of(context)!.share,
+          overflow: TextOverflow.visible,
+        )),
+  ];
 }
