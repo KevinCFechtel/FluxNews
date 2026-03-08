@@ -923,6 +923,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select the action for the extra button'**
   String get floatingButtonAction;
+
+  /// No description provided for @markNewsAsReadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get markNewsAsReadButton;
 }
 
 class _AppLocalizationsDelegate

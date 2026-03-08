@@ -462,4 +462,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get floatingButtonAction => 'Wähle die Aktion für den extra Button';
+
+  @override
+  String get markNewsAsReadButton => 'Als gelesen markieren';
 }

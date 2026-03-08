@@ -135,5 +135,6 @@
     "headers": "Headers",
     "scrolloverAppBar": "Die Appbar verschwindet beim überscrollen",
     "syncNews": "Sync News",
-    "floatingButtonAction": "Wähle die Aktion für den extra Button"
+    "floatingButtonAction": "Wähle die Aktion für den extra Button",
+    "markNewsAsReadButton": "Als gelesen markieren"
 }

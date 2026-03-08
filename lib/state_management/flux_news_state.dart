@@ -1474,7 +1474,8 @@ class FluxNewsState extends ChangeNotifier {
         ];
         recordTypesFloatingButtonActions = <KeyValueRecordType>[
           KeyValueRecordType(
-              key: FluxNewsState.floatingButtonMarkAsReadAction, value: AppLocalizations.of(context)!.markAllAsRead),
+              key: FluxNewsState.floatingButtonMarkAsReadAction,
+              value: AppLocalizations.of(context)!.markNewsAsReadButton),
           KeyValueRecordType(
               key: FluxNewsState.floatingButtonSyncAction, value: AppLocalizations.of(context)!.syncNews),
         ];

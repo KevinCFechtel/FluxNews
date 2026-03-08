@@ -452,4 +452,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floatingButtonAction => 'Select the action for the extra button';
+
+  @override
+  String get markNewsAsReadButton => 'Mark as read';
 }
