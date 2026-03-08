@@ -39,27 +39,29 @@ class BodyNewsList extends StatelessWidget {
               return snapshot.data == null
                   // show empty dialog if list is null
                   ? CustomScrollView(slivers: <Widget>[
-                      SliverAppBar(
-                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                        elevation: 0,
-                        scrolledUnderElevation: 0,
-                        floating: true,
-                        leading: Builder(
-                          builder: (BuildContext context) {
-                            return IconButton(
-                              icon: const Icon(
-                                FontAwesomeIcons.bookOpen,
+                      appState.scrolloverAppBar
+                          ? SliverAppBar(
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                              elevation: 0,
+                              scrolledUnderElevation: 0,
+                              floating: true,
+                              leading: Builder(
+                                builder: (BuildContext context) {
+                                  return IconButton(
+                                    icon: const Icon(
+                                      FontAwesomeIcons.bookOpen,
+                                    ),
+                                    onPressed: () {
+                                      Scaffold.of(context).openDrawer();
+                                    },
+                                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                                  );
+                                },
                               ),
-                              onPressed: () {
-                                Scaffold.of(context).openDrawer();
-                              },
-                              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                            );
-                          },
-                        ),
-                        title: const AppBarTitle(),
-                        actions: appBarButtons(context),
-                      ),
+                              title: const AppBarTitle(),
+                              actions: appBarButtons(context),
+                            )
+                          : SliverToBoxAdapter(child: SizedBox.shrink()),
                       SliverFillRemaining(
                         hasScrollBody: false,
                         child: Container(
@@ -75,27 +77,29 @@ class BodyNewsList extends StatelessWidget {
                   // show empty dialog if list is empty
                   : snapshot.data!.isEmpty
                       ? CustomScrollView(slivers: <Widget>[
-                          SliverAppBar(
-                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                            elevation: 0,
-                            scrolledUnderElevation: 0,
-                            floating: true,
-                            leading: Builder(
-                              builder: (BuildContext context) {
-                                return IconButton(
-                                  icon: const Icon(
-                                    FontAwesomeIcons.bookOpen,
+                          appState.scrolloverAppBar
+                              ? SliverAppBar(
+                                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                                  elevation: 0,
+                                  scrolledUnderElevation: 0,
+                                  floating: true,
+                                  leading: Builder(
+                                    builder: (BuildContext context) {
+                                      return IconButton(
+                                        icon: const Icon(
+                                          FontAwesomeIcons.bookOpen,
+                                        ),
+                                        onPressed: () {
+                                          Scaffold.of(context).openDrawer();
+                                        },
+                                        tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                                      );
+                                    },
                                   ),
-                                  onPressed: () {
-                                    Scaffold.of(context).openDrawer();
-                                  },
-                                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                                );
-                              },
-                            ),
-                            title: const AppBarTitle(),
-                            actions: appBarButtons(context),
-                          ),
+                                  title: const AppBarTitle(),
+                                  actions: appBarButtons(context),
+                                )
+                              : SliverToBoxAdapter(child: SizedBox.shrink()),
                           SliverFillRemaining(
                             hasScrollBody: false,
                             child: Container(

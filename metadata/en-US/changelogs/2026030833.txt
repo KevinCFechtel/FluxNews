@@ -1,0 +1,2 @@
+Fix: Display issues in general settings.
+Fix: Dual app bar appearing when no new news items are present.
