@@ -104,6 +104,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageFrostyAppBarKey = 'frostyAppBar';
   static const String secureStorageUseSliverAppBarKey = 'useSliverAppBar';
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
+  static const String secureStorageAppBarTypeKey = 'appBarType';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -131,6 +132,9 @@ class FluxNewsState extends ChangeNotifier {
   static const String longPressActionExpandString = 'expand';
   static const String floatingButtonSyncAction = 'sync';
   static const String floatingButtonMarkAsReadAction = 'markAsRead';
+  static const String appBarNormalType = 'normal';
+  static const String appBarCollapsedType = 'collapsed';
+  static const String appBarFrozenType = 'frozen';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -214,6 +218,7 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? tabActionSelection;
   KeyValueRecordType? longPressActionSelection;
   KeyValueRecordType? floatingButtonActionSelection;
+  KeyValueRecordType? appBarTypeSelection;
   String? sortOrder = FluxNewsState.sortOrderNewestFirstString;
   int savedScrollPosition = 0;
   int amountOfSavedNews = 1000;
@@ -234,6 +239,7 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesLongPressActions;
   List<KeyValueRecordType>? recordTypesSyncReadNewsAfterDays;
   List<KeyValueRecordType>? recordTypesFloatingButtonActions;
+  List<KeyValueRecordType>? recordTypesAppBarType;
   bool activateTruncate = false;
   int truncateMode = 0;
   int charactersToTruncate = 100;
@@ -263,6 +269,7 @@ class FluxNewsState extends ChangeNotifier {
   bool scrolloverAppBar = false;
   bool frostyAppBar = false;
   bool useSliverAppBar = false;
+  String appBarType = FluxNewsState.appBarNormalType;
 
   // vars for app bar text
   String appBarText = '';
@@ -1483,6 +1490,11 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.floatingButtonSyncAction, value: AppLocalizations.of(context)!.syncNews),
         ];
+        recordTypesAppBarType = <KeyValueRecordType>[
+          KeyValueRecordType(key: FluxNewsState.appBarNormalType, value: AppLocalizations.of(context)!.normal),
+          KeyValueRecordType(key: FluxNewsState.appBarCollapsedType, value: AppLocalizations.of(context)!.collapsible),
+          KeyValueRecordType(key: FluxNewsState.appBarFrozenType, value: AppLocalizations.of(context)!.frosty),
+        ];
       } else {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
         recordTypesAmountOfSearchedNews = <KeyValueRecordType>[];
@@ -1494,6 +1506,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesLongPressActions = <KeyValueRecordType>[];
         recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
         recordTypesFloatingButtonActions = <KeyValueRecordType>[];
+        recordTypesAppBarType = <KeyValueRecordType>[];
       }
     } else {
       recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -1506,6 +1519,7 @@ class FluxNewsState extends ChangeNotifier {
       recordTypesLongPressActions = <KeyValueRecordType>[];
       recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[];
       recordTypesFloatingButtonActions = <KeyValueRecordType>[];
+      recordTypesAppBarType = <KeyValueRecordType>[];
     }
 
     // init the brightness mode selection with the first value of the above generated maps
@@ -1589,6 +1603,13 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesFloatingButtonActions != null) {
       if (recordTypesFloatingButtonActions!.isNotEmpty) {
         floatingButtonActionSelection = recordTypesFloatingButtonActions![0];
+      }
+    }
+
+    // init the app bar type selection with the first value of the above generated maps
+    if (recordTypesAppBarType != null) {
+      if (recordTypesAppBarType!.isNotEmpty) {
+        appBarTypeSelection = recordTypesAppBarType![0];
       }
     }
 
@@ -2015,6 +2036,18 @@ class FluxNewsState extends ChangeNotifier {
             useSliverAppBar = true;
           } else {
             useSliverAppBar = false;
+          }
+        }
+      }
+
+      // assign the floating button action selection from persistent saved config
+      if (key == FluxNewsState.secureStorageAppBarTypeKey) {
+        if (value != '') {
+          appBarType = value;
+          for (KeyValueRecordType recordSet in recordTypesAppBarType!) {
+            if (value == recordSet.key) {
+              appBarTypeSelection = recordSet;
+            }
           }
         }
       }

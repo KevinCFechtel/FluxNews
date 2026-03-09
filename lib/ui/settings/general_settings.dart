@@ -548,94 +548,80 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     )
                   : SizedBox.shrink(),
               appState.floatingButtonVisible ? const Divider() : SizedBox.shrink(),
-              // this row contains the selection if App Bar is scrolled over
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0, top: 10),
                     child: const Icon(
-                      Icons.move_up,
+                      Icons.app_shortcut,
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      AppLocalizations.of(context)!.scrolloverAppBar,
+                      AppLocalizations.of(context)!.appBarType,
                       style: Theme.of(context).textTheme.titleMedium,
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
-                    value: appState.scrolloverAppBar,
-                    onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
-                      if (value == true) {
-                        stringValue = FluxNewsState.secureStorageTrueString;
-                      }
-                      appState.scrolloverAppBar = value;
-                      if (value == true && appState.frostyAppBar == true) {
-                        appState.frostyAppBar = false;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageFrostyAppBarKey,
-                            value: FluxNewsState.secureStorageFalseString);
-                      }
-                      if (value == false && appState.scrolloverAppBar == false) {
-                        appState.useSliverAppBar = false;
-                        appState.storage.write(key: FluxNewsState.secureStorageUseSliverAppBarKey, value: stringValue);
-                      } else {
-                        appState.useSliverAppBar = true;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageUseSliverAppBarKey,
-                            value: FluxNewsState.secureStorageTrueString);
-                      }
-                      appState.storage.write(key: FluxNewsState.secureStorageScrolloverAppBarKey, value: stringValue);
-                      appState.refreshView();
-                    },
-                  ),
-                ],
-              ),
-              const Divider(),
-              // this row contains the selection if App Bar is scrolled over
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                    child: const Icon(
-                      Icons.snowing,
+                  DropdownButton<KeyValueRecordType>(
+                    value: appState.appBarTypeSelection,
+                    elevation: 16,
+                    underline: Container(
+                      height: 2,
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.frostyAppBar,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.visible,
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: appState.frostyAppBar,
-                    onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
-                      if (value == true) {
-                        stringValue = FluxNewsState.secureStorageTrueString;
+                    alignment: AlignmentDirectional.centerEnd,
+                    onChanged: (KeyValueRecordType? value) {
+                      if (value != null) {
+                        appState.appBarType = value.key;
+                        appState.appBarTypeSelection = value;
+                        appState.storage.write(key: FluxNewsState.secureStorageAppBarTypeKey, value: value.key);
+                        if (value.key == FluxNewsState.appBarFrozenType) {
+                          appState.scrolloverAppBar = false;
+                          appState.frostyAppBar = true;
+                          appState.useSliverAppBar = true;
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageScrolloverAppBarKey,
+                              value: FluxNewsState.secureStorageFalseString);
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageFrostyAppBarKey,
+                              value: FluxNewsState.secureStorageTrueString);
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageUseSliverAppBarKey,
+                              value: FluxNewsState.secureStorageTrueString);
+                        } else if (value.key == FluxNewsState.appBarCollapsedType) {
+                          appState.scrolloverAppBar = true;
+                          appState.frostyAppBar = false;
+                          appState.useSliverAppBar = true;
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageScrolloverAppBarKey,
+                              value: FluxNewsState.secureStorageTrueString);
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageFrostyAppBarKey,
+                              value: FluxNewsState.secureStorageFalseString);
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageUseSliverAppBarKey,
+                              value: FluxNewsState.secureStorageTrueString);
+                        } else {
+                          appState.scrolloverAppBar = false;
+                          appState.frostyAppBar = false;
+                          appState.useSliverAppBar = false;
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageScrolloverAppBarKey,
+                              value: FluxNewsState.secureStorageFalseString);
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageFrostyAppBarKey,
+                              value: FluxNewsState.secureStorageFalseString);
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageUseSliverAppBarKey,
+                              value: FluxNewsState.secureStorageFalseString);
+                        }
+                        appState.refreshView();
                       }
-                      appState.frostyAppBar = value;
-                      if (value == true && appState.scrolloverAppBar == true) {
-                        appState.scrolloverAppBar = false;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageScrolloverAppBarKey,
-                            value: FluxNewsState.secureStorageFalseString);
-                      }
-                      if (value == false && appState.scrolloverAppBar == false) {
-                        appState.useSliverAppBar = false;
-                        appState.storage.write(key: FluxNewsState.secureStorageUseSliverAppBarKey, value: stringValue);
-                      } else {
-                        appState.useSliverAppBar = true;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageUseSliverAppBarKey,
-                            value: FluxNewsState.secureStorageTrueString);
-                      }
-                      appState.storage.write(key: FluxNewsState.secureStorageFrostyAppBarKey, value: stringValue);
-                      appState.refreshView();
                     },
+                    items: appState.recordTypesAppBarType!
+                        .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
+                            DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                        .toList(),
                   ),
                 ],
               ),

@@ -468,4 +468,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get frostyAppBar => 'Die Appbar hat einen Glass Effekt';
+
+  @override
+  String get normal => 'Normal';
+
+  @override
+  String get collapsible => 'Überskrollbar';
+
+  @override
+  String get frosty => 'Glass Effekt';
+
+  @override
+  String get appBarType => 'Wähle die Art der Appbar';
 }

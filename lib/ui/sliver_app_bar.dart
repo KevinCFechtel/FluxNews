@@ -23,6 +23,8 @@ class SliverFrostedAppBar extends StatelessWidget {
       return SliverAppBar(
         backgroundColor: Colors.transparent,
         floating: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         pinned: true,
         leading: Builder(
           builder: (BuildContext context) {

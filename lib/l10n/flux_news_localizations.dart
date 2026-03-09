@@ -935,6 +935,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The app bar has a glass effect'**
   String get frostyAppBar;
+
+  /// No description provided for @normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get normal;
+
+  /// No description provided for @collapsible.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapsible'**
+  String get collapsible;
+
+  /// No description provided for @frosty.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass Effect'**
+  String get frosty;
+
+  /// No description provided for @appBarType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the App Bar Type'**
+  String get appBarType;
 }
 
 class _AppLocalizationsDelegate
