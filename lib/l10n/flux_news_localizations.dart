@@ -929,6 +929,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark as read'**
   String get markNewsAsReadButton;
+
+  /// No description provided for @frostyAppBar.
+  ///
+  /// In en, this message translates to:
+  /// **'The app bar has a glass effect'**
+  String get frostyAppBar;
 }
 
 class _AppLocalizationsDelegate

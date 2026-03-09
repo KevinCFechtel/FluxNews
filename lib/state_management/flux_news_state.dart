@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.14.2';
+  static const String applicationVersion = '1.15.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -101,6 +101,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
   static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
   static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
+  static const String secureStorageFrostyAppBarKey = 'frostyAppBar';
+  static const String secureStorageUseSliverAppBarKey = 'useSliverAppBar';
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
@@ -259,6 +261,8 @@ class FluxNewsState extends ChangeNotifier {
   bool skipLongSync = false;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
+  bool frostyAppBar = false;
+  bool useSliverAppBar = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1989,6 +1993,28 @@ class FluxNewsState extends ChangeNotifier {
             scrolloverAppBar = true;
           } else {
             scrolloverAppBar = false;
+          }
+        }
+      }
+
+      // assign the scrollover app bar selection from persistent saved config
+      if (key == FluxNewsState.secureStorageFrostyAppBarKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            frostyAppBar = true;
+          } else {
+            frostyAppBar = false;
+          }
+        }
+      }
+
+      // assign the scrollover app bar selection from persistent saved config
+      if (key == FluxNewsState.secureStorageUseSliverAppBarKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            useSliverAppBar = true;
+          } else {
+            useSliverAppBar = false;
           }
         }
       }

@@ -465,4 +465,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get markNewsAsReadButton => 'Als gelesen markieren';
+
+  @override
+  String get frostyAppBar => 'Die Appbar hat einen Glass Effekt';
 }

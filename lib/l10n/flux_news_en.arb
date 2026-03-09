@@ -136,5 +136,6 @@
     "scrolloverAppBar": "The app bar is collapsible on scroll",
     "syncNews": "Sync News",
     "floatingButtonAction": "Select the action for the extra button",
-    "markNewsAsReadButton": "Mark as read"
+    "markNewsAsReadButton": "Mark as read",
+    "frostyAppBar": "The app bar has a glass effect"
 }

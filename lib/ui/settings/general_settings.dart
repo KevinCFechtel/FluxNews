@@ -548,8 +548,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     )
                   : SizedBox.shrink(),
               appState.floatingButtonVisible ? const Divider() : SizedBox.shrink(),
-              // this row contains the selection if the app bar text is multiline
-              // is turned on, the app bar text is showing the news count in the second line
+              // this row contains the selection if App Bar is scrolled over
               Row(
                 children: [
                   Padding(
@@ -573,7 +572,68 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.scrolloverAppBar = value;
+                      if (value == true && appState.frostyAppBar == true) {
+                        appState.frostyAppBar = false;
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageFrostyAppBarKey,
+                            value: FluxNewsState.secureStorageFalseString);
+                      }
+                      if (value == false && appState.scrolloverAppBar == false) {
+                        appState.useSliverAppBar = false;
+                        appState.storage.write(key: FluxNewsState.secureStorageUseSliverAppBarKey, value: stringValue);
+                      } else {
+                        appState.useSliverAppBar = true;
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageUseSliverAppBarKey,
+                            value: FluxNewsState.secureStorageTrueString);
+                      }
                       appState.storage.write(key: FluxNewsState.secureStorageScrolloverAppBarKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
+              // this row contains the selection if App Bar is scrolled over
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.snowing,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.frostyAppBar,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.frostyAppBar,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.frostyAppBar = value;
+                      if (value == true && appState.scrolloverAppBar == true) {
+                        appState.scrolloverAppBar = false;
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageScrolloverAppBarKey,
+                            value: FluxNewsState.secureStorageFalseString);
+                      }
+                      if (value == false && appState.scrolloverAppBar == false) {
+                        appState.useSliverAppBar = false;
+                        appState.storage.write(key: FluxNewsState.secureStorageUseSliverAppBarKey, value: stringValue);
+                      } else {
+                        appState.useSliverAppBar = true;
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageUseSliverAppBarKey,
+                            value: FluxNewsState.secureStorageTrueString);
+                      }
+                      appState.storage.write(key: FluxNewsState.secureStorageFrostyAppBarKey, value: stringValue);
                       appState.refreshView();
                     },
                   ),
