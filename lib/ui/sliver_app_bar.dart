@@ -43,14 +43,16 @@ class SliverFrostedAppBar extends StatelessWidget {
         flexibleSpace: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: FlexibleSpaceBar(),
+            child: Container(
+                decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor.withAlpha(85)),
+                child: FlexibleSpaceBar()),
           ),
         ),
         actions: appBarButtons(context),
       );
     } else if (appState.scrolloverAppBar) {
       return SliverAppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Colors.transparent, //Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         floating: true,
