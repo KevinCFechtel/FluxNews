@@ -101,10 +101,11 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
   static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
   static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
-  static const String secureStorageFrostyAppBarKey = 'frostyAppBar';
+  static const String secureStorageGlassAppBarKey = 'glassAppBar';
   static const String secureStorageUseSliverAppBarKey = 'useSliverAppBar';
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageAppBarTypeKey = 'appBarType';
+  static const String secureStorageGlassActionButtonKey = 'glassActionButton';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -134,7 +135,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String floatingButtonMarkAsReadAction = 'markAsRead';
   static const String appBarNormalType = 'normal';
   static const String appBarCollapsedType = 'collapsed';
-  static const String appBarFrozenType = 'frozen';
+  static const String appBarGlassType = 'glass';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -267,9 +268,10 @@ class FluxNewsState extends ChangeNotifier {
   bool skipLongSync = false;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
-  bool frostyAppBar = false;
-  bool useSliverAppBar = false;
-  String appBarType = FluxNewsState.appBarNormalType;
+  bool glassAppBar = Platform.isIOS ? true : false;
+  bool useSliverAppBar = Platform.isIOS ? true : false;
+  String appBarType = Platform.isIOS ? FluxNewsState.appBarGlassType : FluxNewsState.appBarNormalType;
+  bool glassActionButton = Platform.isIOS ? true : false;
 
   // vars for app bar text
   String appBarText = '';
@@ -1493,7 +1495,7 @@ class FluxNewsState extends ChangeNotifier {
         recordTypesAppBarType = <KeyValueRecordType>[
           KeyValueRecordType(key: FluxNewsState.appBarNormalType, value: AppLocalizations.of(context)!.normal),
           KeyValueRecordType(key: FluxNewsState.appBarCollapsedType, value: AppLocalizations.of(context)!.collapsible),
-          KeyValueRecordType(key: FluxNewsState.appBarFrozenType, value: AppLocalizations.of(context)!.frosty),
+          KeyValueRecordType(key: FluxNewsState.appBarGlassType, value: AppLocalizations.of(context)!.glass),
         ];
       } else {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -1609,6 +1611,9 @@ class FluxNewsState extends ChangeNotifier {
     // init the app bar type selection with the first value of the above generated maps
     if (recordTypesAppBarType != null) {
       if (recordTypesAppBarType!.isNotEmpty) {
+        if (Platform.isIOS) {
+          appBarTypeSelection = recordTypesAppBarType![2];
+        }
         appBarTypeSelection = recordTypesAppBarType![0];
       }
     }
@@ -2019,12 +2024,12 @@ class FluxNewsState extends ChangeNotifier {
       }
 
       // assign the scrollover app bar selection from persistent saved config
-      if (key == FluxNewsState.secureStorageFrostyAppBarKey) {
+      if (key == FluxNewsState.secureStorageGlassAppBarKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
-            frostyAppBar = true;
+            glassAppBar = true;
           } else {
-            frostyAppBar = false;
+            glassAppBar = false;
           }
         }
       }
@@ -2036,6 +2041,17 @@ class FluxNewsState extends ChangeNotifier {
             useSliverAppBar = true;
           } else {
             useSliverAppBar = false;
+          }
+        }
+      }
+
+      // assign the scrollover app bar selection from persistent saved config
+      if (key == FluxNewsState.secureStorageGlassActionButtonKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            glassActionButton = true;
+          } else {
+            glassActionButton = false;
           }
         }
       }

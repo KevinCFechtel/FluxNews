@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
@@ -221,30 +223,62 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                 }
               },
               child: FloatingActionButton(
-                onPressed: () async {
-                  if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
-                    if (appState.syncProcess) {
-                      appState.longSyncAborted = true;
-                      appState.refreshView();
-                    } else {
-                      await syncNews(appState, context);
+                  heroTag: appState.glassActionButton ? "glassActionButton" : "normalActionButton",
+                  elevation: 4,
+                  backgroundColor: appState.glassActionButton ? Colors.transparent : null,
+                  onPressed: () async {
+                    if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                      if (appState.syncProcess) {
+                        appState.longSyncAborted = true;
+                        appState.refreshView();
+                      } else {
+                        await syncNews(appState, context);
+                      }
+                    } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                      showDeleteAllDialog(context, appState, appCounterState);
                     }
-                  } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
-                    showDeleteAllDialog(context, appState, appCounterState);
-                  }
-                },
-                child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
-                    ? appState.syncProcess
-                        ? const SizedBox(
-                            height: 15.0,
-                            width: 15.0,
-                            child: CircularProgressIndicator.adaptive(),
-                          )
-                        : const Icon(
-                            Icons.refresh,
-                          )
-                    : const Icon(Icons.check_circle_outline),
-              ))
+                  },
+                  child: appState.glassActionButton
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(Radius.circular(10)),
+                                border: Border.all(color: Theme.of(context).scaffoldBackgroundColor),
+                                color: Theme.of(context).scaffoldBackgroundColor.withAlpha(85),
+                              ),
+                              child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                                  ? appState.syncProcess
+                                      ? SizedBox(
+                                          height: 60.0,
+                                          width: 60.0,
+                                          child: CircularProgressIndicator.adaptive(
+                                              padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                                        )
+                                      : SizedBox(
+                                          height: 60.0,
+                                          width: 60.0,
+                                          child: Icon(Icons.refresh,
+                                              color: Theme.of(context).appBarTheme.iconTheme!.color))
+                                  : SizedBox(
+                                      height: 60.0,
+                                      width: 60.0,
+                                      child: Icon(Icons.check_circle_outline,
+                                          color: Theme.of(context).appBarTheme.iconTheme!.color)),
+                            ),
+                          ))
+                      : appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                          ? appState.syncProcess
+                              ? const SizedBox(
+                                  height: 15.0,
+                                  width: 15.0,
+                                  child: CircularProgressIndicator.adaptive(),
+                                )
+                              : Icon(Icons.refresh)
+                          : Icon(Icons.check_circle_outline)),
+            )
           : null,
       appBar: useSliverAppBar
           ? null

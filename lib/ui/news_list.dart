@@ -8,7 +8,7 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/ui/news_card.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/ui/news_row.dart';
-import 'package:flux_news/ui/sliver_app_bar.dart';
+import 'package:flux_news/ui/sliver_glass_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -36,7 +36,7 @@ class BodyNewsList extends StatelessWidget {
               return snapshot.data == null
                   // show empty dialog if list is null
                   ? CustomScrollView(slivers: <Widget>[
-                      SliverFrostedAppBar(),
+                      SliverGlassAppBar(emptyBody: true),
                       SliverFillRemaining(
                         hasScrollBody: false,
                         child: Container(
@@ -52,7 +52,9 @@ class BodyNewsList extends StatelessWidget {
                   // show empty dialog if list is empty
                   : snapshot.data!.isEmpty
                       ? CustomScrollView(slivers: <Widget>[
-                          SliverFrostedAppBar(),
+                          SliverGlassAppBar(
+                            emptyBody: true,
+                          ),
                           SliverFillRemaining(
                             hasScrollBody: false,
                             child: Container(
@@ -79,7 +81,7 @@ class BodyNewsList extends StatelessWidget {
                                       controller: appState.scrollController,
                                       physics: AlwaysScrollableScrollPhysics(),
                                       slivers: <Widget>[
-                                          SliverFrostedAppBar(),
+                                          SliverGlassAppBar(emptyBody: false),
                                           SuperSliverList.builder(
                                               key: const PageStorageKey<String>('NewsList'),
                                               itemCount: snapshot.data!.length,

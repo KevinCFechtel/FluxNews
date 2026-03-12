@@ -11,20 +11,22 @@ import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
-class SliverFrostedAppBar extends StatelessWidget {
-  const SliverFrostedAppBar({
-    super.key,
-  });
+class SliverGlassAppBar extends StatelessWidget {
+  const SliverGlassAppBar({super.key, required this.emptyBody});
+
+  final bool emptyBody;
 
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.read<FluxNewsState>();
-    if (appState.frostyAppBar) {
+    if (appState.glassAppBar) {
       return SliverAppBar(
         backgroundColor: Colors.transparent,
         floating: false,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        forceElevated: emptyBody ? false : true,
+        elevation: emptyBody ? 0 : 4,
+        shadowColor: emptyBody ? null : Colors.black,
+        scrolledUnderElevation: emptyBody ? 0 : 4,
         pinned: true,
         leading: Builder(
           builder: (BuildContext context) {
@@ -44,10 +46,17 @@ class SliverFrostedAppBar extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-                decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor.withAlpha(85)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor.withAlpha(85),
+                ),
                 child: FlexibleSpaceBar()),
           ),
         ),
+        shape: emptyBody
+            ? Border()
+            : Border(
+                bottom: BorderSide(color: Theme.of(context).scaffoldBackgroundColor, width: 1),
+              ),
         actions: appBarButtons(context),
       );
     } else if (appState.scrolloverAppBar) {

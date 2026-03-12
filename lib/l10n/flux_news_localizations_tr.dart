@@ -457,7 +457,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get markNewsAsReadButton => 'Mark as read';
 
   @override
-  String get frostyAppBar => 'The app bar has a glass effect';
+  String get glassAppBar => 'The app bar has a glass effect';
 
   @override
   String get normal => 'Normal';
@@ -466,8 +466,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get collapsible => 'Collapsible';
 
   @override
-  String get frosty => 'Glass Effect';
+  String get glass => 'Glass Effect';
 
   @override
   String get appBarType => 'Select the App Bar Type';
+
+  @override
+  String get glassActionButton => 'Show the extra button with a glass effect';
 }

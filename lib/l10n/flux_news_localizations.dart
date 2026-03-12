@@ -930,11 +930,11 @@ abstract class AppLocalizations {
   /// **'Mark as read'**
   String get markNewsAsReadButton;
 
-  /// No description provided for @frostyAppBar.
+  /// No description provided for @glassAppBar.
   ///
   /// In en, this message translates to:
   /// **'The app bar has a glass effect'**
-  String get frostyAppBar;
+  String get glassAppBar;
 
   /// No description provided for @normal.
   ///
@@ -948,17 +948,23 @@ abstract class AppLocalizations {
   /// **'Collapsible'**
   String get collapsible;
 
-  /// No description provided for @frosty.
+  /// No description provided for @glass.
   ///
   /// In en, this message translates to:
   /// **'Glass Effect'**
-  String get frosty;
+  String get glass;
 
   /// No description provided for @appBarType.
   ///
   /// In en, this message translates to:
   /// **'Select the App Bar Type'**
   String get appBarType;
+
+  /// No description provided for @glassActionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the extra button with a glass effect'**
+  String get glassActionButton;
 }
 
 class _AppLocalizationsDelegate

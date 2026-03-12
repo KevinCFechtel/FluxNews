@@ -504,8 +504,42 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
-              // this row contains the selection of brightness mode
-              // there are the choices of light, dark and system
+              // this row contains the selection if the button to mark as read is turned on
+              appState.floatingButtonVisible
+                  ? Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          child: const Icon(
+                            Icons.snowing,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.glassActionButton,
+                            style: Theme.of(context).textTheme.titleMedium,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: appState.glassActionButton,
+                          onChanged: (bool value) {
+                            String stringValue = FluxNewsState.secureStorageFalseString;
+                            if (value == true) {
+                              stringValue = FluxNewsState.secureStorageTrueString;
+                            }
+                            appState.glassActionButton = value;
+                            appState.storage
+                                .write(key: FluxNewsState.secureStorageGlassActionButtonKey, value: stringValue);
+                            appState.refreshView();
+                          },
+                        ),
+                      ],
+                    )
+                  : SizedBox.shrink(),
+              appState.floatingButtonVisible ? const Divider() : SizedBox.shrink(),
+              // this row contains the selection of the function of the action button
+              // there are the choices of sync news and mark news as read
               appState.floatingButtonVisible
                   ? Row(
                       children: [
@@ -548,6 +582,8 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     )
                   : SizedBox.shrink(),
               appState.floatingButtonVisible ? const Divider() : SizedBox.shrink(),
+              // this row contains the selection of the style of the abb bar
+              // there are the choices of normal, overscrollable and glass effect
               Row(
                 children: [
                   Padding(
@@ -575,41 +611,41 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         appState.appBarType = value.key;
                         appState.appBarTypeSelection = value;
                         appState.storage.write(key: FluxNewsState.secureStorageAppBarTypeKey, value: value.key);
-                        if (value.key == FluxNewsState.appBarFrozenType) {
+                        if (value.key == FluxNewsState.appBarGlassType) {
                           appState.scrolloverAppBar = false;
-                          appState.frostyAppBar = true;
+                          appState.glassAppBar = true;
                           appState.useSliverAppBar = true;
                           appState.storage.write(
                               key: FluxNewsState.secureStorageScrolloverAppBarKey,
                               value: FluxNewsState.secureStorageFalseString);
                           appState.storage.write(
-                              key: FluxNewsState.secureStorageFrostyAppBarKey,
+                              key: FluxNewsState.secureStorageGlassAppBarKey,
                               value: FluxNewsState.secureStorageTrueString);
                           appState.storage.write(
                               key: FluxNewsState.secureStorageUseSliverAppBarKey,
                               value: FluxNewsState.secureStorageTrueString);
                         } else if (value.key == FluxNewsState.appBarCollapsedType) {
                           appState.scrolloverAppBar = true;
-                          appState.frostyAppBar = false;
+                          appState.glassAppBar = false;
                           appState.useSliverAppBar = true;
                           appState.storage.write(
                               key: FluxNewsState.secureStorageScrolloverAppBarKey,
                               value: FluxNewsState.secureStorageTrueString);
                           appState.storage.write(
-                              key: FluxNewsState.secureStorageFrostyAppBarKey,
+                              key: FluxNewsState.secureStorageGlassAppBarKey,
                               value: FluxNewsState.secureStorageFalseString);
                           appState.storage.write(
                               key: FluxNewsState.secureStorageUseSliverAppBarKey,
                               value: FluxNewsState.secureStorageTrueString);
                         } else {
                           appState.scrolloverAppBar = false;
-                          appState.frostyAppBar = false;
+                          appState.glassAppBar = false;
                           appState.useSliverAppBar = false;
                           appState.storage.write(
                               key: FluxNewsState.secureStorageScrolloverAppBarKey,
                               value: FluxNewsState.secureStorageFalseString);
                           appState.storage.write(
-                              key: FluxNewsState.secureStorageFrostyAppBarKey,
+                              key: FluxNewsState.secureStorageGlassAppBarKey,
                               value: FluxNewsState.secureStorageFalseString);
                           appState.storage.write(
                               key: FluxNewsState.secureStorageUseSliverAppBarKey,

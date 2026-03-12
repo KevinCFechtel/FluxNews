@@ -137,9 +137,10 @@
     "syncNews": "Sync News",
     "floatingButtonAction": "Select the action for the extra button",
     "markNewsAsReadButton": "Mark as read",
-    "frostyAppBar": "The app bar has a glass effect",
+    "glassAppBar": "The app bar has a glass effect",
     "normal": "Normal",
     "collapsible": "Collapsible",
-    "frosty": "Glass Effect",
-    "appBarType": "Select the App Bar Type"
+    "glass": "Glass Effect",
+    "appBarType": "Select the App Bar Type",
+    "glassActionButton": "Show the extra button with a glass effect"
 }
