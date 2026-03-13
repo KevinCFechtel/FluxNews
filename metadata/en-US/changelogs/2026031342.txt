@@ -1,0 +1,3 @@
+The following has been added:
+ •	The app bar can have a glass effect.
+ •	The floating action button can have a glass effect.

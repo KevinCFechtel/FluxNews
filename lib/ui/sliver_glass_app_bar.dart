@@ -23,17 +23,14 @@ class SliverGlassAppBar extends StatelessWidget {
       return SliverAppBar(
         backgroundColor: Colors.transparent,
         floating: false,
-        forceElevated: emptyBody ? false : true,
-        elevation: emptyBody ? 0 : 4,
-        shadowColor: emptyBody ? null : Colors.black,
-        scrolledUnderElevation: emptyBody ? 0 : 4,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        forceElevated: true,
         pinned: true,
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(
-                FontAwesomeIcons.bookOpen,
-              ),
+              icon: const Icon(FontAwesomeIcons.bookOpen),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -42,21 +39,55 @@ class SliverGlassAppBar extends StatelessWidget {
           },
         ),
         title: const AppBarTitle(),
-        flexibleSpace: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor.withAlpha(85),
+        flexibleSpace: Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: FlexibleSpaceBar(
+                  expandedTitleScale: 1.0,
+                  background: Container(
+                    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor.withAlpha(90)),
+                    child: const SizedBox.expand(),
+                  ),
                 ),
-                child: FlexibleSpaceBar()),
-          ),
+              ),
+            ),
+            emptyBody
+                ? SizedBox.shrink()
+                : IgnorePointer(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        height: 1,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black,
+                              blurRadius: 2,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 1),
+                              blurStyle: BlurStyle.normal,
+                            ),
+                            BoxShadow(
+                              color: Colors.black,
+                              blurRadius: 4,
+                              spreadRadius: 0.3,
+                              offset: const Offset(0, 4),
+                              blurStyle: BlurStyle.normal,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+          ],
         ),
         shape: emptyBody
             ? Border()
-            : Border(
-                bottom: BorderSide(color: Theme.of(context).scaffoldBackgroundColor, width: 1),
-              ),
+            : Border(bottom: BorderSide(color: Theme.of(context).scaffoldBackgroundColor, width: 1)),
         actions: appBarButtons(context),
       );
     } else if (appState.scrolloverAppBar) {
@@ -68,9 +99,7 @@ class SliverGlassAppBar extends StatelessWidget {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(
-                FontAwesomeIcons.bookOpen,
-              ),
+              icon: const Icon(FontAwesomeIcons.bookOpen),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -104,246 +133,193 @@ class SliverGlassAppBar extends StatelessWidget {
           }
         },
         icon: appState.syncProcess
-            ? const SizedBox(
-                height: 15.0,
-                width: 15.0,
-                child: CircularProgressIndicator.adaptive(),
-              )
-            : const Icon(
-                Icons.refresh,
-              ),
+            ? const SizedBox(height: 15.0, width: 15.0, child: CircularProgressIndicator.adaptive())
+            : const Icon(Icons.refresh),
       ),
       // here is the popup menu where the user can search,
       // choose between all and only unread news view
       // and navigate to the settings
       PopupMenuButton(
-          icon: const Icon(Icons.more_vert),
-          color: Theme.of(context).cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(8.0),
-              bottomRight: Radius.circular(8.0),
-              topLeft: Radius.circular(8.0),
-              topRight: Radius.circular(8.0),
-            ),
+        icon: const Icon(Icons.more_vert),
+        color: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(8.0),
+            bottomRight: Radius.circular(8.0),
+            topLeft: Radius.circular(8.0),
+            topRight: Radius.circular(8.0),
           ),
-          itemBuilder: (context) {
-            return [
-              // the search button
-              PopupMenuItem<int>(
-                value: 0,
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(
-                        Icons.search,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.search,
-                        overflow: TextOverflow.visible,
-                      ),
-                    )
-                  ],
-                ),
+        ),
+        itemBuilder: (context) {
+          return [
+            // the search button
+            PopupMenuItem<int>(
+              value: 0,
+              child: Row(
+                children: [
+                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.search)),
+                  Expanded(child: Text(AppLocalizations.of(context)!.search, overflow: TextOverflow.visible)),
+                ],
               ),
-              // the switch between all and only unread news view
-              PopupMenuItem<int>(
-                value: 1,
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 5),
-                      child: Icon(
-                        appState.newsStatus == FluxNewsState.unreadNewsStatus ? Icons.checklist : Icons.fiber_new,
-                      ),
+            ),
+            // the switch between all and only unread news view
+            PopupMenuItem<int>(
+              value: 1,
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 5),
+                    child: Icon(
+                      appState.newsStatus == FluxNewsState.unreadNewsStatus ? Icons.checklist : Icons.fiber_new,
                     ),
-                    Expanded(
-                      child: appState.newsStatus == FluxNewsState.unreadNewsStatus
-                          ? Text(
-                              AppLocalizations.of(context)!.showRead,
-                              overflow: TextOverflow.visible,
-                            )
-                          : Text(
-                              AppLocalizations.of(context)!.showUnread,
-                              overflow: TextOverflow.visible,
-                            ),
-                    )
-                  ],
-                ),
+                  ),
+                  Expanded(
+                    child: appState.newsStatus == FluxNewsState.unreadNewsStatus
+                        ? Text(AppLocalizations.of(context)!.showRead, overflow: TextOverflow.visible)
+                        : Text(AppLocalizations.of(context)!.showUnread, overflow: TextOverflow.visible),
+                  ),
+                ],
               ),
-              // the selection of the sort order of the news (newest first or oldest first)
-              PopupMenuItem<int>(
-                value: 2,
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(
-                        Icons.sort,
-                      ),
-                    ),
-                    Expanded(
-                      child: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
-                          ? Text(
-                              AppLocalizations.of(context)!.oldestFirst,
-                              overflow: TextOverflow.visible,
-                            )
-                          : Text(
-                              AppLocalizations.of(context)!.newestFirst,
-                              overflow: TextOverflow.visible,
-                            ),
-                    )
-                  ],
-                ),
+            ),
+            // the selection of the sort order of the news (newest first or oldest first)
+            PopupMenuItem<int>(
+              value: 2,
+              child: Row(
+                children: [
+                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.sort)),
+                  Expanded(
+                    child: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+                        ? Text(AppLocalizations.of(context)!.oldestFirst, overflow: TextOverflow.visible)
+                        : Text(AppLocalizations.of(context)!.newestFirst, overflow: TextOverflow.visible),
+                  ),
+                ],
               ),
-              PopupMenuItem<int>(
-                value: 3,
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(
-                        Icons.check_circle_outline,
-                      ),
-                    ),
-                    Expanded(
-                      child: appState.selectedCategoryElementType == FluxNewsState.feedElementType
-                          ? Text(
-                              AppLocalizations.of(context)!.markFeedAsRead,
-                              overflow: TextOverflow.visible,
-                            )
-                          : appState.selectedCategoryElementType == FluxNewsState.categoryElementType
-                              ? Text(
-                                  AppLocalizations.of(context)!.markCategoryAsRead,
-                                  overflow: TextOverflow.visible,
-                                )
-                              : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType
-                                  ? Text(
-                                      AppLocalizations.of(context)!.markBookmarkedAsRead,
-                                      overflow: TextOverflow.visible,
-                                    )
-                                  : Text(
-                                      AppLocalizations.of(context)!.markAllAsRead,
-                                      overflow: TextOverflow.visible,
-                                    ),
-                    )
-                  ],
-                ),
+            ),
+            PopupMenuItem<int>(
+              value: 3,
+              child: Row(
+                children: [
+                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.check_circle_outline)),
+                  Expanded(
+                    child: appState.selectedCategoryElementType == FluxNewsState.feedElementType
+                        ? Text(AppLocalizations.of(context)!.markFeedAsRead, overflow: TextOverflow.visible)
+                        : appState.selectedCategoryElementType == FluxNewsState.categoryElementType
+                            ? Text(AppLocalizations.of(context)!.markCategoryAsRead, overflow: TextOverflow.visible)
+                            : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType
+                                ? Text(AppLocalizations.of(context)!.markBookmarkedAsRead,
+                                    overflow: TextOverflow.visible)
+                                : Text(AppLocalizations.of(context)!.markAllAsRead, overflow: TextOverflow.visible),
+                  ),
+                ],
               ),
-              // the navigation to the settings
-              PopupMenuItem<int>(
-                value: 4,
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(
-                        Icons.settings,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.settings,
-                        overflow: TextOverflow.visible,
-                      ),
-                    )
-                  ],
-                ),
+            ),
+            // the navigation to the settings
+            PopupMenuItem<int>(
+              value: 4,
+              child: Row(
+                children: [
+                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.settings)),
+                  Expanded(child: Text(AppLocalizations.of(context)!.settings, overflow: TextOverflow.visible)),
+                ],
               ),
-            ];
-          },
-          onSelected: (value) async {
-            if (value == 0) {
-              // navigate to the search page
-              Navigator.pushNamed(context, FluxNewsState.searchRouteString);
-            } else if (value == 1) {
-              // switch between all and only unread news view
-              // if the current view is unread news change to all news
-              if (appState.newsStatus == FluxNewsState.unreadNewsStatus) {
-                // switch the state to all news
-                appState.newsStatus = FluxNewsState.allNewsString;
+            ),
+          ];
+        },
+        onSelected: (value) async {
+          if (value == 0) {
+            // navigate to the search page
+            Navigator.pushNamed(context, FluxNewsState.searchRouteString);
+          } else if (value == 1) {
+            // switch between all and only unread news view
+            // if the current view is unread news change to all news
+            if (appState.newsStatus == FluxNewsState.unreadNewsStatus) {
+              // switch the state to all news
+              appState.newsStatus = FluxNewsState.allNewsString;
 
-                // save the state persistent
-                appState.storage
-                    .write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.allNewsString);
+              // save the state persistent
+              appState.storage.write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.allNewsString);
 
-                // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
+              // refresh news list with the all news state
+              appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                appState.jumpToItem(0);
+              });
 
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-                // if the current view is all news change to only unread news
-              } else {
-                // switch the state to show only unread news
-                appState.newsStatus = FluxNewsState.unreadNewsStatus;
+              // notify the categories to update the news count
+              appCounterState.listUpdated = true;
+              appCounterState.refreshView();
+              appState.refreshView();
+              // if the current view is all news change to only unread news
+            } else {
+              // switch the state to show only unread news
+              appState.newsStatus = FluxNewsState.unreadNewsStatus;
 
-                // save the state persistent
-                appState.storage
-                    .write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.unreadNewsStatus);
+              // save the state persistent
+              appState.storage.write(
+                key: FluxNewsState.secureStorageNewsStatusKey,
+                value: FluxNewsState.unreadNewsStatus,
+              );
 
-                // refresh news list with the only unread news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
+              // refresh news list with the only unread news state
+              appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                appState.jumpToItem(0);
+              });
 
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-              }
-            } else if (value == 2) {
-              // switch between newest first and oldest first
-              // if the current sort order is newest first change to oldest first
-              if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
-                // switch the state to all news
-                appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
-
-                // save the state persistent
-                appState.storage.write(
-                    key: FluxNewsState.secureStorageSortOrderKey, value: FluxNewsState.sortOrderOldestFirstString);
-
-                // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-                // if the current sort order is oldest first change to newest first
-              } else {
-                // switch the state to show only unread news
-                appState.sortOrder = FluxNewsState.sortOrderNewestFirstString;
-
-                // save the state persistent
-                appState.storage.write(
-                    key: FluxNewsState.secureStorageSortOrderKey, value: FluxNewsState.sortOrderNewestFirstString);
-
-                // refresh news list with the only unread news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-              }
-            } else if (value == 3) {
-              showDeleteAllDialog(context, appState, appCounterState);
-            } else if (value == 4) {
-              // navigate to the settings page
-              Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
+              // notify the categories to update the news count
+              appCounterState.listUpdated = true;
+              appCounterState.refreshView();
+              appState.refreshView();
             }
-          }),
+          } else if (value == 2) {
+            // switch between newest first and oldest first
+            // if the current sort order is newest first change to oldest first
+            if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+              // switch the state to all news
+              appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
+
+              // save the state persistent
+              appState.storage.write(
+                key: FluxNewsState.secureStorageSortOrderKey,
+                value: FluxNewsState.sortOrderOldestFirstString,
+              );
+
+              // refresh news list with the all news state
+              appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                appState.jumpToItem(0);
+              });
+
+              // notify the categories to update the news count
+              appCounterState.listUpdated = true;
+              appCounterState.refreshView();
+              appState.refreshView();
+              // if the current sort order is oldest first change to newest first
+            } else {
+              // switch the state to show only unread news
+              appState.sortOrder = FluxNewsState.sortOrderNewestFirstString;
+
+              // save the state persistent
+              appState.storage.write(
+                key: FluxNewsState.secureStorageSortOrderKey,
+                value: FluxNewsState.sortOrderNewestFirstString,
+              );
+
+              // refresh news list with the only unread news state
+              appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                appState.jumpToItem(0);
+              });
+
+              // notify the categories to update the news count
+              appCounterState.listUpdated = true;
+              appCounterState.refreshView();
+              appState.refreshView();
+            }
+          } else if (value == 3) {
+            showDeleteAllDialog(context, appState, appCounterState);
+          } else if (value == 4) {
+            // navigate to the settings page
+            Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
+          }
+        },
+      ),
     ];
   }
 }
