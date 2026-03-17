@@ -372,7 +372,7 @@ class Settings extends StatelessWidget {
                         : const EdgeInsets.fromLTRB(0, 0, 0, 0),
                     child: const Icon(Icons.info),
                   ),
-                  applicationIcon: const Icon(
+                  applicationIcon: const FaIcon(
                     FontAwesomeIcons.bookOpen,
                   ),
                   applicationName: FluxNewsState.applicationName,

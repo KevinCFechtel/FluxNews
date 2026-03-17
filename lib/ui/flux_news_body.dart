@@ -290,7 +290,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               leading: Builder(
                 builder: (BuildContext context) {
                   return IconButton(
-                    icon: const Icon(
+                    icon: const FaIcon(
                       FontAwesomeIcons.bookOpen,
                     ),
                     onPressed: () {
@@ -413,7 +413,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     child: Row(children: [
                       const Padding(
                           padding: EdgeInsets.only(left: 18.0),
-                          child: Icon(
+                          child: FaIcon(
                             FontAwesomeIcons.bookOpen,
                           )),
                       Padding(

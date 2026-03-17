@@ -7,6 +7,7 @@ import 'package:flux_news/functions/sync_news.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,7 @@ class SliverGlassAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.read<FluxNewsState>();
+    FluxNewsThemeState themeState = context.watch<FluxNewsThemeState>();
     if (appState.glassAppBar) {
       return SliverAppBar(
         backgroundColor: Colors.transparent,
@@ -30,7 +32,7 @@ class SliverGlassAppBar extends StatelessWidget {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(FontAwesomeIcons.bookOpen),
+              icon: const FaIcon(FontAwesomeIcons.bookOpen),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -64,20 +66,56 @@ class SliverGlassAppBar extends StatelessWidget {
                         width: double.infinity,
                         decoration: BoxDecoration(
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.black,
-                              blurRadius: 2,
-                              spreadRadius: 0,
-                              offset: const Offset(0, 1),
-                              blurStyle: BlurStyle.normal,
-                            ),
-                            BoxShadow(
-                              color: Colors.black,
-                              blurRadius: 4,
-                              spreadRadius: 0.3,
-                              offset: const Offset(0, 4),
-                              blurStyle: BlurStyle.normal,
-                            ),
+                            themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                                ? BoxShadow(
+                                    color: Colors.black,
+                                    blurRadius: 2,
+                                    spreadRadius: 0,
+                                    offset: const Offset(0, 1),
+                                    blurStyle: BlurStyle.normal,
+                                  )
+                                : themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+                                    ? MediaQuery.of(context).platformBrightness == Brightness.light
+                                        ? BoxShadow()
+                                        : BoxShadow(
+                                            color: Colors.black,
+                                            blurRadius: 2,
+                                            spreadRadius: 0,
+                                            offset: const Offset(0, 1),
+                                            blurStyle: BlurStyle.normal,
+                                          )
+                                    : BoxShadow(),
+                            themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                                ? BoxShadow(
+                                    color: Colors.black,
+                                    blurRadius: 4,
+                                    spreadRadius: 0.3,
+                                    offset: const Offset(0, 4),
+                                    blurStyle: BlurStyle.normal,
+                                  )
+                                : themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+                                    ? MediaQuery.of(context).platformBrightness == Brightness.light
+                                        ? BoxShadow(
+                                            color: Colors.black,
+                                            blurRadius: 4,
+                                            spreadRadius: 0,
+                                            offset: const Offset(0, 4),
+                                            blurStyle: BlurStyle.normal,
+                                          )
+                                        : BoxShadow(
+                                            color: Colors.black,
+                                            blurRadius: 4,
+                                            spreadRadius: 0.3,
+                                            offset: const Offset(0, 4),
+                                            blurStyle: BlurStyle.normal,
+                                          )
+                                    : BoxShadow(
+                                        color: Colors.black,
+                                        blurRadius: 4,
+                                        spreadRadius: 0,
+                                        offset: const Offset(0, 4),
+                                        blurStyle: BlurStyle.normal,
+                                      ),
                           ],
                         ),
                       ),
@@ -99,7 +137,7 @@ class SliverGlassAppBar extends StatelessWidget {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(FontAwesomeIcons.bookOpen),
+              icon: const FaIcon(FontAwesomeIcons.bookOpen),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
