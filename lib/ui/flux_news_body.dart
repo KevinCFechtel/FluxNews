@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
@@ -157,6 +158,12 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         }
         FlutterNativeSplash.remove();
       }
+      if (appState.networkImageCacheMigrated == false) {
+        // migrate the network image cache to the new location
+        appState.cleanLegacyCache();
+      }
+      // clear the network image cache of images that are older than 30 days to prevent the cache from growing indefinitely
+      await clearDiskCachedImages(duration: Duration(days: 30));
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {

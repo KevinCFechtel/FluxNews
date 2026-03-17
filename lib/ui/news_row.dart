@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -541,14 +541,20 @@ class NewsRow extends StatelessWidget {
                                           ? 4
                                           : 5
                                       : 5,
-                                  child: CachedNetworkImage(
-                                    imageUrl: news.getImageURL(),
+                                  child: ExtendedImage.network(
+                                    news.getImageURL(),
                                     height: 230,
                                     fit: BoxFit.cover,
                                     alignment: Alignment.center,
-                                    errorWidget: (context, url, error) => const Icon(
-                                      Icons.error,
-                                    ),
+                                    //cache: true,
+                                    loadStateChanged: (state) {
+                                      if (state.extendedImageLoadState == LoadState.failed) {
+                                        return const Icon(
+                                          Icons.error,
+                                        );
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 )
                               // if no image is available, shrink this widget

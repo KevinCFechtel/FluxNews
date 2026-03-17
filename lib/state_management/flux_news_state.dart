@@ -106,6 +106,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageAppBarTypeKey = 'appBarType';
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
+  static const String secureStorageNetworkImageCacheMigratedKey = 'networkImageCacheMigrated';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -272,6 +273,7 @@ class FluxNewsState extends ChangeNotifier {
   bool useSliverAppBar = Platform.isIOS ? true : false;
   String appBarType = Platform.isIOS ? FluxNewsState.appBarGlassType : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
+  bool networkImageCacheMigrated = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -2079,6 +2081,17 @@ class FluxNewsState extends ChangeNotifier {
           }
         }
       }
+
+      // assign the network image cache migrated selection from persistent saved config
+      if (key == FluxNewsState.secureStorageNetworkImageCacheMigratedKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            networkImageCacheMigrated = true;
+          } else {
+            networkImageCacheMigrated = false;
+          }
+        }
+      }
     });
 
     // iterate through all persistent saved values to assign the saved headers
@@ -2242,6 +2255,17 @@ class FluxNewsState extends ChangeNotifier {
       storage.write(key: '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter', value: value);
       headerCounter++;
     });
+  }
+
+  // this function is needed to clean the legacy cache of the cached_network_image package which was used before
+  Future<void> cleanLegacyCache() async {
+    logThis('cleanLegacyCache', 'Starting cleaning of legacy cache', LogLevel.INFO);
+    final temp = await getTemporaryDirectory();
+    final dir = Directory('${temp.path}/libCachedImageData');
+    if (await dir.exists()) await dir.delete(recursive: true);
+    storage.write(
+        key: FluxNewsState.secureStorageNetworkImageCacheMigratedKey, value: FluxNewsState.secureStorageTrueString);
+    logThis('cleanLegacyCache', 'Finished cleaning of legacy cache', LogLevel.INFO);
   }
 
   // notify the listeners of FluxNewsState to refresh views
