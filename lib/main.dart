@@ -60,7 +60,6 @@ class FluxNews extends StatelessWidget {
     FlutterLogs.channel.setMethodCallHandler((call) async {
       if (call.method == 'logsExported') {
         String zipName = call.arguments.toString();
-
         Directory? externalDirectory;
 
         if (Platform.isIOS) {
