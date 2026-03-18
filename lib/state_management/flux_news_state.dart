@@ -35,6 +35,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
   static const String databasePathString = 'news_database.db';
+  static const String androidDatabaseDirectory = 'databases';
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
@@ -291,26 +292,24 @@ class FluxNewsState extends ChangeNotifier {
 
   // init the database connection
   Future<Database> initializeDB() async {
+    logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
+    String databasePath = "/";
+    databaseFactory = databaseFactoryFfi;
     if (Platform.isIOS) {
       externalDirectory = await getApplicationDocumentsDirectory();
-      logThis('Database path', 'Path: ${externalDirectory!.path}', LogLevel.INFO);
-    } else {
+      Directory rootPath = await getLibraryDirectory();
+      databasePath = rootPath.path;
+    } else if (Platform.isAndroid) {
       externalDirectory = await getExternalStorageDirectory();
+      Directory rootPath = await getApplicationSupportDirectory();
+      List<String> rootPathElements = rootPath.path.split('/');
+      for (int i = 0; i < rootPathElements.length - 1; i++) {
+        if (rootPathElements[i].isNotEmpty) {
+          databasePath = path_package.join(databasePath, rootPathElements[i]);
+        }
+      }
+      databasePath = path_package.join(databasePath, FluxNewsState.androidDatabaseDirectory);
     }
-    logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
-    databaseFactory = databaseFactoryFfi;
-    Directory baseDBDir = await getApplicationSupportDirectory();
-    List<String> baseDBDirPathElements = baseDBDir.path.split('/');
-    String databasePath = "";
-    for (int i = 0; i < baseDBDirPathElements.length - 1; i++) {
-      databasePath += '${baseDBDirPathElements[i]}/';
-    }
-    databasePath = "${databasePath}databases";
-    String path = await getDatabasesPath();
-    logThis('Database path', 'Path: $path', LogLevel.INFO);
-
-    Directory rootPath = await getLibraryDirectory();
-    logThis('Database path', 'Path: ${rootPath.path}', LogLevel.INFO);
     logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
       path_package.join(databasePath, FluxNewsState.databasePathString),
