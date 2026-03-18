@@ -546,7 +546,7 @@ class NewsRow extends StatelessWidget {
                                     height: 230,
                                     fit: BoxFit.cover,
                                     alignment: Alignment.center,
-                                    //cache: true,
+                                    cache: true,
                                     loadStateChanged: (state) {
                                       if (state.extendedImageLoadState == LoadState.failed) {
                                         return const Icon(

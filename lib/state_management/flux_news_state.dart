@@ -293,14 +293,27 @@ class FluxNewsState extends ChangeNotifier {
   Future<Database> initializeDB() async {
     if (Platform.isIOS) {
       externalDirectory = await getApplicationDocumentsDirectory();
+      logThis('Database path', 'Path: ${externalDirectory!.path}', LogLevel.INFO);
     } else {
       externalDirectory = await getExternalStorageDirectory();
     }
     logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
+    databaseFactory = databaseFactoryFfi;
+    Directory baseDBDir = await getApplicationSupportDirectory();
+    List<String> baseDBDirPathElements = baseDBDir.path.split('/');
+    String databasePath = "";
+    for (int i = 0; i < baseDBDirPathElements.length - 1; i++) {
+      databasePath += '${baseDBDirPathElements[i]}/';
+    }
+    databasePath = "${databasePath}databases";
     String path = await getDatabasesPath();
+    logThis('Database path', 'Path: $path', LogLevel.INFO);
+
+    Directory rootPath = await getLibraryDirectory();
+    logThis('Database path', 'Path: ${rootPath.path}', LogLevel.INFO);
     logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
-      path_package.join(path, FluxNewsState.databasePathString),
+      path_package.join(databasePath, FluxNewsState.databasePathString),
       onCreate: (db, version) async {
         logThis('initializeDB', 'Starting creating DB', LogLevel.INFO);
         // create the table news

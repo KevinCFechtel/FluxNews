@@ -82,7 +82,7 @@ class NewsRowIOS extends StatelessWidget {
                       height: 230,
                       width: MediaQuery.sizeOf(context).width / 2,
                       fit: BoxFit.cover,
-                      //cache: true,
+                      cache: true,
                       alignment: Alignment.center,
                       loadStateChanged: (state) {
                         if (state.extendedImageLoadState == LoadState.failed) {

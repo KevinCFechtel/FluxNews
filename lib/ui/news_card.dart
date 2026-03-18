@@ -542,7 +542,7 @@ class NewsCard extends StatelessWidget {
                                 height: appState.isTablet ? 250 : 175,
                                 width: MediaQuery.sizeOf(context).width,
                                 fit: BoxFit.cover,
-                                //cache: true,
+                                cache: true,
                                 loadStateChanged: (state) {
                                   if (state.extendedImageLoadState == LoadState.failed) {
                                     return const Icon(
