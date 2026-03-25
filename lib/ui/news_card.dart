@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -536,15 +536,21 @@ class NewsCard extends StatelessWidget {
                         // load the news image if present
                         news.getImageURL() != FluxNewsState.noImageUrlString
                             ?
-                            // the CachedNetworkImage is used to load the images
-                            CachedNetworkImage(
-                                imageUrl: news.getImageURL(),
+                            // the ExtendedImage is used to load the images
+                            ExtendedImage.network(
+                                news.getImageURL(),
                                 height: appState.isTablet ? 250 : 175,
-                                width: double.infinity,
+                                width: MediaQuery.sizeOf(context).width,
                                 fit: BoxFit.cover,
-                                errorWidget: (context, url, error) => const Icon(
-                                  Icons.error,
-                                ),
+                                cache: true,
+                                loadStateChanged: (state) {
+                                  if (state.extendedImageLoadState == LoadState.failed) {
+                                    return const Icon(
+                                      Icons.error,
+                                    );
+                                  }
+                                  return null;
+                                },
                               )
                             // if no image is available, shrink this widget
                             : const SizedBox.shrink(),

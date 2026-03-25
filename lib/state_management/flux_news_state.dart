@@ -35,6 +35,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
   static const String databasePathString = 'news_database.db';
+  static const String androidDatabaseDirectory = 'databases';
   static const String rootRouteString = '/';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
@@ -106,6 +107,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageAppBarTypeKey = 'appBarType';
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
+  static const String secureStorageNetworkImageCacheMigratedKey = 'networkImageCacheMigrated';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -272,6 +274,7 @@ class FluxNewsState extends ChangeNotifier {
   bool useSliverAppBar = Platform.isIOS ? true : false;
   String appBarType = Platform.isIOS ? FluxNewsState.appBarGlassType : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
+  bool networkImageCacheMigrated = false;
 
   // vars for app bar text
   String appBarText = '';
@@ -289,16 +292,27 @@ class FluxNewsState extends ChangeNotifier {
 
   // init the database connection
   Future<Database> initializeDB() async {
+    logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
+    String databasePath = "/";
+    databaseFactory = databaseFactoryFfi;
     if (Platform.isIOS) {
       externalDirectory = await getApplicationDocumentsDirectory();
-    } else {
+      Directory rootPath = await getLibraryDirectory();
+      databasePath = rootPath.path;
+    } else if (Platform.isAndroid) {
       externalDirectory = await getExternalStorageDirectory();
+      Directory rootPath = await getApplicationSupportDirectory();
+      List<String> rootPathElements = rootPath.path.split('/');
+      for (int i = 0; i < rootPathElements.length - 1; i++) {
+        if (rootPathElements[i].isNotEmpty) {
+          databasePath = path_package.join(databasePath, rootPathElements[i]);
+        }
+      }
+      databasePath = path_package.join(databasePath, FluxNewsState.androidDatabaseDirectory);
     }
-    logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
-    String path = await getDatabasesPath();
     logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
-      path_package.join(path, FluxNewsState.databasePathString),
+      path_package.join(databasePath, FluxNewsState.databasePathString),
       onCreate: (db, version) async {
         logThis('initializeDB', 'Starting creating DB', LogLevel.INFO);
         // create the table news
@@ -2079,6 +2093,17 @@ class FluxNewsState extends ChangeNotifier {
           }
         }
       }
+
+      // assign the network image cache migrated selection from persistent saved config
+      if (key == FluxNewsState.secureStorageNetworkImageCacheMigratedKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            networkImageCacheMigrated = true;
+          } else {
+            networkImageCacheMigrated = false;
+          }
+        }
+      }
     });
 
     // iterate through all persistent saved values to assign the saved headers
@@ -2242,6 +2267,17 @@ class FluxNewsState extends ChangeNotifier {
       storage.write(key: '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter', value: value);
       headerCounter++;
     });
+  }
+
+  // this function is needed to clean the legacy cache of the cached_network_image package which was used before
+  Future<void> cleanLegacyCache() async {
+    logThis('cleanLegacyCache', 'Starting cleaning of legacy cache', LogLevel.INFO);
+    final temp = await getTemporaryDirectory();
+    final dir = Directory('${temp.path}/libCachedImageData');
+    if (await dir.exists()) await dir.delete(recursive: true);
+    storage.write(
+        key: FluxNewsState.secureStorageNetworkImageCacheMigratedKey, value: FluxNewsState.secureStorageTrueString);
+    logThis('cleanLegacyCache', 'Finished cleaning of legacy cache', LogLevel.INFO);
   }
 
   // notify the listeners of FluxNewsState to refresh views

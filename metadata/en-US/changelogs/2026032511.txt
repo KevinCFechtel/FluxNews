@@ -1,0 +1,7 @@
+ •	Optimized shadow in light theme.
+ •	Replaced no longer maintained dependency.
+IMPORTANT: Due to restructuring after replacing a dependency, 
+the cached news database might not be recognized, 
+requiring a new one to be created. 
+While this shouldn't normally happen, I can't rule it out for all Android versions. 
+In the worst-case scenario, a clean reinstall of the app may be required once.

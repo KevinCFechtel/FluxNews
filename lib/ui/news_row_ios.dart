@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
@@ -77,15 +77,21 @@ class NewsRowIOS extends StatelessWidget {
                             ? 4
                             : 5
                         : 5,
-                    child: CachedNetworkImage(
-                      imageUrl: news.getImageURL(),
+                    child: ExtendedImage.network(
+                      news.getImageURL(),
                       height: 230,
                       width: MediaQuery.sizeOf(context).width / 2,
                       fit: BoxFit.cover,
+                      cache: true,
                       alignment: Alignment.center,
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.error,
-                      ),
+                      loadStateChanged: (state) {
+                        if (state.extendedImageLoadState == LoadState.failed) {
+                          return const Icon(
+                            Icons.error,
+                          );
+                        }
+                        return null;
+                      },
                     ),
                   )
                 // if no image is available, shrink this widget

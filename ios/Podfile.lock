@@ -10,9 +10,6 @@ PODS:
     - FlutterMacOS
   - share_plus (0.0.1):
     - Flutter
-  - sqflite_darwin (0.0.4):
-    - Flutter
-    - FlutterMacOS
   - system_date_time_format (1.4.0):
     - Flutter
   - url_launcher_ios (0.0.1):
@@ -25,7 +22,6 @@ DEPENDENCIES:
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
-  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - system_date_time_format (from `.symlinks/plugins/system_date_time_format/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -44,8 +40,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_secure_storage_darwin/darwin"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
-  sqflite_darwin:
-    :path: ".symlinks/plugins/sqflite_darwin/darwin"
   system_date_time_format:
     :path: ".symlinks/plugins/system_date_time_format/ios"
   url_launcher_ios:
@@ -57,7 +51,6 @@ SPEC CHECKSUMS:
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
-  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   system_date_time_format: 4950715a9763e67af54dae2bac8a1f20152c8705
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
