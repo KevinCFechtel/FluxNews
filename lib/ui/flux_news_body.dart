@@ -162,8 +162,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         // migrate the network image cache to the new location
         appState.cleanLegacyCache();
       }
-      // clear the network image cache of images that are older than 30 days to prevent the cache from growing indefinitely
-      await clearDiskCachedImages(duration: Duration(days: 30));
+      // clear the network image cache of images that are older than the specified duration to prevent the cache from growing indefinitely
+      await clearDiskCachedImages(duration: Duration(days: appState.imageCacheDurationDays));
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {

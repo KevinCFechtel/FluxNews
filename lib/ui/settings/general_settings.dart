@@ -53,6 +53,8 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
     super.key,
   });
 
+  static const List<int> imageCacheDurationDaysList = <int>[7, 14, 30, 60, 90, 180, 365];
+
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
@@ -658,6 +660,47 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
                             DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
                         .toList(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              // this row contains the selection of the image cache duration in days
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0, top: 10),
+                    child: const Icon(
+                      Icons.image,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.imageCacheDurationDays,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  DropdownButton<int>(
+                    value: appState.imageCacheDurationDays,
+                    elevation: 16,
+                    underline: Container(
+                      height: 2,
+                    ),
+                    alignment: AlignmentDirectional.centerEnd,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        appState.imageCacheDurationDays = value;
+                        appState.storage
+                            .write(key: FluxNewsState.secureStorageImageCacheDurationDaysKey, value: value.toString());
+                        appState.refreshView();
+                      }
+                    },
+                    items: imageCacheDurationDaysList.map<DropdownMenuItem<int>>((int value) {
+                      return DropdownMenuItem<int>(
+                        value: value,
+                        child: Text(value.toString()),
+                      );
+                    }).toList(),
                   ),
                 ],
               ),

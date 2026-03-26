@@ -965,6 +965,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show the extra button with a glass effect'**
   String get glassActionButton;
+
+  /// No description provided for @imageCacheDurationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of days to keep images in cache'**
+  String get imageCacheDurationDays;
 }
 
 class _AppLocalizationsDelegate

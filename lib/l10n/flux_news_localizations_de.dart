@@ -484,4 +484,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get glassActionButton =>
       'Zeige den extra Button in einer Glas Optik an';
+
+  @override
+  String get imageCacheDurationDays =>
+      'Anzahl der Tage, die Bilder im Cache vorgehalten werden sollen';
 }

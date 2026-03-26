@@ -142,5 +142,6 @@
     "collapsible": "Überskrollbar",
     "glass": "Glas Effekt",
     "appBarType": "Wähle die Art der Appbar",
-    "glassActionButton": "Zeige den extra Button in einer Glas Optik an"
+    "glassActionButton": "Zeige den extra Button in einer Glas Optik an",
+    "imageCacheDurationDays": "Anzahl der Tage, die Bilder im Cache vorgehalten werden sollen"
 }

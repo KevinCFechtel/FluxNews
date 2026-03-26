@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.15.2';
+  static const String applicationVersion = '1.15.3';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -108,6 +108,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageAppBarTypeKey = 'appBarType';
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
   static const String secureStorageNetworkImageCacheMigratedKey = 'networkImageCacheMigrated';
+  static const String secureStorageImageCacheDurationDaysKey = 'imageCacheDurationDays';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -275,6 +276,7 @@ class FluxNewsState extends ChangeNotifier {
   String appBarType = Platform.isIOS ? FluxNewsState.appBarGlassType : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
   bool networkImageCacheMigrated = false;
+  int imageCacheDurationDays = 30;
 
   // vars for app bar text
   String appBarText = '';
@@ -2102,6 +2104,13 @@ class FluxNewsState extends ChangeNotifier {
           } else {
             networkImageCacheMigrated = false;
           }
+        }
+      }
+
+      // assign the image cache duration from persistent saved config
+      if (key == FluxNewsState.secureStorageImageCacheDurationDaysKey) {
+        if (value != '') {
+          imageCacheDurationDays = int.parse(value);
         }
       }
     });

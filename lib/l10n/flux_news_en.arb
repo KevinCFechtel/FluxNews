@@ -142,5 +142,6 @@
     "collapsible": "Collapsible",
     "glass": "Glass Effect",
     "appBarType": "Select the App Bar Type",
-    "glassActionButton": "Show the extra button with a glass effect"
+    "glassActionButton": "Show the extra button with a glass effect",
+    "imageCacheDurationDays": "Number of days to keep images in cache"
 }

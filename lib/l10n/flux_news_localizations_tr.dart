@@ -473,4 +473,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get glassActionButton => 'Show the extra button with a glass effect';
+
+  @override
+  String get imageCacheDurationDays => 'Number of days to keep images in cache';
 }
