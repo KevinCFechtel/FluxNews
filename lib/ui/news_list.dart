@@ -36,7 +36,9 @@ class BodyNewsList extends StatelessWidget {
               return snapshot.data == null
                   // show empty dialog if list is null
                   ? CustomScrollView(slivers: <Widget>[
-                      SliverGlassAppBar(emptyBody: true),
+                      !appState.isTablet
+                          ? SliverGlassAppBar(emptyBody: true)
+                          : SliverToBoxAdapter(child: SizedBox.shrink()),
                       SliverFillRemaining(
                         hasScrollBody: false,
                         child: Container(
@@ -52,9 +54,11 @@ class BodyNewsList extends StatelessWidget {
                   // show empty dialog if list is empty
                   : snapshot.data!.isEmpty
                       ? CustomScrollView(slivers: <Widget>[
-                          SliverGlassAppBar(
-                            emptyBody: true,
-                          ),
+                          !appState.isTablet
+                              ? SliverGlassAppBar(
+                                  emptyBody: true,
+                                )
+                              : SliverToBoxAdapter(child: SizedBox.shrink()),
                           SliverFillRemaining(
                             hasScrollBody: false,
                             child: Container(

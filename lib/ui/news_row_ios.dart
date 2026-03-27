@@ -26,6 +26,7 @@ class NewsRowIOS extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    bool isTablet = context.select((FluxNewsState model) => model.isTablet);
     if (appState.longPressAction == FluxNewsState.longPressActionExpandString) {
       return InkWell(
           splashFactory: NoSplash.splashFactory,
@@ -40,23 +41,23 @@ class NewsRowIOS extends StatelessWidget {
             }
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           },
-          child: newsRow(appState, AlwaysStoppedAnimation(1)));
+          child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
     } else {
       return CupertinoContextMenu.builder(
         enableHapticFeedback: true,
         actions: getIOSContextMenuActions(appState, news, context, searchView, itemIndex, newsList),
         builder: (context, animation) {
           if (animation.status == AnimationStatus.completed) {
-            return newsRow(appState, animation);
+            return newsRow(appState, animation, isTablet);
           } else {
-            return newsRow(appState, animation);
+            return newsRow(appState, animation, isTablet);
           }
         },
       );
     }
   }
 
-  Widget newsRow(FluxNewsState appState, Animation<double> animation) {
+  Widget newsRow(FluxNewsState appState, Animation<double> animation, bool isTablet) {
     return Card(
       // inkwell is used for the onTab and onLongPress functions
       child: InkWell(
@@ -73,7 +74,7 @@ class NewsRowIOS extends StatelessWidget {
             news.getImageURL() != FluxNewsState.noImageUrlString
                 ? Flexible(
                     flex: searchView
-                        ? context.select((FluxNewsState model) => model.isTablet)
+                        ? isTablet
                             ? 4
                             : 5
                         : 5,
@@ -95,13 +96,20 @@ class NewsRowIOS extends StatelessWidget {
                     ),
                   )
                 // if no image is available, shrink this widget
-                : SizedBox(
-                    height: 230,
-                    width: MediaQuery.sizeOf(context).width / 2,
+                : Flexible(
+                    flex: searchView
+                        ? isTablet
+                            ? 4
+                            : 5
+                        : 5,
+                    child: SizedBox(
+                      height: 230,
+                      width: MediaQuery.sizeOf(context).width / 2,
+                    ),
                   ),
             Flexible(
               flex: searchView
-                  ? context.select((FluxNewsState model) => model.isTablet)
+                  ? isTablet
                       ? 7
                       : 5
                   : 5,

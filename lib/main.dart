@@ -123,6 +123,7 @@ class FluxNews extends StatelessWidget {
     // and add it as the seed of the app color scheme.
     return DynamicColorBuilder(builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
       return MaterialApp(
+        debugShowCheckedModeBanner: false,
         // setting theme mode depending on the settings
         themeMode: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
             ? ThemeMode.system

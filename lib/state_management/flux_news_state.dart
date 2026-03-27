@@ -1629,8 +1629,9 @@ class FluxNewsState extends ChangeNotifier {
       if (recordTypesAppBarType!.isNotEmpty) {
         if (Platform.isIOS) {
           appBarTypeSelection = recordTypesAppBarType![2];
+        } else {
+          appBarTypeSelection = recordTypesAppBarType![0];
         }
-        appBarTypeSelection = recordTypesAppBarType![0];
       }
     }
 
