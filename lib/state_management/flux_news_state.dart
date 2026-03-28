@@ -232,7 +232,7 @@ class FluxNewsState extends ChangeNotifier {
   bool markAsReadOnScrollOver = false;
   bool syncOnStart = false;
   bool multilineAppBarText = false;
-  bool showFeedIcons = false;
+  bool showFeedIcons = Platform.isIOS ? true : false;
   List<KeyValueRecordType>? recordTypesBrightnessMode;
   List<KeyValueRecordType>? recordTypesAmountOfSyncedNews;
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;

@@ -2,11 +2,11 @@
 
 <img src="assets/Flux_News_Starticon_Blue_Mac.png" width="150">
 
-A simple Newsreader for the miniflux backend (<https://miniflux.app>).
+A Newsreader for the miniflux backend (<https://miniflux.app>).
 
-This newsreader sync with the miniflux server api.
+This Newsreader sync with the miniflux server api.
 
-It supports light and dark mode, mark articles as read on scrollover and open articles preferred in an already installed app.
+Enjoy full offline support, intuitive swipe gestures, a true OLED black mode and open articles preferred in an already installed app.
 <br/><br/>
 
 ## Download
@@ -52,30 +52,25 @@ Flux News is still in development but implements some common features for an RSS
 mind that this is a personal project which is moving forward depending on my free time. At the
 moment, the following is supported:
 
-**Dark Mode:** Flux News has a material design inspired look in either light or dark themes.
-
-**Search for articles:** Search for articles at the miniflux backend.
-
-**Mark as read on scrollover:** Articles are marked as read when you scroll over them.
+**Intuitive Gesture Control:** Navigate your news with natural swipe gestures. Quickly triage your articles, mark them as read, or save them for later.
 
 **Open articles in an app:** Articles can be opened in an already installed app.
 
-**Order articles by date:** Articles can be ordered by date ascending or descanding.
+**Mark as read on scrollover:** Articles are marked as read when you scroll over them.
 
-**Filter articles by status:** Articles can be filtered by status (unread, read, starred).
+**OLED-Optimized Design:** Choose between Light, Dark, and a specialized true black mode for OLED screens to save battery and reduce eye strain.
 
-**Filter articles by category:** Articles can be filtered by category.
-
-**Filter articles by feed:** Articles can be filtered by feed.
+**Precision Filtering & Search:** Instantly sort through your content by status (Unread, Read, Starred), category, or individual feeds. Use the powerful search to query your entire Miniflux backend.
 
 **Send an article:** Articles can be send to third-party services if enabled.
 
 **Truncate an article:** Articles can be truncated to have a teaser instead of the full article text.
+
+**Quick Access to Discussions:** Open article comments directly in the app to stay engaged with the community without leaving your newsreader.
 <br/><br/>
 
 ## Limitations:
 
-- Being online is required (no fetching for offline reading).
 - No user management.
 - No feed or category management.
 
