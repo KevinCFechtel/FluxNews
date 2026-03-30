@@ -521,7 +521,7 @@ class NewsCard extends StatelessWidget {
                       if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
                         showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>(),
                             itemIndex, newsList);
-                      } else {
+                      } else if (appState.longPressAction == FluxNewsState.longPressActionExpandString) {
                         if (news.expanded) {
                           news.expanded = false;
                         } else {

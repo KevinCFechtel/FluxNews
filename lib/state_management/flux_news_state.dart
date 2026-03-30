@@ -134,6 +134,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String tabActionSplittedString = 'splitted';
   static const String longPressActionMenuString = 'menu';
   static const String longPressActionExpandString = 'expand';
+  static const String longPressActionNoneString = 'none';
   static const String floatingButtonSyncAction = 'sync';
   static const String floatingButtonMarkAsReadAction = 'markAsRead';
   static const String appBarNormalType = 'normal';
@@ -1500,6 +1501,7 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(key: FluxNewsState.longPressActionMenuString, value: AppLocalizations.of(context)!.menu),
           KeyValueRecordType(
               key: FluxNewsState.longPressActionExpandString, value: AppLocalizations.of(context)!.expand),
+          KeyValueRecordType(key: FluxNewsState.longPressActionNoneString, value: AppLocalizations.of(context)!.none),
         ];
         recordTypesFloatingButtonActions = <KeyValueRecordType>[
           KeyValueRecordType(

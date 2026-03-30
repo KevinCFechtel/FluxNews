@@ -42,6 +42,13 @@ class NewsRowIOS extends StatelessWidget {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           },
           child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
+    } else if (appState.longPressAction == FluxNewsState.longPressActionNoneString) {
+      return InkWell(
+          splashFactory: NoSplash.splashFactory,
+          onTap: () async {
+            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+          },
+          child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
     } else {
       return CupertinoContextMenu.builder(
         enableHapticFeedback: true,

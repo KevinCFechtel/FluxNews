@@ -41,6 +41,13 @@ class NewsCardIOS extends StatelessWidget {
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           },
           child: newsCard(appState, AlwaysStoppedAnimation(1)));
+    } else if (appState.longPressAction == FluxNewsState.longPressActionNoneString) {
+      return InkWell(
+          splashFactory: NoSplash.splashFactory,
+          onTap: () async {
+            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+          },
+          child: newsCard(appState, AlwaysStoppedAnimation(1)));
     } else {
       return CupertinoContextMenu.builder(
           enableHapticFeedback: true,
