@@ -476,4 +476,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageCacheDurationDays => 'Number of days to keep images in cache';
+
+  @override
+  String get login => 'Login';
 }

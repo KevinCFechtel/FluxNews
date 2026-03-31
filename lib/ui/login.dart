@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
@@ -238,16 +241,27 @@ class _LoginState extends State<Login> {
                   ),
                 ],
                 const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(localization.save),
-                ),
+                Platform.isIOS
+                    ? CupertinoButton.filled(
+                        onPressed: _isLoading ? null : _submit,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                              )
+                            : Text(localization.save),
+                      )
+                    : ElevatedButton(
+                        onPressed: _isLoading ? null : _submit,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                              )
+                            : Text(localization.save),
+                      ),
               ],
             ),
           ),

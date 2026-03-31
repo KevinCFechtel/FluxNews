@@ -971,6 +971,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number of days to keep images in cache'**
   String get imageCacheDurationDays;
+
+  /// No description provided for @login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login;
 }
 
 class _AppLocalizationsDelegate

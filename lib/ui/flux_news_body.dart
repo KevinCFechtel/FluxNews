@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:extended_image/extended_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
@@ -174,18 +175,20 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       }
 
       if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
-        if (!appState.welcomeScreenShown) {
-          // show the welcome screen once before the login screen on first app start
-          appState.welcomeScreenShown = true;
-          appState.storage.write(
-              key: FluxNewsState.secureStorageWelcomeScreenShownKey, value: FluxNewsState.secureStorageTrueString);
-          appState.refreshView();
-          Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        //if (!appState.welcomeScreenShown) {
+        // show the welcome screen once before the login screen on first app start
+        appState.welcomeScreenShown = true;
+        appState.storage
+            .write(key: FluxNewsState.secureStorageWelcomeScreenShownKey, value: FluxNewsState.secureStorageTrueString);
+        appState.refreshView();
+        Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        /*
         } else {
           // navigate to login screen if there are problems with the miniflux config
           appState.refreshView();
           Navigator.pushNamed(context, FluxNewsState.loginRouteString);
         }
+        */
       } else {
         // if everything is fine with the settings, present the list view
         appState.refreshView();
@@ -909,12 +912,19 @@ class NoSettings extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 20.0),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, FluxNewsState.loginRouteString);
-              },
-              child: Text(AppLocalizations.of(context)!.ok),
-            ),
+            child: Platform.isIOS
+                ? CupertinoButton.filled(
+                    child: Text(AppLocalizations.of(context)!.login),
+                    onPressed: () {
+                      Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                    },
+                  )
+                : ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                    },
+                    child: Text(AppLocalizations.of(context)!.login),
+                  ),
           ),
         ],
       ),

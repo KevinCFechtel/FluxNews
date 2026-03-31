@@ -488,4 +488,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get imageCacheDurationDays =>
       'Anzahl der Tage, die Bilder im Cache vorgehalten werden sollen';
+
+  @override
+  String get login => 'Login';
 }
