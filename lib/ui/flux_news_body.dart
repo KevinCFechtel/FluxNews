@@ -174,9 +174,18 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       }
 
       if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
-        // navigate to settings screen if there are problems with the miniflux config
-        appState.refreshView();
-        Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
+        if (!appState.welcomeScreenShown) {
+          // show the welcome screen once before the login screen on first app start
+          appState.welcomeScreenShown = true;
+          appState.storage.write(
+              key: FluxNewsState.secureStorageWelcomeScreenShownKey, value: FluxNewsState.secureStorageTrueString);
+          appState.refreshView();
+          Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        } else {
+          // navigate to login screen if there are problems with the miniflux config
+          appState.refreshView();
+          Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+        }
       } else {
         // if everything is fine with the settings, present the list view
         appState.refreshView();
@@ -897,7 +906,16 @@ class NoSettings extends StatelessWidget {
               AppLocalizations.of(context)!.provideMinifluxCredentials,
               style: const TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          )
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+              },
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ),
         ],
       ),
     );
