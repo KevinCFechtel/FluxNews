@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.15.3';
+  static const String applicationVersion = '1.16.0';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -245,16 +245,18 @@ class FluxNewsState extends ChangeNotifier {
   List<KeyValueRecordType>? recordTypesSyncReadNewsAfterDays;
   List<KeyValueRecordType>? recordTypesFloatingButtonActions;
   List<KeyValueRecordType>? recordTypesAppBarType;
-  bool activateTruncate = false;
+  bool activateTruncate = Platform.isIOS ? true : false;
   int truncateMode = 0;
-  int charactersToTruncate = 100;
+  int charactersToTruncate = Platform.isIOS ? 300 : 100;
   int charactersToTruncateLimit = 0;
   bool activateSwipeGestures = true;
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
-  String secondLeftSwipeAction = FluxNewsState.swipeActionNoneString;
-  String secondRightSwipeAction = FluxNewsState.swipeActionNoneString;
-  String tabAction = FluxNewsState.tabActionOpenString;
+  String secondLeftSwipeAction =
+      Platform.isIOS ? FluxNewsState.swipeActionSaveString : FluxNewsState.swipeActionNoneString;
+  String secondRightSwipeAction =
+      Platform.isIOS ? FluxNewsState.swipeActionShareString : FluxNewsState.swipeActionNoneString;
+  String tabAction = Platform.isIOS ? FluxNewsState.tabActionSplittedString : FluxNewsState.tabActionOpenString;
   String longPressAction = FluxNewsState.longPressActionMenuString;
   bool showHeadlineOnTop = false;
   int startupCategorie = 0;
@@ -1587,21 +1589,33 @@ class FluxNewsState extends ChangeNotifier {
     // init the second left Swipe action selection with the first value of the above generated maps
     if (recordTypesSecondSwipeActions != null) {
       if (recordTypesSecondSwipeActions!.isNotEmpty) {
-        secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![0];
+        if (Platform.isIOS) {
+          secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![3];
+        } else {
+          secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![0];
+        }
       }
     }
 
     // init the second right Swipe action selection with the first value of the above generated maps
     if (recordTypesSecondSwipeActions != null) {
       if (recordTypesSecondSwipeActions!.isNotEmpty) {
-        secondRightSwipeActionSelection = recordTypesSecondSwipeActions![0];
+        if (Platform.isIOS) {
+          secondRightSwipeActionSelection = recordTypesSecondSwipeActions![5];
+        } else {
+          secondRightSwipeActionSelection = recordTypesSecondSwipeActions![0];
+        }
       }
     }
 
     // init the tab action selection with the first value of the above generated maps
     if (recordTypesTabActions != null) {
       if (recordTypesTabActions!.isNotEmpty) {
-        tabActionSelection = recordTypesTabActions![0];
+        if (Platform.isIOS) {
+          tabActionSelection = recordTypesTabActions![2];
+        } else {
+          tabActionSelection = recordTypesTabActions![0];
+        }
       }
     }
 

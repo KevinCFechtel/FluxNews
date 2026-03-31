@@ -1,1 +1,1 @@
-vendor/flutter/bin/flutter build ipa
+vendor/flutter/bin/flutter build ipa --release
