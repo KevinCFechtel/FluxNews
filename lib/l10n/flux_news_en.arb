@@ -144,5 +144,9 @@
     "appBarType": "Select the App Bar Type",
     "glassActionButton": "Show the extra button with a glass effect",
     "imageCacheDurationDays": "Number of days to keep images in cache",
-    "login": "Login"
+    "login": "Login",
+    "restoreSettings": "Restore settings",
+    "backupSettings": "Backup settings",
+    "backupSettingsDescription": "Backup all settings including feed settings",
+    "backupError": "Failed to create backup."
 }

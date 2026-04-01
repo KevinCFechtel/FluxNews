@@ -24,11 +24,17 @@ class Welcome extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        'assets/Flux_News_Starticon_Transparent.png',
-                        width: 180,
-                        height: 180,
-                      ),
+                      MediaQuery.of(context).platformBrightness == Brightness.light
+                          ? Image.asset(
+                              'assets/Flux_News_Starticon_Transparent.png',
+                              width: 180,
+                              height: 180,
+                            )
+                          : Image.asset(
+                              'assets/Flux_News_Starticon_Invert_Transparent.png',
+                              width: 180,
+                              height: 180,
+                            ),
                       const SizedBox(height: 24),
                       Text(
                         FluxNewsState.applicationName,
@@ -50,7 +56,7 @@ class Welcome extends StatelessWidget {
                           appState.storage.write(
                               key: FluxNewsState.secureStorageWelcomeScreenShownKey,
                               value: FluxNewsState.secureStorageTrueString);
-                          Navigator.pushReplacementNamed(context, FluxNewsState.loginRouteString);
+                          Navigator.pushNamed(context, FluxNewsState.loginRouteString);
                         },
                       )
                     : ElevatedButton(
@@ -60,9 +66,26 @@ class Welcome extends StatelessWidget {
                           appState.storage.write(
                               key: FluxNewsState.secureStorageWelcomeScreenShownKey,
                               value: FluxNewsState.secureStorageTrueString);
-                          Navigator.pushReplacementNamed(context, FluxNewsState.loginRouteString);
+                          Navigator.pushNamed(context, FluxNewsState.loginRouteString);
                         },
                         child: Text(AppLocalizations.of(context)!.login),
+                      ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: Platform.isIOS
+                    ? CupertinoButton(
+                        child: Text(AppLocalizations.of(context)!.restoreSettings),
+                        onPressed: () {
+                          Navigator.pushNamed(context, FluxNewsState.restoreSettingsRouteString);
+                        },
+                      )
+                    : OutlinedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, FluxNewsState.restoreSettingsRouteString);
+                        },
+                        child: Text(AppLocalizations.of(context)!.restoreSettings),
                       ),
               ),
             ],

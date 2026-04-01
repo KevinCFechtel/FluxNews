@@ -977,6 +977,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login'**
   String get login;
+
+  /// No description provided for @restoreSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore settings'**
+  String get restoreSettings;
+
+  /// No description provided for @backupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup settings'**
+  String get backupSettings;
+
+  /// No description provided for @backupSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup all settings including feed settings'**
+  String get backupSettingsDescription;
+
+  /// No description provided for @backupError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create backup.'**
+  String get backupError;
 }
 
 class _AppLocalizationsDelegate

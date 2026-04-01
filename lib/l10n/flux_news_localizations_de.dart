@@ -491,4 +491,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get login => 'Login';
+
+  @override
+  String get restoreSettings => 'Einstellungen wiederherstellen';
+
+  @override
+  String get backupSettings => 'Einstellungen sichern';
+
+  @override
+  String get backupSettingsDescription =>
+      'Sichert alle Einstellungen inkl. Feed-Einstellungen';
+
+  @override
+  String get backupError => 'Backup konnte nicht erstellt werden.';
 }

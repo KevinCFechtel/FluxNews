@@ -28,6 +28,7 @@ import 'state_management/flux_news_state.dart';
 import 'ui/search.dart';
 import 'ui/settings.dart';
 import 'ui/welcome.dart';
+import 'ui/restore_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -236,6 +237,7 @@ class FluxNews extends StatelessWidget {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),
           FluxNewsState.welcomeRouteString: (context) => const Welcome(),
           FluxNewsState.loginRouteString: (context) => const Login(),
+          FluxNewsState.restoreSettingsRouteString: (context) => const RestoreSettingsPage(),
           FluxNewsState.settingsRouteString: (context) => const Settings(),
           FluxNewsState.searchRouteString: (context) => const Search(),
           FluxNewsState.feedSettingsRouteString: (context) => const FeedSettings(),

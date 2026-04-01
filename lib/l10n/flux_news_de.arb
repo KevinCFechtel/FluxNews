@@ -144,5 +144,9 @@
     "appBarType": "Wähle die Art der Appbar",
     "glassActionButton": "Zeige den extra Button in einer Glas Optik an",
     "imageCacheDurationDays": "Anzahl der Tage, die Bilder im Cache vorgehalten werden sollen",
-    "login": "Login"
+    "login": "Login",
+    "restoreSettings": "Einstellungen wiederherstellen",
+    "backupSettings": "Einstellungen sichern",
+    "backupSettingsDescription": "Sichert alle Einstellungen inkl. Feed-Einstellungen",
+    "backupError": "Backup konnte nicht erstellt werden."
 }

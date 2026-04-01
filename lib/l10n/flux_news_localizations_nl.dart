@@ -481,4 +481,17 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get login => 'Login';
+
+  @override
+  String get restoreSettings => 'Restore settings';
+
+  @override
+  String get backupSettings => 'Backup settings';
+
+  @override
+  String get backupSettingsDescription =>
+      'Backup all settings including feed settings';
+
+  @override
+  String get backupError => 'Failed to create backup.';
 }
