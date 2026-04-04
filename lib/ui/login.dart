@@ -18,8 +18,10 @@ class _LoginState extends State<Login> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController();
-  final TextEditingController _authHeadersController = TextEditingController();
+  final TextEditingController _headerKeyController = TextEditingController();
+  final TextEditingController _headerValueController = TextEditingController();
 
+  Map<String, String> _headers = {};
   bool _isLoading = false;
   String? _errorText;
   bool _initialized = false;
@@ -31,7 +33,7 @@ class _LoginState extends State<Login> {
       return;
     }
 
-    final appState = context.read<FluxNewsState>();
+    FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.minifluxURL != null) {
       _urlController.text = appState.minifluxURL!;
     }
@@ -39,8 +41,7 @@ class _LoginState extends State<Login> {
       _apiKeyController.text = appState.minifluxAPIKey!;
     }
     if (appState.customHeaders.isNotEmpty) {
-      _authHeadersController.text =
-          appState.customHeaders.entries.map((entry) => '${entry.key}: ${entry.value}').join('\n');
+      _headers = Map<String, String>.from(appState.customHeaders);
     }
 
     _initialized = true;
@@ -50,7 +51,8 @@ class _LoginState extends State<Login> {
   void dispose() {
     _urlController.dispose();
     _apiKeyController.dispose();
-    _authHeadersController.dispose();
+    _headerKeyController.dispose();
+    _headerValueController.dispose();
     super.dispose();
   }
 
@@ -70,51 +72,32 @@ class _LoginState extends State<Login> {
     return normalizedUrl;
   }
 
-  Map<String, String>? _parseAuthHeaders(String rawHeaders) {
-    final parsedHeaders = <String, String>{};
-    final lines = rawHeaders.split('\n');
-    for (final line in lines) {
-      final trimmedLine = line.trim();
-      if (trimmedLine.isEmpty) {
-        continue;
-      }
-
-      final separatorIndex = trimmedLine.indexOf(':');
-      if (separatorIndex <= 0 || separatorIndex >= trimmedLine.length - 1) {
-        return null;
-      }
-
-      final headerName = trimmedLine.substring(0, separatorIndex).trim();
-      final headerValue = trimmedLine.substring(separatorIndex + 1).trim();
-      if (headerName.isEmpty || headerValue.isEmpty) {
-        return null;
-      }
-
-      parsedHeaders[headerName] = headerValue;
+  void _addHeader() {
+    final key = _headerKeyController.text.trim();
+    final value = _headerValueController.text.trim();
+    if (key.isEmpty) {
+      return;
     }
-
-    return parsedHeaders;
+    setState(() {
+      _headers[key] = value;
+      _headerKeyController.clear();
+      _headerValueController.clear();
+    });
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     if (_isLoading) {
       return;
     }
 
-    final appState = context.read<FluxNewsState>();
+    FluxNewsState appState = context.read<FluxNewsState>();
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     final normalizedUrl = _normalizeUrl(_urlController.text);
     final apiKey = _apiKeyController.text.trim();
-    final parsedHeaders = _parseAuthHeaders(_authHeadersController.text);
-    if (parsedHeaders == null) {
-      setState(() {
-        _errorText = 'Auth Header muessen im Format "Header-Name: Wert" eingegeben werden.';
-      });
-      return;
-    }
+    final parsedHeaders = Map<String, String>.from(_headers);
 
     final previousHeaders = Map<String, String>.from(appState.customHeaders);
 
@@ -149,13 +132,14 @@ class _LoginState extends State<Login> {
     appState.saveCustomHeadersToStorage();
     appState.errorOnMinifluxAuth = false;
     appState.insecureMinifluxURL = !normalizedUrl.toLowerCase().startsWith('https');
+    appState.syncNow = true;
     appState.refreshView();
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() {
         _isLoading = false;
       });
-      Navigator.pop(context);
+      Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.rootRouteString, (route) => false);
     }
   }
 
@@ -184,7 +168,6 @@ class _LoginState extends State<Login> {
                   controller: _urlController,
                   decoration: InputDecoration(
                     labelText: localization.apiUrl,
-                    hintText: 'https://example.com/v1/',
                     border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.url,
@@ -219,20 +202,62 @@ class _LoginState extends State<Login> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _authHeadersController,
-                  minLines: 4,
-                  maxLines: 8,
-                  decoration: const InputDecoration(
-                    labelText: 'Zusaetzliche Auth Header',
-                    hintText: 'Authorization: Bearer abc123\nX-Api-User: max.mustermann',
-                    border: OutlineInputBorder(),
-                  ),
+                Text(
+                  AppLocalizations.of(context)!.headers,
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Optional. Ein Header pro Zeile im Format "Header-Name: Wert".',
+                Wrap(
+                  children: [
+                    Text(AppLocalizations.of(context)!.headerKey),
+                    TextField(
+                      controller: _headerKeyController,
+                    ),
+                  ],
                 ),
+                Wrap(
+                  children: [
+                    Text(AppLocalizations.of(context)!.headerValue),
+                    TextField(
+                      controller: _headerValueController,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: _addHeader,
+                  child: Text(AppLocalizations.of(context)!.saveHeader),
+                ),
+                if (_headers.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: [
+                        DataColumn(label: Text(AppLocalizations.of(context)!.headerKey)),
+                        DataColumn(label: Text(AppLocalizations.of(context)!.headerValue)),
+                        const DataColumn(label: Text('')),
+                      ],
+                      rows: _headers.entries
+                          .map(
+                            (entry) => DataRow(cells: [
+                              DataCell(Text(entry.key)),
+                              DataCell(Text(entry.value)),
+                              DataCell(TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _headers.remove(entry.key);
+                                  });
+                                },
+                                child: Text(AppLocalizations.of(context)!.delete),
+                              )),
+                            ]),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ],
                 if (_errorText != null) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -243,7 +268,7 @@ class _LoginState extends State<Login> {
                 const SizedBox(height: 20),
                 Platform.isIOS
                     ? CupertinoButton.filled(
-                        onPressed: _isLoading ? null : _submit,
+                        onPressed: _isLoading ? null : () => _submit(context),
                         child: _isLoading
                             ? const SizedBox(
                                 width: 18,
@@ -253,7 +278,7 @@ class _LoginState extends State<Login> {
                             : Text(localization.save),
                       )
                     : ElevatedButton(
-                        onPressed: _isLoading ? null : _submit,
+                        onPressed: _isLoading ? null : () => _submit(context),
                         child: _isLoading
                             ? const SizedBox(
                                 width: 18,

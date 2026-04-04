@@ -6,7 +6,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../state_management/flux_news_state.dart';
@@ -19,7 +18,6 @@ class RestoreSettingsPage extends StatefulWidget {
 }
 
 class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
-  late Future<List<File>> _backupFilesFuture;
   bool _restoring = false;
 
   Future<bool> _confirmRestore(_ParsedBackupData preview) async {
@@ -178,34 +176,6 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _backupFilesFuture = _loadBackupFiles();
-  }
-
-  Future<List<File>> _loadBackupFiles() async {
-    Directory? directory;
-    if (Platform.isIOS) {
-      directory = await getApplicationDocumentsDirectory();
-    } else {
-      directory = await getExternalStorageDirectory();
-    }
-    if (directory == null) {
-      return [];
-    }
-
-    final files = directory
-        .listSync()
-        .whereType<File>()
-        .where((file) => file.path.endsWith('.zip') && file.path.contains('flux_news_settings_backup_'))
-        .toList();
-
-    files.sort((a, b) => b.lastModifiedSync().millisecondsSinceEpoch - a.lastModifiedSync().millisecondsSinceEpoch);
-
-    return files;
-  }
-
   int _toInt(dynamic value) {
     if (value is int) {
       return value;
@@ -234,7 +204,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       return;
     }
 
-    final appState = context.read<FluxNewsState>();
+    FluxNewsState appState = context.read<FluxNewsState>();
     setState(() {
       _restoring = true;
     });
@@ -244,7 +214,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
 
       final storageEntries = parsed.settings;
       for (final entry in storageEntries.entries) {
-        await appState.storage.write(key: entry.key, value: entry.value == null ? null : entry.value.toString());
+        await appState.storage.write(key: entry.key, value: entry.value?.toString());
       }
 
       appState.db ??= await appState.initializeDB();
@@ -278,12 +248,14 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
         appState.readConfig(context);
         appState.readThemeConfigValues(context);
       }
+      appState.syncNow = true;
       appState.refreshView();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Backup erfolgreich wiederhergestellt.')),
         );
+        Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.rootRouteString, (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -295,7 +267,6 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       if (mounted) {
         setState(() {
           _restoring = false;
-          _backupFilesFuture = _loadBackupFiles();
         });
       }
     }
@@ -307,79 +278,41 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.restoreSettings),
       ),
-      body: FutureBuilder<List<File>>(
-        future: _backupFilesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final files = snapshot.data ?? [];
-          if (files.isEmpty) {
-            return const Center(
+      body: Column(
+        children: [
+          if (_restoring) const LinearProgressIndicator(),
+          Expanded(
+            child: Center(
               child: Padding(
-                padding: EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Text(
-                  'Keine Backup-Dateien gefunden.\nLege zuerst ein ZIP-Backup in deinem App-Verzeichnis an.',
+                  'Waehle eine ZIP-Backup-Datei aus, um die Einstellungen wiederherzustellen.',
                   textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
               ),
-            );
-          }
-
-          return Column(
-            children: [
-              if (_restoring) const LinearProgressIndicator(),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: files.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final file = files[index];
-                    final fileName = file.path.split(Platform.pathSeparator).last;
-                    final modified = file.lastModifiedSync();
-                    return ListTile(
-                      leading: const Icon(Icons.archive),
-                      title: Text(fileName),
-                      subtitle: Text('Geaendert: ${modified.toLocal()}'),
-                      trailing: _restoring
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : (Platform.isIOS ? const Icon(CupertinoIcons.refresh) : const Icon(Icons.restore)),
-                      onTap: _restoring
-                          ? null
-                          : () async {
-                              await _previewAndRestore(file);
-                            },
-                    );
-                  },
-                ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Platform.isIOS
+                    ? CupertinoButton.filled(
+                        onPressed: _restoring ? null : _pickAndRestoreBackup,
+                        child: const Text('ZIP-Datei waehlen und wiederherstellen'),
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: _restoring ? null : _pickAndRestoreBackup,
+                        icon: const Icon(Icons.folder_open),
+                        label: const Text('ZIP-Datei waehlen und wiederherstellen'),
+                      ),
               ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Platform.isIOS
-                        ? CupertinoButton.filled(
-                            onPressed: _restoring ? null : _pickAndRestoreBackup,
-                            child: const Text('ZIP-Datei waehlen und wiederherstellen'),
-                          )
-                        : ElevatedButton.icon(
-                            onPressed: _restoring ? null : _pickAndRestoreBackup,
-                            icon: const Icon(Icons.folder_open),
-                            label: const Text('ZIP-Datei waehlen und wiederherstellen'),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

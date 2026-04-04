@@ -494,4 +494,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get backupError => 'Failed to create backup.';
+
+  @override
+  String get saveHeader => 'Save Header';
 }

@@ -133,8 +133,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         }
       }
 
-      if (appState.syncOnStart) {
-        // sync on startup
+      if (appState.syncOnStart || appState.syncNow) {
+        // sync on startup or now
         if (context.mounted) {
           await syncNews(appState, context);
         }
@@ -175,20 +175,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       }
 
       if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
-        //if (!appState.welcomeScreenShown) {
         // show the welcome screen once before the login screen on first app start
-        appState.welcomeScreenShown = true;
-        appState.storage
-            .write(key: FluxNewsState.secureStorageWelcomeScreenShownKey, value: FluxNewsState.secureStorageTrueString);
-        appState.refreshView();
         Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
-        /*
-        } else {
-          // navigate to login screen if there are problems with the miniflux config
-          appState.refreshView();
-          Navigator.pushNamed(context, FluxNewsState.loginRouteString);
-        }
-        */
       } else {
         // if everything is fine with the settings, present the list view
         appState.refreshView();

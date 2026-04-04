@@ -148,5 +148,6 @@
     "restoreSettings": "Restore settings",
     "backupSettings": "Backup settings",
     "backupSettingsDescription": "Backup all settings including feed settings",
-    "backupError": "Failed to create backup."
+    "backupError": "Failed to create backup.",
+    "saveHeader": "Save Header"
 }

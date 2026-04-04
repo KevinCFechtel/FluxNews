@@ -504,4 +504,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupError => 'Backup konnte nicht erstellt werden.';
+
+  @override
+  String get saveHeader => 'Speichere Header';
 }

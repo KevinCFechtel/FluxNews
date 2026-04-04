@@ -537,7 +537,7 @@ class Settings extends StatelessWidget {
       final zipFilePath = '${exportDirectory.path}/flux_news_settings_backup_$timestamp.zip';
       final zipEncoder = ZipFileEncoder();
       zipEncoder.create(zipFilePath);
-      zipEncoder.addFile(jsonFile);
+      await zipEncoder.addFile(jsonFile);
       zipEncoder.close();
 
       await jsonFile.delete();

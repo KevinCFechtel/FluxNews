@@ -66,7 +66,6 @@ class FluxNewsState extends ChangeNotifier {
   static const String sortOrderOldestFirstString = 'Oldest first';
   static const String secureStorageMinifluxURLKey = 'minifluxURL';
   static const String secureStorageMinifluxAPIKey = 'minifluxAPIKey';
-  static const String secureStorageWelcomeScreenShownKey = 'welcomeScreenShown';
   static const String secureStorageMinifluxVersionKey = 'minifluxVersionKey';
   static const String secureStorageBrightnessModeKey = 'brightnessMode';
   static const String secureStorageAmountOfSyncedNewsKey = 'amountOfSyncedNews';
@@ -184,6 +183,7 @@ class FluxNewsState extends ChangeNotifier {
   final ListController listController = ListController();
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
+  bool syncNow = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
@@ -213,7 +213,6 @@ class FluxNewsState extends ChangeNotifier {
   String? minifluxVersionString;
   int minifluxVersionInt = 0;
   bool insecureMinifluxURL = false;
-  bool welcomeScreenShown = false;
 
   // vars for settings
   Map<String, String> storageValues = {};
@@ -1673,17 +1672,6 @@ class FluxNewsState extends ChangeNotifier {
       // assign the miniflux server api key from persistent saved config
       if (key == FluxNewsState.secureStorageMinifluxAPIKey) {
         minifluxAPIKey = value;
-      }
-
-      // assign if the welcome screen was shown on first app start
-      if (key == FluxNewsState.secureStorageWelcomeScreenShownKey) {
-        if (value != '') {
-          if (value == FluxNewsState.secureStorageTrueString) {
-            welcomeScreenShown = true;
-          } else {
-            welcomeScreenShown = false;
-          }
-        }
       }
 
       // assign the miniflux server version from persistent saved config

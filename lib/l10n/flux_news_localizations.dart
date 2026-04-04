@@ -1001,6 +1001,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to create backup.'**
   String get backupError;
+
+  /// No description provided for @saveHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Header'**
+  String get saveHeader;
 }
 
 class _AppLocalizationsDelegate
