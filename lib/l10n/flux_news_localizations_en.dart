@@ -495,4 +495,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveHeader => 'Save Header';
+
+  @override
+  String get confirmRestore => 'Confirm restore';
+
+  @override
+  String get confirmRestoreOverride =>
+      'This will overwrite your current settings and feed configurations.';
+
+  @override
+  String get file => 'File';
+
+  @override
+  String get backupType => 'Backup-Type';
+
+  @override
+  String get createdAt => 'Created at';
+
+  @override
+  String get appVersion => 'App version';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get backupCheckFailed => 'Backup check failed';
+
+  @override
+  String get invalidFile => 'The selected file is invalid.';
+
+  @override
+  String get fileSelectionFailed => 'The file selection failed';
+
+  @override
+  String get backupSuccessfullyRestored => 'Backup successfully restored';
+
+  @override
+  String get restoreFailed => 'Restore failed';
+
+  @override
+  String get selectZipBackupFile =>
+      'Select a ZIP backup file to restore settings.';
+
+  @override
+  String get selectZipBackupFileButton => 'Select ZIP file and restore';
 }

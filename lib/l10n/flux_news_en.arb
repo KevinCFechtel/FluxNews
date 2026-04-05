@@ -149,5 +149,19 @@
     "backupSettings": "Backup settings",
     "backupSettingsDescription": "Backup all settings including feed settings",
     "backupError": "Failed to create backup.",
-    "saveHeader": "Save Header"
+    "saveHeader": "Save Header",
+    "confirmRestore": "Confirm restore",
+    "confirmRestoreOverride": "This will overwrite your current settings and feed configurations.",
+    "file": "File",
+    "backupType": "Backup-Type",
+    "createdAt": "Created at",
+    "appVersion": "App version",
+    "restore": "Restore",
+    "backupCheckFailed": "Backup check failed",
+    "invalidFile": "The selected file is invalid.",
+    "fileSelectionFailed": "The file selection failed",
+    "backupSuccessfullyRestored": "Backup successfully restored",
+    "restoreFailed": "Restore failed",
+    "selectZipBackupFile": "Select a ZIP backup file to restore settings.",
+    "selectZipBackupFileButton": "Select ZIP file and restore"
 }

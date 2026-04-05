@@ -5,6 +5,8 @@ import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -25,22 +27,22 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog.adaptive(
-          title: const Text('Restore bestaetigen'),
+          title: Text(AppLocalizations.of(context)!.confirmRestore),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Datei: ${preview.fileName}'),
+                Text('${AppLocalizations.of(context)!.file}: ${preview.fileName}'),
                 const SizedBox(height: 8),
-                Text('Backup-Typ: ${preview.backupType}'),
-                Text('Erstellt: ${preview.createdAt ?? '-'}'),
-                Text('App-Version: ${preview.appVersion ?? '-'}'),
-                Text('Einstellungen: ${preview.settingsCount}'),
-                Text('Feed-Einstellungen: ${preview.feedSettingsCount}'),
+                Text('${AppLocalizations.of(context)!.backupType}: ${preview.backupType}'),
+                Text('${AppLocalizations.of(context)!.createdAt}: ${preview.createdAt ?? '-'}'),
+                Text('${AppLocalizations.of(context)!.appVersion}: ${preview.appVersion ?? '-'}'),
+                Text('${AppLocalizations.of(context)!.settings}: ${preview.settingsCount}'),
+                Text('${AppLocalizations.of(context)!.feedSettings}: ${preview.feedSettingsCount}'),
                 const SizedBox(height: 12),
-                const Text(
-                  'Dabei werden aktuelle Einstellungen und Feed-Einstellungen ueberschrieben.',
+                Text(
+                  AppLocalizations.of(context)!.confirmRestoreOverride,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -49,11 +51,11 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Abbrechen'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Wiederherstellen'),
+              child: Text(AppLocalizations.of(context)!.restore),
             ),
           ],
         );
@@ -78,28 +80,33 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
     }
 
     if (jsonArchiveFile == null) {
-      throw Exception('Keine JSON-Datei im ZIP gefunden.');
+      logThis('RestoreSettings', 'Found no JSON file in the ZIP.', LogLevel.ERROR);
+      throw Exception('Found no JSON file in the ZIP.');
     }
 
     final jsonContent = utf8.decode(jsonArchiveFile.content as List<int>);
     final data = jsonDecode(jsonContent);
     if (data is! Map<String, dynamic>) {
-      throw Exception('Ungueltiges Backup-Format.');
+      logThis('RestoreSettings', 'Invalid backup format.', LogLevel.ERROR);
+      throw Exception('Invalid backup format.');
     }
 
     final backupType = data['backupType']?.toString() ?? '';
     if (backupType != 'flux_news_settings') {
-      throw Exception('Dieses ZIP ist kein Flux News Settings Backup.');
+      logThis('RestoreSettings', 'This ZIP is not a Flux News Settings Backup.', LogLevel.ERROR);
+      throw Exception('This ZIP is not a Flux News Settings Backup.');
     }
 
     final settings = data['settings'];
     if (settings is! Map) {
-      throw Exception('Settings im Backup fehlen oder sind ungueltig.');
+      logThis('RestoreSettings', 'Settings in the backup are missing or invalid.', LogLevel.ERROR);
+      throw Exception('Settings in the backup are missing or invalid.');
     }
 
     final feedSettings = data['feedSettings'];
     if (feedSettings is! List) {
-      throw Exception('Feed-Settings im Backup fehlen oder sind ungueltig.');
+      logThis('RestoreSettings', 'Feed settings in the backup are missing or invalid.', LogLevel.ERROR);
+      throw Exception('Feed settings in the backup are missing or invalid.');
     }
 
     final storageEntries = Map<String, dynamic>.from(settings);
@@ -133,8 +140,9 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       await _restoreBackup(backupFile, parsedBackup: preview);
     } catch (e) {
       if (mounted) {
+        logThis('RestoreSettings', 'Backup check failed: ${e.toString()}', LogLevel.ERROR);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Backup-Pruefung fehlgeschlagen: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupCheckFailed)),
         );
       }
     }
@@ -158,8 +166,9 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       final selectedPath = result.files.single.path;
       if (selectedPath == null || selectedPath.isEmpty) {
         if (mounted) {
+          logThis('RestoreSettings', 'The selected file is invalid.', LogLevel.ERROR);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Die gewaehlte Datei ist ungueltig.')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.invalidFile)),
           );
         }
         return;
@@ -169,8 +178,9 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       await _previewAndRestore(selectedFile);
     } catch (e) {
       if (mounted) {
+        logThis('RestoreSettings', 'The file selection failed: ${e.toString()}', LogLevel.ERROR);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Dateiauswahl fehlgeschlagen: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileSelectionFailed)),
         );
       }
     }
@@ -252,15 +262,17 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       appState.refreshView();
 
       if (mounted) {
+        logThis('RestoreSettings', 'Backup successfully restored.', LogLevel.INFO);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup erfolgreich wiederhergestellt.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupSuccessfullyRestored)),
         );
         Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.rootRouteString, (route) => false);
       }
     } catch (e) {
       if (mounted) {
+        logThis('RestoreSettings', 'Restore failed: ${e.toString()}', LogLevel.ERROR);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restore fehlgeschlagen: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.restoreFailed)),
         );
       }
     } finally {
@@ -286,7 +298,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Text(
-                  'Waehle eine ZIP-Backup-Datei aus, um die Einstellungen wiederherzustellen.',
+                  AppLocalizations.of(context)!.selectZipBackupFile,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
@@ -302,12 +314,12 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
                 child: Platform.isIOS
                     ? CupertinoButton.filled(
                         onPressed: _restoring ? null : _pickAndRestoreBackup,
-                        child: const Text('ZIP-Datei waehlen und wiederherstellen'),
+                        child: Text(AppLocalizations.of(context)!.selectZipBackupFileButton),
                       )
                     : ElevatedButton.icon(
                         onPressed: _restoring ? null : _pickAndRestoreBackup,
                         icon: const Icon(Icons.folder_open),
-                        label: const Text('ZIP-Datei waehlen und wiederherstellen'),
+                        label: Text(AppLocalizations.of(context)!.selectZipBackupFileButton),
                       ),
               ),
             ),

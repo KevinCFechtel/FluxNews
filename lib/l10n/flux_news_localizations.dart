@@ -1007,6 +1007,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Header'**
   String get saveHeader;
+
+  /// No description provided for @confirmRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm restore'**
+  String get confirmRestore;
+
+  /// No description provided for @confirmRestoreOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'This will overwrite your current settings and feed configurations.'**
+  String get confirmRestoreOverride;
+
+  /// No description provided for @file.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get file;
+
+  /// No description provided for @backupType.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup-Type'**
+  String get backupType;
+
+  /// No description provided for @createdAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get createdAt;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get appVersion;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @backupCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup check failed'**
+  String get backupCheckFailed;
+
+  /// No description provided for @invalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file is invalid.'**
+  String get invalidFile;
+
+  /// No description provided for @fileSelectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The file selection failed'**
+  String get fileSelectionFailed;
+
+  /// No description provided for @backupSuccessfullyRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup successfully restored'**
+  String get backupSuccessfullyRestored;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed'**
+  String get restoreFailed;
+
+  /// No description provided for @selectZipBackupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a ZIP backup file to restore settings.'**
+  String get selectZipBackupFile;
+
+  /// No description provided for @selectZipBackupFileButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Select ZIP file and restore'**
+  String get selectZipBackupFileButton;
 }
 
 class _AppLocalizationsDelegate
