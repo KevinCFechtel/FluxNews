@@ -369,14 +369,14 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    FluxNewsState appState = context.watch<FluxNewsState>();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(localization.minifluxServer),
       ),
       body: SafeArea(
-        child: isTablet ? _buildTabletLayout(context, localization) : _buildPhoneLayout(context, localization),
+        child: appState.isTablet ? _buildTabletLayout(context, localization) : _buildPhoneLayout(context, localization),
       ),
     );
   }

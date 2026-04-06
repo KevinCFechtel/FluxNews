@@ -334,7 +334,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    FluxNewsState appState = context.watch<FluxNewsState>();
 
     return Scaffold(
       appBar: AppBar(
@@ -354,7 +354,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
           label: Text(_isSubmitting ? localization.feedCreationDuration : '${localization.save} ($_selectedCount)'),
         ),
       ),
-      body: isTablet ? _buildTabletLayout(context, localization) : _buildPhoneLayout(context, localization),
+      body: appState.isTablet ? _buildTabletLayout(context, localization) : _buildPhoneLayout(context, localization),
     );
   }
 

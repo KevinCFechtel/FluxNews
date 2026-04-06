@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:provider/provider.dart';
 
 class Welcome extends StatelessWidget {
   const Welcome({super.key});
@@ -174,11 +175,11 @@ class Welcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    FluxNewsState appState = context.watch<FluxNewsState>();
 
     return Scaffold(
       body: SafeArea(
-        child: isTablet ? _buildTabletLayout(context) : _buildPhoneLayout(context),
+        child: appState.isTablet ? _buildTabletLayout(context) : _buildPhoneLayout(context),
       ),
     );
   }
