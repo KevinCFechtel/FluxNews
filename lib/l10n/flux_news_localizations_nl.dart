@@ -541,4 +541,26 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get selectZipBackupFileButton => 'Select ZIP file and restore';
+
+  @override
+  String get minimumFeedSelection => 'Please select at least one feed.';
+
+  @override
+  String get feedCreationError => 'Creation failed.';
+
+  @override
+  String get feedSelection => 'Select feed';
+
+  @override
+  String get feedCreationDuration => 'Creating...';
+
+  @override
+  String get feedCreationDescription =>
+      'Select multiple feeds. The selected feeds will be created in your Miniflux account.';
+
+  @override
+  String get feedSelectionSelectAll => 'Select all';
+
+  @override
+  String get feedSelectionDeleteSelection => 'Clear selection';
 }

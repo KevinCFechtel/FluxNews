@@ -553,4 +553,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get selectZipBackupFileButton =>
       'ZIP-Datei wählen und wiederherstellen';
+
+  @override
+  String get minimumFeedSelection => 'Bitte mindestens einen Feed auswählen.';
+
+  @override
+  String get feedCreationError => 'Erstellung fehlgeschlagen.';
+
+  @override
+  String get feedSelection => 'Feeds auswählen';
+
+  @override
+  String get feedCreationDuration => 'Wird erstellt...';
+
+  @override
+  String get feedCreationDescription =>
+      'Wähle mehrere Feeds aus. Die ausgewählten Feeds werden im Miniflux-Account angelegt.';
+
+  @override
+  String get feedSelectionSelectAll => 'Alle auswählen';
+
+  @override
+  String get feedSelectionDeleteSelection => 'Auswahl löschen';
 }

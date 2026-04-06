@@ -163,5 +163,12 @@
     "backupSuccessfullyRestored": "Backup successfully restored",
     "restoreFailed": "Restore failed",
     "selectZipBackupFile": "Select a ZIP backup file to restore settings.",
-    "selectZipBackupFileButton": "Select ZIP file and restore"
+    "selectZipBackupFileButton": "Select ZIP file and restore",
+    "minimumFeedSelection": "Please select at least one feed.",
+    "feedCreationError": "Creation failed.",
+    "feedSelection": "Select feed",
+    "feedCreationDuration": "Creating...",
+    "feedCreationDescription": "Select multiple feeds. The selected feeds will be created in your Miniflux account.",
+    "feedSelectionSelectAll": "Select all",
+    "feedSelectionDeleteSelection": "Clear selection"
 }

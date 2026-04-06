@@ -1091,6 +1091,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select ZIP file and restore'**
   String get selectZipBackupFileButton;
+
+  /// No description provided for @minimumFeedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least one feed.'**
+  String get minimumFeedSelection;
+
+  /// No description provided for @feedCreationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Creation failed.'**
+  String get feedCreationError;
+
+  /// No description provided for @feedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select feed'**
+  String get feedSelection;
+
+  /// No description provided for @feedCreationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating...'**
+  String get feedCreationDuration;
+
+  /// No description provided for @feedCreationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select multiple feeds. The selected feeds will be created in your Miniflux account.'**
+  String get feedCreationDescription;
+
+  /// No description provided for @feedSelectionSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get feedSelectionSelectAll;
+
+  /// No description provided for @feedSelectionDeleteSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get feedSelectionDeleteSelection;
 }
 
 class _AppLocalizationsDelegate

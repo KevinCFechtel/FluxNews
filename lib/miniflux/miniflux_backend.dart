@@ -607,7 +607,7 @@ Future<void> toggleBookmark(FluxNewsState appState, News news) async {
   }
 }
 
-// mark a news as bookmarked at the miniflux server
+// save a news to a third party service at the miniflux server
 Future<void> saveNewsToThirdPartyService(FluxNewsState appState, News news) async {
   if (appState.debugMode) {
     logThis(
@@ -667,6 +667,59 @@ Future<void> saveNewsToThirdPartyService(FluxNewsState appState, News news) asyn
     logThis(
         'saveNewsToThirdPartyService', 'Finished saving news to third party service at miniflux server', LogLevel.INFO);
   }
+}
+
+// check if there are no feeds at the miniflux server, to show a hint for the users to add feeds to their miniflux account
+Future<bool> checkEmptyFeeds(FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('checkEmptyFeeds', 'Starting checking empty feeds at miniflux server', LogLevel.INFO);
+  }
+
+  // first check if the miniflux url and api key is set
+  if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
+    appState.db ??= await appState.initializeDB();
+    if (appState.db != null) {
+      final Client client;
+      if (Platform.isAndroid) {
+        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+        client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+      } else {
+        client = IOClient(HttpClient());
+      }
+      final header = {
+        FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+      };
+      if (appState.customHeaders.isNotEmpty) {
+        header.addAll(appState.customHeaders);
+      }
+      // checking empty miniflux account on miniflux server
+      final response = await client.get(
+        Uri.parse('${appState.minifluxURL!}feeds'),
+        headers: header,
+      );
+      if (response.statusCode != 200) {
+        logThis(
+            'checkEmptyFeeds',
+            'Got unexpected response from miniflux server: ${response.statusCode} while checking empty feeds.',
+            LogLevel.ERROR);
+        // if the response code is not 200, throw an error
+        throw FluxNewsState.httpUnexpectedResponseErrorString;
+      }
+      if (response.body.isNotEmpty) {
+        Iterable feedList = json.decode(utf8.decode(response.bodyBytes));
+        if (feedList.isEmpty) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      client.close();
+    }
+  }
+  if (appState.debugMode) {
+    logThis('checkEmptyFeeds', 'Finished checking empty feeds at miniflux server', LogLevel.INFO);
+  }
+  return true;
 }
 
 // fetch the information about the categories from the miniflux server
@@ -868,6 +921,320 @@ Future<FeedIcon?> getFeedIcon(FluxNewsState appState, int feedIconID) async {
   }
   // return the feed icon
   return feedIcon;
+}
+
+Future<int?> _fetchCategoryIDByTitle(
+  FluxNewsState appState,
+  Client client,
+  Map<String, String> header,
+  String categoryTitle,
+) async {
+  final response = await client.get(
+    Uri.parse('${appState.minifluxURL!}categories'),
+    headers: header,
+  );
+
+  if (response.statusCode != 200) {
+    logThis(
+      'createOrGetCategory',
+      'Got unexpected response from miniflux server: ${response.statusCode} while loading categories.',
+      LogLevel.ERROR,
+    );
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  }
+
+  Iterable categories = json.decode(utf8.decode(response.bodyBytes));
+  for (final categoryJson in categories) {
+    final category = Category.fromJson(categoryJson as Map<String, dynamic>);
+    if (category.title == categoryTitle) {
+      return category.categoryID;
+    }
+  }
+
+  return null;
+}
+
+Future<int> createOrGetCategory(FluxNewsState appState, String categoryTitle) async {
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+    FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  try {
+    final existingCategoryID = await _fetchCategoryIDByTitle(appState, client, header, categoryTitle);
+    if (existingCategoryID != null) {
+      return existingCategoryID;
+    }
+
+    final response = await client.post(
+      Uri.parse('${appState.minifluxURL!}categories'),
+      headers: header,
+      body: jsonEncode({'title': categoryTitle}),
+    );
+
+    if (response.statusCode == 201) {
+      final categoryJson = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final category = Category.fromJson(categoryJson);
+      return category.categoryID;
+    }
+
+    final fallbackCategoryID = await _fetchCategoryIDByTitle(appState, client, header, categoryTitle);
+    if (fallbackCategoryID != null) {
+      return fallbackCategoryID;
+    }
+
+    logThis(
+      'createOrGetCategory',
+      'Got unexpected response from miniflux server: ${response.statusCode} while creating category.',
+      LogLevel.ERROR,
+    );
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  } finally {
+    client.close();
+  }
+}
+
+Future<void> createFeedSubscription(
+  FluxNewsState appState,
+  String feedURL,
+  int categoryID, {
+  String? scraperRules,
+  String? suggestedTitle,
+}) async {
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+    FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  try {
+    int? targetFeedID;
+    final Map<String, dynamic> requestBody = {
+      'feed_url': feedURL,
+      'category_id': categoryID,
+    };
+    if (scraperRules != null && scraperRules.trim().isNotEmpty) {
+      requestBody['crawler'] = true;
+      requestBody['scraper_rules'] = scraperRules.trim();
+    }
+
+    final response = await client.post(
+      Uri.parse('${appState.minifluxURL!}feeds'),
+      headers: header,
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 201) {
+      if (response.body.isNotEmpty) {
+        final createdFeed = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final createdFeedID = createdFeed['feed_id'];
+        if (createdFeedID is int) {
+          targetFeedID = createdFeedID;
+        }
+      }
+    }
+
+    if (response.statusCode == 400) {
+      final errorBody = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final errorMessage = (errorBody['error_message'] ?? '').toString().toLowerCase();
+      if (errorMessage.contains('already exists')) {
+        targetFeedID = await _fetchFeedIDByFeedURL(appState, client, header, feedURL);
+      } else {
+        logThis(
+          'createFeedSubscription',
+          'Got unexpected response from miniflux server: ${response.statusCode} while creating feed $feedURL.',
+          LogLevel.ERROR,
+        );
+        throw FluxNewsState.httpUnexpectedResponseErrorString;
+      }
+    } else if (response.statusCode != 201) {
+      logThis(
+        'createFeedSubscription',
+        'Got unexpected response from miniflux server: ${response.statusCode} while creating feed $feedURL.',
+        LogLevel.ERROR,
+      );
+      throw FluxNewsState.httpUnexpectedResponseErrorString;
+    }
+
+    if (suggestedTitle != null && suggestedTitle.trim().isNotEmpty) {
+      if (targetFeedID == null) {
+        logThis(
+          'createFeedSubscription',
+          'Could not determine feed id for $feedURL to set suggested title.',
+          LogLevel.ERROR,
+        );
+        throw FluxNewsState.httpUnexpectedResponseErrorString;
+      }
+      await _updateFeedTitle(appState, client, header, targetFeedID, suggestedTitle.trim());
+    }
+  } finally {
+    client.close();
+  }
+}
+
+String _normalizeFeedURL(String url) {
+  final parsed = Uri.tryParse(url.trim());
+  if (parsed == null) {
+    return url.trim();
+  }
+
+  String normalizedPath = parsed.path;
+  if (normalizedPath.endsWith('/') && normalizedPath.length > 1) {
+    normalizedPath = normalizedPath.substring(0, normalizedPath.length - 1);
+  }
+
+  return parsed
+      .replace(
+        path: normalizedPath,
+        fragment: '',
+      )
+      .toString();
+}
+
+Future<int?> _fetchFeedIDByFeedURL(
+  FluxNewsState appState,
+  Client client,
+  Map<String, String> header,
+  String feedURL,
+) async {
+  final response = await client.get(
+    Uri.parse('${appState.minifluxURL!}feeds'),
+    headers: header,
+  );
+
+  if (response.statusCode != 200) {
+    logThis(
+      '_fetchFeedIDByFeedURL',
+      'Got unexpected response from miniflux server: ${response.statusCode} while loading feeds.',
+      LogLevel.ERROR,
+    );
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  }
+
+  final normalizedTarget = _normalizeFeedURL(feedURL);
+  final feedList = jsonDecode(utf8.decode(response.bodyBytes));
+  if (feedList is! Iterable) {
+    return null;
+  }
+
+  for (final item in feedList) {
+    if (item is! Map<String, dynamic>) {
+      continue;
+    }
+
+    final candidate = (item['feed_url'] ?? '').toString();
+    if (_normalizeFeedURL(candidate) == normalizedTarget) {
+      final id = item['id'];
+      if (id is int) {
+        return id;
+      }
+    }
+  }
+
+  return null;
+}
+
+Future<void> _updateFeedTitle(
+  FluxNewsState appState,
+  Client client,
+  Map<String, String> header,
+  int feedID,
+  String title,
+) async {
+  final response = await client.put(
+    Uri.parse('${appState.minifluxURL!}feeds/$feedID'),
+    headers: header,
+    body: jsonEncode({'title': title}),
+  );
+
+  if (response.statusCode != 204 && response.statusCode != 201) {
+    logThis(
+      '_updateFeedTitle',
+      'Got unexpected response from miniflux server: ${response.statusCode} while updating feed title for $feedID.',
+      LogLevel.ERROR,
+    );
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  }
+}
+
+Future<void> refreshAllFeeds(FluxNewsState appState) async {
+  if (appState.debugMode) {
+    logThis('refreshAllFeeds', 'Starting refresh all feeds at miniflux server', LogLevel.INFO);
+  }
+
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
+    throw FluxNewsState.httpUnexpectedResponseErrorString;
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+    FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  try {
+    final response = await client.put(
+      Uri.parse('${appState.minifluxURL!}feeds/refresh'),
+      headers: header,
+    );
+
+    if (response.statusCode != 204) {
+      logThis(
+        'refreshAllFeeds',
+        'Got unexpected response from miniflux server: ${response.statusCode} while refreshing all feeds.',
+        LogLevel.ERROR,
+      );
+      throw FluxNewsState.httpUnexpectedResponseErrorString;
+    }
+  } finally {
+    client.close();
+  }
+
+  if (appState.debugMode) {
+    logThis('refreshAllFeeds', 'Finished refresh all feeds at miniflux server', LogLevel.INFO);
+  }
 }
 
 // check if the miniflux credentials are valid

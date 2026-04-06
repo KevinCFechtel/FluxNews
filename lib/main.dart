@@ -23,6 +23,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
 
 import 'ui/flux_news_body.dart';
+import 'ui/feed_onboarding.dart';
 import 'ui/login.dart';
 import 'state_management/flux_news_state.dart';
 import 'ui/search.dart';
@@ -237,6 +238,7 @@ class FluxNews extends StatelessWidget {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),
           FluxNewsState.welcomeRouteString: (context) => const Welcome(),
           FluxNewsState.loginRouteString: (context) => const Login(),
+          FluxNewsState.feedOnboardingRouteString: (context) => const FeedOnboarding(),
           FluxNewsState.restoreSettingsRouteString: (context) => const RestoreSettingsPage(),
           FluxNewsState.settingsRouteString: (context) => const Settings(),
           FluxNewsState.searchRouteString: (context) => const Search(),

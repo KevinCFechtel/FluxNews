@@ -39,6 +39,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String rootRouteString = '/';
   static const String welcomeRouteString = '/welcome';
   static const String loginRouteString = '/login';
+  static const String feedOnboardingRouteString = '/feedOnboarding';
   static const String restoreSettingsRouteString = '/restoreSettings';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
