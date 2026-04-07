@@ -37,6 +37,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String databasePathString = 'news_database.db';
   static const String androidDatabaseDirectory = 'databases';
   static const String rootRouteString = '/';
+  static const String welcomeRouteString = '/welcome';
+  static const String loginRouteString = '/login';
+  static const String feedOnboardingRouteString = '/feedOnboarding';
+  static const String restoreSettingsRouteString = '/restoreSettings';
   static const String settingsRouteString = '/settings';
   static const String searchRouteString = '/search';
   static const String feedSettingsRouteString = '/feedSettings';
@@ -180,6 +184,7 @@ class FluxNewsState extends ChangeNotifier {
   final ListController listController = ListController();
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
+  bool syncNow = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);

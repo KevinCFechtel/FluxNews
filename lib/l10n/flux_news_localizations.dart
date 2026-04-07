@@ -971,6 +971,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number of days to keep images in cache'**
   String get imageCacheDurationDays;
+
+  /// No description provided for @login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login;
+
+  /// No description provided for @restoreSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore settings'**
+  String get restoreSettings;
+
+  /// No description provided for @backupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup settings'**
+  String get backupSettings;
+
+  /// No description provided for @backupSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup all settings including feed settings'**
+  String get backupSettingsDescription;
+
+  /// No description provided for @backupError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create backup.'**
+  String get backupError;
+
+  /// No description provided for @saveHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Header'**
+  String get saveHeader;
+
+  /// No description provided for @confirmRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm restore'**
+  String get confirmRestore;
+
+  /// No description provided for @confirmRestoreOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'This will overwrite your current settings and feed configurations.'**
+  String get confirmRestoreOverride;
+
+  /// No description provided for @file.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get file;
+
+  /// No description provided for @backupType.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup-Type'**
+  String get backupType;
+
+  /// No description provided for @createdAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get createdAt;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get appVersion;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @backupCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup check failed'**
+  String get backupCheckFailed;
+
+  /// No description provided for @invalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file is invalid.'**
+  String get invalidFile;
+
+  /// No description provided for @fileSelectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The file selection failed'**
+  String get fileSelectionFailed;
+
+  /// No description provided for @backupSuccessfullyRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup successfully restored'**
+  String get backupSuccessfullyRestored;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed'**
+  String get restoreFailed;
+
+  /// No description provided for @selectZipBackupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a ZIP backup file to restore settings.'**
+  String get selectZipBackupFile;
+
+  /// No description provided for @selectZipBackupFileButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Select ZIP file and restore'**
+  String get selectZipBackupFileButton;
+
+  /// No description provided for @minimumFeedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least one feed.'**
+  String get minimumFeedSelection;
+
+  /// No description provided for @feedCreationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Creation failed.'**
+  String get feedCreationError;
+
+  /// No description provided for @feedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select feed'**
+  String get feedSelection;
+
+  /// No description provided for @feedCreationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating...'**
+  String get feedCreationDuration;
+
+  /// No description provided for @feedCreationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select multiple feeds. The selected feeds will be created in your Miniflux account.'**
+  String get feedCreationDescription;
+
+  /// No description provided for @feedSelectionSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get feedSelectionSelectAll;
+
+  /// No description provided for @feedSelectionDeleteSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get feedSelectionDeleteSelection;
 }
 
 class _AppLocalizationsDelegate

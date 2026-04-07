@@ -488,4 +488,91 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get imageCacheDurationDays =>
       'Anzahl der Tage, die Bilder im Cache vorgehalten werden sollen';
+
+  @override
+  String get login => 'Login';
+
+  @override
+  String get restoreSettings => 'Einstellungen wiederherstellen';
+
+  @override
+  String get backupSettings => 'Einstellungen sichern';
+
+  @override
+  String get backupSettingsDescription =>
+      'Sichert alle Einstellungen inkl. Feed-Einstellungen';
+
+  @override
+  String get backupError => 'Backup konnte nicht erstellt werden.';
+
+  @override
+  String get saveHeader => 'Speichere Header';
+
+  @override
+  String get confirmRestore => 'Wiederherstellung bestätigen';
+
+  @override
+  String get confirmRestoreOverride =>
+      'Dabei werden aktuelle Einstellungen und Feed-Einstellungen ueberschrieben.';
+
+  @override
+  String get file => 'Datei';
+
+  @override
+  String get backupType => 'Backup-Typ';
+
+  @override
+  String get createdAt => 'Erstellt';
+
+  @override
+  String get appVersion => 'App-Version';
+
+  @override
+  String get restore => 'Wiederherstellen';
+
+  @override
+  String get backupCheckFailed => 'Backup Check fehlgeschlagen';
+
+  @override
+  String get invalidFile => 'Die gewählte Datei ist ungültig.';
+
+  @override
+  String get fileSelectionFailed => 'Dateiauswahl fehlgeschlagen';
+
+  @override
+  String get backupSuccessfullyRestored =>
+      'Backup erfolgreich wiederhergestellt.';
+
+  @override
+  String get restoreFailed => 'Restore fehlgeschlagen';
+
+  @override
+  String get selectZipBackupFile =>
+      'Wähle eine ZIP-Backup-Datei aus, um die Einstellungen wiederherzustellen.';
+
+  @override
+  String get selectZipBackupFileButton =>
+      'ZIP-Datei wählen und wiederherstellen';
+
+  @override
+  String get minimumFeedSelection => 'Bitte mindestens einen Feed auswählen.';
+
+  @override
+  String get feedCreationError => 'Erstellung fehlgeschlagen.';
+
+  @override
+  String get feedSelection => 'Feeds auswählen';
+
+  @override
+  String get feedCreationDuration => 'Wird erstellt...';
+
+  @override
+  String get feedCreationDescription =>
+      'Wähle mehrere Feeds aus. Die ausgewählten Feeds werden im Miniflux-Account angelegt.';
+
+  @override
+  String get feedSelectionSelectAll => 'Alle auswählen';
+
+  @override
+  String get feedSelectionDeleteSelection => 'Auswahl löschen';
 }

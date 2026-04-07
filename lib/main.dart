@@ -23,9 +23,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
 
 import 'ui/flux_news_body.dart';
+import 'ui/feed_onboarding.dart';
+import 'ui/login.dart';
 import 'state_management/flux_news_state.dart';
 import 'ui/search.dart';
 import 'ui/settings.dart';
+import 'ui/welcome.dart';
+import 'ui/restore_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -232,6 +236,10 @@ class FluxNews extends StatelessWidget {
         // define routes for main view (FluxNewsBody), settings view and search view
         routes: {
           FluxNewsState.rootRouteString: (context) => const FluxNewsBody(),
+          FluxNewsState.welcomeRouteString: (context) => const Welcome(),
+          FluxNewsState.loginRouteString: (context) => const Login(),
+          FluxNewsState.feedOnboardingRouteString: (context) => const FeedOnboarding(),
+          FluxNewsState.restoreSettingsRouteString: (context) => const RestoreSettingsPage(),
           FluxNewsState.settingsRouteString: (context) => const Settings(),
           FluxNewsState.searchRouteString: (context) => const Search(),
           FluxNewsState.feedSettingsRouteString: (context) => const FeedSettings(),

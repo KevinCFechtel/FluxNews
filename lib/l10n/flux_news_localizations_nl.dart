@@ -478,4 +478,89 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get imageCacheDurationDays => 'Number of days to keep images in cache';
+
+  @override
+  String get login => 'Login';
+
+  @override
+  String get restoreSettings => 'Restore settings';
+
+  @override
+  String get backupSettings => 'Backup settings';
+
+  @override
+  String get backupSettingsDescription =>
+      'Backup all settings including feed settings';
+
+  @override
+  String get backupError => 'Failed to create backup.';
+
+  @override
+  String get saveHeader => 'Save Header';
+
+  @override
+  String get confirmRestore => 'Confirm restore';
+
+  @override
+  String get confirmRestoreOverride =>
+      'This will overwrite your current settings and feed configurations.';
+
+  @override
+  String get file => 'File';
+
+  @override
+  String get backupType => 'Backup-Type';
+
+  @override
+  String get createdAt => 'Created at';
+
+  @override
+  String get appVersion => 'App version';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get backupCheckFailed => 'Backup check failed';
+
+  @override
+  String get invalidFile => 'The selected file is invalid.';
+
+  @override
+  String get fileSelectionFailed => 'The file selection failed';
+
+  @override
+  String get backupSuccessfullyRestored => 'Backup successfully restored';
+
+  @override
+  String get restoreFailed => 'Restore failed';
+
+  @override
+  String get selectZipBackupFile =>
+      'Select a ZIP backup file to restore settings.';
+
+  @override
+  String get selectZipBackupFileButton => 'Select ZIP file and restore';
+
+  @override
+  String get minimumFeedSelection => 'Please select at least one feed.';
+
+  @override
+  String get feedCreationError => 'Creation failed.';
+
+  @override
+  String get feedSelection => 'Select feed';
+
+  @override
+  String get feedCreationDuration => 'Creating...';
+
+  @override
+  String get feedCreationDescription =>
+      'Select multiple feeds. The selected feeds will be created in your Miniflux account.';
+
+  @override
+  String get feedSelectionSelectAll => 'Select all';
+
+  @override
+  String get feedSelectionDeleteSelection => 'Clear selection';
 }

@@ -476,12 +476,14 @@ class News {
                     icon!,
                     width: size,
                     height: size,
+                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               return Image.memory(
                 icon!,
                 width: size,
                 height: size,
+                errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
               );
             }
           } else {
@@ -496,6 +498,7 @@ class News {
                     icon!,
                     width: size,
                     height: size,
+                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               if (manualAdaptLightModeToIcon!) {
@@ -509,12 +512,14 @@ class News {
                       icon!,
                       width: size,
                       height: size,
+                      errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                     ));
               } else {
                 return Image.memory(
                   icon!,
                   width: size,
                   height: size,
+                  errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                 );
               }
             }
@@ -524,6 +529,7 @@ class News {
             icon!,
             width: size,
             height: size,
+            errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
           );
         }
       }
@@ -786,6 +792,7 @@ class Feed {
                     icon!,
                     width: size,
                     height: size,
+                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               if (manualAdaptLightModeToIcon!) {
@@ -799,12 +806,14 @@ class Feed {
                       icon!,
                       width: size,
                       height: size,
+                      errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                     ));
               } else {
                 return Image.memory(
                   icon!,
                   width: size,
                   height: size,
+                  errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                 );
               }
             }
@@ -820,12 +829,14 @@ class Feed {
                     icon!,
                     width: size,
                     height: size,
+                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               return Image.memory(
                 icon!,
                 width: size,
                 height: size,
+                errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
               );
             }
           }
@@ -834,6 +845,7 @@ class Feed {
             icon!,
             width: size,
             height: size,
+            errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
           );
         }
       }

@@ -1,15 +1,19 @@
 import 'dart:io';
+import 'dart:convert';
 
+import 'package:archive/archive_io.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'dart:io' show Platform;
+import 'package:share_plus/share_plus.dart';
 
 import '../state_management/flux_news_state.dart';
 import '../miniflux/miniflux_backend.dart';
@@ -344,6 +348,33 @@ class Settings extends StatelessWidget {
                   },
                 ),
                 const Divider(),
+                ListTile(
+                  leading: const Icon(
+                    Icons.backup,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.backupSettings,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.backupSettingsDescription,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    exportSettingsBackup(context, appState);
+                  },
+                ),
+                const Divider(),
                 // this list tile delete the local news database
                 ListTile(
                   leading: const Icon(
@@ -441,6 +472,94 @@ class Settings extends StatelessWidget {
       }
     }
     appState.refreshView();
+  }
+
+  Future<void> exportSettingsBackup(BuildContext context, FluxNewsState appState) async {
+    try {
+      appState.db ??= await appState.initializeDB();
+
+      final storageSettings = await appState.storage.readAll();
+      final feedSettings = <Map<String, Object?>>[];
+      if (appState.db != null) {
+        final feeds = await appState.db!.rawQuery('''SELECT feedID,
+                                                            title,
+                                                            site_url,
+                                                            iconMimeType,
+                                                            iconID,
+                                                            newsCount,
+                                                            crawler,
+                                                            manualTruncate,
+                                                            preferParagraph,
+                                                            preferAttachmentImage,
+                                                            manualAdaptLightModeToIcon,
+                                                            manualAdaptDarkModeToIcon,
+                                                            openMinifluxEntry,
+                                                            expandedWithFulltext,
+                                                            expandedFulltextLimit,
+                                                            categoryID
+                                                       FROM feeds
+                                                   ORDER BY UPPER(title) ASC''');
+        for (final feed in feeds) {
+          feedSettings.add(Map<String, Object?>.from(feed));
+        }
+      }
+
+      final backupData = {
+        'backupType': 'flux_news_settings',
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
+        'appVersion': FluxNewsState.applicationVersion,
+        'settings': storageSettings,
+        'feedSettings': feedSettings,
+      };
+
+      final backupJson = const JsonEncoder.withIndent('  ').convert(backupData);
+      Directory? exportDirectory;
+      if (Platform.isIOS) {
+        exportDirectory = await getApplicationDocumentsDirectory();
+      } else {
+        exportDirectory = await getExternalStorageDirectory();
+      }
+
+      if (exportDirectory == null) {
+        logThis('fetchNews', 'Error export directory for the backup could not be determined', LogLevel.ERROR);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
+          );
+        }
+        return;
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final jsonFile = File('${exportDirectory.path}/flux_news_settings_backup_$timestamp.json');
+      await jsonFile.writeAsString(backupJson, flush: true);
+
+      final zipFilePath = '${exportDirectory.path}/flux_news_settings_backup_$timestamp.zip';
+      final zipEncoder = ZipFileEncoder();
+      zipEncoder.create(zipFilePath);
+      await zipEncoder.addFile(jsonFile);
+      zipEncoder.close();
+
+      await jsonFile.delete();
+
+      if (context.mounted) {
+        if (Platform.isIOS) {
+          final box = context.findRenderObject() as RenderBox?;
+          await SharePlus.instance.share(ShareParams(
+              files: [XFile(zipFilePath)],
+              sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+        } else {
+          await SharePlus.instance.share(ShareParams(files: [XFile(zipFilePath)]));
+        }
+      }
+    } catch (e) {
+      logThis('fetchNews', 'Error shareing the backup: ${e.toString()}', LogLevel.ERROR);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
+        );
+      }
+    }
   }
 
   // this method shows a dialog to enter the miniflux url
