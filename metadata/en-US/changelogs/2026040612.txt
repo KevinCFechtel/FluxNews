@@ -1,0 +1,4 @@
+ •	Added an option to configure Image Cache Days.
+ •	Added the ability to backup and restore settings.
+ •	New Welcome Screen to better support the initial app setup.
+ •	Feed suggestions are now provided if a Miniflux account is detected as empty.
