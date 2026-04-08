@@ -12,6 +12,7 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/audioplayer.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -612,6 +613,10 @@ Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext contex
 
 void onTabAction(
     FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (_openAudioPlayerIfAvailable(news, appState, context, searchView, itemIndex, newsList)) {
+    return;
+  }
+
   if (appState.tabAction != FluxNewsState.tabActionExpandString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
       if (news.openMinifluxEntry != null) {
@@ -649,6 +654,10 @@ void onTabAction(
 
 void onTabContentAction(
     FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (_openAudioPlayerIfAvailable(news, appState, context, searchView, itemIndex, newsList)) {
+    return;
+  }
+
   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
       if (news.openMinifluxEntry != null) {
@@ -682,6 +691,36 @@ void onTabContentAction(
     }
     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
   }
+}
+
+bool _openAudioPlayerIfAvailable(
+  News news,
+  FluxNewsState appState,
+  BuildContext context,
+  bool searchView,
+  int itemIndex,
+  List<News>? newsList,
+) {
+  final hasAudio = news.getAudioAttachments().isNotEmpty;
+  if (!hasAudio) {
+    return false;
+  }
+
+  if (news.status == FluxNewsState.unreadNewsStatus) {
+    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+    if (appState.removeNewsFromListWhenRead && !searchView) {
+      newsList?.removeAt(itemIndex);
+    }
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => NewsAudioPlayerScreen(news: news),
+    ),
+  );
+
+  return true;
 }
 
 List<Widget> getIOSContextMenuActions(

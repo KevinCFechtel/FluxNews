@@ -600,6 +600,17 @@ class NewsCard extends StatelessWidget {
                                                     padding: const EdgeInsets.only(right: 5.0),
                                                     child: news.getFeedIcon(16.0, context))
                                                 : const SizedBox.shrink(),
+                                            news.getAudioAttachments().isNotEmpty
+                                                ? Padding(
+                                                    padding: const EdgeInsets.only(right: 5.0),
+                                                    child: Icon(
+                                                      Icons.headphones,
+                                                      size: 16.0,
+                                                      color: news.status == FluxNewsState.unreadNewsStatus
+                                                          ? Theme.of(context).primaryIconTheme.color
+                                                          : Theme.of(context).disabledColor,
+                                                    ))
+                                                : const SizedBox.shrink(),
                                             Expanded(
                                               child: Padding(
                                                 padding: const EdgeInsets.only(left: 0.0),

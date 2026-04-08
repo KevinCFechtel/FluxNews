@@ -1320,3 +1320,51 @@ Future<bool> checkMinifluxCredentials(String? miniFluxUrl, String? miniFluxApiKe
     return false;
   }
 }
+
+// sync the media progression of an enclosure with the miniflux server
+Future<void> syncMediaProgression(FluxNewsState appState, int entryID, int attachmentID, int progressSeconds) async {
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) return;
+  if (appState.debugMode) {
+    logThis('syncMediaProgression',
+        'Syncing media progression for entry $entryID, enclosure $attachmentID: ${progressSeconds}s', LogLevel.INFO);
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+    FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  try {
+    final response = await client.put(
+      Uri.parse('${appState.minifluxURL!}enclosures/$attachmentID'),
+      headers: header,
+      body: jsonEncode({'media_progression': progressSeconds}),
+    );
+
+    if (response.statusCode != 204) {
+      logThis(
+        'syncMediaProgression',
+        'Got unexpected response from miniflux server: ${response.statusCode} for enclosure $attachmentID',
+        LogLevel.ERROR,
+      );
+    }
+  } finally {
+    client.close();
+  }
+
+  if (appState.debugMode) {
+    logThis('syncMediaProgression', 'Finished syncing media progression for entry $entryID', LogLevel.INFO);
+  }
+}

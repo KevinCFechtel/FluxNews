@@ -66,6 +66,7 @@ dependencies:
   extended_image: ^10.0.1
   path_provider_foundation: 2.5.1
   archive: ^4.0.9
+  audioplayers: ^6.6.0
 
 dev_dependencies:
   flutter_test:

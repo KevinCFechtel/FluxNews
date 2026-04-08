@@ -376,7 +376,8 @@ class FluxNewsState extends ChangeNotifier {
           '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
                           newsID INTEGER, 
                           attachmentURL TEXT, 
-                          attachmentMimeType TEXT)''',
+                          attachmentMimeType TEXT,
+                          mediaProgression INTEGER NOT NULL DEFAULT 0)''',
         );
 
         logThis('initializeDB', 'Finished creating DB', LogLevel.INFO);
@@ -392,7 +393,8 @@ class FluxNewsState extends ChangeNotifier {
             '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
                           newsID INTEGER, 
                           attachmentURL TEXT, 
-                          attachmentMimeType TEXT)''',
+                          attachmentMimeType TEXT,
+                          mediaProgression INTEGER NOT NULL DEFAULT 0)''',
           );
           await db.execute(
             '''ALTER TABLE "categories" 
@@ -624,6 +626,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 5) {
           logThis('upgradeDB', 'Upgrading DB from version 5', LogLevel.INFO);
 
@@ -838,6 +843,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 6) {
           logThis('upgradeDB', 'Upgrading DB from version 6', LogLevel.INFO);
 
@@ -1052,6 +1060,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 7) {
           logThis('upgradeDB', 'Upgrading DB from version 7', LogLevel.INFO);
 
@@ -1266,6 +1277,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 8) {
           logThis('upgradeDB', 'Upgrading DB from version 8', LogLevel.INFO);
 
@@ -1377,11 +1391,20 @@ class FluxNewsState extends ChangeNotifier {
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
+        } else if (oldVersion == 9) {
+          logThis('upgradeDB', 'Upgrading DB from version 9', LogLevel.INFO);
+
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         }
 
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 9,
+      version: 10,
     );
   }
 

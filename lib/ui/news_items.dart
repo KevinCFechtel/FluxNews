@@ -50,6 +50,18 @@ class NewsTopHeadline extends StatelessWidget {
                   appState.showFeedIcons
                       ? Padding(padding: const EdgeInsets.only(right: 5.0), child: news.getFeedIcon(16.0, context))
                       : const SizedBox.shrink(),
+                  news.getAudioAttachments().isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: 5.0),
+                          child: Icon(
+                            Icons.headphones,
+                            size: 16.0,
+                            color: news.status == FluxNewsState.unreadNewsStatus
+                                ? Theme.of(context).primaryIconTheme.color
+                                : Theme.of(context).disabledColor,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 0.0),
@@ -71,6 +83,16 @@ class NewsTopHeadline extends StatelessWidget {
                           : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
                     ),
                   ),
+                  if (news.getAudioAttachments().isNotEmpty && news.getFormattedPlaybackTime().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        news.getFormattedPlaybackTime(),
+                        style: news.status == FluxNewsState.unreadNewsStatus
+                            ? Theme.of(context).textTheme.bodyMedium
+                            : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                      ),
+                    ),
                   SizedBox(
                     width: 40,
                     height: 35,
@@ -101,46 +123,29 @@ class NewsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+
+    // Prepare audio playback time if audio attachments exist
+    String playbackPrefix = '';
+    if (news.getAudioAttachments().isNotEmpty && news.getFormattedPlaybackTime().isNotEmpty) {
+      playbackPrefix = '🎧 ${news.getFormattedPlaybackTime()} • ';
+    }
+
+    final Widget textContent = news.expanded
+        ? news.expandedWithFulltext != null
+            ? news.expandedWithFulltext!
+                ? news.getFullTextWidget(appState)
+                : news.getFullRenderedWidget(appState, context)
+            : news.getFullRenderedWidget(appState, context)
+        : Text(
+            playbackPrefix + news.getText(appState),
+            style: news.status == FluxNewsState.unreadNewsStatus
+                ? Theme.of(context).textTheme.bodyMedium
+                : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+          );
+
     return Padding(
       padding: const EdgeInsets.only(top: 2.0, bottom: 10),
-      child: news.expanded
-          ? news.expandedWithFulltext != null
-              ? news.expandedWithFulltext!
-                  ? news.getFullTextWidget(appState)
-                  : news.getFullRenderedWidget(appState, context)
-              /*
-                  HtmlWidget(
-                      news.content,
-                      enableCaching: true,
-                      textStyle: TextStyle(
-                        fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize,
-                        color: Theme.of(context).textTheme.bodyMedium!.color,
-                      ),
-                      onTapUrl: (url) async {
-                        return await openUrlAction(url, context);
-                      },
-                    )
-                    */
-              : news.getFullRenderedWidget(appState, context)
-          /*
-              HtmlWidget(
-                  news.content,
-                  enableCaching: true,
-                  textStyle: TextStyle(
-                    fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize,
-                    color: Theme.of(context).textTheme.bodyMedium!.color,
-                  ),
-                  onTapUrl: (url) async {
-                    return await openUrlAction(url, context);
-                  },
-                )
-                */
-          : Text(
-              news.getText(appState),
-              style: news.status == FluxNewsState.unreadNewsStatus
-                  ? Theme.of(context).textTheme.bodyMedium
-                  : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
-            ),
+      child: textContent,
     );
   }
 }

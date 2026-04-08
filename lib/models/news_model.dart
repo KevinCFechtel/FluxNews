@@ -332,6 +332,48 @@ class News {
     return imageAttachment;
   }
 
+  List<Attachment> getAudioAttachments() {
+    final List<Attachment> audioAttachments = [];
+
+    if (attachments != null) {
+      for (final attachment in attachments!) {
+        if (attachment.attachmentMimeType.toLowerCase().startsWith('audio/')) {
+          audioAttachments.add(attachment);
+        }
+      }
+    }
+
+    if (audioAttachments.isEmpty &&
+        attachmentURL != null &&
+        attachmentURL!.isNotEmpty &&
+        attachmentMimeType != null &&
+        attachmentMimeType!.toLowerCase().startsWith('audio/')) {
+      audioAttachments.add(
+        Attachment(
+          attachmentID: -1,
+          newsID: newsID,
+          attachmentURL: attachmentURL!,
+          attachmentMimeType: attachmentMimeType!,
+        ),
+      );
+    }
+
+    return audioAttachments;
+  }
+
+  String getFormattedPlaybackTime() {
+    if (readingTime == 0) return '';
+    if (readingTime < 60) {
+      return '${readingTime}min';
+    }
+    final int hours = readingTime ~/ 60;
+    final int minutes = readingTime % 60;
+    if (minutes == 0) {
+      return '${hours}h';
+    }
+    return '${hours}h ${minutes}min';
+  }
+
   // define the method to extract the image url from the html content
   // the image url is searched in the img tags
   // the image url is searched in the src attribute
@@ -342,7 +384,9 @@ class News {
     final document = parse(content);
     if (preferAttachmentImage != null && preferAttachmentImage!) {
       if (attachmentURL != null) {
-        imageUrl = attachmentURL!;
+        if (attachmentMimeType != null && attachmentMimeType!.startsWith('image/')) {
+          imageUrl = attachmentURL!;
+        }
       }
       if (imageUrl == FluxNewsState.noImageUrlString) {
         var images = document.getElementsByTagName('img');
@@ -369,7 +413,9 @@ class News {
       }
       if (imageUrl == FluxNewsState.noImageUrlString) {
         if (attachmentURL != null) {
-          imageUrl = attachmentURL!;
+          if (attachmentMimeType != null && attachmentMimeType!.startsWith('image/')) {
+            imageUrl = attachmentURL!;
+          }
         }
       }
     }
@@ -973,13 +1019,15 @@ class Attachment {
       {required this.attachmentID,
       required this.newsID,
       required this.attachmentURL,
-      required this.attachmentMimeType});
+      required this.attachmentMimeType,
+      this.mediaProgression = 0});
 
   // define the properties
   int attachmentID = 0;
   int newsID = 0;
   String attachmentURL = '';
   String attachmentMimeType = '';
+  int mediaProgression = 0;
 
   // define the method to convert the model from json
   factory Attachment.fromJson(Map<String, dynamic> json) {
@@ -988,6 +1036,7 @@ class Attachment {
       newsID: json['entry_id'],
       attachmentURL: json['url'],
       attachmentMimeType: json['mime_type'],
+      mediaProgression: json['media_progression'] ?? 0,
     );
   }
 
@@ -998,6 +1047,7 @@ class Attachment {
       'newsID': newsID,
       'attachmentURL': attachmentURL,
       'attachmentMimeType': attachmentMimeType,
+      'mediaProgression': mediaProgression,
     };
   }
 
@@ -1006,7 +1056,8 @@ class Attachment {
       : attachmentID = res['attachmentID'],
         newsID = res['newsID'],
         attachmentURL = res['attachmentURL'],
-        attachmentMimeType = res['attachmentMimeType'];
+        attachmentMimeType = res['attachmentMimeType'],
+        mediaProgression = res['mediaProgression'] ?? 0;
 }
 
 // define the model for Version response

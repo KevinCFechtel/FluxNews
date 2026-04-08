@@ -50,14 +50,17 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
         if (resultSelect.isEmpty) {
           batch.insert('news', news.toMap());
 
-          // insert the first image attachment of the news in the attachments db
-          Attachment imageAttachment = news.getFirstImageAttachment();
-          if (imageAttachment.attachmentID != -1) {
-            resultSelect = await appState.db!
-                .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?', [imageAttachment.attachmentID]);
-            // if the attachment is not present, insert the attachment
-            if (resultSelect.isEmpty) {
-              batch.insert('attachments', imageAttachment.toMap());
+          // insert all attachments (images and audio)
+          if (news.attachments != null && news.attachments!.isNotEmpty) {
+            for (Attachment attachment in news.attachments!) {
+              if (attachment.attachmentID != -1) {
+                resultSelect = await appState.db!
+                    .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?', [attachment.attachmentID]);
+                // if the attachment is not present, insert the attachment
+                if (resultSelect.isEmpty) {
+                  batch.insert('attachments', attachment.toMap());
+                }
+              }
             }
           }
 
@@ -145,6 +148,19 @@ Future<int> updateStarredNewsInDB(NewsList newsList, FluxNewsState appState) asy
           WHERE newsID = ?''', [news.newsID]);
       if (resultSelect.isEmpty) {
         appState.db!.insert('news', news.toMap());
+
+        // insert all attachments (images and audio)
+        if (news.attachments != null && news.attachments!.isNotEmpty) {
+          for (Attachment attachment in news.attachments!) {
+            if (attachment.attachmentID != -1) {
+              resultSelect = await appState.db!
+                  .rawQuery('SELECT * FROM attachments WHERE attachmentID = ?', [attachment.attachmentID]);
+              if (resultSelect.isEmpty) {
+                appState.db!.insert('attachments', attachment.toMap());
+              }
+            }
+          }
+        }
       } else {
         // check if the news is already marked as bookmarked
         resultSelect = await appState.db!.rawQuery('''
@@ -331,12 +347,9 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
                         feeds.expandedWithFulltext,
-                        feeds.expandedFulltextLimit,
-                        substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
-                        attachments.attachmentMimeType
+                        feeds.expandedFulltextLimit
                   FROM news 
                   LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-                  LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
                   WHERE news.starred = ? 
                   ORDER BY news.publishedAt $sortOrder''', [1]);
         newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
@@ -369,12 +382,9 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
                         feeds.expandedWithFulltext,
-                        feeds.expandedFulltextLimit,
-                        substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
-                        attachments.attachmentMimeType
+                        feeds.expandedFulltextLimit
                     FROM news 
                     LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-                    LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
                     WHERE (news.status LIKE ?) 
                       AND news.feedID LIKE ? 
                     ORDER BY news.publishedAt $sortOrder''', [status, feedID]);
@@ -409,16 +419,43 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.manualAdaptDarkModeToIcon,
                         feeds.openMinifluxEntry,
                         feeds.expandedWithFulltext,
-                        feeds.expandedFulltextLimit,
-                        substr(attachments.attachmentURL, 1, 1000000) as attachmentURL,
-                        attachments.attachmentMimeType
+                        feeds.expandedFulltextLimit
                 FROM news 
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-                LEFT OUTER JOIN attachments ON news.newsID = attachments.newsID
                 WHERE (news.status LIKE ?) 
                 ORDER BY news.publishedAt $sortOrder
                 ''', [status]);
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
+    }
+
+    // Load all attachments for the queried news (separate query to avoid JOIN duplicates)
+    if (newList.isNotEmpty) {
+      final newsIDs = newList.map((n) => n.newsID).toSet().toList();
+      Map<int, List<Attachment>> attachmentMap = {};
+
+      // Process in chunks of 500 to avoid SQLite parameter limit (default: 999)
+      const int chunkSize = 500;
+      for (int i = 0; i < newsIDs.length; i += chunkSize) {
+        final int end = (i + chunkSize < newsIDs.length) ? i + chunkSize : newsIDs.length;
+        final List<int> chunk = newsIDs.sublist(i, end);
+        final String placeholders = List.filled(chunk.length, '?').join(',');
+
+        List<Map<String, Object?>> attachmentRows =
+            await appState.db!.rawQuery('SELECT * FROM attachments WHERE newsID IN ($placeholders)', chunk);
+
+        for (var row in attachmentRows) {
+          int newsID = row['newsID'] as int;
+          if (!attachmentMap.containsKey(newsID)) {
+            attachmentMap[newsID] = [];
+          }
+          attachmentMap[newsID]!.add(Attachment.fromMap(row));
+        }
+      }
+
+      // Assign attachments to news objects
+      for (News news in newList) {
+        news.attachments = attachmentMap[news.newsID] ?? [];
+      }
     }
     List<Feed> feedList = [];
     List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
@@ -1127,7 +1164,8 @@ Future<void> deleteLocalNewsCache(FluxNewsState appState, BuildContext context) 
       '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
                           newsID INTEGER, 
                           attachmentURL TEXT, 
-                          attachmentMimeType TEXT)''',
+                          attachmentMimeType TEXT,
+                          mediaProgression INTEGER NOT NULL DEFAULT 0)''',
     );
   }
   await appState.deleteAllFeedIconFiles();
