@@ -30,7 +30,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.16.0';
+  static const String applicationVersion = '1.17.0';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -85,6 +85,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
   static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
   static const String secureStorageSyncReadNewsKey = 'syncReadNews';
+  static const String secureStorageAutoDownloadAudioAfterSyncKey = 'autoDownloadAudioAfterSync';
+  static const String secureStorageDownloadAudioOnlyOnWifiKey = 'downloadAudioOnlyOnWifi';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
@@ -274,6 +276,8 @@ class FluxNewsState extends ChangeNotifier {
   bool categorieStartup = false;
   bool removeNewsFromListWhenRead = false;
   bool syncReadNews = false;
+  bool autoDownloadAudioAfterSync = false;
+  bool downloadAudioOnlyOnWifi = false;
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
@@ -2058,6 +2062,28 @@ class FluxNewsState extends ChangeNotifier {
             syncReadNews = true;
           } else {
             syncReadNews = false;
+          }
+        }
+      }
+
+      // assign the auto-download audio after sync selection from persistent saved config
+      if (key == FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            autoDownloadAudioAfterSync = true;
+          } else {
+            autoDownloadAudioAfterSync = false;
+          }
+        }
+      }
+
+      // assign the download audio only on wifi selection from persistent saved config
+      if (key == FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            downloadAudioOnlyOnWifi = true;
+          } else {
+            downloadAudioOnlyOnWifi = false;
           }
         }
       }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -143,6 +144,14 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         }
         return 0;
       });
+
+      if (appState.autoDownloadAudioAfterSync) {
+        unawaited(AudioDownloadService.downloadAudioForNewsList(
+          newsList: newNews.news,
+          retentionDays: appState.imageCacheDurationDays,
+          onlyOnWifi: appState.downloadAudioOnlyOnWifi,
+        ));
+      }
     }
     if (!appState.longSyncAborted) {
       // after inserting the news, renew the list view with the new news

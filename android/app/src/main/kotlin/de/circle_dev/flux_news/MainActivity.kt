@@ -11,6 +11,7 @@ import androidx.browser.customtabs.*
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.view.WindowCompat
+import com.ryanheise.audioservice.AudioServiceActivity
 
 // this are the constants used in the dart code
 private const val CHANNEL = "UrlLauncher"
@@ -21,7 +22,7 @@ private const val KEY_OPTIONS_SHOW_PAGE_TITLE = "showPageTitle"
 private const val KEY_OPTIONS_ENABLE_URL_BAR_HIDING = "enableUrlBarHiding"
 private const val KEY_OPTIONS_DEFAULT_SHARE_MENU_ITEM = "enableDefaultShare"
 private const val KEY_OPTIONS_ENABLE_INSTANT_APPS = "enableInstantApps"
-class MainActivity: FlutterActivity() {
+class MainActivity: AudioServiceActivity() {
 
     // This is needed to hide the status bar and navigation bar
     override fun onPostResume() {

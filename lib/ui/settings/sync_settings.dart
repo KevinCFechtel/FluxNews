@@ -240,6 +240,37 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.wifi,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Audio nur ueber WLAN herunterladen',
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.downloadAudioOnlyOnWifi,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.downloadAudioOnlyOnWifi = value;
+                      appState.storage
+                          .write(key: FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
               // this row contains the selection of the sync on start
               Row(
                 children: [
@@ -317,6 +348,37 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       ],
                     )
                   : const SizedBox.shrink(),
+              const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.download_for_offline_outlined,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Audio nach Sync automatisch herunterladen',
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.autoDownloadAudioAfterSync,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.autoDownloadAudioAfterSync = value;
+                      appState.storage
+                          .write(key: FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
               const Divider(),
               // this row contains the selection of the sync on start
               Row(

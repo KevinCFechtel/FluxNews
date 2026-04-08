@@ -1322,8 +1322,39 @@ Future<bool> checkMinifluxCredentials(String? miniFluxUrl, String? miniFluxApiKe
 }
 
 // sync the media progression of an enclosure with the miniflux server
+bool _isMinifluxVersionAtLeast(String? versionString, List<int> minimum) {
+  if (versionString == null || versionString.trim().isEmpty) {
+    return false;
+  }
+
+  final parts = RegExp(r'\d+').allMatches(versionString).map((m) => int.parse(m.group(0)!)).toList();
+  if (parts.isEmpty) {
+    return false;
+  }
+
+  for (int i = 0; i < minimum.length; i++) {
+    final currentPart = i < parts.length ? parts[i] : 0;
+    final minPart = minimum[i];
+    if (currentPart > minPart) return true;
+    if (currentPart < minPart) return false;
+  }
+
+  return true;
+}
+
 Future<void> syncMediaProgression(FluxNewsState appState, int entryID, int attachmentID, int progressSeconds) async {
   if (appState.minifluxURL == null || appState.minifluxAPIKey == null) return;
+  const List<int> minMediaProgressionApiVersion = [2, 2, 0]; // Miniflux 2.2.0
+  if (!_isMinifluxVersionAtLeast(appState.minifluxVersionString, minMediaProgressionApiVersion)) {
+    if (appState.debugMode) {
+      logThis(
+        'syncMediaProgression',
+        'Skipping media progression sync. Miniflux version ${appState.minifluxVersionString ?? appState.minifluxVersionInt} is lower than 2.2.0.',
+        LogLevel.INFO,
+      );
+    }
+    return;
+  }
   if (appState.debugMode) {
     logThis('syncMediaProgression',
         'Syncing media progression for entry $entryID, enclosure $attachmentID: ${progressSeconds}s', LogLevel.INFO);
