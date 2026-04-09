@@ -25,6 +25,9 @@ class NewsAudioPlayerScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(news.title),
       ),
       body: SafeArea(
@@ -100,6 +103,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   StreamSubscription<PlaybackState>? _playbackStateSubscription;
   final Map<int, String> _downloadedPaths = {};
   final Map<int, List<AudioChapter>> _chaptersByAttachmentID = {};
+  final Map<int, ScrollController> _chapterScrollControllers = {};
+  final Set<int> _loadingChapterAttachmentIDs = {};
   final Set<int> _downloadingAttachmentIDs = {};
   Uri? _defaultArtworkUri;
   double _playbackSpeed = 1.0;
@@ -118,6 +123,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   bool _isDisposed = false;
 
   String _progressKey() => '${FluxNewsState.audioProgressKeyPrefix}${widget.news.newsID}';
+
+  ScrollController _chapterControllerFor(int attachmentID) {
+    return _chapterScrollControllers.putIfAbsent(attachmentID, ScrollController.new);
+  }
 
   @override
   void initState() {
@@ -142,8 +151,11 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     _downloadedPaths
       ..clear()
       ..addAll(downloadedPaths);
-    for (final entry in downloadedPaths.entries) {
-      await _loadChaptersForAttachment(entry.key, entry.value);
+    for (final attachment in _audioAttachments) {
+      await _loadChaptersForAttachment(
+        attachment,
+        filePath: downloadedPaths[attachment.attachmentID],
+      );
     }
     _syncActiveAttachment();
     if (!mounted || _isDisposed) return;
@@ -182,9 +194,35 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     });
   }
 
-  Future<void> _loadChaptersForAttachment(int attachmentID, String filePath) async {
-    final chapters = await AudioDownloadService.readChapters(filePath, context);
-    _chaptersByAttachmentID[attachmentID] = chapters;
+  Future<void> _loadChaptersForAttachment(Attachment attachment, {String? filePath}) async {
+    if (mounted && !_isDisposed) {
+      setState(() {
+        _loadingChapterAttachmentIDs.add(attachment.attachmentID);
+      });
+    } else {
+      _loadingChapterAttachmentIDs.add(attachment.attachmentID);
+    }
+
+    List<AudioChapter> chapters = [];
+    if (filePath != null && filePath.isNotEmpty) {
+      if (mounted) {
+        chapters = await AudioDownloadService.readChapters(filePath, context);
+      }
+    } else {
+      if (mounted) {
+        chapters = await AudioDownloadService.readChaptersFromUrl(attachment.attachmentURL, context);
+      }
+    }
+
+    _chaptersByAttachmentID[attachment.attachmentID] = chapters;
+    if (!mounted || _isDisposed) {
+      _loadingChapterAttachmentIDs.remove(attachment.attachmentID);
+      return;
+    }
+
+    setState(() {
+      _loadingChapterAttachmentIDs.remove(attachment.attachmentID);
+    });
   }
 
   Future<void> _downloadAudio(Attachment attachment) async {
@@ -195,7 +233,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
           onlyOnWifi: widget.appState.downloadAudioOnlyOnWifi);
       if (filePath != null) {
         _downloadedPaths[attachment.attachmentID] = filePath;
-        await _loadChaptersForAttachment(attachment.attachmentID, filePath);
+        await _loadChaptersForAttachment(attachment, filePath: filePath);
       } else if (widget.appState.downloadAudioOnlyOnWifi) {
         final isWifiConnected = await AudioDownloadService.isWifiConnected();
         if (!isWifiConnected && mounted) {
@@ -276,6 +314,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     _playerStateSubscription?.cancel();
     _mediaItemSubscription?.cancel();
     _playbackStateSubscription?.cancel();
+    for (final controller in _chapterScrollControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -613,6 +654,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         final isStopped = !isActive || _playerState.processingState == ProcessingState.idle;
         final isDownloaded = _downloadedPaths.containsKey(attachment.attachmentID);
         final isDownloading = _downloadingAttachmentIDs.contains(attachment.attachmentID);
+        final isLoadingChapters = _loadingChapterAttachmentIDs.contains(attachment.attachmentID);
         final chapters = _chaptersByAttachmentID[attachment.attachmentID] ?? const <AudioChapter>[];
 
         final parsedUri = Uri.tryParse(attachment.attachmentURL);
@@ -620,6 +662,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
             ? parsedUri.pathSegments.last
             : attachment.attachmentMimeType;
         final mediaName = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
+        final chapterListHeight = chapters.length > 4 ? 224.0 : chapters.length * 56.0;
+        final chapterScrollController = _chapterControllerFor(attachment.attachmentID);
 
         final maxMs = _duration.inMilliseconds > 0 ? _duration.inMilliseconds.toDouble() : 1.0;
         final currentMs = isActive ? _position.inMilliseconds.toDouble().clamp(0.0, maxMs) : 0.0;
@@ -700,32 +744,70 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                   ),
                 ),
 
-                if (chapters.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  ExpansionTile(
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: EdgeInsets.zero,
-                    title: Text(
-                      AppLocalizations.of(context)!.chapters,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    children: chapters
-                        .map(
-                          (chapter) => ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              chapter.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(_formatChapterStart(chapter.start)),
-                            onTap: () => _seekToChapter(attachment, chapter),
-                          ),
-                        )
-                        .toList(),
+                const SizedBox(height: 8),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: EdgeInsets.zero,
+                  title: Text(
+                    AppLocalizations.of(context)!.chapters,
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-                ],
+                  children: [
+                    if (isLoadingChapters)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(AppLocalizations.of(context)!.loadingChapters),
+                          ],
+                        ),
+                      )
+                    else if (chapters.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.noChaptersFound,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: chapterListHeight,
+                        child: Scrollbar(
+                          controller: chapterScrollController,
+                          child: ListView.builder(
+                            controller: chapterScrollController,
+                            primary: false,
+                            padding: EdgeInsets.zero,
+                            itemCount: chapters.length,
+                            itemBuilder: (context, index) {
+                              final chapter = chapters[index];
+                              return ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  chapter.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: Text(_formatChapterStart(chapter.start)),
+                                onTap: () => _seekToChapter(attachment, chapter),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
 
                 const SizedBox(height: 4),
                 ExpansionTile(

@@ -1379,6 +1379,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advanced Settings'**
   String get advancedSettings;
+
+  /// No description provided for @loadingChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading chapters ...'**
+  String get loadingChapters;
+
+  /// No description provided for @noChaptersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No chapters found.'**
+  String get noChaptersFound;
 }
 
 class _AppLocalizationsDelegate

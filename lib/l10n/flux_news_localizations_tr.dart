@@ -689,4 +689,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get advancedSettings => 'Advanced Settings';
+
+  @override
+  String get loadingChapters => 'Loading chapters ...';
+
+  @override
+  String get noChaptersFound => 'No chapters found.';
 }

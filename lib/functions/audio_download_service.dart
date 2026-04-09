@@ -67,6 +67,7 @@ class DownloadedAudioInfo {
 
 class AudioDownloadService {
   static const _storage = sec_store.FlutterSecureStorage();
+  static const int _remoteId3HeaderLength = 10;
   static const String _downloadPathKeyPrefix = FluxNewsState.downloadPathKeyPrefix;
   static const String _downloadPathByUrlKeyPrefix = FluxNewsState.downloadPathByUrlKeyPrefix;
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
@@ -193,8 +194,8 @@ class AudioDownloadService {
 
     final raf = await file.open();
     try {
-      final header = await raf.read(10);
-      if (header.length < 10 || ascii.decode(header.sublist(0, 3), allowInvalid: true) != 'ID3') {
+      final header = await raf.read(_remoteId3HeaderLength);
+      if (!_hasId3Header(header)) {
         return const [];
       }
 
@@ -204,47 +205,152 @@ class AudioDownloadService {
       if (tagSize <= 0) return const [];
 
       final tagData = await raf.read(tagSize);
-      if (tagData.isEmpty) return const [];
-
-      final chapters = <AudioChapter>[];
-      var offset = 0;
-
-      if ((flags & 0x40) != 0) {
-        if (version == 3 && tagData.length >= 4) {
-          offset = 4 + _readInt32(tagData, 0);
-        } else if (version == 4 && tagData.length >= 4) {
-          offset = _readSynchsafeInt(tagData, 0);
-        }
+      if (context.mounted) {
+        return _extractChaptersFromTagData(
+          version: version,
+          flags: flags,
+          tagData: tagData,
+          context: context,
+        );
+      } else {
+        return const [];
       }
-
-      while (offset + 10 <= tagData.length) {
-        final frameId = ascii.decode(tagData.sublist(offset, offset + 4), allowInvalid: true);
-        if (frameId.trim().isEmpty || frameId.codeUnits.every((unit) => unit == 0)) {
-          break;
-        }
-
-        final frameSize = version == 4 ? _readSynchsafeInt(tagData, offset + 4) : _readInt32(tagData, offset + 4);
-        if (frameSize <= 0 || offset + 10 + frameSize > tagData.length) {
-          break;
-        }
-
-        if (frameId == 'CHAP') {
-          if (context.mounted) {
-            final chapter = _parseChapFrame(tagData.sublist(offset + 10, offset + 10 + frameSize), version, context);
-            if (chapter != null) {
-              chapters.add(chapter);
-            }
-          }
-        }
-
-        offset += 10 + frameSize;
-      }
-
-      chapters.sort((a, b) => a.start.compareTo(b.start));
-      return chapters;
     } finally {
       await raf.close();
     }
+  }
+
+  static Future<List<AudioChapter>> readChaptersFromUrl(String url, BuildContext context) async {
+    final parsedUrl = Uri.tryParse(url);
+    if (parsedUrl == null) return const [];
+
+    final client = HttpClient();
+    try {
+      final headerBytes = await _readRemoteBytes(
+        client: client,
+        uri: parsedUrl,
+        start: 0,
+        end: _remoteId3HeaderLength - 1,
+        maxBytes: _remoteId3HeaderLength,
+      );
+      if (!_hasId3Header(headerBytes)) {
+        return const [];
+      }
+
+      final version = headerBytes[3];
+      final flags = headerBytes[5];
+      final tagSize = _readSynchsafeInt(headerBytes, 6);
+      if (tagSize <= 0) return const [];
+
+      final tagData = await _readRemoteBytes(
+        client: client,
+        uri: parsedUrl,
+        start: _remoteId3HeaderLength,
+        end: _remoteId3HeaderLength + tagSize - 1,
+        maxBytes: tagSize,
+      );
+      if (tagData.length < tagSize) {
+        return const [];
+      }
+
+      if (context.mounted) {
+        return _extractChaptersFromTagData(
+          version: version,
+          flags: flags,
+          tagData: tagData,
+          context: context,
+        );
+      } else {
+        return const [];
+      }
+    } catch (_) {
+      return const [];
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  static bool _hasId3Header(Uint8List header) {
+    return header.length >= _remoteId3HeaderLength && ascii.decode(header.sublist(0, 3), allowInvalid: true) == 'ID3';
+  }
+
+  static Future<Uint8List> _readRemoteBytes({
+    required HttpClient client,
+    required Uri uri,
+    required int start,
+    required int end,
+    required int maxBytes,
+  }) async {
+    final request = await client.getUrl(uri);
+    request.headers.set(HttpHeaders.rangeHeader, 'bytes=$start-$end');
+    final response = await request.close();
+    if (response.statusCode != HttpStatus.partialContent && response.statusCode != HttpStatus.ok) {
+      return Uint8List(0);
+    }
+
+    final builder = BytesBuilder(copy: false);
+    var receivedBytes = 0;
+    await for (final chunk in response) {
+      if (receivedBytes >= maxBytes) {
+        break;
+      }
+
+      final remaining = maxBytes - receivedBytes;
+      if (chunk.length <= remaining) {
+        builder.add(chunk);
+        receivedBytes += chunk.length;
+      } else {
+        builder.add(chunk.sublist(0, remaining));
+        receivedBytes += remaining;
+        break;
+      }
+    }
+
+    return builder.takeBytes();
+  }
+
+  static List<AudioChapter> _extractChaptersFromTagData({
+    required int version,
+    required int flags,
+    required Uint8List tagData,
+    required BuildContext context,
+  }) {
+    if (tagData.isEmpty) return const [];
+
+    final chapters = <AudioChapter>[];
+    var offset = 0;
+
+    if ((flags & 0x40) != 0) {
+      if (version == 3 && tagData.length >= 4) {
+        offset = 4 + _readInt32(tagData, 0);
+      } else if (version == 4 && tagData.length >= 4) {
+        offset = _readSynchsafeInt(tagData, 0);
+      }
+    }
+
+    while (offset + 10 <= tagData.length) {
+      final frameId = ascii.decode(tagData.sublist(offset, offset + 4), allowInvalid: true);
+      if (frameId.trim().isEmpty || frameId.codeUnits.every((unit) => unit == 0)) {
+        break;
+      }
+
+      final frameSize = version == 4 ? _readSynchsafeInt(tagData, offset + 4) : _readInt32(tagData, offset + 4);
+      if (frameSize <= 0 || offset + 10 + frameSize > tagData.length) {
+        break;
+      }
+
+      if (frameId == 'CHAP' && context.mounted) {
+        final chapter = _parseChapFrame(tagData.sublist(offset + 10, offset + 10 + frameSize), version, context);
+        if (chapter != null) {
+          chapters.add(chapter);
+        }
+      }
+
+      offset += 10 + frameSize;
+    }
+
+    chapters.sort((a, b) => a.start.compareTo(b.start));
+    return chapters;
   }
 
   static AudioChapter? _parseChapFrame(Uint8List data, int version, BuildContext context) {

@@ -211,5 +211,7 @@
     "noAudioDownloads": "No audio files downloaded yet.",
     "fileList": "File list",
     "useAudioPlayer": "Open audio items with audio player",
-    "advancedSettings": "Advanced Settings"
+    "advancedSettings": "Advanced Settings",
+    "loadingChapters": "Loading chapters ...",
+    "noChaptersFound": "No chapters found."
 }

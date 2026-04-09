@@ -705,4 +705,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get advancedSettings => 'Erweiterte Einstellungen';
+
+  @override
+  String get loadingChapters => 'Kapitel werden geladen ...';
+
+  @override
+  String get noChaptersFound => 'Keine Kapitel gefunden.';
 }
