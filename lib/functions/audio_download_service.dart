@@ -68,7 +68,7 @@ class DownloadedAudioInfo {
 class AudioDownloadService {
   static const _storage = sec_store.FlutterSecureStorage();
   static const String _downloadPathKeyPrefix = FluxNewsState.downloadPathKeyPrefix;
-  static const String _downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
+  static const String _downloadPathByUrlKeyPrefix = FluxNewsState.downloadPathByUrlKeyPrefix;
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
   static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
   static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;

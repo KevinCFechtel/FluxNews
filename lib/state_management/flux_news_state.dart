@@ -169,6 +169,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String defaultArtworkFileName = 'default_audio_artwork.png';
   static const String audioCachePath = 'audio_cache';
   static const String audioFilePrefix = 'audio_';
+  static const String downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*
