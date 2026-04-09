@@ -563,4 +563,126 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get feedSelectionDeleteSelection => 'Clear selection';
+
+  @override
+  String get settingAudioDownloadsTitle => 'Audio Downloads';
+
+  @override
+  String get downloadsManagerDeleteTitle => 'Delete Download?';
+
+  @override
+  String get downloadsManagerDeletedSnackbar => 'Download deleted';
+
+  @override
+  String get downloadsManagerClearAllTitle => 'Delete all downloads?';
+
+  @override
+  String get downloadsManagerClearAllMessage =>
+      'This will delete all downloaded audio files. This action cannot be undone.';
+
+  @override
+  String get downloadsManagerClearedSnackbar => 'All downloads deleted';
+
+  @override
+  String get downloadsManagerClearAll => 'Delete all downloads';
+
+  @override
+  String get audioDownloadsSettings => 'Audio Downloads';
+
+  @override
+  String get audioDownloadsSettingsDescription =>
+      'View active downloads and downloaded data';
+
+  @override
+  String get deleteDownloadAfterFinishing =>
+      'Automatically delete downloads after listening';
+
+  @override
+  String get downloadAudioWLAN => 'Download audio via Wi-Fi only';
+
+  @override
+  String get autoDownloadAudio => 'Auto-download audio after sync';
+
+  @override
+  String get chapterFrom => 'Chapter from';
+
+  @override
+  String get downloadWLANWarning =>
+      'Downloads allowed via Wi-Fi only. Please enable Wi-Fi.';
+
+  @override
+  String get noAudioFileAvailable => 'No audio file available.';
+
+  @override
+  String get sleepTimerNotification =>
+      'Sleep Timer: Playback stopped automatically.';
+
+  @override
+  String get sleepTimerOff => 'Sleep Timer: Off';
+
+  @override
+  String get sleepTimerEndingSoon => 'Sleep Timer: Ending soon';
+
+  @override
+  String get sleepTimerActive => 'Sleep Timer: active';
+
+  @override
+  String get sleepTimerRemaining => 'min remaining';
+
+  @override
+  String get downloaded => 'Downloaded';
+
+  @override
+  String get downloadAudio => 'Download Audio';
+
+  @override
+  String get speed => 'Speed';
+
+  @override
+  String get chapters => 'Chapters';
+
+  @override
+  String get interval => 'Interval';
+
+  @override
+  String get minutes => 'min';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get runningDownloads => 'Running downloads';
+
+  @override
+  String get noActiveDownloads => 'No active downloads.';
+
+  @override
+  String get from => 'from';
+
+  @override
+  String get loaded => 'loaded';
+
+  @override
+  String get downloadedData => 'Downloaded data';
+
+  @override
+  String get totalStorage => 'Total storage';
+
+  @override
+  String get loadDownloadedDataError => 'Failed to load downloaded files.';
+
+  @override
+  String get noAudioDownloads => 'No audio files downloaded yet.';
+
+  @override
+  String get fileList => 'File list';
 }

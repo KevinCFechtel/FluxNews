@@ -1,6 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
 
 FluxNewsAudioHandler? _fluxNewsAudioHandler;
@@ -17,9 +17,9 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
   _fluxNewsAudioHandlerFuture = AudioService.init(
     builder: () => FluxNewsAudioHandler(),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'de.kevincfechtel.flux_news.audio',
-      androidNotificationChannelName: 'Flux News Audio',
-      androidNotificationIcon: 'mipmap/ic_appicon',
+      androidNotificationChannelId: FluxNewsState.androidNotificationChannelId,
+      androidNotificationChannelName: FluxNewsState.androidNotificationChannelName,
+      androidNotificationIcon: FluxNewsState.androidNotificationIcon,
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
       fastForwardInterval: Duration(seconds: 30),
@@ -52,6 +52,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Duration? get duration => _player.duration;
   PlayerState get playerState => _player.playerState;
   String? get currentUrl => _currentUrl;
+  double get speed => _player.speed;
 
   Future<void> _init() async {
     final session = await AudioSession.instance;
@@ -123,6 +124,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   @override
   Future<void> seek(Duration position) async {
     await _player.seek(position);
+    playbackState.add(_buildPlaybackState());
+  }
+
+  @override
+  Future<void> setSpeed(double speed) async {
+    await _player.setSpeed(speed);
     playbackState.add(_buildPlaybackState());
   }
 

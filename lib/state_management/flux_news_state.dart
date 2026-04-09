@@ -87,6 +87,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageSyncReadNewsKey = 'syncReadNews';
   static const String secureStorageAutoDownloadAudioAfterSyncKey = 'autoDownloadAudioAfterSync';
   static const String secureStorageDownloadAudioOnlyOnWifiKey = 'downloadAudioOnlyOnWifi';
+  static const String secureStorageDeleteAudioAfterPlaybackKey = 'deleteAudioAfterPlayback';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
@@ -157,6 +158,16 @@ class FluxNewsState extends ChangeNotifier {
   static const String apiVersionPath = "v1/";
   static const String minifluxEntryPathPrefix = "unread/feed/";
   static const String minifluxEntryPathSuffix = "/entry/";
+  static const String audioProgressKeyPrefix = "audio_progress_";
+  static const String androidNotificationChannelId = 'de.kevincfechtel.flux_news.audio';
+  static const String androidNotificationChannelName = 'Flux News Audio';
+  static const String androidNotificationIcon = 'mipmap/ic_appicon';
+  static const String downloadPathKeyPrefix = 'audio_download_path_';
+  static const String downloadTimestampKeyPrefix = 'audio_download_ts_';
+  static const String defaultArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_IOS.png';
+  static const String defaultArtworkFileName = 'default_audio_artwork.png';
+  static const String audioCachePath = 'audio_cache';
+  static const String audioFilePrefix = 'audio_';
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*
@@ -278,6 +289,7 @@ class FluxNewsState extends ChangeNotifier {
   bool syncReadNews = false;
   bool autoDownloadAudioAfterSync = false;
   bool downloadAudioOnlyOnWifi = false;
+  bool deleteAudioAfterPlayback = false;
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
@@ -2084,6 +2096,17 @@ class FluxNewsState extends ChangeNotifier {
             downloadAudioOnlyOnWifi = true;
           } else {
             downloadAudioOnlyOnWifi = false;
+          }
+        }
+      }
+
+      // assign the delete downloaded audio after playback selection from persistent saved config
+      if (key == FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            deleteAudioAfterPlayback = true;
+          } else {
+            deleteAudioAfterPlayback = false;
           }
         }
       }

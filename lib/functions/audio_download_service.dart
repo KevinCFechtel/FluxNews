@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:path/path.dart' as path;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -21,15 +26,84 @@ class AudioChapter {
   final Duration? end;
 }
 
+class AudioDownloadProgress {
+  const AudioDownloadProgress({
+    required this.attachmentID,
+    required this.fileName,
+    required this.receivedBytes,
+    required this.totalBytes,
+    required this.startedAt,
+  });
+
+  final int attachmentID;
+  final String fileName;
+  final int receivedBytes;
+  final int totalBytes;
+  final DateTime startedAt;
+
+  double? get progress {
+    if (totalBytes <= 0) return null;
+    return receivedBytes / totalBytes;
+  }
+}
+
+class DownloadedAudioInfo {
+  const DownloadedAudioInfo({
+    required this.attachmentID,
+    required this.fileName,
+    required this.filePath,
+    required this.fileSize,
+    required this.downloadedAt,
+  });
+
+  final int attachmentID;
+  final String fileName;
+  final String filePath;
+  final int fileSize;
+  final DateTime downloadedAt;
+}
+
 class AudioDownloadService {
   static const _storage = sec_store.FlutterSecureStorage();
-  static const String _downloadPathKeyPrefix = 'audio_download_path_';
-  static const String _downloadTimestampKeyPrefix = 'audio_download_ts_';
-  static const String _defaultArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_IOS.png';
-  static const String _defaultArtworkFileName = 'default_audio_artwork.png';
+  static const String _downloadPathKeyPrefix = FluxNewsState.downloadPathKeyPrefix;
+  static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
+  static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
+  static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;
+  static final _activeDownloads = <int, AudioDownloadProgress>{};
+  static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
+  static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
 
   static String _downloadPathKey(int attachmentID) => '$_downloadPathKeyPrefix$attachmentID';
   static String _downloadTimestampKey(int attachmentID) => '$_downloadTimestampKeyPrefix$attachmentID';
+
+  static Stream<List<AudioDownloadProgress>> get activeDownloadsStream => _activeDownloadsController.stream;
+  static Stream<void> get downloadedAudiosChangedStream => _downloadedAudiosChangedController.stream;
+
+  static List<AudioDownloadProgress> getActiveDownloadsSnapshot() {
+    final downloads = _activeDownloads.values.toList();
+    downloads.sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    return downloads;
+  }
+
+  static void _emitActiveDownloads() {
+    if (_activeDownloadsController.isClosed) return;
+    _activeDownloadsController.add(getActiveDownloadsSnapshot());
+  }
+
+  static void _emitDownloadedAudiosChanged() {
+    if (_downloadedAudiosChangedController.isClosed) return;
+    _downloadedAudiosChangedController.add(null);
+  }
+
+  static void _setActiveDownload(AudioDownloadProgress progress) {
+    _activeDownloads[progress.attachmentID] = progress;
+    _emitActiveDownloads();
+  }
+
+  static void _removeActiveDownload(int attachmentID) {
+    _activeDownloads.remove(attachmentID);
+    _emitActiveDownloads();
+  }
 
   static Future<bool> _isWifiConnected() async {
     final results = await Connectivity().checkConnectivity();
@@ -57,7 +131,7 @@ class AudioDownloadService {
     }
   }
 
-  static Future<List<AudioChapter>> readChapters(String filePath) async {
+  static Future<List<AudioChapter>> readChapters(String filePath, BuildContext context) async {
     final file = File(filePath);
     if (!await file.exists()) return const [];
 
@@ -99,9 +173,11 @@ class AudioDownloadService {
         }
 
         if (frameId == 'CHAP') {
-          final chapter = _parseChapFrame(tagData.sublist(offset + 10, offset + 10 + frameSize), version);
-          if (chapter != null) {
-            chapters.add(chapter);
+          if (context.mounted) {
+            final chapter = _parseChapFrame(tagData.sublist(offset + 10, offset + 10 + frameSize), version, context);
+            if (chapter != null) {
+              chapters.add(chapter);
+            }
           }
         }
 
@@ -115,7 +191,7 @@ class AudioDownloadService {
     }
   }
 
-  static AudioChapter? _parseChapFrame(Uint8List data, int version) {
+  static AudioChapter? _parseChapFrame(Uint8List data, int version, BuildContext context) {
     var offset = 0;
     while (offset < data.length && data[offset] != 0) {
       offset++;
@@ -149,7 +225,9 @@ class AudioDownloadService {
 
     if (startMs < 0) return null;
     return AudioChapter(
-      title: (title == null || title.trim().isEmpty) ? 'Kapitel ab ${_formatChapterTime(startMs)}' : title.trim(),
+      title: (title == null || title.trim().isEmpty)
+          ? '${AppLocalizations.of(context)!.chapterFrom} ${_formatChapterTime(startMs)}'
+          : title.trim(),
       start: Duration(milliseconds: startMs),
       end: endMs >= 0xffffffff ? null : Duration(milliseconds: endMs),
     );
@@ -244,12 +322,79 @@ class AudioDownloadService {
     return downloadedPaths;
   }
 
+  static Future<List<DownloadedAudioInfo>> getDownloadedAudios() async {
+    final values = await _storage.readAll();
+    final downloads = <DownloadedAudioInfo>[];
+
+    for (final entry in values.entries) {
+      if (!entry.key.startsWith(_downloadPathKeyPrefix)) continue;
+
+      final attachmentID = int.tryParse(entry.key.substring(_downloadPathKeyPrefix.length));
+      if (attachmentID == null || entry.value.isEmpty) continue;
+
+      final file = File(entry.value);
+      if (!await file.exists()) {
+        await _storage.delete(key: _downloadPathKey(attachmentID));
+        await _storage.delete(key: _downloadTimestampKey(attachmentID));
+        _emitDownloadedAudiosChanged();
+        continue;
+      }
+
+      final stat = await file.stat();
+      final storedTimestamp = values[_downloadTimestampKey(attachmentID)];
+      final downloadedAt = DateTime.tryParse(storedTimestamp ?? '') ?? stat.modified;
+      downloads.add(DownloadedAudioInfo(
+        attachmentID: attachmentID,
+        fileName: path.basename(file.path),
+        filePath: file.path,
+        fileSize: stat.size,
+        downloadedAt: downloadedAt,
+      ));
+    }
+
+    downloads.sort((a, b) => b.downloadedAt.compareTo(a.downloadedAt));
+    return downloads;
+  }
+
+  static Future<int> getDownloadedAudioSizeInBytes() async {
+    final downloads = await getDownloadedAudios();
+    return downloads.fold<int>(0, (sum, item) => sum + item.fileSize);
+  }
+
+  static Future<void> deleteDownloadedAudio(int attachmentID) async {
+    final storedPath = await _storage.read(key: _downloadPathKey(attachmentID));
+    if (storedPath != null && storedPath.isNotEmpty) {
+      final file = File(storedPath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+
+    await _storage.delete(key: _downloadPathKey(attachmentID));
+    await _storage.delete(key: _downloadTimestampKey(attachmentID));
+    _emitDownloadedAudiosChanged();
+  }
+
+  static Future<void> deleteAllDownloadedAudios() async {
+    final downloads = await getDownloadedAudios();
+    for (final download in downloads) {
+      await deleteDownloadedAudio(download.attachmentID);
+    }
+  }
+
+  static String formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+
   static Future<void> cleanupExpiredDownloads(int retentionDays) async {
     if (retentionDays <= 0) return;
 
     final now = DateTime.now();
     final appSupport = await getApplicationSupportDirectory();
-    final audioDirectory = Directory(p.join(appSupport.path, 'audio_cache'));
+    final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
 
     final allValues = await _storage.readAll();
     final trackedPaths = <String>{};
@@ -268,6 +413,7 @@ class AudioDownloadService {
       if (!await file.exists()) {
         await _storage.delete(key: _downloadPathKey(attachmentID));
         await _storage.delete(key: _downloadTimestampKey(attachmentID));
+        _emitDownloadedAudiosChanged();
         continue;
       }
 
@@ -289,6 +435,7 @@ class AudioDownloadService {
         await file.delete();
         await _storage.delete(key: _downloadPathKey(attachmentID));
         await _storage.delete(key: _downloadTimestampKey(attachmentID));
+        _emitDownloadedAudiosChanged();
       } else {
         trackedPaths.add(storedPath);
         if (storedTimestamp == null || DateTime.tryParse(storedTimestamp) == null) {
@@ -339,7 +486,7 @@ class AudioDownloadService {
       }
 
       final appSupport = await getApplicationSupportDirectory();
-      final audioDirectory = Directory(p.join(appSupport.path, 'audio_cache'));
+      final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
       if (!await audioDirectory.exists()) {
         await audioDirectory.create(recursive: true);
       }
@@ -348,19 +495,55 @@ class AudioDownloadService {
       final extension = uri != null ? p.extension(uri.path) : '';
       final filePath = p.join(
         audioDirectory.path,
-        'audio_${attachment.attachmentID}_${DateTime.now().millisecondsSinceEpoch}$extension',
+        '${FluxNewsState.audioFilePrefix}${attachment.attachmentID}_${DateTime.now().millisecondsSinceEpoch}$extension',
       );
       final file = File(filePath);
-      await response.pipe(file.openWrite());
+      final sink = file.openWrite();
+      final totalBytes = response.contentLength;
+      var receivedBytes = 0;
+      final startedAt = DateTime.now();
+      _setActiveDownload(AudioDownloadProgress(
+        attachmentID: attachment.attachmentID,
+        fileName: path.basename(filePath),
+        receivedBytes: 0,
+        totalBytes: totalBytes,
+        startedAt: startedAt,
+      ));
+
+      try {
+        await for (final chunk in response) {
+          receivedBytes += chunk.length;
+          sink.add(chunk);
+          _setActiveDownload(AudioDownloadProgress(
+            attachmentID: attachment.attachmentID,
+            fileName: path.basename(filePath),
+            receivedBytes: receivedBytes,
+            totalBytes: totalBytes,
+            startedAt: startedAt,
+          ));
+        }
+      } catch (_) {
+        await sink.close();
+        _removeActiveDownload(attachment.attachmentID);
+        if (await file.exists()) {
+          await file.delete();
+        }
+        rethrow;
+      }
+
+      await sink.close();
 
       await _storage.write(key: _downloadPathKey(attachment.attachmentID), value: filePath);
       await _storage.write(
         key: _downloadTimestampKey(attachment.attachmentID),
         value: DateTime.now().toIso8601String(),
       );
+      _emitDownloadedAudiosChanged();
+      _removeActiveDownload(attachment.attachmentID);
 
       return filePath;
     } finally {
+      _removeActiveDownload(attachment.attachmentID);
       client.close(force: true);
     }
   }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -28,8 +29,8 @@ class NewsAudioPlayerScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: audioAttachments.isEmpty
-            ? const Center(
-                child: Text('Keine Audio-Datei vorhanden.'),
+            ? Center(
+                child: Text(AppLocalizations.of(context)!.noAudioFileAvailable),
               )
             : Padding(
                 padding: const EdgeInsets.all(16),
@@ -74,6 +75,20 @@ class NewsAudioPlayer extends StatefulWidget {
 }
 
 class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
+  static const List<int> _sleepTimerMinuteOptions = [
+    30,
+    45,
+    60,
+    75,
+    90,
+    105,
+    120,
+    135,
+    150,
+    165,
+    180,
+  ];
+
   FluxNewsAudioHandler? _audioHandler;
   late final List<Attachment> _audioAttachments;
   final _storage = const sec_store.FlutterSecureStorage();
@@ -82,10 +97,16 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   StreamSubscription<Duration?>? _durationSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<MediaItem?>? _mediaItemSubscription;
+  StreamSubscription<PlaybackState>? _playbackStateSubscription;
   final Map<int, String> _downloadedPaths = {};
   final Map<int, List<AudioChapter>> _chaptersByAttachmentID = {};
   final Set<int> _downloadingAttachmentIDs = {};
   Uri? _defaultArtworkUri;
+  double _playbackSpeed = 1.0;
+  Timer? _sleepTimer;
+  bool _sleepTimerEnabled = false;
+  int _sleepTimerMinutes = 30;
+  DateTime? _sleepTimerEndAt;
 
   String? _activeUrl;
   int? _activeAttachmentID;
@@ -95,7 +116,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   PlayerState _playerState = PlayerState(false, ProcessingState.idle);
   bool _isLoading = false;
 
-  String _progressKey() => 'audio_progress_${widget.news.newsID}';
+  String _progressKey() => '${FluxNewsState.audioProgressKeyPrefix}${widget.news.newsID}';
 
   @override
   void initState() {
@@ -161,7 +182,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   }
 
   Future<void> _loadChaptersForAttachment(int attachmentID, String filePath) async {
-    final chapters = await AudioDownloadService.readChapters(filePath);
+    final chapters = await AudioDownloadService.readChapters(filePath, context);
     _chaptersByAttachmentID[attachmentID] = chapters;
   }
 
@@ -178,8 +199,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         final isWifiConnected = await AudioDownloadService.isWifiConnected();
         if (!isWifiConnected && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Download nur ueber WLAN erlaubt. Bitte WLAN aktivieren.'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.downloadWLANWarning),
             ),
           );
         }
@@ -232,6 +253,13 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       _syncActiveAttachment(mediaItemId: item?.id);
     });
 
+    _playbackStateSubscription = audioHandler.playbackState.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        _playbackSpeed = state.speed;
+      });
+    });
+
     setState(() {});
   }
 
@@ -239,14 +267,39 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   void dispose() {
     _saveProgress();
     _autoSaveTimer?.cancel();
+    _sleepTimer?.cancel();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
     _playerStateSubscription?.cancel();
     _mediaItemSubscription?.cancel();
+    _playbackStateSubscription?.cancel();
     super.dispose();
   }
 
+  Future<void> _setPlaybackSpeedFromAdjustment(double adjustment) async {
+    if (_audioHandler == null) return;
+
+    final roundedAdjustment = (adjustment * 10).round() / 10;
+    final speed = (1.0 + roundedAdjustment).clamp(0.5, 4.0).toDouble();
+    await _audioHandler!.setSpeed(speed);
+    if (!mounted) return;
+    setState(() {
+      _playbackSpeed = speed;
+    });
+  }
+
+  String _formatSignedAdjustment(double adjustment) {
+    final rounded = (adjustment * 10).round() / 10;
+    if (rounded >= 0) {
+      return '+${rounded.toStringAsFixed(1)}';
+    }
+    return rounded.toStringAsFixed(1);
+  }
+
   Future<void> _handlePlaybackCompleted() async {
+    final completedAttachmentID = _activeAttachmentID;
+    final shouldDeleteDownloadedAudio = widget.appState.deleteAudioAfterPlayback && completedAttachmentID != null;
+
     await _storage.delete(key: _progressKey());
     final completedAttachment = _activeAttachmentID == null
         ? null
@@ -256,7 +309,19 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (completedAttachment != null) {
       syncMediaProgression(widget.appState, widget.news.newsID, completedAttachment.attachmentID, 0).ignore();
     }
+
+    if (shouldDeleteDownloadedAudio) {
+      final attachmentIDToDelete = completedAttachmentID;
+      final downloadedPath = _downloadedPaths[attachmentIDToDelete];
+      if (downloadedPath != null) {
+        await AudioDownloadService.deleteDownloadedAudio(attachmentIDToDelete);
+        _downloadedPaths.remove(attachmentIDToDelete);
+        _chaptersByAttachmentID.remove(attachmentIDToDelete);
+      }
+    }
+
     _autoSaveTimer?.cancel();
+    _sleepTimer?.cancel();
     if (!mounted) return;
     setState(() {
       _position = Duration.zero;
@@ -264,7 +329,57 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       _activeUrl = null;
       _activeAttachmentID = null;
       _isLoading = false;
+      _sleepTimerEnabled = false;
+      _sleepTimerEndAt = null;
     });
+  }
+
+  void _startSleepTimer() {
+    _sleepTimer?.cancel();
+    final duration = Duration(minutes: _sleepTimerMinutes);
+    _sleepTimerEndAt = DateTime.now().add(duration);
+    _sleepTimer = Timer(duration, () async {
+      if (_playerState.playing) {
+        await _stop();
+      }
+      if (!mounted) return;
+      setState(() {
+        _sleepTimerEnabled = false;
+        _sleepTimerEndAt = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.sleepTimerNotification)),
+      );
+    });
+  }
+
+  Future<void> _toggleSleepTimer(bool enabled) async {
+    if (!mounted) return;
+
+    if (!enabled) {
+      _sleepTimer?.cancel();
+      setState(() {
+        _sleepTimerEnabled = false;
+        _sleepTimerEndAt = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _sleepTimerEnabled = true;
+    });
+    _startSleepTimer();
+  }
+
+  Future<void> _updateSleepTimerMinutes(int minutes) async {
+    if (!mounted) return;
+    setState(() {
+      _sleepTimerMinutes = minutes;
+    });
+
+    if (_sleepTimerEnabled) {
+      _startSleepTimer();
+    }
   }
 
   // ---- Progress persistence ----
@@ -360,13 +475,30 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (_audioHandler == null) return;
     await _saveProgress();
     await _audioHandler!.stop();
+    _sleepTimer?.cancel();
     setState(() {
       _activeUrl = null;
       _activeAttachmentID = null;
       _position = Duration.zero;
       _duration = Duration.zero;
       _isLoading = false;
+      _sleepTimerEnabled = false;
+      _sleepTimerEndAt = null;
     });
+  }
+
+  String _formatSleepTimerLabel() {
+    if (!_sleepTimerEnabled || _sleepTimerEndAt == null) {
+      return AppLocalizations.of(context)!.sleepTimerOff;
+    }
+
+    final remaining = _sleepTimerEndAt!.difference(DateTime.now());
+    if (remaining.inSeconds <= 0) {
+      return AppLocalizations.of(context)!.sleepTimerEndingSoon;
+    }
+
+    final remainingMinutes = (remaining.inSeconds / 60).ceil();
+    return '${AppLocalizations.of(context)!.sleepTimerActive} ($remainingMinutes ${AppLocalizations.of(context)!.sleepTimerRemaining})';
   }
 
   Future<void> _seek(Duration offset) async {
@@ -509,7 +641,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       ),
                     ),
                     IconButton(
-                      tooltip: isDownloaded ? 'Heruntergeladen' : 'Audio herunterladen',
+                      tooltip: isDownloaded
+                          ? AppLocalizations.of(context)!.downloaded
+                          : AppLocalizations.of(context)!.downloadAudio,
                       onPressed: isDownloaded || isDownloading ? null : () => _downloadAudio(attachment),
                       icon: isDownloading
                           ? const SizedBox(
@@ -559,7 +693,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                     tilePadding: EdgeInsets.zero,
                     childrenPadding: EdgeInsets.zero,
                     title: Text(
-                      'Kapitel',
+                      AppLocalizations.of(context)!.chapters,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     children: chapters
@@ -579,6 +713,79 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         .toList(),
                   ),
                 ],
+
+                const SizedBox(height: 4),
+
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.speed, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${AppLocalizations.of(context)!.speed}: ${_playbackSpeed.toStringAsFixed(1)}x (${_formatSignedAdjustment(_playbackSpeed - 1.0)})',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: (_playbackSpeed - 1.0).clamp(-0.5, 3.0),
+                  min: -0.5,
+                  max: 3.0,
+                  divisions: 35,
+                  label: _formatSignedAdjustment(_playbackSpeed - 1.0),
+                  onChanged: (value) async {
+                    await _setPlaybackSpeedFromAdjustment(value);
+                  },
+                ),
+
+                const SizedBox(height: 4),
+
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.bedtime_outlined, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _formatSleepTimerLabel(),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _sleepTimerEnabled,
+                      onChanged: (value) {
+                        _toggleSleepTimer(value);
+                      },
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const SizedBox(width: 26),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.interval,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    DropdownButton<int>(
+                      value: _sleepTimerMinutes,
+                      onChanged: (value) {
+                        if (value != null) {
+                          _updateSleepTimerMinutes(value);
+                        }
+                      },
+                      items: _sleepTimerMinuteOptions
+                          .map((minutes) => DropdownMenuItem<int>(
+                                value: minutes,
+                                child: Text('$minutes ${AppLocalizations.of(context)!.minutes}'),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 4),
 
@@ -614,10 +821,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                             ),
                           IconButton(
                             tooltip: isPlaying
-                                ? 'Pause'
+                                ? AppLocalizations.of(context)!.pause
                                 : isPaused
-                                    ? 'Weiter'
-                                    : 'Play',
+                                    ? AppLocalizations.of(context)!.resume
+                                    : AppLocalizations.of(context)!.play,
                             onPressed: () => _play(attachment),
                             icon: Icon(
                               isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
@@ -633,7 +840,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
                     // Stop
                     IconButton(
-                      tooltip: 'Stop',
+                      tooltip: AppLocalizations.of(context)!.stop,
                       onPressed: isActive && !isStopped ? _stop : null,
                       icon: const Icon(Icons.stop_circle_outlined),
                       iconSize: 32,

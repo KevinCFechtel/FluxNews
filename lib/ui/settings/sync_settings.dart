@@ -240,37 +240,6 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                    child: const Icon(
-                      Icons.wifi,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Audio nur ueber WLAN herunterladen',
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.visible,
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: appState.downloadAudioOnlyOnWifi,
-                    onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
-                      if (value == true) {
-                        stringValue = FluxNewsState.secureStorageTrueString;
-                      }
-                      appState.downloadAudioOnlyOnWifi = value;
-                      appState.storage
-                          .write(key: FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey, value: stringValue);
-                      appState.refreshView();
-                    },
-                  ),
-                ],
-              ),
-              const Divider(),
               // this row contains the selection of the sync on start
               Row(
                 children: [
@@ -359,7 +328,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'Audio nach Sync automatisch herunterladen',
+                      AppLocalizations.of(context)!.autoDownloadAudio,
                       style: Theme.of(context).textTheme.titleMedium,
                       overflow: TextOverflow.visible,
                     ),
@@ -374,6 +343,68 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       appState.autoDownloadAudioAfterSync = value;
                       appState.storage
                           .write(key: FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.wifi,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.downloadAudioWLAN,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.downloadAudioOnlyOnWifi,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.downloadAudioOnlyOnWifi = value;
+                      appState.storage
+                          .write(key: FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
+              const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.delete_sweep_outlined,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.autoDownloadAudio,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.deleteAudioAfterPlayback,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.deleteAudioAfterPlayback = value;
+                      appState.storage
+                          .write(key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey, value: stringValue);
                       appState.refreshView();
                     },
                   ),
