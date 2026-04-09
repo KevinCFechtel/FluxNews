@@ -183,6 +183,7 @@
     "deleteDownloadAfterFinishing": "Automatically delete downloads after listening",
     "downloadAudioWLAN": "Download audio via Wi-Fi only",
     "autoDownloadAudio": "Auto-download audio after sync",
+    "audioDownloadRetentionDays": "Number of days to keep audio downloads",
     "chapterFrom": "Chapter from",
     "downloadWLANWarning": "Downloads allowed via Wi-Fi only. Please enable Wi-Fi.",
     "noAudioFileAvailable": "No audio file available.",

@@ -148,7 +148,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       if (appState.autoDownloadAudioAfterSync) {
         unawaited(AudioDownloadService.downloadAudioForNewsList(
           newsList: newNews.news,
-          retentionDays: appState.imageCacheDurationDays,
+          retentionDays: appState.audioDownloadRetentionDays,
           onlyOnWifi: appState.downloadAudioOnlyOnWifi,
         ));
       }

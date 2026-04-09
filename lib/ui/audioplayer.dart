@@ -123,16 +123,14 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
         scrolledUnderElevation: 0,
         title: Text(widget.news.title),
       ),
-      body: SafeArea(
-        child: audioAttachments.isEmpty
-            ? Center(
-                child: Text(AppLocalizations.of(context)!.noAudioFileAvailable),
-              )
-            : Padding(
-                padding: const EdgeInsets.all(16),
-                child: useTabletLayout ? tabletLayout : mobileLayout,
-              ),
-      ),
+      body: audioAttachments.isEmpty
+          ? Center(
+              child: Text(AppLocalizations.of(context)!.noAudioFileAvailable),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: useTabletLayout ? tabletLayout : mobileLayout,
+            ),
     );
   }
 }
@@ -217,7 +215,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   Future<void> _initializeDownloadedAudioState() async {
     final downloadedPaths = await AudioDownloadService.loadDownloadedPathsForAttachments(
-        _audioAttachments, widget.appState.imageCacheDurationDays);
+        _audioAttachments, widget.appState.audioDownloadRetentionDays);
     _downloadedPaths
       ..clear()
       ..addAll(downloadedPaths);

@@ -1206,6 +1206,12 @@ abstract class AppLocalizations {
   /// **'Auto-download audio after sync'**
   String get autoDownloadAudio;
 
+  /// No description provided for @audioDownloadRetentionDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of days to keep audio downloads'**
+  String get audioDownloadRetentionDays;
+
   /// No description provided for @chapterFrom.
   ///
   /// In en, this message translates to:

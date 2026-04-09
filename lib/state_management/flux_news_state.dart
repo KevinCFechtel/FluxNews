@@ -88,6 +88,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageAutoDownloadAudioAfterSyncKey = 'autoDownloadAudioAfterSync';
   static const String secureStorageDownloadAudioOnlyOnWifiKey = 'downloadAudioOnlyOnWifi';
   static const String secureStorageDeleteAudioAfterPlaybackKey = 'deleteAudioAfterPlayback';
+  static const String secureStorageAudioDownloadRetentionDaysKey = 'audioDownloadRetentionDays';
   static const String secureStorageOpenAudioItemsInPlayerKey = 'openAudioItemsInPlayer';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
@@ -293,6 +294,7 @@ class FluxNewsState extends ChangeNotifier {
   bool autoDownloadAudioAfterSync = false;
   bool downloadAudioOnlyOnWifi = false;
   bool deleteAudioAfterPlayback = false;
+  int audioDownloadRetentionDays = 30;
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
@@ -2112,6 +2114,13 @@ class FluxNewsState extends ChangeNotifier {
           } else {
             deleteAudioAfterPlayback = false;
           }
+        }
+      }
+
+      // assign the audio download retention duration from persistent saved config
+      if (key == FluxNewsState.secureStorageAudioDownloadRetentionDaysKey) {
+        if (value != '') {
+          audioDownloadRetentionDays = int.parse(value);
         }
       }
 

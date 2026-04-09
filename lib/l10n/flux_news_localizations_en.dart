@@ -602,6 +602,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoDownloadAudio => 'Auto-download audio after sync';
 
   @override
+  String get audioDownloadRetentionDays =>
+      'Number of days to keep audio downloads';
+
+  @override
   String get chapterFrom => 'Chapter from';
 
   @override

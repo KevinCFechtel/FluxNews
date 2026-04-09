@@ -55,6 +55,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
   // define the selection lists for the settings of saved news and starred news
   static const List<int> amountOfSavedNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
   static const List<int> amountOfSavedStarredNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
+  static const List<int> audioDownloadRetentionDaysList = <int>[7, 14, 30, 60, 90, 180, 365];
 
   @override
   Widget build(BuildContext context) {
@@ -345,6 +346,46 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                           .write(key: FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey, value: stringValue);
                       appState.refreshView();
                     },
+                  ),
+                ],
+              ),
+              const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.event_repeat,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.audioDownloadRetentionDays,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  DropdownButton<int>(
+                    value: appState.audioDownloadRetentionDays,
+                    elevation: 16,
+                    underline: Container(
+                      height: 2,
+                    ),
+                    alignment: AlignmentDirectional.centerEnd,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        appState.audioDownloadRetentionDays = value;
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageAudioDownloadRetentionDaysKey, value: value.toString());
+                        appState.refreshView();
+                      }
+                    },
+                    items: audioDownloadRetentionDaysList.map<DropdownMenuItem<int>>((int value) {
+                      return DropdownMenuItem<int>(
+                        value: value,
+                        child: Text(value.toString()),
+                      );
+                    }).toList(),
                   ),
                 ],
               ),
