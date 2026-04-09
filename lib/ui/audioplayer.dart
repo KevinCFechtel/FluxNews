@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
@@ -703,14 +702,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     } else {
       // Fall back to original image extraction logic
       final imageAttachment = widget.news.getFirstImageAttachment();
-      if (Platform.isIOS) {
-        artworkUri = _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
-        _defaultArtworkUri ??= artworkUri;
-      } else {
-        artworkUri = imageAttachment.attachmentID != -1 ? Uri.tryParse(imageAttachment.attachmentURL) : null;
-        artworkUri ??= _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
-        _defaultArtworkUri ??= artworkUri;
-      }
+      artworkUri = imageAttachment.attachmentID != -1 ? Uri.tryParse(imageAttachment.attachmentURL) : null;
+      artworkUri ??= _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
+      _defaultArtworkUri ??= artworkUri;
     }
 
     return MediaItem(

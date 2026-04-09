@@ -323,12 +323,27 @@ class News {
     Attachment imageAttachment = Attachment(attachmentID: -1, newsID: -1, attachmentURL: "", attachmentMimeType: "");
 
     if (attachments != null) {
-      for (var attachment in attachments!) {
-        if (attachment.attachmentMimeType.startsWith("image") && imageAttachment.attachmentID == -1) {
+      for (final attachment in attachments!) {
+        if (attachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
           imageAttachment = attachment;
+          break;
         }
       }
     }
+
+    if (imageAttachment.attachmentID == -1 &&
+        attachmentURL != null &&
+        attachmentURL!.isNotEmpty &&
+        attachmentMimeType != null &&
+        attachmentMimeType!.trim().toLowerCase().startsWith('image/')) {
+      imageAttachment = Attachment(
+        attachmentID: -1,
+        newsID: newsID,
+        attachmentURL: attachmentURL!,
+        attachmentMimeType: attachmentMimeType!,
+      );
+    }
+
     return imageAttachment;
   }
 
@@ -382,43 +397,78 @@ class News {
   String getImageURL() {
     String imageUrl = FluxNewsState.noImageUrlString;
     final document = parse(content);
-    if (preferAttachmentImage != null && preferAttachmentImage!) {
-      if (attachmentURL != null) {
-        if (attachmentMimeType != null && attachmentMimeType!.startsWith('image/')) {
-          imageUrl = attachmentURL!;
-        }
+
+    String? normalizeImageUrl(String? rawUrl) {
+      if (rawUrl == null) return null;
+      final trimmed = rawUrl.trim();
+      if (trimmed.isEmpty) return null;
+      if (trimmed.startsWith('//')) {
+        return 'https:$trimmed';
       }
-      if (imageUrl == FluxNewsState.noImageUrlString) {
-        var images = document.getElementsByTagName('img');
-        for (var image in images) {
-          String? attrib = image.attributes['src'];
-          if (attrib != null) {
-            if (attrib.startsWith('http')) {
-              imageUrl = attrib;
-              break;
+      final uri = Uri.tryParse(trimmed);
+      if (uri == null || !uri.hasScheme) return null;
+      final scheme = uri.scheme.toLowerCase();
+      if (scheme == 'http' || scheme == 'https') {
+        return trimmed;
+      }
+      return null;
+    }
+
+    String? firstImageFromAttachments() {
+      if (attachments != null) {
+        for (final attachment in attachments!) {
+          if (attachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
+            final normalized = normalizeImageUrl(attachment.attachmentURL);
+            if (normalized != null) {
+              return normalized;
             }
           }
         }
       }
-    } else {
-      var images = document.getElementsByTagName('img');
-      for (var image in images) {
-        String? attrib = image.attributes['src'];
-        if (attrib != null) {
-          if (attrib.startsWith('http')) {
-            imageUrl = attrib;
-            break;
-          }
-        }
+
+      if (attachmentURL != null &&
+          attachmentURL!.isNotEmpty &&
+          attachmentMimeType != null &&
+          attachmentMimeType!.trim().toLowerCase().startsWith('image/')) {
+        return normalizeImageUrl(attachmentURL);
       }
-      if (imageUrl == FluxNewsState.noImageUrlString) {
-        if (attachmentURL != null) {
-          if (attachmentMimeType != null && attachmentMimeType!.startsWith('image/')) {
-            imageUrl = attachmentURL!;
-          }
-        }
-      }
+
+      return null;
     }
+
+    String? firstImageFromHtml() {
+      final images = document.getElementsByTagName('img');
+      for (final image in images) {
+        final directSrc = normalizeImageUrl(image.attributes['src']);
+        if (directSrc != null) {
+          return directSrc;
+        }
+
+        final lazySrc = normalizeImageUrl(image.attributes['data-src']);
+        if (lazySrc != null) {
+          return lazySrc;
+        }
+
+        final srcSet = image.attributes['srcset'];
+        if (srcSet != null) {
+          for (final candidate in srcSet.split(',')) {
+            final urlPart = candidate.trim().split(RegExp(r'\s+')).first;
+            final normalized = normalizeImageUrl(urlPart);
+            if (normalized != null) {
+              return normalized;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    if (preferAttachmentImage != null && preferAttachmentImage!) {
+      imageUrl = firstImageFromAttachments() ?? firstImageFromHtml() ?? FluxNewsState.noImageUrlString;
+    } else {
+      imageUrl = firstImageFromHtml() ?? firstImageFromAttachments() ?? FluxNewsState.noImageUrlString;
+    }
+
     return imageUrl;
   }
 
