@@ -701,6 +701,10 @@ bool _openAudioPlayerIfAvailable(
   int itemIndex,
   List<News>? newsList,
 ) {
+  if (!appState.openAudioItemsInPlayer) {
+    return false;
+  }
+
   final hasAudio = news.getAudioAttachments().isNotEmpty;
   if (!hasAudio) {
     return false;

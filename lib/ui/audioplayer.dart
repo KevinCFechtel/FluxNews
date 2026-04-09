@@ -715,79 +715,84 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                 ],
 
                 const SizedBox(height: 4),
-
-                const SizedBox(height: 8),
-                Row(
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: EdgeInsets.zero,
+                  title: Text(
+                    AppLocalizations.of(context)!.advancedSettings,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   children: [
-                    const Icon(Icons.speed, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${AppLocalizations.of(context)!.speed}: ${_playbackSpeed.toStringAsFixed(1)}x (${_formatSignedAdjustment(_playbackSpeed - 1.0)})',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.speed, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${AppLocalizations.of(context)!.speed}: ${_playbackSpeed.toStringAsFixed(1)}x (${_formatSignedAdjustment(_playbackSpeed - 1.0)})',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                Slider(
-                  value: (_playbackSpeed - 1.0).clamp(-0.5, 3.0),
-                  min: -0.5,
-                  max: 3.0,
-                  divisions: 35,
-                  label: _formatSignedAdjustment(_playbackSpeed - 1.0),
-                  onChanged: (value) async {
-                    await _setPlaybackSpeedFromAdjustment(value);
-                  },
-                ),
-
-                const SizedBox(height: 4),
-
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.bedtime_outlined, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _formatSleepTimerLabel(),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: _sleepTimerEnabled,
-                      onChanged: (value) {
-                        _toggleSleepTimer(value);
+                    Slider(
+                      value: (_playbackSpeed - 1.0).clamp(-0.5, 3.0),
+                      min: -0.5,
+                      max: 3.0,
+                      divisions: 35,
+                      label: _formatSignedAdjustment(_playbackSpeed - 1.0),
+                      onChanged: (value) async {
+                        await _setPlaybackSpeedFromAdjustment(value);
                       },
                     ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.bedtime_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _formatSleepTimerLabel(),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: _sleepTimerEnabled,
+                          onChanged: (value) {
+                            _toggleSleepTimer(value);
+                          },
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(width: 26),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.interval,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        DropdownButton<int>(
+                          value: _sleepTimerMinutes,
+                          onChanged: (value) {
+                            if (value != null) {
+                              _updateSleepTimerMinutes(value);
+                            }
+                          },
+                          items: _sleepTimerMinuteOptions
+                              .map((minutes) => DropdownMenuItem<int>(
+                                    value: minutes,
+                                    child: Text('$minutes ${AppLocalizations.of(context)!.minutes}'),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                   ],
                 ),
-                Row(
-                  children: [
-                    const SizedBox(width: 26),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.interval,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                    DropdownButton<int>(
-                      value: _sleepTimerMinutes,
-                      onChanged: (value) {
-                        if (value != null) {
-                          _updateSleepTimerMinutes(value);
-                        }
-                      },
-                      items: _sleepTimerMinuteOptions
-                          .map((minutes) => DropdownMenuItem<int>(
-                                value: minutes,
-                                child: Text('$minutes ${AppLocalizations.of(context)!.minutes}'),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 4),
 
                 // Control buttons
                 Row(

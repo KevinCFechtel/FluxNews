@@ -88,6 +88,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageAutoDownloadAudioAfterSyncKey = 'autoDownloadAudioAfterSync';
   static const String secureStorageDownloadAudioOnlyOnWifiKey = 'downloadAudioOnlyOnWifi';
   static const String secureStorageDeleteAudioAfterPlaybackKey = 'deleteAudioAfterPlayback';
+  static const String secureStorageOpenAudioItemsInPlayerKey = 'openAudioItemsInPlayer';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
@@ -286,6 +287,7 @@ class FluxNewsState extends ChangeNotifier {
   int? startupFeedSelectionKey;
   bool categorieStartup = false;
   bool removeNewsFromListWhenRead = false;
+  bool openAudioItemsInPlayer = true;
   bool syncReadNews = false;
   bool autoDownloadAudioAfterSync = false;
   bool downloadAudioOnlyOnWifi = false;
@@ -2107,6 +2109,17 @@ class FluxNewsState extends ChangeNotifier {
             deleteAudioAfterPlayback = true;
           } else {
             deleteAudioAfterPlayback = false;
+          }
+        }
+      }
+
+      // assign the open audio items in player selection from persistent saved config
+      if (key == FluxNewsState.secureStorageOpenAudioItemsInPlayerKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            openAudioItemsInPlayer = true;
+          } else {
+            openAudioItemsInPlayer = false;
           }
         }
       }

@@ -45,7 +45,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   }
 
   Future<void> _deleteItem(DownloadedAudioInfo item) async {
-    await AudioDownloadService.deleteDownloadedAudio(item.attachmentID);
+    await AudioDownloadService.deleteDownloadedAudioByStorageId(item.storageID);
     if (!mounted) return;
     setState(_reload);
     ScaffoldMessenger.of(context).showSnackBar(

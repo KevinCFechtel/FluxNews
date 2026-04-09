@@ -683,4 +683,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileList => 'File list';
+
+  @override
+  String get useAudioPlayer => 'Open audio items with audio player';
+
+  @override
+  String get advancedSettings => 'Advanced Settings';
 }

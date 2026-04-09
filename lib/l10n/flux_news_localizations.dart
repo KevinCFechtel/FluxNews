@@ -1367,6 +1367,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'File list'**
   String get fileList;
+
+  /// No description provided for @useAudioPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open audio items with audio player'**
+  String get useAudioPlayer;
+
+  /// No description provided for @advancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Settings'**
+  String get advancedSettings;
 }
 
 class _AppLocalizationsDelegate

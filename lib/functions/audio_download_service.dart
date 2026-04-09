@@ -49,6 +49,7 @@ class AudioDownloadProgress {
 
 class DownloadedAudioInfo {
   const DownloadedAudioInfo({
+    required this.storageID,
     required this.attachmentID,
     required this.fileName,
     required this.filePath,
@@ -56,6 +57,7 @@ class DownloadedAudioInfo {
     required this.downloadedAt,
   });
 
+  final String storageID;
   final int attachmentID;
   final String fileName;
   final String filePath;
@@ -66,6 +68,7 @@ class DownloadedAudioInfo {
 class AudioDownloadService {
   static const _storage = sec_store.FlutterSecureStorage();
   static const String _downloadPathKeyPrefix = FluxNewsState.downloadPathKeyPrefix;
+  static const String _downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
   static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
   static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;
@@ -74,7 +77,60 @@ class AudioDownloadService {
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
 
   static String _downloadPathKey(int attachmentID) => '$_downloadPathKeyPrefix$attachmentID';
+  static String _downloadPathByUrlKey(String attachmentURL) {
+    final encoded = base64UrlEncode(utf8.encode(attachmentURL));
+    return '$_downloadPathByUrlKeyPrefix$encoded';
+  }
+
   static String _downloadTimestampKey(int attachmentID) => '$_downloadTimestampKeyPrefix$attachmentID';
+
+  /// Extracts the numeric attachment ID encoded in the filename.
+  /// File pattern: audio_<storageAttachmentId>_<epochMs>.<ext>
+  static int _attachmentIdFromFileName(String fileName) {
+    try {
+      final withoutPrefix = fileName.substring(FluxNewsState.audioFilePrefix.length);
+      final underscore = withoutPrefix.indexOf('_');
+      if (underscore < 0) return -1;
+      return int.tryParse(withoutPrefix.substring(0, underscore)) ?? -1;
+    } catch (_) {
+      return -1;
+    }
+  }
+
+  static int _resolveStorageAttachmentId(Attachment attachment) {
+    if (attachment.attachmentID >= 0) {
+      return attachment.attachmentID;
+    }
+    if (attachment.newsID >= 0) {
+      // Stable synthetic ID so fallback attachments do not collide at -1.
+      return -(attachment.newsID + 1000000);
+    }
+    return attachment.attachmentID;
+  }
+
+  static Future<String?> _findCachedFileForStorageAttachmentId(int storageAttachmentId) async {
+    final appSupport = await getApplicationSupportDirectory();
+    final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
+    if (!await audioDirectory.exists()) return null;
+
+    final expectedPrefix = '${FluxNewsState.audioFilePrefix}${storageAttachmentId}_';
+    File? newestMatch;
+    DateTime? newestModified;
+
+    await for (final entity in audioDirectory.list(followLinks: false)) {
+      if (entity is! File) continue;
+      final fileName = p.basename(entity.path);
+      if (!fileName.startsWith(expectedPrefix)) continue;
+
+      final stat = await entity.stat();
+      if (newestModified == null || stat.modified.isAfter(newestModified)) {
+        newestMatch = entity;
+        newestModified = stat.modified;
+      }
+    }
+
+    return newestMatch?.path;
+  }
 
   static Stream<List<AudioDownloadProgress>> get activeDownloadsStream => _activeDownloadsController.stream;
   static Stream<void> get downloadedAudiosChangedStream => _downloadedAudiosChangedController.stream;
@@ -307,53 +363,97 @@ class AudioDownloadService {
 
     final downloadedPaths = <int, String>{};
     for (final attachment in attachments) {
-      final storedPath = await _storage.read(key: _downloadPathKey(attachment.attachmentID));
+      final storageAttachmentId = _resolveStorageAttachmentId(attachment);
+      String? storedPath = await _storage.read(key: _downloadPathKey(attachment.attachmentID));
+      if ((storedPath == null || storedPath.isEmpty) && storageAttachmentId != attachment.attachmentID) {
+        storedPath = await _storage.read(key: _downloadPathKey(storageAttachmentId));
+      }
+      if ((storedPath == null || storedPath.isEmpty) && attachment.attachmentURL.isNotEmpty) {
+        storedPath = await _storage.read(key: _downloadPathByUrlKey(attachment.attachmentURL));
+        if (storedPath != null && storedPath.isNotEmpty) {
+          await _storage.write(key: _downloadPathKey(storageAttachmentId), value: storedPath);
+          if (attachment.attachmentID >= 0 && attachment.attachmentID != storageAttachmentId) {
+            await _storage.write(key: _downloadPathKey(attachment.attachmentID), value: storedPath);
+          }
+        }
+      }
       if (storedPath == null || storedPath.isEmpty) continue;
+
+      await _storage.write(key: _downloadPathKey(storageAttachmentId), value: storedPath);
+
+      // Backfill URL-based mapping for older ID-only entries.
+      if (attachment.attachmentURL.isNotEmpty) {
+        await _storage.write(
+          key: _downloadPathByUrlKey(attachment.attachmentURL),
+          value: storedPath,
+        );
+      }
 
       final file = File(storedPath);
       if (await file.exists()) {
         downloadedPaths[attachment.attachmentID] = storedPath;
       } else {
         await _storage.delete(key: _downloadPathKey(attachment.attachmentID));
+        await _storage.delete(key: _downloadPathKey(storageAttachmentId));
         await _storage.delete(key: _downloadTimestampKey(attachment.attachmentID));
+        await _storage.delete(key: _downloadTimestampKey(storageAttachmentId));
+        if (attachment.attachmentURL.isNotEmpty) {
+          await _storage.delete(key: _downloadPathByUrlKey(attachment.attachmentURL));
+        }
       }
     }
 
     return downloadedPaths;
   }
 
+  /// Lists all downloaded audio files by scanning the audio cache directory.
+  /// This is resilient to app restarts because it reads directly from the
+  /// filesystem rather than relying on persistent key–value storage.
   static Future<List<DownloadedAudioInfo>> getDownloadedAudios() async {
-    final values = await _storage.readAll();
-    final downloads = <DownloadedAudioInfo>[];
+    try {
+      final appSupport = await getApplicationSupportDirectory();
+      final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
 
-    for (final entry in values.entries) {
-      if (!entry.key.startsWith(_downloadPathKeyPrefix)) continue;
-
-      final attachmentID = int.tryParse(entry.key.substring(_downloadPathKeyPrefix.length));
-      if (attachmentID == null || entry.value.isEmpty) continue;
-
-      final file = File(entry.value);
-      if (!await file.exists()) {
-        await _storage.delete(key: _downloadPathKey(attachmentID));
-        await _storage.delete(key: _downloadTimestampKey(attachmentID));
-        _emitDownloadedAudiosChanged();
-        continue;
+      if (!await audioDirectory.exists()) {
+        return const [];
       }
 
-      final stat = await file.stat();
-      final storedTimestamp = values[_downloadTimestampKey(attachmentID)];
-      final downloadedAt = DateTime.tryParse(storedTimestamp ?? '') ?? stat.modified;
-      downloads.add(DownloadedAudioInfo(
-        attachmentID: attachmentID,
-        fileName: path.basename(file.path),
-        filePath: file.path,
-        fileSize: stat.size,
-        downloadedAt: downloadedAt,
-      ));
-    }
+      final downloads = <DownloadedAudioInfo>[];
+      final newestByAttachmentId = <int, DownloadedAudioInfo>{};
+      await for (final entity in audioDirectory.list(followLinks: false)) {
+        if (entity is! File) continue;
+        final fileName = p.basename(entity.path);
+        if (!fileName.startsWith(FluxNewsState.audioFilePrefix)) continue;
 
-    downloads.sort((a, b) => b.downloadedAt.compareTo(a.downloadedAt));
-    return downloads;
+        final stat = await entity.stat();
+        final info = DownloadedAudioInfo(
+          storageID: entity.path,
+          attachmentID: _attachmentIdFromFileName(fileName),
+          fileName: fileName,
+          filePath: entity.path,
+          fileSize: stat.size,
+          downloadedAt: stat.modified,
+        );
+
+        // Keep only one file per attachment ID (the newest), which avoids
+        // duplicate entries after historic repeated sync downloads.
+        if (info.attachmentID != -1) {
+          final previous = newestByAttachmentId[info.attachmentID];
+          if (previous == null || info.downloadedAt.isAfter(previous.downloadedAt)) {
+            newestByAttachmentId[info.attachmentID] = info;
+          }
+        } else {
+          downloads.add(info);
+        }
+      }
+
+      downloads.addAll(newestByAttachmentId.values);
+
+      downloads.sort((a, b) => b.downloadedAt.compareTo(a.downloadedAt));
+      return downloads;
+    } catch (_) {
+      return const [];
+    }
   }
 
   static Future<int> getDownloadedAudioSizeInBytes() async {
@@ -362,23 +462,56 @@ class AudioDownloadService {
   }
 
   static Future<void> deleteDownloadedAudio(int attachmentID) async {
+    // Try the fast path via legacy storage key.
     final storedPath = await _storage.read(key: _downloadPathKey(attachmentID));
     if (storedPath != null && storedPath.isNotEmpty) {
       final file = File(storedPath);
-      if (await file.exists()) {
-        await file.delete();
+      if (await file.exists()) await file.delete();
+    } else {
+      // Fall back to filesystem scan when the storage key is missing.
+      final appSupport = await getApplicationSupportDirectory();
+      final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
+      if (await audioDirectory.exists()) {
+        await for (final entity in audioDirectory.list(followLinks: false)) {
+          if (entity is! File) continue;
+          final fileName = p.basename(entity.path);
+          if (!fileName.startsWith(FluxNewsState.audioFilePrefix)) continue;
+          if (_attachmentIdFromFileName(fileName) == attachmentID) {
+            await entity.delete();
+            break;
+          }
+        }
       }
     }
-
     await _storage.delete(key: _downloadPathKey(attachmentID));
     await _storage.delete(key: _downloadTimestampKey(attachmentID));
+    _emitDownloadedAudiosChanged();
+  }
+
+  /// Deletes a downloaded audio by its storageID, which is the file path.
+  static Future<void> deleteDownloadedAudioByStorageId(String storageID) async {
+    if (storageID.isEmpty) return;
+
+    final file = File(storageID);
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+    // Clean up legacy storage keys derived from the filename.
+    final fileName = p.basename(storageID);
+    final attachmentID = _attachmentIdFromFileName(fileName);
+    if (attachmentID >= 0) {
+      await _storage.delete(key: _downloadPathKey(attachmentID));
+      await _storage.delete(key: _downloadTimestampKey(attachmentID));
+    }
+
     _emitDownloadedAudiosChanged();
   }
 
   static Future<void> deleteAllDownloadedAudios() async {
     final downloads = await getDownloadedAudios();
     for (final download in downloads) {
-      await deleteDownloadedAudio(download.attachmentID);
+      await deleteDownloadedAudioByStorageId(download.storageID);
     }
   }
 
@@ -396,66 +529,38 @@ class AudioDownloadService {
     final appSupport = await getApplicationSupportDirectory();
     final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
 
-    final allValues = await _storage.readAll();
-    final trackedPaths = <String>{};
-
-    for (final entry in allValues.entries) {
-      if (!entry.key.startsWith(_downloadPathKeyPrefix)) continue;
-
-      final idString = entry.key.substring(_downloadPathKeyPrefix.length);
-      final attachmentID = int.tryParse(idString);
-      if (attachmentID == null) continue;
-
-      final storedPath = entry.value;
-      if (storedPath.isEmpty) continue;
-
-      final file = File(storedPath);
-      if (!await file.exists()) {
-        await _storage.delete(key: _downloadPathKey(attachmentID));
-        await _storage.delete(key: _downloadTimestampKey(attachmentID));
-        _emitDownloadedAudiosChanged();
-        continue;
-      }
-
-      bool isExpired = false;
-      final storedTimestamp = allValues[_downloadTimestampKey(attachmentID)];
-      if (storedTimestamp != null && storedTimestamp.isNotEmpty) {
-        final parsedTimestamp = DateTime.tryParse(storedTimestamp);
-        if (parsedTimestamp != null) {
-          isExpired = now.difference(parsedTimestamp).inDays >= retentionDays;
-        }
-      }
-
-      if (!isExpired && (storedTimestamp == null || DateTime.tryParse(storedTimestamp) == null)) {
-        final stat = await file.stat();
-        isExpired = now.difference(stat.modified).inDays >= retentionDays;
-      }
-
-      if (isExpired) {
-        await file.delete();
-        await _storage.delete(key: _downloadPathKey(attachmentID));
-        await _storage.delete(key: _downloadTimestampKey(attachmentID));
-        _emitDownloadedAudiosChanged();
-      } else {
-        trackedPaths.add(storedPath);
-        if (storedTimestamp == null || DateTime.tryParse(storedTimestamp) == null) {
-          await _storage.write(
-            key: _downloadTimestampKey(attachmentID),
-            value: now.toIso8601String(),
-          );
-        }
-      }
-    }
-
     if (!await audioDirectory.exists()) return;
 
+    // Delete expired audio files directly from the cache directory.
     await for (final entity in audioDirectory.list(followLinks: false)) {
       if (entity is! File) continue;
-      if (trackedPaths.contains(entity.path)) continue;
+      final fileName = p.basename(entity.path);
+      if (!fileName.startsWith(FluxNewsState.audioFilePrefix)) continue;
 
       final stat = await entity.stat();
       if (now.difference(stat.modified).inDays >= retentionDays) {
+        final attachmentID = _attachmentIdFromFileName(fileName);
         await entity.delete();
+        if (attachmentID >= 0) {
+          await _storage.delete(key: _downloadPathKey(attachmentID));
+          await _storage.delete(key: _downloadTimestampKey(attachmentID));
+        }
+        _emitDownloadedAudiosChanged();
+      }
+    }
+
+    // Clean up dangling legacy storage keys that no longer have a file.
+    final allValues = await _storage.readAll();
+    for (final entry in allValues.entries) {
+      if (!entry.key.startsWith(_downloadPathKeyPrefix)) continue;
+      if (entry.value.isEmpty) continue;
+      if (!await File(entry.value).exists()) {
+        final idString = entry.key.substring(_downloadPathKeyPrefix.length);
+        final attachmentID = int.tryParse(idString);
+        if (attachmentID != null) {
+          await _storage.delete(key: _downloadPathKey(attachmentID));
+          await _storage.delete(key: _downloadTimestampKey(attachmentID));
+        }
       }
     }
   }
@@ -463,14 +568,53 @@ class AudioDownloadService {
   static Future<String?> downloadAttachment(Attachment attachment, {bool onlyOnWifi = false}) async {
     if (attachment.attachmentURL.isEmpty) return null;
 
-    final existingPath = await _storage.read(key: _downloadPathKey(attachment.attachmentID));
+    final storageAttachmentId = _resolveStorageAttachmentId(attachment);
+
+    String? existingPath = await _storage.read(key: _downloadPathKey(attachment.attachmentID));
+    if ((existingPath == null || existingPath.isEmpty) && storageAttachmentId != attachment.attachmentID) {
+      existingPath = await _storage.read(key: _downloadPathKey(storageAttachmentId));
+    }
+    existingPath ??= await _storage.read(key: _downloadPathByUrlKey(attachment.attachmentURL));
+
     if (existingPath != null && existingPath.isNotEmpty) {
       final existingFile = File(existingPath);
       if (await existingFile.exists()) {
+        await _storage.write(
+          key: _downloadPathKey(storageAttachmentId),
+          value: existingPath,
+        );
+        await _storage.write(
+          key: _downloadPathByUrlKey(attachment.attachmentURL),
+          value: existingPath,
+        );
         return existingPath;
       }
       await _storage.delete(key: _downloadPathKey(attachment.attachmentID));
+      await _storage.delete(key: _downloadPathKey(storageAttachmentId));
       await _storage.delete(key: _downloadTimestampKey(attachment.attachmentID));
+      await _storage.delete(key: _downloadTimestampKey(storageAttachmentId));
+      await _storage.delete(key: _downloadPathByUrlKey(attachment.attachmentURL));
+    }
+
+    // Fallback: detect already cached file directly from filesystem so sync
+    // does not re-download when secure storage entries are missing.
+    final cachedPath = await _findCachedFileForStorageAttachmentId(storageAttachmentId);
+    if (cachedPath != null && cachedPath.isNotEmpty) {
+      await _storage.write(
+        key: _downloadPathKey(storageAttachmentId),
+        value: cachedPath,
+      );
+      if (attachment.attachmentID >= 0 && attachment.attachmentID != storageAttachmentId) {
+        await _storage.write(
+          key: _downloadPathKey(attachment.attachmentID),
+          value: cachedPath,
+        );
+      }
+      await _storage.write(
+        key: _downloadPathByUrlKey(attachment.attachmentURL),
+        value: cachedPath,
+      );
+      return cachedPath;
     }
 
     if (onlyOnWifi && !await _isWifiConnected()) {
@@ -495,7 +639,7 @@ class AudioDownloadService {
       final extension = uri != null ? p.extension(uri.path) : '';
       final filePath = p.join(
         audioDirectory.path,
-        '${FluxNewsState.audioFilePrefix}${attachment.attachmentID}_${DateTime.now().millisecondsSinceEpoch}$extension',
+        '${FluxNewsState.audioFilePrefix}${storageAttachmentId}_${DateTime.now().millisecondsSinceEpoch}$extension',
       );
       final file = File(filePath);
       final sink = file.openWrite();
@@ -503,7 +647,7 @@ class AudioDownloadService {
       var receivedBytes = 0;
       final startedAt = DateTime.now();
       _setActiveDownload(AudioDownloadProgress(
-        attachmentID: attachment.attachmentID,
+        attachmentID: storageAttachmentId,
         fileName: path.basename(filePath),
         receivedBytes: 0,
         totalBytes: totalBytes,
@@ -515,7 +659,7 @@ class AudioDownloadService {
           receivedBytes += chunk.length;
           sink.add(chunk);
           _setActiveDownload(AudioDownloadProgress(
-            attachmentID: attachment.attachmentID,
+            attachmentID: storageAttachmentId,
             fileName: path.basename(filePath),
             receivedBytes: receivedBytes,
             totalBytes: totalBytes,
@@ -524,7 +668,7 @@ class AudioDownloadService {
         }
       } catch (_) {
         await sink.close();
-        _removeActiveDownload(attachment.attachmentID);
+        _removeActiveDownload(storageAttachmentId);
         if (await file.exists()) {
           await file.delete();
         }
@@ -533,17 +677,21 @@ class AudioDownloadService {
 
       await sink.close();
 
-      await _storage.write(key: _downloadPathKey(attachment.attachmentID), value: filePath);
+      await _storage.write(key: _downloadPathKey(storageAttachmentId), value: filePath);
+      if (attachment.attachmentID >= 0 && attachment.attachmentID != storageAttachmentId) {
+        await _storage.write(key: _downloadPathKey(attachment.attachmentID), value: filePath);
+      }
+      await _storage.write(key: _downloadPathByUrlKey(attachment.attachmentURL), value: filePath);
       await _storage.write(
-        key: _downloadTimestampKey(attachment.attachmentID),
+        key: _downloadTimestampKey(storageAttachmentId),
         value: DateTime.now().toIso8601String(),
       );
       _emitDownloadedAudiosChanged();
-      _removeActiveDownload(attachment.attachmentID);
+      _removeActiveDownload(storageAttachmentId);
 
       return filePath;
     } finally {
-      _removeActiveDownload(attachment.attachmentID);
+      _removeActiveDownload(storageAttachmentId);
       client.close(force: true);
     }
   }

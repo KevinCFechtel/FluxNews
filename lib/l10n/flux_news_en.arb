@@ -209,5 +209,7 @@
     "totalStorage": "Total storage",
     "loadDownloadedDataError": "Failed to load downloaded files.",
     "noAudioDownloads": "No audio files downloaded yet.",
-    "fileList": "File list"
+    "fileList": "File list",
+    "useAudioPlayer": "Open audio items with audio player",
+    "advancedSettings": "Advanced Settings"
 }

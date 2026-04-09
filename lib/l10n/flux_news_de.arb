@@ -210,5 +210,7 @@
     "totalStorage": "Gesamtspeicher",
     "loadDownloadedDataError": "Die heruntergeladenen Dateien konnten nicht geladen werden.",
     "noAudioDownloads": "Es wurden noch keine Audiodateien heruntergeladen.",
-    "fileList": "Dateiliste"
+    "fileList": "Dateiliste",
+    "useAudioPlayer": "Audio-Items mit dem Audio Player öffnen",
+    "advancedSettings": "Erweiterte Einstellungen"
 }

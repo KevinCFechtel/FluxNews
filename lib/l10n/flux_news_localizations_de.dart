@@ -699,4 +699,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileList => 'Dateiliste';
+
+  @override
+  String get useAudioPlayer => 'Audio-Items mit dem Audio Player öffnen';
+
+  @override
+  String get advancedSettings => 'Erweiterte Einstellungen';
 }
