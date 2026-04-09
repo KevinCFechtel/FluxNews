@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
@@ -13,22 +15,113 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
-class NewsAudioPlayerScreen extends StatelessWidget {
+class NewsAudioPlayerScreen extends StatefulWidget {
   const NewsAudioPlayerScreen({super.key, required this.news});
 
   final News news;
 
   @override
+  State<NewsAudioPlayerScreen> createState() => _NewsAudioPlayerScreenState();
+}
+
+class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
+  late final ScrollController _articleContentController;
+  late final ScrollController _playerContentController;
+
+  @override
+  void initState() {
+    super.initState();
+    _articleContentController = ScrollController();
+    _playerContentController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _articleContentController.dispose();
+    _playerContentController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final audioAttachments = news.getAudioAttachments();
+    final audioAttachments = widget.news.getAudioAttachments();
     final appState = Provider.of<FluxNewsState>(context, listen: false);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+    final useTabletLayout = screenWidth >= 900 || shortestSide >= 600;
+
+    Widget articleContent = Scrollbar(
+      controller: _articleContentController,
+      child: SingleChildScrollView(
+        controller: _articleContentController,
+        primary: false,
+        child: widget.news.getFullRenderedWidget(appState, context),
+      ),
+    );
+
+    Widget playerHeader = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.news.feedTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          widget.news.title,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+      ],
+    );
+
+    Widget mobileLayout = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        playerHeader,
+        const SizedBox(height: 16),
+        NewsAudioPlayer(news: widget.news, appState: appState),
+        const SizedBox(height: 20),
+        Expanded(child: articleContent),
+      ],
+    );
+
+    Widget tabletLayout = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 5,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              playerHeader,
+              const SizedBox(height: 16),
+              Expanded(
+                child: Scrollbar(
+                  controller: _playerContentController,
+                  child: SingleChildScrollView(
+                    controller: _playerContentController,
+                    primary: false,
+                    child: NewsAudioPlayer(news: widget.news, appState: appState),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 24),
+        Expanded(
+          flex: 6,
+          child: articleContent,
+        ),
+      ],
+    );
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(news.title),
+        title: Text(widget.news.title),
       ),
       body: SafeArea(
         child: audioAttachments.isEmpty
@@ -37,30 +130,7 @@ class NewsAudioPlayerScreen extends StatelessWidget {
               )
             : Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      news.feedTitle,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      news.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    NewsAudioPlayer(news: news, appState: appState),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: Scrollbar(
-                        child: SingleChildScrollView(
-                          child: news.getFullRenderedWidget(appState, context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: useTabletLayout ? tabletLayout : mobileLayout,
               ),
       ),
     );
@@ -613,16 +683,36 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         ? parsedUri.pathSegments.last
         : attachment.attachmentMimeType;
     final title = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
-    final imageAttachment = widget.news.getFirstImageAttachment();
     Uri? artworkUri;
 
-    if (Platform.isIOS) {
-      artworkUri = _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
-      _defaultArtworkUri ??= artworkUri;
+    // Try to extract album art from ID3 tags
+    Uint8List? id3ImageBytes;
+    final downloadedPath = _downloadedPaths[attachment.attachmentID];
+    if (downloadedPath != null && downloadedPath.isNotEmpty) {
+      // Try local file first
+      id3ImageBytes = await AudioDownloadService.extractAlbumArtFromFile(downloadedPath);
+    }
+    id3ImageBytes ??= await AudioDownloadService.extractAlbumArtFromUrl(attachment.attachmentURL);
+
+    // Use ID3 image if found, otherwise fall back to attachment image
+    if (id3ImageBytes != null && id3ImageBytes.isNotEmpty) {
+      // Create data URI from image bytes
+      final base64Image = base64Encode(id3ImageBytes);
+      artworkUri = Uri.dataFromString(
+        'data:image/jpeg;base64,$base64Image',
+        mimeType: 'image/jpeg',
+      );
     } else {
-      artworkUri = imageAttachment.attachmentID != -1 ? Uri.tryParse(imageAttachment.attachmentURL) : null;
-      artworkUri ??= _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
-      _defaultArtworkUri ??= artworkUri;
+      // Fall back to original image extraction logic
+      final imageAttachment = widget.news.getFirstImageAttachment();
+      if (Platform.isIOS) {
+        artworkUri = _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
+        _defaultArtworkUri ??= artworkUri;
+      } else {
+        artworkUri = imageAttachment.attachmentID != -1 ? Uri.tryParse(imageAttachment.attachmentURL) : null;
+        artworkUri ??= _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
+        _defaultArtworkUri ??= artworkUri;
+      }
     }
 
     return MediaItem(

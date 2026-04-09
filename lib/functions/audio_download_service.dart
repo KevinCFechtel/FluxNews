@@ -270,6 +270,124 @@ class AudioDownloadService {
     }
   }
 
+  /// Extracts album art (APIC frame) from local audio file
+  static Future<Uint8List?> extractAlbumArtFromFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) return null;
+
+      final fileBytes = await file.readAsBytes();
+      if (fileBytes.length < _remoteId3HeaderLength) return null;
+
+      if (!_hasId3Header(fileBytes)) return null;
+
+      final version = fileBytes[3];
+      final tagSize = _readSynchsafeInt(fileBytes, 6);
+      if (tagSize <= 0) return null;
+
+      final endOffset = _remoteId3HeaderLength + tagSize;
+      if (endOffset > fileBytes.length) return null;
+
+      final tagBytes = fileBytes.sublist(_remoteId3HeaderLength, endOffset);
+      return _extractPictureFromTagData(version: version, tagData: tagBytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Extracts album art (APIC frame) from remote audio file
+  static Future<Uint8List?> extractAlbumArtFromUrl(String url) async {
+    final parsedUrl = Uri.tryParse(url);
+    if (parsedUrl == null) return null;
+
+    final client = HttpClient();
+    try {
+      final headerBytes = await _readRemoteBytes(
+        client: client,
+        uri: parsedUrl,
+        start: 0,
+        end: _remoteId3HeaderLength - 1,
+        maxBytes: _remoteId3HeaderLength,
+      );
+      if (!_hasId3Header(headerBytes)) return null;
+
+      final version = headerBytes[3];
+      final tagSize = _readSynchsafeInt(headerBytes, 6);
+      if (tagSize <= 0) return null;
+
+      final tagData = await _readRemoteBytes(
+        client: client,
+        uri: parsedUrl,
+        start: _remoteId3HeaderLength,
+        end: _remoteId3HeaderLength + tagSize - 1,
+        maxBytes: tagSize,
+      );
+
+      return _extractPictureFromTagData(version: version, tagData: tagData);
+    } catch (_) {
+      return null;
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  /// Extracts APIC (picture) frame from ID3v2 tag data
+  static Uint8List? _extractPictureFromTagData({
+    required int version,
+    required Uint8List tagData,
+  }) {
+    if (version < 3 || version > 4) return null;
+
+    int offset = 0;
+    while (offset < tagData.length - 10) {
+      final frameId = String.fromCharCodes(tagData.sublist(offset, offset + 4));
+      if (frameId.startsWith('\u0000')) break; // padding
+
+      if (frameId == 'APIC') {
+        return _parseApicFrame(tagData, offset);
+      }
+
+      offset += 10; // frame header
+      final frameSize = version == 3 ? _readInt32(tagData, offset - 4) : _readSynchsafeInt(tagData, offset - 4);
+      offset += frameSize;
+      if (offset > tagData.length) break;
+    }
+    return null;
+  }
+
+  /// Parses APIC (attached picture) frame and returns image bytes
+  static Uint8List? _parseApicFrame(Uint8List tagData, int frameOffset) {
+    try {
+      int offset = frameOffset + 10; // skip frame header
+      if (offset >= tagData.length) return null;
+
+      offset++; // skip encoding byte
+      if (offset >= tagData.length) return null;
+
+      // Skip MIME type (null-terminated string)
+      while (offset < tagData.length && tagData[offset] != 0) {
+        offset++;
+      }
+      offset++; // skip null terminator
+
+      if (offset >= tagData.length) return null;
+      offset++; // skip picture type
+
+      // Skip description (null-terminated string)
+      while (offset < tagData.length && tagData[offset] != 0) {
+        offset++;
+      }
+      offset++; // skip null terminator
+
+      if (offset >= tagData.length) return null;
+
+      // Remaining bytes are the image data
+      return tagData.sublist(offset);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static bool _hasId3Header(Uint8List header) {
     return header.length >= _remoteId3HeaderLength && ascii.decode(header.sublist(0, 3), allowInvalid: true) == 'ID3';
   }

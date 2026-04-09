@@ -773,6 +773,14 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
               return const SizedBox.shrink();
             }
 
+            // Detect tablet layout
+            final screenWidth = MediaQuery.sizeOf(context).width;
+            final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+            final isTablet = screenWidth >= 900 || shortestSide >= 600;
+            final iconSize = isTablet ? 38.0 : 34.0;
+            final buttonSize = isTablet ? 60.0 : 52.0;
+            final textFontSize = isTablet ? 14.0 : 12.0;
+
             return SafeArea(
               top: false,
               child: Material(
@@ -781,7 +789,10 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                 child: InkWell(
                   onTap: _openFullPlayer,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 12 : 8,
+                      vertical: isTablet ? 8 : 6,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -791,16 +802,22 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                             children: [
                               IconButton(
                                 color: miniPlayerForeground,
-                                iconSize: 34,
-                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
                                 tooltip: '-30s',
                                 onPressed: () => _audioHandler!.rewind(),
                                 icon: const Icon(Icons.replay_30),
                               ),
                               IconButton(
                                 color: miniPlayerForeground,
-                                iconSize: 34,
-                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
                                 tooltip: playback.playing
                                     ? AppLocalizations.of(context)!.pause
                                     : AppLocalizations.of(context)!.play,
@@ -809,28 +826,34 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                               ),
                               IconButton(
                                 color: miniPlayerForeground,
-                                iconSize: 34,
-                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
                                 tooltip: AppLocalizations.of(context)!.stop,
                                 onPressed: () => _audioHandler!.stop(),
                                 icon: const Icon(Icons.stop_circle),
                               ),
                               IconButton(
                                 color: miniPlayerForeground,
-                                iconSize: 34,
-                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
                                 tooltip: '+30s',
                                 onPressed: () => _audioHandler!.fastForward(),
                                 icon: const Icon(Icons.forward_30),
                               ),
-                              const SizedBox(width: 4),
+                              SizedBox(width: isTablet ? 8 : 4),
                               Expanded(
                                 child: Text(
                                   media.title,
-                                  maxLines: 2,
+                                  maxLines: isTablet ? 3 : 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontSize: 12,
+                                        fontSize: textFontSize,
                                         height: 1.15,
                                         fontWeight: FontWeight.w600,
                                         color: miniPlayerForeground,
@@ -840,7 +863,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isTablet ? 6 : 4),
                         LinearProgressIndicator(
                           value: (() {
                             final totalMs = media.duration?.inMilliseconds ?? 0;
@@ -848,7 +871,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                             final currentMs = playback.updatePosition.inMilliseconds.clamp(0, totalMs);
                             return currentMs / totalMs;
                           })(),
-                          minHeight: 3,
+                          minHeight: isTablet ? 4 : 3,
                           backgroundColor: miniPlayerForeground.withValues(alpha: 0.25),
                           valueColor: AlwaysStoppedAnimation<Color>(miniPlayerForeground),
                         ),
