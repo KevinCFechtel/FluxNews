@@ -377,6 +377,23 @@ class AudioDownloadService {
           }
         }
       }
+
+      // Fallback after app restart: restore mapping from cached file name even
+      // when secure storage keys are missing.
+      if (storedPath == null || storedPath.isEmpty) {
+        final cachedPath = await _findCachedFileForStorageAttachmentId(storageAttachmentId);
+        if (cachedPath != null && cachedPath.isNotEmpty) {
+          storedPath = cachedPath;
+          await _storage.write(key: _downloadPathKey(storageAttachmentId), value: cachedPath);
+          if (attachment.attachmentID >= 0 && attachment.attachmentID != storageAttachmentId) {
+            await _storage.write(key: _downloadPathKey(attachment.attachmentID), value: cachedPath);
+          }
+          if (attachment.attachmentURL.isNotEmpty) {
+            await _storage.write(key: _downloadPathByUrlKey(attachment.attachmentURL), value: cachedPath);
+          }
+        }
+      }
+
       if (storedPath == null || storedPath.isEmpty) continue;
 
       await _storage.write(key: _downloadPathKey(storageAttachmentId), value: storedPath);

@@ -308,6 +308,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for app bar text
   String appBarText = '';
   int? selectedID;
+  News? activeAudioNews;
 
   // vars for detecting device orientation and device type
   bool isTablet = false;
@@ -2399,6 +2400,11 @@ class FluxNewsState extends ChangeNotifier {
 
   // notify the listeners of FluxNewsState to refresh views
   void refreshView() {
+    notifyListeners();
+  }
+
+  void setActiveAudioNews(News news) {
+    activeAudioNews = news;
     notifyListeners();
   }
 }

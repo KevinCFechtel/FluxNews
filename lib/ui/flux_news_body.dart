@@ -3,8 +3,10 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:extended_image/extended_image.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -19,6 +21,7 @@ import 'package:provider/provider.dart';
 import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
+import 'audioplayer.dart';
 
 class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   const FluxNewsBody({super.key});
@@ -198,6 +201,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     }
     // start the main view in portrait mode
     return Scaffold(
+      extendBody: true,
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
@@ -312,6 +316,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             ),
       drawer: getDrawer(context, appState),
       body: const FluxNewsBodyList(),
+      bottomNavigationBar: PersistentAudioMiniPlayer(appState: appState),
     );
   }
 
@@ -319,6 +324,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
+      extendBody: true,
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
@@ -399,6 +405,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
           ),
         ],
       ),
+      bottomNavigationBar: PersistentAudioMiniPlayer(appState: appState),
     );
   }
 
@@ -694,6 +701,167 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             }
           }),
     ];
+  }
+}
+
+class PersistentAudioMiniPlayer extends StatefulWidget {
+  const PersistentAudioMiniPlayer({super.key, required this.appState});
+
+  final FluxNewsState appState;
+
+  @override
+  State<PersistentAudioMiniPlayer> createState() => _PersistentAudioMiniPlayerState();
+}
+
+class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
+  FluxNewsAudioHandler? _audioHandler;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAudioHandler();
+  }
+
+  Future<void> _initAudioHandler() async {
+    final handler = await initFluxNewsAudioHandler();
+    if (!mounted) return;
+    setState(() {
+      _audioHandler = handler;
+    });
+  }
+
+  Future<void> _openFullPlayer() async {
+    final activeNews = widget.appState.activeAudioNews;
+    if (activeNews == null) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NewsAudioPlayerScreen(news: activeNews),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_audioHandler == null) return const SizedBox.shrink();
+
+    return StreamBuilder<MediaItem?>(
+      stream: _audioHandler!.mediaItem,
+      initialData: _audioHandler!.mediaItem.value,
+      builder: (context, mediaSnapshot) {
+        final media = mediaSnapshot.data;
+        if (media == null || widget.appState.activeAudioNews == null) {
+          return const SizedBox.shrink();
+        }
+
+        return StreamBuilder<PlaybackState>(
+          stream: _audioHandler!.playbackState,
+          initialData: _audioHandler!.playbackState.value,
+          builder: (context, playbackSnapshot) {
+            final playback = playbackSnapshot.data;
+            if (playback == null) {
+              return const SizedBox.shrink();
+            }
+
+            final colorScheme = Theme.of(context).colorScheme;
+            final miniPlayerBackground = colorScheme.primaryContainer;
+            final miniPlayerForeground = colorScheme.onPrimaryContainer;
+
+            final isVisible = playback.playing || playback.processingState != AudioProcessingState.idle;
+            if (!isVisible) {
+              return const SizedBox.shrink();
+            }
+
+            return SafeArea(
+              top: false,
+              child: Material(
+                elevation: 8,
+                color: miniPlayerBackground,
+                child: InkWell(
+                  onTap: _openFullPlayer,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconTheme(
+                          data: IconThemeData(color: miniPlayerForeground),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: 34,
+                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                tooltip: '-30s',
+                                onPressed: () => _audioHandler!.rewind(),
+                                icon: const Icon(Icons.replay_30),
+                              ),
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: 34,
+                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                tooltip: playback.playing
+                                    ? AppLocalizations.of(context)!.pause
+                                    : AppLocalizations.of(context)!.play,
+                                onPressed: () => playback.playing ? _audioHandler!.pause() : _audioHandler!.play(),
+                                icon: Icon(playback.playing ? Icons.pause_circle : Icons.play_circle),
+                              ),
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: 34,
+                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                tooltip: AppLocalizations.of(context)!.stop,
+                                onPressed: () => _audioHandler!.stop(),
+                                icon: const Icon(Icons.stop_circle),
+                              ),
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: 34,
+                                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                                tooltip: '+30s',
+                                onPressed: () => _audioHandler!.fastForward(),
+                                icon: const Icon(Icons.forward_30),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  media.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        fontSize: 12,
+                                        height: 1.15,
+                                        fontWeight: FontWeight.w600,
+                                        color: miniPlayerForeground,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        LinearProgressIndicator(
+                          value: (() {
+                            final totalMs = media.duration?.inMilliseconds ?? 0;
+                            if (totalMs <= 0) return null;
+                            final currentMs = playback.updatePosition.inMilliseconds.clamp(0, totalMs);
+                            return currentMs / totalMs;
+                          })(),
+                          minHeight: 3,
+                          backgroundColor: miniPlayerForeground.withValues(alpha: 0.25),
+                          valueColor: AlwaysStoppedAnimation<Color>(miniPlayerForeground),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
 

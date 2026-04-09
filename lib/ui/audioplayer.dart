@@ -115,6 +115,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   Duration? _savedPosition; // loaded from storage, seek target on first play
   PlayerState _playerState = PlayerState(false, ProcessingState.idle);
   bool _isLoading = false;
+  bool _isDisposed = false;
 
   String _progressKey() => '${FluxNewsState.audioProgressKeyPrefix}${widget.news.newsID}';
 
@@ -131,7 +132,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   Future<void> _initializeDefaultArtwork() async {
     final artworkUri = await AudioDownloadService.getDefaultArtworkUri();
-    if (!mounted) return;
+    if (!mounted || _isDisposed) return;
     setState(() => _defaultArtworkUri = artworkUri);
   }
 
@@ -145,9 +146,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       await _loadChaptersForAttachment(entry.key, entry.value);
     }
     _syncActiveAttachment();
-    if (mounted) {
-      setState(() {});
-    }
+    if (!mounted || _isDisposed) return;
+    setState(() {});
   }
 
   void _syncActiveAttachment({String? mediaItemId}) {
@@ -176,6 +176,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       return;
     }
 
+    if (_isDisposed) return;
     setState(() {
       _activeAttachmentID = matchedAttachment?.attachmentID;
     });
@@ -214,7 +215,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   Future<void> _initializeAudioHandler() async {
     final audioHandler = await initFluxNewsAudioHandler();
-    if (!mounted) return;
+    if (!mounted || _isDisposed) return;
 
     _audioHandler = audioHandler;
     _activeUrl = audioHandler.currentUrl;
@@ -226,17 +227,17 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     _syncActiveAttachment(mediaItemId: audioHandler.mediaItem.value?.id);
 
     _positionSubscription = audioHandler.positionStream.listen((position) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       setState(() => _position = position);
     });
 
     _durationSubscription = audioHandler.durationStream.listen((duration) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       setState(() => _duration = duration ?? Duration.zero);
     });
 
     _playerStateSubscription = audioHandler.playerStateStream.listen((state) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       final completed = state.processingState == ProcessingState.completed && _activeUrl != null;
       setState(() {
         _playerState = state;
@@ -249,22 +250,24 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     });
 
     _mediaItemSubscription = audioHandler.mediaItem.listen((item) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       _syncActiveAttachment(mediaItemId: item?.id);
     });
 
     _playbackStateSubscription = audioHandler.playbackState.listen((state) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       setState(() {
         _playbackSpeed = state.speed;
       });
     });
 
+    if (!mounted || _isDisposed) return;
     setState(() {});
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _saveProgress();
     _autoSaveTimer?.cancel();
     _sleepTimer?.cancel();
@@ -282,7 +285,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     final roundedAdjustment = (adjustment * 10).round() / 10;
     final speed = (1.0 + roundedAdjustment).clamp(0.5, 4.0).toDouble();
     await _audioHandler!.setSpeed(speed);
-    if (!mounted) return;
+    if (!mounted || _isDisposed) return;
     setState(() {
       _playbackSpeed = speed;
     });
@@ -342,11 +345,12 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       if (_playerState.playing) {
         await _stop();
       }
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       setState(() {
         _sleepTimerEnabled = false;
         _sleepTimerEndAt = null;
       });
+      if (!mounted || _isDisposed) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.sleepTimerNotification)),
       );
@@ -395,6 +399,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   Future<void> _loadProgress() async {
     final saved = await _storage.read(key: _progressKey());
+    if (!mounted || _isDisposed) return;
     final localMs = saved != null ? (int.tryParse(saved) ?? 0) : 0;
 
     // Prefer local storage; fall back to server-side media_progression if local is absent
@@ -466,7 +471,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       initialPosition: seekTarget != null && seekTarget > Duration.zero ? seekTarget : null,
     );
     await _audioHandler!.play();
-    if (seekTarget != null && seekTarget > Duration.zero) {
+    if (seekTarget != null && seekTarget > Duration.zero && mounted && !_isDisposed) {
       setState(() => _savedPosition = null);
     }
   }
@@ -476,6 +481,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     await _saveProgress();
     await _audioHandler!.stop();
     _sleepTimer?.cancel();
+    if (!mounted || _isDisposed) return;
     setState(() {
       _activeUrl = null;
       _activeAttachmentID = null;
@@ -641,17 +647,24 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       ),
                     ),
                     IconButton(
+                      color: Theme.of(context).colorScheme.primary,
                       tooltip: isDownloaded
                           ? AppLocalizations.of(context)!.downloaded
                           : AppLocalizations.of(context)!.downloadAudio,
                       onPressed: isDownloaded || isDownloading ? null : () => _downloadAudio(attachment),
                       icon: isDownloading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                              ),
                             )
-                          : Icon(isDownloaded ? Icons.download_done : Icons.download),
+                          : Icon(
+                              isDownloaded ? Icons.download_done : Icons.download,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       iconSize: 20,
                     ),
                   ],
