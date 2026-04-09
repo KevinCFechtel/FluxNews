@@ -85,7 +85,7 @@ class AudioDownloadService {
   static String _downloadTimestampKey(int attachmentID) => '$_downloadTimestampKeyPrefix$attachmentID';
 
   /// Extracts the numeric attachment ID encoded in the filename.
-  /// File pattern: audio_<storageAttachmentId>_<epochMs>.<ext>
+  /// File pattern: audio_[storageAttachmentId]_[epochMs].[ext]
   static int _attachmentIdFromFileName(String fileName) {
     try {
       final withoutPrefix = fileName.substring(FluxNewsState.audioFilePrefix.length);
