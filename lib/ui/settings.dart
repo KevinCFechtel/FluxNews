@@ -10,7 +10,6 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
-import 'package:flux_news/ui/downloads_overview.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -202,41 +201,6 @@ class Settings extends StatelessWidget {
                   onTap: () {
                     // navigate to the search page
                     Navigator.pushNamed(context, FluxNewsState.syncSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
-                ),
-                const Divider(),
-                // Overview of the downloaded audio files
-                ListTile(
-                  leading: const Icon(
-                    Icons.download_for_offline_outlined,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.audioDownloadsSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.audioDownloadsSettingsDescription,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (context) => const DownloadsOverview(),
-                      ),
-                    );
                   },
                   trailing: const Icon(
                     Icons.arrow_right,

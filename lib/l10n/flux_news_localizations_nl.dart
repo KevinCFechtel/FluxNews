@@ -571,6 +571,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get downloadsManagerDeleteTitle => 'Delete Download?';
 
   @override
+  String get downloadsManagerDeleteMessage =>
+      'Are you sure you want to delete this download?';
+
+  @override
   String get downloadsManagerDeletedSnackbar => 'Download deleted';
 
   @override

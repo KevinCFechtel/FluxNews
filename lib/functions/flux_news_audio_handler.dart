@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -39,7 +40,31 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   static const String _rootMediaId = 'flux_news_root';
-  static const String _nowPlayingMediaId = 'flux_news_now_playing';
+
+  bool _isRootId(String id) {
+    return id == _rootMediaId ||
+        id == AudioService.browsableRootId ||
+        id == AudioService.recentRootId ||
+        id == '' ||
+        id == 'root';
+  }
+
+  Future<List<MediaItem>> _buildDownloadedMediaItems() async {
+    final downloads = await AudioDownloadService.getDownloadedAudios();
+    return downloads.map((info) {
+      final title = AudioDownloadService.getDownloadTitle(info.attachmentID) ?? info.fileName;
+      final artist = AudioDownloadService.getDownloadFeedTitle(info.attachmentID);
+      final fileUri = Uri.file(info.filePath).toString();
+      return MediaItem(
+        id: fileUri,
+        title: title,
+        artist: artist,
+        album: 'Flux News',
+        playable: true,
+        extras: <String, dynamic>{'attachmentID': info.attachmentID, 'storageID': info.storageID},
+      );
+    }).toList();
+  }
 
   final AudioPlayer _player = AudioPlayer();
   late final Future<void> _initFuture;
@@ -100,7 +125,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     mediaItem.add(preparedItem);
 
     if (shouldReload) {
-      await _player.setAudioSource(AudioSource.uri(Uri.parse(url)));
+      final uri = Uri.parse(url);
+      if (uri.scheme == 'file') {
+        await _player.setAudioSource(AudioSource.file(uri.toFilePath()));
+      } else {
+        await _player.setAudioSource(AudioSource.uri(uri));
+      }
     }
 
     if (initialPosition != null) {
@@ -145,33 +175,28 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       if (_currentMediaItem != null) {
         return [_currentMediaItem!];
       }
-      return const [];
+      return queue.value;
     }
 
-    if (parentMediaId == _rootMediaId || parentMediaId == AudioService.browsableRootId) {
-      return [
-        MediaItem(
-          id: _nowPlayingMediaId,
-          album: 'Flux News',
-          title: 'Aktuelle Wiedergabe',
-          playable: false,
-          artUri: _currentMediaItem?.artUri,
-        ),
-      ];
-    }
+    if (_isRootId(parentMediaId)) {
+      final items = <MediaItem>[];
 
-    if (parentMediaId == _nowPlayingMediaId) {
-      if (_currentMediaItem != null) {
-        return [_currentMediaItem!];
+      // Currently queued / playing items first
+      if (queue.value.isNotEmpty) {
+        items.addAll(queue.value);
+      } else if (_currentMediaItem != null) {
+        items.add(_currentMediaItem!);
       }
-      return [
-        const MediaItem(
-          id: 'flux_news_empty',
-          album: 'Flux News',
-          title: 'Keine aktive Wiedergabe',
-          playable: false,
-        )
-      ];
+
+      // Add downloaded items directly so Android Auto always receives playable children.
+      try {
+        final downloadedItems = await _buildDownloadedMediaItems();
+        items.addAll(downloadedItems.where((d) => items.every((i) => i.id != d.id)));
+      } catch (_) {
+        // Keep browse responsive even if local download scan fails.
+      }
+
+      return items;
     }
 
     return const [];
@@ -179,18 +204,75 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   @override
   Future<MediaItem?> getMediaItem(String mediaId) async {
+    if (_isRootId(mediaId)) {
+      return const MediaItem(id: _rootMediaId, title: 'Flux News', playable: false);
+    }
+
     if (_currentMediaItem?.id == mediaId) {
       return _currentMediaItem;
     }
+
     final matches = queue.value.where((item) => item.id == mediaId);
-    return matches.isEmpty ? null : matches.first;
+    if (matches.isNotEmpty) {
+      return matches.first;
+    }
+
+    final downloadedItems = await _buildDownloadedMediaItems();
+    final downloadedMatch = downloadedItems.where((item) => item.id == mediaId);
+    if (downloadedMatch.isNotEmpty) {
+      return downloadedMatch.first;
+    }
+
+    return null;
   }
 
   @override
   Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
-    final target = mediaId == _currentMediaItem?.id
+    if (_isRootId(mediaId)) {
+      if (_currentMediaItem != null) {
+        await play();
+      }
+      return;
+    }
+
+    MediaItem? target = mediaId == _currentMediaItem?.id
         ? _currentMediaItem
         : queue.value.where((item) => item.id == mediaId).fold<MediaItem?>(null, (prev, e) => prev ?? e);
+
+    target ??= await getMediaItem(mediaId);
+
+    // Check if it's a download (file:// URI)
+    if (target == null) {
+      final uri = Uri.tryParse(mediaId);
+      if (uri != null && uri.scheme == 'file') {
+        final attachmentID = extras?['attachmentID'] as int?;
+        final title = (attachmentID != null ? AudioDownloadService.getDownloadTitle(attachmentID) : null) ??
+            (uri.pathSegments.isNotEmpty ? Uri.decodeComponent(uri.pathSegments.last) : mediaId);
+        final artist = attachmentID != null ? AudioDownloadService.getDownloadFeedTitle(attachmentID) : null;
+        target = MediaItem(
+          id: mediaId,
+          title: title,
+          artist: artist,
+          album: 'Flux News',
+          playable: true,
+          extras: extras,
+        );
+      }
+    }
+
+    if (target == null) {
+      final uri = Uri.tryParse(mediaId);
+      if (uri != null && uri.hasScheme) {
+        final fallbackTitle = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
+        target = MediaItem(
+          id: mediaId,
+          album: 'Flux News',
+          title: fallbackTitle,
+          playable: true,
+        );
+      }
+    }
+
     if (target == null) {
       return;
     }
@@ -198,6 +280,50 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await loadMediaItem(
       url: target.id,
       item: target,
+      initialPosition: Duration.zero,
+    );
+    await play();
+  }
+
+  @override
+  Future<void> prepareFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
+    if (_isRootId(mediaId)) {
+      return;
+    }
+
+    MediaItem? target = await getMediaItem(mediaId);
+    target ??= await getMediaItem(Uri.decodeFull(mediaId));
+
+    if (target == null) {
+      final uri = Uri.tryParse(mediaId);
+      if (uri != null && uri.hasScheme) {
+        final fallbackTitle = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
+        target = MediaItem(
+          id: mediaId,
+          album: 'Flux News',
+          title: fallbackTitle,
+          playable: true,
+          extras: extras,
+        );
+      }
+    }
+
+    if (target == null) {
+      return;
+    }
+
+    await loadMediaItem(
+      url: target.id,
+      item: target,
+      initialPosition: Duration.zero,
+    );
+  }
+
+  @override
+  Future<void> playMediaItem(MediaItem mediaItem) async {
+    await loadMediaItem(
+      url: mediaItem.id,
+      item: mediaItem,
       initialPosition: Duration.zero,
     );
     await play();
@@ -244,7 +370,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
-      queueIndex: 0,
+      queueIndex: queue.value.isNotEmpty ? 0 : null,
     );
   }
 

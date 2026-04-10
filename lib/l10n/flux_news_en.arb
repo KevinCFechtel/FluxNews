@@ -173,6 +173,7 @@
     "feedSelectionDeleteSelection": "Clear selection",
     "settingAudioDownloadsTitle": "Audio Downloads",
     "downloadsManagerDeleteTitle": "Delete Download?",
+    "downloadsManagerDeleteMessage": "Are you sure you want to delete this download?",
     "downloadsManagerDeletedSnackbar": "Download deleted",
     "downloadsManagerClearAllTitle": "Delete all downloads?",
     "downloadsManagerClearAllMessage": "This will delete all downloaded audio files. This action cannot be undone.",

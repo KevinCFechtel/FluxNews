@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -9,6 +10,92 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../state_management/flux_news_state.dart';
 import '../miniflux/miniflux_backend.dart';
 import '../models/news_model.dart';
+
+const int _sqliteInChunkSize = 500;
+
+String _buildChunkedNotInClause(String columnName, List<int> ids, List<Object?> parameters) {
+  if (ids.isEmpty) {
+    return '';
+  }
+
+  final buffer = StringBuffer();
+  for (int i = 0; i < ids.length; i += _sqliteInChunkSize) {
+    final int end = (i + _sqliteInChunkSize < ids.length) ? i + _sqliteInChunkSize : ids.length;
+    final List<int> chunk = ids.sublist(i, end);
+    final String placeholders = List.filled(chunk.length, '?').join(',');
+    buffer.write(' AND $columnName NOT IN ($placeholders)');
+    parameters.addAll(chunk);
+  }
+  return buffer.toString();
+}
+
+Future<bool> _feedHasProtectedNews(Database db, int feedID, List<int> protectedNewsIDs) async {
+  if (protectedNewsIDs.isEmpty) {
+    return false;
+  }
+
+  for (int i = 0; i < protectedNewsIDs.length; i += _sqliteInChunkSize) {
+    final int end =
+        (i + _sqliteInChunkSize < protectedNewsIDs.length) ? i + _sqliteInChunkSize : protectedNewsIDs.length;
+    final List<int> chunk = protectedNewsIDs.sublist(i, end);
+    final String placeholders = List.filled(chunk.length, '?').join(',');
+    final resultProtected = await db.rawQuery(
+      'SELECT newsID FROM news WHERE feedID = ? AND newsID IN ($placeholders) LIMIT 1',
+      [feedID, ...chunk],
+    );
+    if (resultProtected.isNotEmpty) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+Future<Set<int>> _getProtectedNewsIdsFromDownloads(FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return <int>{};
+  }
+
+  final downloadedAudios = await AudioDownloadService.getDownloadedAudios();
+  final attachmentIDs =
+      downloadedAudios.map((download) => download.attachmentID).where((id) => id >= 0).toSet().toList();
+
+  if (attachmentIDs.isEmpty) {
+    if (appState.debugMode) {
+      logThis(
+          '_getProtectedNewsIdsFromDownloads', 'No downloaded attachments found. 0 protected news IDs.', LogLevel.INFO);
+    }
+    return <int>{};
+  }
+
+  final protectedNewsIDs = <int>{};
+  for (int i = 0; i < attachmentIDs.length; i += _sqliteInChunkSize) {
+    final int end = (i + _sqliteInChunkSize < attachmentIDs.length) ? i + _sqliteInChunkSize : attachmentIDs.length;
+    final List<int> chunk = attachmentIDs.sublist(i, end);
+    final String placeholders = List.filled(chunk.length, '?').join(',');
+    final result = await appState.db!.rawQuery(
+      'SELECT DISTINCT newsID FROM attachments WHERE attachmentID IN ($placeholders)',
+      chunk,
+    );
+    for (final row in result) {
+      final newsID = row['newsID'];
+      if (newsID is int) {
+        protectedNewsIDs.add(newsID);
+      }
+    }
+  }
+
+  if (appState.debugMode) {
+    logThis(
+      '_getProtectedNewsIdsFromDownloads',
+      'Resolved ${attachmentIDs.length} downloaded attachment IDs to ${protectedNewsIDs.length} protected news IDs.',
+      LogLevel.INFO,
+    );
+  }
+
+  return protectedNewsIDs;
+}
 
 // function to insert news in database which are located in the newsList parameter
 Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
@@ -289,6 +376,153 @@ Future<int> markNotFetchedNewsAsRead(NewsList newNewsList, FluxNewsState appStat
     logThis('markNotFetchedNewsAsRead', 'Finished marking not fetched news as read', LogLevel.INFO);
   }
   return result;
+}
+
+Future<News?> queryNewsByNewsId(FluxNewsState appState, int newsID) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return null;
+  }
+
+  final rows = await appState.db!.rawQuery(
+    '''SELECT news.newsID,
+              news.feedID,
+              substr(news.title, 1, 1000000) as title,
+              substr(news.url, 1, 1000000) as url,
+              substr(news.commentsUrl, 1, 1000000) as commentsUrl,
+              substr(news.shareCode, 1, 1000000) as shareCode,
+              substr(news.content, 1, 1000000) as content,
+              news.hash,
+              news.publishedAt,
+              news.createdAt,
+              news.status,
+              news.readingTime,
+              news.starred,
+              substr(news.feedTitle, 1, 1000000) as feedTitle,
+              news.syncStatus,
+              feeds.iconMimeType,
+              feeds.iconID,
+              NULL as attachmentURL,
+              NULL as attachmentMimeType,
+              feeds.crawler,
+              feeds.manualTruncate,
+              feeds.preferParagraph,
+              feeds.preferAttachmentImage,
+              feeds.manualAdaptLightModeToIcon,
+              feeds.manualAdaptDarkModeToIcon,
+              feeds.openMinifluxEntry,
+              feeds.expandedWithFulltext,
+              feeds.expandedFulltextLimit
+       FROM news
+       LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+       WHERE news.newsID = ?
+       LIMIT 1''',
+    [newsID],
+  );
+
+  if (rows.isEmpty) {
+    return null;
+  }
+
+  final news = News.fromMap(rows.first);
+  final attachmentRows = await appState.db!.rawQuery(
+    'SELECT * FROM attachments WHERE newsID = ?',
+    [news.newsID],
+  );
+  news.attachments = attachmentRows.map((row) => Attachment.fromMap(row)).toList();
+  return news;
+}
+
+Future<int?> queryNewsIdByAttachmentId(FluxNewsState appState, int attachmentID) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return null;
+  }
+
+  final rows = await appState.db!.rawQuery(
+    '''SELECT news.newsID
+       FROM attachments
+       INNER JOIN news ON attachments.newsID = news.newsID
+       WHERE attachments.attachmentID = ?
+       LIMIT 1''',
+    [attachmentID],
+  );
+
+  if (rows.isEmpty) {
+    return null;
+  }
+  return rows.first['newsID'] as int?;
+}
+
+Future<int?> queryNewsIdByAttachmentUrl(FluxNewsState appState, String attachmentUrl) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return null;
+  }
+
+  final rows = await appState.db!.rawQuery(
+    '''SELECT news.newsID
+       FROM attachments
+       INNER JOIN news ON attachments.newsID = news.newsID
+       WHERE attachments.attachmentURL = ?
+       LIMIT 1''',
+    [attachmentUrl],
+  );
+
+  if (rows.isEmpty) {
+    return null;
+  }
+  return rows.first['newsID'] as int?;
+}
+
+Future<String?> queryNewsTitleByAttachmentId(FluxNewsState appState, int attachmentID) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return null;
+  }
+
+  final rows = await appState.db!.rawQuery(
+    '''SELECT news.title
+       FROM attachments
+       INNER JOIN news ON attachments.newsID = news.newsID
+       WHERE attachments.attachmentID = ?
+       LIMIT 1''',
+    [attachmentID],
+  );
+
+  if (rows.isEmpty) {
+    return null;
+  }
+  return rows.first['title'] as String?;
+}
+
+Future<String?> queryFeedTitleByAttachmentId(FluxNewsState appState, int attachmentID) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return null;
+  }
+
+  final rows = await appState.db!.rawQuery(
+    '''SELECT news.feedTitle
+       FROM attachments
+       INNER JOIN news ON attachments.newsID = news.newsID
+       WHERE attachments.attachmentID = ?
+       LIMIT 1''',
+    [attachmentID],
+  );
+
+  if (rows.isEmpty) {
+    return null;
+  }
+  return rows.first['feedTitle'] as String?;
+}
+
+Future<News?> queryNewsByAttachmentId(FluxNewsState appState, int attachmentID) async {
+  final newsID = await queryNewsIdByAttachmentId(appState, attachmentID);
+  if (newsID == null) {
+    return null;
+  }
+  return queryNewsByNewsId(appState, newsID);
 }
 
 // get the local saved news from the database
@@ -732,7 +966,12 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
 
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
-    await appState.db!.rawDelete('''DELETE FROM news 
+    final protectedNewsIDs = await _getProtectedNewsIdsFromDownloads(appState);
+    if (appState.debugMode) {
+      logThis('cleanUnstarredNews', 'Protected news IDs count: ${protectedNewsIDs.length}', LogLevel.INFO);
+    }
+    if (protectedNewsIDs.isEmpty) {
+      await appState.db!.rawDelete('''DELETE FROM news 
                                       WHERE starred != 1 AND 
                                         status = ? AND
                                         newsID NOT IN 
@@ -742,7 +981,26 @@ Future<void> cleanUnstarredNews(FluxNewsState appState) async {
                                             AND status = ?
                                           ORDER BY publishedAt DESC
                                           LIMIT ?)''',
-        [FluxNewsState.readNewsStatus, FluxNewsState.readNewsStatus, appState.amountOfSavedNews]);
+          [FluxNewsState.readNewsStatus, FluxNewsState.readNewsStatus, appState.amountOfSavedNews]);
+    } else {
+      final parameters = <Object?>[
+        FluxNewsState.readNewsStatus,
+        FluxNewsState.readNewsStatus,
+        appState.amountOfSavedNews,
+      ];
+      final chunkedNotInClause = _buildChunkedNotInClause('newsID', protectedNewsIDs.toList(), parameters);
+      await appState.db!.rawDelete('''DELETE FROM news 
+                                      WHERE starred != 1 AND 
+                                        status = ? AND
+                                        newsID NOT IN 
+                                        (SELECT newsID 
+                                          FROM news 
+                                          WHERE starred != 1
+                                            AND status = ?
+                                          ORDER BY publishedAt DESC
+                                          LIMIT ?)
+                                        $chunkedNotInClause''', parameters);
+    }
   }
 
   if (appState.debugMode) {
@@ -761,13 +1019,30 @@ Future<void> cleanStarredNews(FluxNewsState appState) async {
 
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
-    await appState.db!.rawDelete('''DELETE FROM news 
+    final protectedNewsIDs = await _getProtectedNewsIdsFromDownloads(appState);
+    if (appState.debugMode) {
+      logThis('cleanStarredNews', 'Protected news IDs count: ${protectedNewsIDs.length}', LogLevel.INFO);
+    }
+    if (protectedNewsIDs.isEmpty) {
+      await appState.db!.rawDelete('''DELETE FROM news 
                                       WHERE starred = 1 AND newsID NOT IN 
                                         (SELECT newsID 
                                           FROM news 
                                           WHERE starred = 1
                                           ORDER BY publishedAt DESC
                                           LIMIT ?)''', [appState.amountOfSavedStarredNews]);
+    } else {
+      final parameters = <Object?>[appState.amountOfSavedStarredNews];
+      final chunkedNotInClause = _buildChunkedNotInClause('newsID', protectedNewsIDs.toList(), parameters);
+      await appState.db!.rawDelete('''DELETE FROM news 
+                                      WHERE starred = 1 AND newsID NOT IN 
+                                        (SELECT newsID 
+                                          FROM news 
+                                          WHERE starred = 1
+                                          ORDER BY publishedAt DESC
+                                          LIMIT ?)
+                                        $chunkedNotInClause''', parameters);
+    }
   }
 
   if (appState.debugMode) {
@@ -933,6 +1208,12 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
       existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
     }
 
+    final protectedNewsIDs = await _getProtectedNewsIdsFromDownloads(appState);
+    if (appState.debugMode) {
+      logThis('insertCategoriesInDB', 'Protected news IDs count for feed cleanup: ${protectedNewsIDs.length}',
+          LogLevel.INFO);
+    }
+
     for (Feed feed in existingFeeds) {
       feedFound = false;
       for (Category category in categoryList.categories) {
@@ -942,10 +1223,29 @@ Future<int> insertCategoriesInDB(Categories categoryList, FluxNewsState appState
         }
       }
       if (feedFound == false) {
+        final hasProtectedNewsForFeed =
+            await _feedHasProtectedNews(appState.db!, feed.feedID, protectedNewsIDs.toList());
+
+        if (hasProtectedNewsForFeed) {
+          if (appState.debugMode) {
+            logThis(
+                'insertCategoriesInDB',
+                'Skipped deleting feed/news for feed ${feed.feedID} because downloaded audio exists for one or more news',
+                LogLevel.INFO);
+          }
+          continue;
+        }
+
         // if the feed doesn't exists, delete the feed and all the news of the feed.
         // this is because the feed seems to be deleted on the miniflux server.
         result = await appState.db!.rawDelete('DELETE FROM feeds WHERE feedID = ?', [feed.feedID]);
-        result = await appState.db!.rawDelete('DELETE FROM news WHERE feedID = ?', [feed.feedID]);
+        if (protectedNewsIDs.isEmpty) {
+          result = await appState.db!.rawDelete('DELETE FROM news WHERE feedID = ?', [feed.feedID]);
+        } else {
+          final parameters = <Object?>[feed.feedID];
+          final chunkedNotInClause = _buildChunkedNotInClause('newsID', protectedNewsIDs.toList(), parameters);
+          result = await appState.db!.rawDelete('DELETE FROM news WHERE feedID = ?$chunkedNotInClause', parameters);
+        }
         if (feed.feedIconID != null && feed.feedIconID != 0) {
           // if the feed has an icon, save the icon file locally
           appState.deleteFeedIconFile(feed.feedIconID!);

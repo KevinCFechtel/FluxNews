@@ -25,6 +25,7 @@ import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
 import 'audioplayer.dart';
+import 'downloads_overview.dart';
 
 class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   const FluxNewsBody({super.key});
@@ -592,9 +593,28 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              // the navigation to the settings
               PopupMenuItem<int>(
                 value: 4,
+                child: Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(
+                        Icons.download_for_offline_outlined,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.audioDownloadsSettings,
+                        overflow: TextOverflow.visible,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              // the navigation to the settings
+              PopupMenuItem<int>(
+                value: 5,
                 child: Row(
                   children: [
                     const Padding(
@@ -699,6 +719,12 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             } else if (value == 3) {
               showDeleteAllDialog(context, appState, appCounterState);
             } else if (value == 4) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const DownloadsOverview(),
+                ),
+              );
+            } else if (value == 5) {
               // navigate to the settings page
               Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
             }
@@ -746,8 +772,51 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
     });
   }
 
-  Future<void> _handleCompletion(FluxNewsAudioHandler handler) async {
+  Future<News?> _resolveCurrentPlaybackNews(FluxNewsAudioHandler handler) async {
     final activeNews = widget.appState.activeAudioNews;
+    final media = handler.mediaItem.value;
+    if (media == null) {
+      return activeNews;
+    }
+
+    final extras = media.extras;
+    final newsIdFromExtras = extras?['newsID'];
+    if (newsIdFromExtras is int) {
+      if (activeNews != null && activeNews.newsID == newsIdFromExtras) {
+        return activeNews;
+      }
+      final byNewsId = await queryNewsByNewsId(widget.appState, newsIdFromExtras);
+      if (byNewsId != null) {
+        return byNewsId;
+      }
+    }
+
+    if (activeNews != null) {
+      final matchingAttachment = activeNews
+          .getAudioAttachments()
+          .where((a) => a.attachmentURL == media.id)
+          .fold<Attachment?>(null, (prev, e) => prev ?? e);
+      if (matchingAttachment != null) {
+        return activeNews;
+      }
+    }
+
+    final attachmentIdFromExtras = extras?['attachmentID'];
+    int? newsID;
+    if (attachmentIdFromExtras is int) {
+      newsID = await queryNewsIdByAttachmentId(widget.appState, attachmentIdFromExtras);
+    } else {
+      newsID = await queryNewsIdByAttachmentUrl(widget.appState, media.id);
+    }
+
+    if (newsID == null) {
+      return activeNews;
+    }
+    return await queryNewsByNewsId(widget.appState, newsID) ?? activeNews;
+  }
+
+  Future<void> _handleCompletion(FluxNewsAudioHandler handler) async {
+    final activeNews = await _resolveCurrentPlaybackNews(handler);
     if (activeNews != null) {
       final mediaItemId = handler.mediaItem.value?.id;
       final attachments = activeNews.getAudioAttachments();
@@ -773,8 +842,15 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   }
 
   Future<void> _openFullPlayer() async {
-    final activeNews = widget.appState.activeAudioNews;
-    if (activeNews == null) return;
+    final handler = _audioHandler;
+    if (handler == null) return;
+
+    final activeNews = await _resolveCurrentPlaybackNews(handler);
+    if (!mounted || activeNews == null) return;
+
+    if (widget.appState.activeAudioNews?.newsID != activeNews.newsID) {
+      widget.appState.setActiveAudioNews(activeNews);
+    }
 
     await Navigator.push(
       context,

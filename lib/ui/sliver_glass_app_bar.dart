@@ -8,6 +8,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/downloads_overview.dart';
 import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -251,9 +252,26 @@ class SliverGlassAppBar extends StatelessWidget {
                 ],
               ),
             ),
-            // the navigation to the settings
             PopupMenuItem<int>(
               value: 4,
+              child: Row(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(right: 5),
+                    child: Icon(Icons.download_for_offline_outlined),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.audioDownloadsSettings,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // the navigation to the settings
+            PopupMenuItem<int>(
+              value: 5,
               child: Row(
                 children: [
                   const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.settings)),
@@ -353,6 +371,12 @@ class SliverGlassAppBar extends StatelessWidget {
           } else if (value == 3) {
             showDeleteAllDialog(context, appState, appCounterState);
           } else if (value == 4) {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const DownloadsOverview(),
+              ),
+            );
+          } else if (value == 5) {
             // navigate to the settings page
             Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
           }

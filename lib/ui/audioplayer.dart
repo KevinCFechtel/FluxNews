@@ -734,6 +734,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       artist: widget.news.feedTitle,
       album: widget.news.feedTitle,
       artUri: artworkUri,
+      extras: <String, dynamic>{
+        'newsID': widget.news.newsID,
+        'attachmentID': attachment.attachmentID,
+      },
     );
   }
 

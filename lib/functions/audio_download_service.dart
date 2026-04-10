@@ -77,6 +77,21 @@ class AudioDownloadService {
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
 
+  // Cache for download titles (attachmentID → news title) used by Android Auto
+  static final _downloadTitleCache = <int, String>{};
+  static final _downloadFeedTitleCache = <int, String>{};
+
+  static void cacheDownloadTitle(int attachmentID, String title) {
+    _downloadTitleCache[attachmentID] = title;
+  }
+
+  static void cacheDownloadFeedTitle(int attachmentID, String feedTitle) {
+    _downloadFeedTitleCache[attachmentID] = feedTitle;
+  }
+
+  static String? getDownloadTitle(int attachmentID) => _downloadTitleCache[attachmentID];
+  static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
+
   static String _downloadPathKey(int attachmentID) => '$_downloadPathKeyPrefix$attachmentID';
   static String _downloadPathByUrlKey(String attachmentURL) {
     final encoded = base64UrlEncode(utf8.encode(attachmentURL));

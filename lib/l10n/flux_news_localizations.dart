@@ -1146,6 +1146,12 @@ abstract class AppLocalizations {
   /// **'Delete Download?'**
   String get downloadsManagerDeleteTitle;
 
+  /// No description provided for @downloadsManagerDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this download?'**
+  String get downloadsManagerDeleteMessage;
+
   /// No description provided for @downloadsManagerDeletedSnackbar.
   ///
   /// In en, this message translates to:

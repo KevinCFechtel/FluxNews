@@ -583,6 +583,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get downloadsManagerDeleteTitle => 'Download löschen?';
 
   @override
+  String get downloadsManagerDeleteMessage =>
+      'Soll dieser Download wirklich gelöscht werden?';
+
+  @override
   String get downloadsManagerDeletedSnackbar => 'Download gelöscht';
 
   @override
