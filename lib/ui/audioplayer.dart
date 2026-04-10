@@ -49,16 +49,7 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
     final shortestSide = MediaQuery.sizeOf(context).shortestSide;
     final useTabletLayout = screenWidth >= 900 || shortestSide >= 600;
 
-    Widget articleContent = Scrollbar(
-      controller: _articleContentController,
-      child: SingleChildScrollView(
-        controller: _articleContentController,
-        primary: false,
-        child: widget.news.getFullRenderedWidget(appState, context),
-      ),
-    );
-
-    Widget playerHeader = Column(
+    Widget newsHeader = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -73,11 +64,20 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
       ],
     );
 
+    Widget articleContent = Scrollbar(
+      controller: _articleContentController,
+      child: SingleChildScrollView(
+        controller: _articleContentController,
+        primary: false,
+        child: Column(
+          children: [newsHeader, widget.news.getFullRenderedWidget(appState, context)],
+        ),
+      ),
+    );
+
     Widget mobileLayout = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        playerHeader,
-        const SizedBox(height: 16),
         NewsAudioPlayer(news: widget.news, appState: appState),
         const SizedBox(height: 20),
         Expanded(child: articleContent),
@@ -92,8 +92,6 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              playerHeader,
-              const SizedBox(height: 16),
               Expanded(
                 child: Scrollbar(
                   controller: _playerContentController,
@@ -120,14 +118,22 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(widget.news.title),
+        title: Row(children: [
+          widget.news.getFeedIcon(16, context),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(
+            widget.news.feedTitle,
+            overflow: TextOverflow.ellipsis,
+          ))
+        ]),
       ),
       body: audioAttachments.isEmpty
           ? Center(
               child: Text(AppLocalizations.of(context)!.noAudioFileAvailable),
             )
           : Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: useTabletLayout ? tabletLayout : mobileLayout,
             ),
     );
@@ -168,7 +174,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<MediaItem?>? _mediaItemSubscription;
   StreamSubscription<PlaybackState>? _playbackStateSubscription;
+  StreamSubscription<List<AudioDownloadProgress>>? _activeDownloadsSubscription;
   final Map<int, String> _downloadedPaths = {};
+  final Map<int, AudioDownloadProgress> _activeDownloadsByStorageAttachmentID = {};
   final Map<int, List<AudioChapter>> _chaptersByAttachmentID = {};
   final Map<int, ScrollController> _chapterScrollControllers = {};
   final Set<int> _loadingChapterAttachmentIDs = {};
@@ -195,10 +203,33 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     return _chapterScrollControllers.putIfAbsent(attachmentID, ScrollController.new);
   }
 
+  int _storageAttachmentIDFor(Attachment attachment) {
+    if (attachment.attachmentID >= 0) {
+      return attachment.attachmentID;
+    }
+    if (attachment.newsID >= 0) {
+      return -(attachment.newsID + 1000000);
+    }
+    return attachment.attachmentID;
+  }
+
   @override
   void initState() {
     super.initState();
     _audioAttachments = widget.news.getAudioAttachments();
+    _activeDownloadsByStorageAttachmentID
+      ..clear()
+      ..addEntries(
+        AudioDownloadService.getActiveDownloadsSnapshot().map((progress) => MapEntry(progress.attachmentID, progress)),
+      );
+    _activeDownloadsSubscription = AudioDownloadService.activeDownloadsStream.listen((downloads) {
+      if (!mounted || _isDisposed) return;
+      setState(() {
+        _activeDownloadsByStorageAttachmentID
+          ..clear()
+          ..addEntries(downloads.map((progress) => MapEntry(progress.attachmentID, progress)));
+      });
+    });
     _initializeDefaultArtwork();
     _initializeAudioHandler();
     _initializeDownloadedAudioState();
@@ -381,6 +412,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     _playerStateSubscription?.cancel();
     _mediaItemSubscription?.cancel();
     _playbackStateSubscription?.cancel();
+    _activeDownloadsSubscription?.cancel();
     for (final controller in _chapterScrollControllers.values) {
       controller.dispose();
     }
@@ -736,6 +768,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         final isStopped = !isActive || _playerState.processingState == ProcessingState.idle;
         final isDownloaded = _downloadedPaths.containsKey(attachment.attachmentID);
         final isDownloading = _downloadingAttachmentIDs.contains(attachment.attachmentID);
+        final storageAttachmentID = _storageAttachmentIDFor(attachment);
+        final downloadProgress = _activeDownloadsByStorageAttachmentID[storageAttachmentID];
+        final downloadProgressValue = downloadProgress?.progress;
         final isLoadingChapters = _loadingChapterAttachmentIDs.contains(attachment.attachmentID);
         final chapters = _chaptersByAttachmentID[attachment.attachmentID] ?? const <AudioChapter>[];
 
@@ -783,6 +818,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
+                                value: downloadProgressValue,
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                               ),
