@@ -8,7 +8,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -715,11 +718,19 @@ class PersistentAudioMiniPlayer extends StatefulWidget {
 
 class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   FluxNewsAudioHandler? _audioHandler;
+  StreamSubscription<PlaybackState>? _completionSubscription;
+  final _storage = const sec_store.FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
     _initAudioHandler();
+  }
+
+  @override
+  void dispose() {
+    _completionSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _initAudioHandler() async {
@@ -728,6 +739,37 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
     setState(() {
       _audioHandler = handler;
     });
+    _completionSubscription = handler.playbackState.listen((state) {
+      if (state.processingState == AudioProcessingState.completed) {
+        _handleCompletion(handler);
+      }
+    });
+  }
+
+  Future<void> _handleCompletion(FluxNewsAudioHandler handler) async {
+    final activeNews = widget.appState.activeAudioNews;
+    if (activeNews != null) {
+      final mediaItemId = handler.mediaItem.value?.id;
+      final attachments = activeNews.getAudioAttachments();
+      final completedAttachment =
+          attachments.where((a) => a.attachmentURL == mediaItemId).fold<Attachment?>(null, (prev, e) => prev ?? e);
+
+      // Fortschritt aus Secure Storage löschen
+      await _storage.delete(
+        key: '${FluxNewsState.audioProgressKeyPrefix}${activeNews.newsID}',
+      );
+
+      if (completedAttachment != null) {
+        // Fortschritt auf Server zurücksetzen
+        syncMediaProgression(widget.appState, activeNews.newsID, completedAttachment.attachmentID, 0).ignore();
+
+        // Download löschen, wenn konfiguriert
+        if (widget.appState.deleteAudioAfterPlayback) {
+          await AudioDownloadService.deleteDownloadedAudio(completedAttachment.attachmentID);
+        }
+      }
+    }
+    await handler.stop();
   }
 
   Future<void> _openFullPlayer() async {

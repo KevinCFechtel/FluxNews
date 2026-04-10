@@ -715,4 +715,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noChaptersFound => 'Keine Kapitel gefunden.';
+
+  @override
+  String get autoDeleteDownloadAfterFinish =>
+      'Audio Downloads nach dem Beenden automatisch löschen';
 }

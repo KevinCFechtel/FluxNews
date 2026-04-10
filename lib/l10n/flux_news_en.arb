@@ -214,5 +214,6 @@
     "useAudioPlayer": "Open audio items with audio player",
     "advancedSettings": "Advanced Settings",
     "loadingChapters": "Loading chapters ...",
-    "noChaptersFound": "No chapters found."
+    "noChaptersFound": "No chapters found.",
+    "autoDeleteDownloadAfterFinish": "Automatically delete audio downloads when finished"
 }

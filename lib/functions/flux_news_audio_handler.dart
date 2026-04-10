@@ -136,6 +136,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   @override
   Future<void> stop() async {
     await _player.stop();
+    _currentUrl = null; // force setAudioSource on next play of the same track
     playbackState.add(_buildPlaybackState().copyWith(processingState: AudioProcessingState.idle));
   }
 

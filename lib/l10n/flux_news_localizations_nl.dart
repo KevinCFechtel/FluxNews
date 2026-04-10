@@ -701,4 +701,8 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get noChaptersFound => 'No chapters found.';
+
+  @override
+  String get autoDeleteDownloadAfterFinish =>
+      'Automatically delete audio downloads when finished';
 }

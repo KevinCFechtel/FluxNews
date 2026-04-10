@@ -431,7 +431,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      AppLocalizations.of(context)!.autoDownloadAudio,
+                      AppLocalizations.of(context)!.autoDeleteDownloadAfterFinish,
                       style: Theme.of(context).textTheme.titleMedium,
                       overflow: TextOverflow.visible,
                     ),

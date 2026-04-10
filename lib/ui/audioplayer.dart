@@ -463,18 +463,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       }
     }
 
-    _autoSaveTimer?.cancel();
-    _sleepTimer?.cancel();
-    if (!mounted) return;
-    setState(() {
-      _position = Duration.zero;
-      _savedPosition = null;
-      _activeUrl = null;
-      _activeAttachmentID = null;
-      _isLoading = false;
-      _sleepTimerEnabled = false;
-      _sleepTimerEndAt = null;
-    });
+    await _stop();
   }
 
   void _startSleepTimer() {

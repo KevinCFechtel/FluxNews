@@ -215,5 +215,6 @@
     "useAudioPlayer": "Audio-Items mit dem Audio Player öffnen",
     "advancedSettings": "Erweiterte Einstellungen",
     "loadingChapters": "Kapitel werden geladen ...",
-    "noChaptersFound": "Keine Kapitel gefunden."
+    "noChaptersFound": "Keine Kapitel gefunden.",
+    "autoDeleteDownloadAfterFinish": "Audio Downloads nach dem Beenden automatisch löschen"
 }

@@ -1397,6 +1397,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No chapters found.'**
   String get noChaptersFound;
+
+  /// No description provided for @autoDeleteDownloadAfterFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically delete audio downloads when finished'**
+  String get autoDeleteDownloadAfterFinish;
 }
 
 class _AppLocalizationsDelegate
