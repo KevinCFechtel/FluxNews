@@ -38,6 +38,9 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     _initFuture = _init();
   }
 
+  static const String _rootMediaId = 'flux_news_root';
+  static const String _nowPlayingMediaId = 'flux_news_now_playing';
+
   final AudioPlayer _player = AudioPlayer();
   late final Future<void> _initFuture;
 
@@ -89,9 +92,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await _initFuture; // ensure AVAudioSession is configured before activating
     final shouldReload = _currentUrl != url;
     _currentUrl = url;
-    _currentMediaItem = item;
-    queue.add([item]);
-    mediaItem.add(item);
+    final preparedItem = item.copyWith(
+      playable: true,
+    );
+    _currentMediaItem = preparedItem;
+    queue.add([preparedItem]);
+    mediaItem.add(preparedItem);
 
     if (shouldReload) {
       await _player.setAudioSource(AudioSource.uri(Uri.parse(url)));
@@ -131,6 +137,70 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Future<void> setSpeed(double speed) async {
     await _player.setSpeed(speed);
     playbackState.add(_buildPlaybackState());
+  }
+
+  @override
+  Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async {
+    if (parentMediaId == AudioService.recentRootId) {
+      if (_currentMediaItem != null) {
+        return [_currentMediaItem!];
+      }
+      return const [];
+    }
+
+    if (parentMediaId == _rootMediaId || parentMediaId == AudioService.browsableRootId) {
+      return [
+        MediaItem(
+          id: _nowPlayingMediaId,
+          album: 'Flux News',
+          title: 'Aktuelle Wiedergabe',
+          playable: false,
+          artUri: _currentMediaItem?.artUri,
+        ),
+      ];
+    }
+
+    if (parentMediaId == _nowPlayingMediaId) {
+      if (_currentMediaItem != null) {
+        return [_currentMediaItem!];
+      }
+      return [
+        const MediaItem(
+          id: 'flux_news_empty',
+          album: 'Flux News',
+          title: 'Keine aktive Wiedergabe',
+          playable: false,
+        )
+      ];
+    }
+
+    return const [];
+  }
+
+  @override
+  Future<MediaItem?> getMediaItem(String mediaId) async {
+    if (_currentMediaItem?.id == mediaId) {
+      return _currentMediaItem;
+    }
+    final matches = queue.value.where((item) => item.id == mediaId);
+    return matches.isEmpty ? null : matches.first;
+  }
+
+  @override
+  Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
+    final target = mediaId == _currentMediaItem?.id
+        ? _currentMediaItem
+        : queue.value.where((item) => item.id == mediaId).fold<MediaItem?>(null, (prev, e) => prev ?? e);
+    if (target == null) {
+      return;
+    }
+
+    await loadMediaItem(
+      url: target.id,
+      item: target,
+      initialPosition: Duration.zero,
+    );
+    await play();
   }
 
   @override
