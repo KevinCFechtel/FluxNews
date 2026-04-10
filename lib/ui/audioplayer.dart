@@ -423,7 +423,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (_audioHandler == null) return;
 
     final roundedAdjustment = (adjustment * 10).round() / 10;
-    final speed = (1.0 + roundedAdjustment).clamp(0.5, 4.0).toDouble();
+    final speed = (1.0 + roundedAdjustment).clamp(0.5, 3.0).toDouble();
     await _audioHandler!.setSpeed(speed);
     if (!mounted || _isDisposed) return;
     setState(() {
@@ -939,10 +939,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       ],
                     ),
                     Slider(
-                      value: (_playbackSpeed - 1.0).clamp(-0.5, 3.0),
+                      value: (_playbackSpeed - 1.0).clamp(-0.5, 2.0),
                       min: -0.5,
-                      max: 3.0,
-                      divisions: 35,
+                      max: 2.0,
+                      divisions: 25,
                       label: _formatSignedAdjustment(_playbackSpeed - 1.0),
                       onChanged: (value) async {
                         await _setPlaybackSpeedFromAdjustment(value);
