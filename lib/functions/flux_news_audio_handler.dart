@@ -354,23 +354,35 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   @override
+  Future<void> skipToNext() async {
+    await fastForward();
+  }
+
+  @override
   Future<void> rewind() async {
     final target = _player.position - const Duration(seconds: 30);
     await seek(target < Duration.zero ? Duration.zero : target);
   }
 
+  @override
+  Future<void> skipToPrevious() async {
+    await rewind();
+  }
+
   PlaybackState _buildPlaybackState() {
     return PlaybackState(
       controls: [
-        MediaControl.rewind,
+        MediaControl.skipToPrevious,
         if (_player.playing) MediaControl.pause else MediaControl.play,
         MediaControl.stop,
-        MediaControl.fastForward,
+        MediaControl.skipToNext,
       ],
       systemActions: const {
         MediaAction.play,
         MediaAction.pause,
         MediaAction.playPause,
+        MediaAction.skipToPrevious,
+        MediaAction.skipToNext,
         MediaAction.seek,
         MediaAction.seekForward,
         MediaAction.seekBackward,

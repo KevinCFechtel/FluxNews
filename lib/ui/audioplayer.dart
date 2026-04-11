@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
@@ -710,11 +709,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
     // Use ID3 image if found, otherwise fall back to attachment image
     if (id3ImageBytes != null && id3ImageBytes.isNotEmpty) {
-      // Create data URI from image bytes
-      final base64Image = base64Encode(id3ImageBytes);
-      artworkUri = Uri.dataFromString(
-        'data:image/jpeg;base64,$base64Image',
-        mimeType: 'image/jpeg',
+      artworkUri = await AudioDownloadService.cacheArtworkBytesForAttachment(
+        attachmentID: attachment.attachmentID,
+        imageBytes: id3ImageBytes,
       );
     } else {
       // Fall back to original image extraction logic

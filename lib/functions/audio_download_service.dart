@@ -73,6 +73,7 @@ class AudioDownloadService {
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
   static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
   static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;
+  static const String _artworkCacheDirectoryName = 'audio_artwork_cache';
   static final _activeDownloads = <int, AudioDownloadProgress>{};
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
@@ -201,6 +202,44 @@ class AudioDownloadService {
     } catch (_) {
       return null;
     }
+  }
+
+  static Future<Uri?> cacheArtworkBytesForAttachment({
+    required int attachmentID,
+    required Uint8List imageBytes,
+  }) async {
+    if (imageBytes.isEmpty) {
+      return null;
+    }
+
+    try {
+      final appSupport = await getApplicationSupportDirectory();
+      final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
+      if (!await artworkDirectory.exists()) {
+        await artworkDirectory.create(recursive: true);
+      }
+
+      final extension = _detectImageFileExtension(imageBytes);
+      final fileName = 'artwork_$attachmentID.$extension';
+      final file = File(p.join(artworkDirectory.path, fileName));
+      await file.writeAsBytes(imageBytes, flush: true);
+      return Uri.file(file.path);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _detectImageFileExtension(Uint8List bytes) {
+    if (bytes.length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) {
+      return 'png';
+    }
+    if (bytes.length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+      return 'jpg';
+    }
+    if (bytes.length >= 4 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46) {
+      return 'gif';
+    }
+    return 'jpg';
   }
 
   static Future<List<AudioChapter>> readChapters(String filePath, BuildContext context) async {
