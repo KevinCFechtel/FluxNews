@@ -577,9 +577,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get feedSelectionDeleteSelection => 'Auswahl löschen';
 
   @override
-  String get settingAudioDownloadsTitle => 'Audio Downloads';
-
-  @override
   String get downloadsManagerDeleteTitle => 'Download löschen?';
 
   @override
@@ -603,7 +600,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get downloadsManagerClearAll => 'Alle Downloads löschen';
 
   @override
-  String get audioDownloadsSettings => 'Audio Downloads';
+  String get audioDownloadsSettings => 'Podcasts';
 
   @override
   String get audioDownloadsSettingsDescription =>
@@ -706,7 +703,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Es wurden noch keine Audiodateien heruntergeladen.';
 
   @override
-  String get fileList => 'Dateiliste';
+  String get fileList => 'Folgen';
 
   @override
   String get useAudioPlayer => 'Audio-Items mit dem Audio Player öffnen';

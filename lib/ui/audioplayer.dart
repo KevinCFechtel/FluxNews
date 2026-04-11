@@ -70,6 +70,7 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
         controller: _articleContentController,
         primary: false,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [newsHeader, widget.news.getFullRenderedWidget(appState, context)],
         ),
       ),
@@ -118,15 +119,10 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Row(children: [
-          widget.news.getFeedIcon(16, context),
-          const SizedBox(width: 8),
-          Expanded(
-              child: Text(
-            widget.news.feedTitle,
-            overflow: TextOverflow.ellipsis,
-          ))
-        ]),
+        title: Text(
+          widget.news.feedTitle,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       body: audioAttachments.isEmpty
           ? Center(

@@ -1134,12 +1134,6 @@ abstract class AppLocalizations {
   /// **'Clear selection'**
   String get feedSelectionDeleteSelection;
 
-  /// No description provided for @settingAudioDownloadsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio Downloads'**
-  String get settingAudioDownloadsTitle;
-
   /// No description provided for @downloadsManagerDeleteTitle.
   ///
   /// In en, this message translates to:
@@ -1185,7 +1179,7 @@ abstract class AppLocalizations {
   /// No description provided for @audioDownloadsSettings.
   ///
   /// In en, this message translates to:
-  /// **'Audio Downloads'**
+  /// **'Podcasts'**
   String get audioDownloadsSettings;
 
   /// No description provided for @audioDownloadsSettingsDescription.
@@ -1377,7 +1371,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileList.
   ///
   /// In en, this message translates to:
-  /// **'File list'**
+  /// **'Episodes'**
   String get fileList;
 
   /// No description provided for @useAudioPlayer.

@@ -600,7 +600,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                     const Padding(
                       padding: EdgeInsets.only(right: 5),
                       child: Icon(
-                        Icons.download_for_offline_outlined,
+                        Icons.podcasts,
                       ),
                     ),
                     Expanded(

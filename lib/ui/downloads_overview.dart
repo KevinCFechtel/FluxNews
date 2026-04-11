@@ -165,7 +165,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.settingAudioDownloadsTitle),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings),
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,

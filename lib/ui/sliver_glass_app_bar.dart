@@ -258,7 +258,7 @@ class SliverGlassAppBar extends StatelessWidget {
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(right: 5),
-                    child: Icon(Icons.download_for_offline_outlined),
+                    child: Icon(Icons.podcasts),
                   ),
                   Expanded(
                     child: Text(
