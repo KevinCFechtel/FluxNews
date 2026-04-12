@@ -10,11 +10,15 @@ import android.content.pm.PackageInfo
 import androidx.browser.customtabs.*
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.view.WindowCompat
+import androidx.core.content.FileProvider
 import com.ryanheise.audioservice.AudioServiceActivity
+import java.io.File
 
 // this are the constants used in the dart code
 private const val CHANNEL = "UrlLauncher"
+private const val ARTWORK_CHANNEL = "ArtworkProvider"
 private const val KEY_OPTIONS_URL = "url"
 private const val KEY_OPTIONS_PREFERRED_PACKAGE_NAME = "preferredPackageName"
 private const val KEY_OPTIONS_TOOLBAR_COLOR = "toolbarColor"
@@ -22,7 +26,22 @@ private const val KEY_OPTIONS_SHOW_PAGE_TITLE = "showPageTitle"
 private const val KEY_OPTIONS_ENABLE_URL_BAR_HIDING = "enableUrlBarHiding"
 private const val KEY_OPTIONS_DEFAULT_SHARE_MENU_ITEM = "enableDefaultShare"
 private const val KEY_OPTIONS_ENABLE_INSTANT_APPS = "enableInstantApps"
+private val AUTO_PACKAGES = listOf(
+    "com.google.android.projection.gearhead",
+    "com.google.android.apps.automotive.media",
+    "com.android.car.media"
+)
 class MainActivity: AudioServiceActivity() {
+
+    private fun grantArtworkUriReadPermissions(contentUri: Uri) {
+        for (pkg in AUTO_PACKAGES) {
+            try {
+                grantUriPermission(pkg, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {
+                // Ignore unknown packages on this device.
+            }
+        }
+    }
 
     // This is needed to hide the status bar and navigation bar
     override fun onPostResume() {
@@ -33,6 +52,34 @@ class MainActivity: AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Channel: Datei-Pfad → content:// URI via FileProvider
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ARTWORK_CHANNEL).setMethodCallHandler {
+            call, result ->
+            if (call.method == "getContentUri") {
+                val filePath = call.argument<String>("filePath")
+                if (filePath != null) {
+                    try {
+                        val file = File(filePath)
+                        val contentUri = FileProvider.getUriForFile(
+                            this,
+                            "${packageName}.fileprovider",
+                            file
+                        )
+                        grantArtworkUriReadPermissions(contentUri)
+                        Log.i("FluxNews", "ArtworkProvider getContentUri -> $contentUri")
+                        result.success(contentUri.toString())
+                    } catch (e: Exception) {
+                        result.error("FILEPROVIDER_ERROR", e.message, null)
+                    }
+                } else {
+                    result.error("INVALID_PATH", "filePath argument is null", null)
+                }
+            } else {
+                result.notImplemented()
+            }
+        }
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
             call, result ->
             // if the method call is launchURL then we will launch the url

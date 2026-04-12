@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -174,6 +175,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   final Map<int, AudioDownloadProgress> _activeDownloadsByStorageAttachmentID = {};
   final Map<int, List<AudioChapter>> _chaptersByAttachmentID = {};
   final Map<int, ScrollController> _chapterScrollControllers = {};
+  final Map<int, int> _lastAutoScrolledChapterIndexByAttachmentID = {};
   final Set<int> _loadingChapterAttachmentIDs = {};
   final Set<int> _downloadingAttachmentIDs = {};
   Uri? _defaultArtworkUri;
@@ -690,36 +692,59 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     return '${duration.inMinutes}:$seconds';
   }
 
+  /// Gibt den Index des aktuell laufenden Kapitels zurück (-1 wenn kein Match).
+  int _activeChapterIndex(List<AudioChapter> chapters, Duration position) {
+    if (chapters.isEmpty) return -1;
+    int active = 0;
+    for (int i = 0; i < chapters.length; i++) {
+      if (position >= chapters[i].start) {
+        active = i;
+      } else {
+        break;
+      }
+    }
+    return active;
+  }
+
+  /// Scrollt die Kapitel-Liste so, dass das aktive Kapitel sichtbar ist.
+  void _scrollToActiveChapter(
+    ScrollController controller,
+    int activeIndex,
+    double itemHeight,
+  ) {
+    if (!controller.hasClients) return;
+    final targetOffset = (activeIndex * itemHeight).clamp(
+      0.0,
+      controller.position.maxScrollExtent,
+    );
+    controller.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  bool _isSupportedArtworkUri(Uri? uri) {
+    if (uri == null) {
+      return false;
+    }
+
+    return uri.scheme == 'file' || uri.scheme == 'content' || uri.scheme == 'http' || uri.scheme == 'https';
+  }
+
+  Future<Uri?> _resolveFallbackArtworkUri() async {
+    _defaultArtworkUri ??= await AudioDownloadService.getDefaultArtworkUri();
+    return _isSupportedArtworkUri(_defaultArtworkUri) ? _defaultArtworkUri : null;
+  }
+
   Future<MediaItem> _buildMediaItem(Attachment attachment) async {
     final parsedUri = Uri.tryParse(attachment.attachmentURL);
     final fallbackMediaName = parsedUri != null && parsedUri.pathSegments.isNotEmpty
         ? parsedUri.pathSegments.last
         : attachment.attachmentMimeType;
     final title = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
-    Uri? artworkUri;
-
-    // Try to extract album art from ID3 tags
-    Uint8List? id3ImageBytes;
-    final downloadedPath = _downloadedPaths[attachment.attachmentID];
-    if (downloadedPath != null && downloadedPath.isNotEmpty) {
-      // Try local file first
-      id3ImageBytes = await AudioDownloadService.extractAlbumArtFromFile(downloadedPath);
-    }
-    id3ImageBytes ??= await AudioDownloadService.extractAlbumArtFromUrl(attachment.attachmentURL);
-
-    // Use ID3 image if found, otherwise fall back to attachment image
-    if (id3ImageBytes != null && id3ImageBytes.isNotEmpty) {
-      artworkUri = await AudioDownloadService.cacheArtworkBytesForAttachment(
-        attachmentID: attachment.attachmentID,
-        imageBytes: id3ImageBytes,
-      );
-    } else {
-      // Fall back to original image extraction logic
-      final imageAttachment = widget.news.getFirstImageAttachment();
-      artworkUri = imageAttachment.attachmentID != -1 ? Uri.tryParse(imageAttachment.attachmentURL) : null;
-      artworkUri ??= _defaultArtworkUri ?? await AudioDownloadService.getDefaultArtworkUri();
-      _defaultArtworkUri ??= artworkUri;
-    }
+    final artworkUri = await _resolveFallbackArtworkUri();
+    logThis('audioplayer', '_buildMediaItem: artworkUri=$artworkUri, title=$title', LogLevel.INFO);
 
     return MediaItem(
       id: attachment.attachmentURL,
@@ -888,23 +913,63 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         height: chapterListHeight,
                         child: Scrollbar(
                           controller: chapterScrollController,
-                          child: ListView.builder(
-                            controller: chapterScrollController,
-                            primary: false,
-                            padding: EdgeInsets.zero,
-                            itemCount: chapters.length,
-                            itemBuilder: (context, index) {
-                              final chapter = chapters[index];
-                              return ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  chapter.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: Text(_formatChapterStart(chapter.start)),
-                                onTap: () => _seekToChapter(attachment, chapter),
+                          child: Builder(
+                            builder: (context) {
+                              final activeChapterIdx = isActive ? _activeChapterIndex(chapters, _position) : -1;
+
+                              // Auto-Scroll zum aktiven Kapitel nach dem Build
+                              if (isActive && activeChapterIdx >= 0) {
+                                final previousAutoScrolledIdx =
+                                    _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID];
+                                if (previousAutoScrolledIdx != activeChapterIdx) {
+                                  _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID] =
+                                      activeChapterIdx;
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    _scrollToActiveChapter(
+                                      chapterScrollController,
+                                      activeChapterIdx,
+                                      56.0,
+                                    );
+                                  });
+                                }
+                              }
+
+                              return ListView.builder(
+                                controller: chapterScrollController,
+                                primary: false,
+                                padding: EdgeInsets.zero,
+                                itemCount: chapters.length,
+                                itemBuilder: (context, index) {
+                                  final chapter = chapters[index];
+                                  final isActiveChapter = index == activeChapterIdx;
+                                  return ListTile(
+                                    dense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    tileColor: isActiveChapter
+                                        ? Theme.of(context).colorScheme.primaryContainer.withAlpha(128)
+                                        : null,
+                                    title: Text(
+                                      chapter.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: isActiveChapter
+                                          ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                              )
+                                          : null,
+                                    ),
+                                    leading: isActiveChapter
+                                        ? Icon(
+                                            Icons.play_arrow,
+                                            size: 16,
+                                            color: Theme.of(context).colorScheme.primary,
+                                          )
+                                        : const SizedBox(width: 16),
+                                    trailing: Text(_formatChapterStart(chapter.start)),
+                                    onTap: () => _seekToChapter(attachment, chapter),
+                                  );
+                                },
                               );
                             },
                           ),

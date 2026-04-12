@@ -6,7 +6,9 @@ import 'dart:typed_data';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -187,6 +189,8 @@ class AudioDownloadService {
     return _isWifiConnected();
   }
 
+  static const _artworkProviderChannel = MethodChannel('ArtworkProvider');
+
   static Future<Uri?> getDefaultArtworkUri() async {
     try {
       final appSupport = await getApplicationSupportDirectory();
@@ -196,12 +200,42 @@ class AudioDownloadService {
       if (!await file.exists()) {
         final byteData = await rootBundle.load(_defaultArtworkAssetPath);
         await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
+        logThis('artwork', 'created file at ${file.path} (${byteData.lengthInBytes} bytes)', LogLevel.INFO);
+      } else {
+        logThis('artwork', 'file already exists at ${file.path}, size=${await file.length()}', LogLevel.INFO);
       }
 
-      return Uri.file(file.path);
-    } catch (_) {
+      // Auf Android: content:// URI via FileProvider liefern, damit andere
+      // Prozesse (z. B. Android Auto) die Datei lesen dürfen.
+      if (Platform.isAndroid) {
+        final contentUriString = await _artworkProviderChannel.invokeMethod<String>(
+          'getContentUri',
+          {'filePath': file.path},
+        );
+        if (contentUriString != null) {
+          final contentUri = Uri.parse(contentUriString);
+          logThis('artwork', 'returning content URI = $contentUri', LogLevel.INFO);
+          return contentUri;
+        }
+        logThis('artwork', 'getContentUri returned null, falling back to file URI', LogLevel.WARNING);
+      }
+
+      final uri = Uri.file(file.path);
+      logThis('artwork', 'returning file URI = $uri', LogLevel.INFO);
+      return uri;
+    } catch (e, st) {
+      logThis('artwork', 'getDefaultArtworkUri error: $e\n$st', LogLevel.ERROR);
       return null;
     }
+  }
+
+  static Future<String> getCoverCacheDir() async {
+    final appSupport = await getApplicationSupportDirectory();
+    final coverCacheDir = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
+    if (!await coverCacheDir.exists()) {
+      await coverCacheDir.create(recursive: true);
+    }
+    return coverCacheDir.path;
   }
 
   static Future<Uri?> cacheArtworkBytesForAttachment({

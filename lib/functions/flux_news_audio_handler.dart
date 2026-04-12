@@ -1,7 +1,12 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flux_news/functions/logging.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -47,13 +52,36 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   static const String _rootMediaId = 'flux_news_root';
+  static const String _downloadsMediaId = 'flux_news_downloads';
+  final _storage = const sec_store.FlutterSecureStorage();
+  final FluxNewsState _downloadQueryState = FluxNewsState();
+  final Map<String, MediaItem> _downloadMediaItems = <String, MediaItem>{};
+  DateTime? _lastPeriodicPersistAt;
 
-  void _aaLog(String message) {
-    logThis('android_auto', message, LogLevel.INFO);
+  String _downloadsTitleLocalized() {
+    final languageCode = ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase();
+    return languageCode == 'de' ? 'Folgen' : 'Episodes';
   }
 
-  void _aaError(String message) {
-    logThis('android_auto', message, LogLevel.ERROR);
+  Future<Uri?> _extractId3Cover(String filePath) async {
+    try {
+      final imageBytes = await AudioDownloadService.extractAlbumArtFromFile(filePath);
+      if (imageBytes != null && imageBytes.isNotEmpty) {
+        final coverCacheDir = await AudioDownloadService.getCoverCacheDir();
+        final fileName = '${filePath.hashCode}_cover.jpg';
+        final cacheFile = File('$coverCacheDir/$fileName');
+
+        if (!await cacheFile.exists()) {
+          await cacheFile.create(recursive: true);
+          await cacheFile.writeAsBytes(imageBytes);
+        }
+
+        return Uri.file(cacheFile.path);
+      }
+    } catch (e) {
+      // Silently ignore errors - will fall back to default artwork
+    }
+    return null;
   }
 
   bool _isRootId(String id) {
@@ -69,6 +97,131 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   MediaItem? _currentMediaItem;
   String? _currentUrl;
+
+  Future<List<MediaItem>> _buildDownloadedMediaItems() async {
+    final downloads = await AudioDownloadService.getDownloadedAudios();
+    final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+    final items = <MediaItem>[];
+    final nextCache = <String, MediaItem>{};
+
+    for (final download in downloads) {
+      final fileUri = Uri.file(download.filePath).toString();
+      final attachmentID = download.attachmentID;
+      int? newsID;
+      String? title;
+      String? feedTitle;
+
+      if (attachmentID >= 0) {
+        title = AudioDownloadService.getDownloadTitle(attachmentID) ??
+            await queryNewsTitleByAttachmentId(_downloadQueryState, attachmentID);
+        feedTitle = AudioDownloadService.getDownloadFeedTitle(attachmentID) ??
+            await queryFeedTitleByAttachmentId(_downloadQueryState, attachmentID);
+        newsID = await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
+      }
+
+      // Try to extract cover from ID3 tags, fall back to default
+      final id3CoverUri = await _extractId3Cover(download.filePath);
+      final artUri = id3CoverUri ?? defaultArtworkUri;
+
+      final mediaItem = MediaItem(
+        id: fileUri,
+        title: title ?? download.fileName,
+        artist: feedTitle ?? 'Flux News',
+        album: feedTitle ?? 'Flux News',
+        artUri: artUri,
+        playable: true,
+        extras: <String, dynamic>{
+          if (attachmentID >= 0) 'attachmentID': attachmentID,
+          if (newsID != null) 'newsID': newsID,
+          'downloaded': true,
+        },
+      );
+
+      nextCache[fileUri] = mediaItem;
+      items.add(mediaItem);
+    }
+
+    _downloadMediaItems
+      ..clear()
+      ..addAll(nextCache);
+    return items;
+  }
+
+  Future<Duration?> _resolveSavedPosition(MediaItem item, [Map<String, dynamic>? extras]) async {
+    final mergedExtras = <String, dynamic>{
+      if (item.extras != null) ...item.extras!,
+      if (extras != null) ...extras,
+    };
+
+    final newsID = mergedExtras['newsID'];
+    if (newsID is int) {
+      final saved = await _storage.read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
+      final localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
+      if (localMs > 0) {
+        return Duration(milliseconds: localMs);
+      }
+    }
+
+    final attachmentID = mergedExtras['attachmentID'];
+    if (attachmentID is int && attachmentID >= 0) {
+      final news = await queryNewsByAttachmentId(_downloadQueryState, attachmentID);
+      final attachment = news?.attachments
+          ?.where((candidate) => candidate.attachmentID == attachmentID)
+          .fold<Attachment?>(null, (previous, candidate) => previous ?? candidate);
+      final mediaProgression = attachment?.mediaProgression ?? 0;
+      if (mediaProgression > 0) {
+        return Duration(seconds: mediaProgression);
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _persistCurrentProgress({bool clear = false}) async {
+    final item = _currentMediaItem;
+    if (item == null) {
+      return;
+    }
+
+    final extras = item.extras ?? const <String, dynamic>{};
+    int? newsID = extras['newsID'] is int ? extras['newsID'] as int : null;
+    final attachmentID = extras['attachmentID'] is int ? extras['attachmentID'] as int : null;
+
+    if (newsID == null && attachmentID != null && attachmentID >= 0) {
+      newsID = await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
+    }
+
+    if (newsID == null) {
+      return;
+    }
+
+    final progressKey = '${FluxNewsState.audioProgressKeyPrefix}$newsID';
+    if (clear) {
+      await _storage.delete(key: progressKey);
+      return;
+    }
+
+    final positionMs = _player.position.inMilliseconds;
+    if (positionMs <= 0) {
+      return;
+    }
+
+    await _storage.write(key: progressKey, value: positionMs.toString());
+    _lastPeriodicPersistAt = DateTime.now();
+  }
+
+  void _persistCurrentProgressPeriodically() {
+    if (!_player.playing) {
+      return;
+    }
+
+    final now = DateTime.now();
+    if (_lastPeriodicPersistAt != null && now.difference(_lastPeriodicPersistAt!) < const Duration(seconds: 30)) {
+      return;
+    }
+
+    _persistCurrentProgress();
+  }
 
   Stream<Duration> get positionStream => _player.positionStream;
   Stream<Duration?> get durationStream => _player.durationStream;
@@ -92,6 +245,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     _player.positionStream.listen((pos) {
       // intentionally low-noise — uncomment if needed:
       playbackState.add(_buildPlaybackState());
+      _persistCurrentProgressPeriodically();
     });
 
     _player.bufferedPositionStream.listen((_) {
@@ -112,9 +266,13 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     required MediaItem item,
     Duration? initialPosition,
   }) async {
-    _aaLog('loadMediaItem start: id=${item.id}, title=${item.title}, initial=${initialPosition?.inSeconds ?? -1}');
     await _initFuture; // ensure AVAudioSession is configured before activating
     final shouldReload = _currentUrl != url;
+
+    if (shouldReload && _currentMediaItem != null) {
+      await _persistCurrentProgress();
+    }
+
     _currentUrl = url;
     final preparedItem = item.copyWith(
       playable: true,
@@ -130,9 +288,6 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       } else {
         await _player.setAudioSource(AudioSource.uri(uri));
       }
-      _aaLog('loadMediaItem source loaded: scheme=${uri.scheme}, shouldReload=true');
-    } else {
-      _aaLog('loadMediaItem source reused: shouldReload=false');
     }
 
     if (initialPosition != null) {
@@ -141,32 +296,29 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final state = _buildPlaybackState();
     playbackState.add(state);
-    _aaLog('loadMediaItem done: playing=${state.playing}, processing=${state.processingState.name}');
   }
 
   @override
   Future<void> play() async {
-    _aaLog('play called');
     final session = await AudioSession.instance;
     await session.setActive(true);
     await _player.play();
     final state = _buildPlaybackState();
     playbackState.add(state);
-    _aaLog('play done: playing=${state.playing}, processing=${state.processingState.name}');
   }
 
   @override
   Future<void> pause() async {
-    _aaLog('pause called');
     await _player.pause();
+    await _persistCurrentProgress();
     final state = _buildPlaybackState();
     playbackState.add(state);
-    _aaLog('pause done: playing=${state.playing}, processing=${state.processingState.name}');
   }
 
   @override
   Future<void> seek(Duration position) async {
     await _player.seek(position);
+    await _persistCurrentProgress();
     playbackState.add(_buildPlaybackState());
   }
 
@@ -178,18 +330,27 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   @override
   Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async {
-    _aaLog('getChildren called: parent=$parentMediaId, options=${options?.keys.toList()}');
     if (parentMediaId == AudioService.recentRootId) {
       if (_currentMediaItem != null) {
-        _aaLog('getChildren recentRoot -> currentMediaItem');
         return [_currentMediaItem!];
       }
-      _aaLog('getChildren recentRoot -> queue count=${queue.value.length}');
       return queue.value;
     }
 
+    if (parentMediaId == _downloadsMediaId) {
+      return await _buildDownloadedMediaItems();
+    }
+
     if (_isRootId(parentMediaId)) {
-      final items = <MediaItem>[];
+      final downloadsTitle = _downloadsTitleLocalized();
+      final items = <MediaItem>[
+        MediaItem(
+          id: _downloadsMediaId,
+          title: downloadsTitle,
+          album: 'Flux News',
+          playable: false,
+        ),
+      ];
 
       // Currently queued / playing items first
       if (queue.value.isNotEmpty) {
@@ -198,44 +359,56 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         items.add(_currentMediaItem!);
       }
 
-      _aaLog('getChildren root -> items=${items.length}');
       return items;
     }
 
-    _aaLog('getChildren unknown parent -> empty list');
     return const [];
   }
 
   @override
   Future<MediaItem?> getMediaItem(String mediaId) async {
-    _aaLog('getMediaItem called: mediaId=$mediaId');
     if (_isRootId(mediaId)) {
-      _aaLog('getMediaItem resolved as root');
       return const MediaItem(id: _rootMediaId, title: 'Flux News', playable: false);
     }
 
+    if (mediaId == _downloadsMediaId) {
+      return MediaItem(
+        id: _downloadsMediaId,
+        title: _downloadsTitleLocalized(),
+        album: 'Flux News',
+        playable: false,
+      );
+    }
+
     if (_currentMediaItem?.id == mediaId) {
-      _aaLog('getMediaItem matched currentMediaItem');
       return _currentMediaItem;
+    }
+
+    if (_downloadMediaItems.containsKey(mediaId)) {
+      return _downloadMediaItems[mediaId];
+    }
+
+    if (Uri.tryParse(mediaId)?.scheme == 'file') {
+      await _buildDownloadedMediaItems();
+      final cachedItem = _downloadMediaItems[mediaId];
+      if (cachedItem != null) {
+        return cachedItem;
+      }
     }
 
     final matches = queue.value.where((item) => item.id == mediaId);
     if (matches.isNotEmpty) {
-      _aaLog('getMediaItem matched queue');
       return matches.first;
     }
 
-    _aaLog('getMediaItem not found');
     return null;
   }
 
   @override
   Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
-    _aaLog('playFromMediaId called: mediaId=$mediaId, extras=${extras?.keys.toList()}');
     if (_isRootId(mediaId)) {
       if (_currentMediaItem != null) {
         await play();
-        _aaLog('playFromMediaId root -> resumed current item');
       }
       return;
     }
@@ -271,29 +444,26 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
           title: fallbackTitle,
           playable: true,
         );
-        _aaLog('playFromMediaId fallback media item created for uri');
       }
     }
 
     if (target == null) {
-      _aaError('playFromMediaId failed: target unresolved');
       return;
     }
+
+    final initialPosition = await _resolveSavedPosition(target, extras);
 
     await loadMediaItem(
       url: target.id,
       item: target,
-      initialPosition: Duration.zero,
+      initialPosition: initialPosition,
     );
     await play();
-    _aaLog('playFromMediaId done: target=${target.id}');
   }
 
   @override
   Future<void> prepareFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
-    _aaLog('prepareFromMediaId called: mediaId=$mediaId, extras=${extras?.keys.toList()}');
     if (_isRootId(mediaId)) {
-      _aaLog('prepareFromMediaId root -> no-op');
       return;
     }
 
@@ -315,37 +485,34 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     }
 
     if (target == null) {
-      _aaError('prepareFromMediaId failed: target unresolved');
       return;
     }
+
+    final initialPosition = await _resolveSavedPosition(target, extras);
 
     await loadMediaItem(
       url: target.id,
       item: target,
-      initialPosition: Duration.zero,
+      initialPosition: initialPosition,
     );
-    _aaLog('prepareFromMediaId done: target=${target.id}');
   }
 
   @override
   Future<void> playMediaItem(MediaItem mediaItem) async {
-    _aaLog('playMediaItem called: id=${mediaItem.id}, title=${mediaItem.title}');
     await loadMediaItem(
       url: mediaItem.id,
       item: mediaItem,
       initialPosition: Duration.zero,
     );
     await play();
-    _aaLog('playMediaItem done: id=${mediaItem.id}');
   }
 
   @override
   Future<void> stop() async {
-    _aaLog('stop called');
+    await _persistCurrentProgress();
     await _player.stop();
     _currentUrl = null; // force setAudioSource on next play of the same track
     playbackState.add(_buildPlaybackState().copyWith(processingState: AudioProcessingState.idle));
-    _aaLog('stop done');
   }
 
   @override
