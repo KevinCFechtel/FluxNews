@@ -37,6 +37,10 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
         'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_BROWSABLE_HINT': 1,
         'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_PLAYABLE_HINT': 1,
       },
+      // iOS/CarPlay support
+      preloadArtwork: true,
+      artDownscaleWidth: 512,
+      artDownscaleHeight: 512,
     ),
   ).then((handler) {
     _fluxNewsAudioHandler = handler;
@@ -63,25 +67,25 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     return languageCode == 'de' ? 'Folgen' : 'Episodes';
   }
 
-  Future<Uri?> _extractId3Cover(String filePath) async {
-    try {
-      final imageBytes = await AudioDownloadService.extractAlbumArtFromFile(filePath);
-      if (imageBytes != null && imageBytes.isNotEmpty) {
-        final coverCacheDir = await AudioDownloadService.getCoverCacheDir();
-        final fileName = '${filePath.hashCode}_cover.jpg';
-        final cacheFile = File('$coverCacheDir/$fileName');
+  MediaItem _forBrowseList(MediaItem item) {
+    return MediaItem(
+      id: item.id,
+      album: item.album,
+      title: item.title,
+      artist: item.artist,
+      genre: item.genre,
+      duration: item.duration,
+      playable: item.playable,
+      displayTitle: item.displayTitle,
+      displaySubtitle: item.displaySubtitle,
+      displayDescription: item.displayDescription,
+      rating: item.rating,
+      extras: item.extras,
+    );
+  }
 
-        if (!await cacheFile.exists()) {
-          await cacheFile.create(recursive: true);
-          await cacheFile.writeAsBytes(imageBytes);
-        }
-
-        return Uri.file(cacheFile.path);
-      }
-    } catch (e) {
-      // Silently ignore errors - will fall back to default artwork
-    }
-    return null;
+  List<MediaItem> _forBrowseListItems(List<MediaItem> items) {
+    return items.map(_forBrowseList).toList(growable: false);
   }
 
   bool _isRootId(String id) {
@@ -119,16 +123,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         newsID = await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
       }
 
-      // Try to extract cover from ID3 tags, fall back to default
-      final id3CoverUri = await _extractId3Cover(download.filePath);
-      final artUri = id3CoverUri ?? defaultArtworkUri;
-
       final mediaItem = MediaItem(
         id: fileUri,
         title: title ?? download.fileName,
         artist: feedTitle ?? 'Flux News',
         album: feedTitle ?? 'Flux News',
-        artUri: artUri,
+        artUri: defaultArtworkUri,
         playable: true,
         extras: <String, dynamic>{
           if (attachmentID >= 0) 'attachmentID': attachmentID,
@@ -332,13 +332,14 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async {
     if (parentMediaId == AudioService.recentRootId) {
       if (_currentMediaItem != null) {
-        return [_currentMediaItem!];
+        return [_forBrowseList(_currentMediaItem!)];
       }
-      return queue.value;
+      return _forBrowseListItems(queue.value);
     }
 
     if (parentMediaId == _downloadsMediaId) {
-      return await _buildDownloadedMediaItems();
+      final items = await _buildDownloadedMediaItems();
+      return _forBrowseListItems(items);
     }
 
     if (_isRootId(parentMediaId)) {
@@ -352,11 +353,16 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         ),
       ];
 
+      if (Platform.isIOS) {
+        final downloadedItems = await _buildDownloadedMediaItems();
+        items.addAll(_forBrowseListItems(downloadedItems));
+      }
+
       // Currently queued / playing items first
       if (queue.value.isNotEmpty) {
-        items.addAll(queue.value);
+        items.addAll(_forBrowseListItems(queue.value));
       } else if (_currentMediaItem != null) {
-        items.add(_currentMediaItem!);
+        items.add(_forBrowseList(_currentMediaItem!));
       }
 
       return items;
@@ -541,7 +547,6 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       controls: [
         MediaControl.skipToPrevious,
         if (_player.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
         MediaControl.skipToNext,
       ],
       systemActions: const {
@@ -555,7 +560,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         MediaAction.seekBackward,
         MediaAction.stop,
       },
-      androidCompactActionIndices: const [0, 1, 3],
+      androidCompactActionIndices: const [0, 1, 2],
       processingState: _mapProcessingState(_player.processingState),
       playing: _player.playing,
       updatePosition: _player.position,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -67,9 +68,22 @@ class DownloadedAudioInfo {
   final DateTime downloadedAt;
 }
 
+class _ArtworkImageInfo {
+  const _ArtworkImageInfo({
+    required this.width,
+    required this.height,
+  });
+
+  final int width;
+  final int height;
+}
+
 class AudioDownloadService {
   static const _storage = sec_store.FlutterSecureStorage();
   static const int _remoteId3HeaderLength = 10;
+  static const int _maxArtworkBytes = 3 * 1024 * 1024;
+  static const int _maxArtworkDownloadBytes = 12 * 1024 * 1024;
+  static const int _maxArtworkDimension = 1024;
   static const String _downloadPathKeyPrefix = FluxNewsState.downloadPathKeyPrefix;
   static const String _downloadPathByUrlKeyPrefix = FluxNewsState.downloadPathByUrlKeyPrefix;
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
@@ -247,20 +261,209 @@ class AudioDownloadService {
     }
 
     try {
+      final normalizedBytes = await _normalizeArtworkBytes(imageBytes);
+      if (normalizedBytes == null || normalizedBytes.isEmpty) {
+        return null;
+      }
+
       final appSupport = await getApplicationSupportDirectory();
       final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
       if (!await artworkDirectory.exists()) {
         await artworkDirectory.create(recursive: true);
       }
 
-      final extension = _detectImageFileExtension(imageBytes);
+      final extension = _detectImageFileExtension(normalizedBytes);
       final fileName = 'artwork_$attachmentID.$extension';
       final file = File(p.join(artworkDirectory.path, fileName));
-      await file.writeAsBytes(imageBytes, flush: true);
+      await file.writeAsBytes(normalizedBytes, flush: true);
       return Uri.file(file.path);
     } catch (_) {
       return null;
     }
+  }
+
+  static Future<Uint8List?> _normalizeArtworkBytes(Uint8List imageBytes) async {
+    if (imageBytes.isEmpty || imageBytes.length > _maxArtworkDownloadBytes) {
+      return null;
+    }
+
+    final imageInfo = await _tryReadImageInfo(imageBytes);
+    if (imageInfo == null) {
+      return imageBytes.length <= _maxArtworkBytes ? imageBytes : null;
+    }
+
+    final originalWidth = imageInfo.width;
+    final originalHeight = imageInfo.height;
+    if (imageBytes.length <= _maxArtworkBytes &&
+        originalWidth <= _maxArtworkDimension &&
+        originalHeight <= _maxArtworkDimension) {
+      return imageBytes;
+    }
+
+    Uint8List? candidate;
+    for (final targetLongSide in const [1024, 768, 512, 384, 256]) {
+      final resized = await _resizeToLongSide(imageBytes, originalWidth, originalHeight, targetLongSide);
+      if (resized == null) {
+        continue;
+      }
+
+      candidate = resized;
+      if (candidate.length <= _maxArtworkBytes) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  static Future<_ArtworkImageInfo?> _tryReadImageInfo(Uint8List imageBytes) async {
+    try {
+      final codec = await ui.instantiateImageCodec(imageBytes);
+      final frame = await codec.getNextFrame();
+      final width = frame.image.width;
+      final height = frame.image.height;
+      frame.image.dispose();
+      codec.dispose();
+      return _ArtworkImageInfo(width: width, height: height);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<Uint8List?> _resizeToLongSide(
+    Uint8List imageBytes,
+    int width,
+    int height,
+    int targetLongSide,
+  ) async {
+    try {
+      final maxSide = width > height ? width : height;
+      if (maxSide <= 0) {
+        return null;
+      }
+
+      final scale = targetLongSide / maxSide;
+      final targetWidth = scale >= 1 ? width : (width * scale).round().clamp(1, width);
+      final targetHeight = scale >= 1 ? height : (height * scale).round().clamp(1, height);
+
+      final codec = await ui.instantiateImageCodec(
+        imageBytes,
+        targetWidth: targetWidth,
+        targetHeight: targetHeight,
+      );
+      final frame = await codec.getNextFrame();
+      final byteData = await frame.image.toByteData(format: ui.ImageByteFormat.png);
+      frame.image.dispose();
+      codec.dispose();
+      if (byteData == null) {
+        return null;
+      }
+      return byteData.buffer.asUint8List();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<Uri?> getCachedArtworkUriForAttachment(int attachmentID) async {
+    try {
+      final appSupport = await getApplicationSupportDirectory();
+      final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
+      if (!await artworkDirectory.exists()) {
+        return null;
+      }
+
+      for (final extension in const ['png', 'jpg', 'gif']) {
+        final file = File(p.join(artworkDirectory.path, 'artwork_$attachmentID.$extension'));
+        if (await file.exists()) {
+          return Uri.file(file.path);
+        }
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
+  }
+
+  static Future<Uint8List?> _downloadImageBytes(Uri uri) async {
+    if (!(uri.scheme == 'http' || uri.scheme == 'https')) {
+      return null;
+    }
+
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
+    try {
+      final request = await client.getUrl(uri);
+
+      final apiKey = await _storage.read(key: FluxNewsState.secureStorageMinifluxAPIKey);
+      final minifluxUrl = await _storage.read(key: FluxNewsState.secureStorageMinifluxURLKey);
+      final minifluxHost = Uri.tryParse(minifluxUrl ?? '')?.host.toLowerCase();
+      if (apiKey != null &&
+          apiKey.isNotEmpty &&
+          minifluxHost != null &&
+          minifluxHost.isNotEmpty &&
+          uri.host.toLowerCase() == minifluxHost) {
+        request.headers.set(FluxNewsState.httpMinifluxAuthHeaderString, apiKey);
+      }
+
+      final response = await request.close().timeout(const Duration(seconds: 4));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+
+      if (response.contentLength > _maxArtworkDownloadBytes) {
+        return null;
+      }
+
+      final bytesBuilder = BytesBuilder(copy: false);
+      var receivedBytes = 0;
+      await for (final chunk in response) {
+        receivedBytes += chunk.length;
+        if (receivedBytes > _maxArtworkDownloadBytes) {
+          return null;
+        }
+        bytesBuilder.add(chunk);
+      }
+
+      final bytes = bytesBuilder.toBytes();
+      if (bytes.isEmpty) {
+        return null;
+      }
+
+      return bytes;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  static Future<void> _precacheArtworkForDownloadedAudio({
+    required Attachment attachment,
+    required String downloadedFilePath,
+    News? news,
+  }) async {
+    Uint8List? artworkBytes;
+
+    if (news != null) {
+      final imageAttachment = news.getFirstImageAttachment();
+      if (imageAttachment.attachmentURL.isNotEmpty &&
+          imageAttachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
+        final imageUri = Uri.tryParse(imageAttachment.attachmentURL);
+        if (imageUri != null) {
+          artworkBytes = await _downloadImageBytes(imageUri);
+        }
+      }
+    }
+
+    artworkBytes ??= await extractAlbumArtFromFile(downloadedFilePath);
+    if (artworkBytes == null || artworkBytes.isEmpty) {
+      return;
+    }
+
+    await cacheArtworkBytesForAttachment(
+      attachmentID: attachment.attachmentID,
+      imageBytes: artworkBytes,
+    );
   }
 
   static String _detectImageFileExtension(Uint8List bytes) {
@@ -894,7 +1097,7 @@ class AudioDownloadService {
     }
   }
 
-  static Future<String?> downloadAttachment(Attachment attachment, {bool onlyOnWifi = false}) async {
+  static Future<String?> downloadAttachment(Attachment attachment, {bool onlyOnWifi = false, News? news}) async {
     if (attachment.attachmentURL.isEmpty) return null;
 
     final storageAttachmentId = _resolveStorageAttachmentId(attachment);
@@ -1015,6 +1218,11 @@ class AudioDownloadService {
         key: _downloadTimestampKey(storageAttachmentId),
         value: DateTime.now().toIso8601String(),
       );
+      await _precacheArtworkForDownloadedAudio(
+        attachment: attachment,
+        downloadedFilePath: filePath,
+        news: news,
+      );
       _emitDownloadedAudiosChanged();
       _removeActiveDownload(storageAttachmentId);
 
@@ -1039,7 +1247,7 @@ class AudioDownloadService {
     for (final news in newsList) {
       final attachments = news.getAudioAttachments();
       for (final attachment in attachments) {
-        await downloadAttachment(attachment, onlyOnWifi: onlyOnWifi);
+        await downloadAttachment(attachment, onlyOnWifi: onlyOnWifi, news: news);
       }
     }
   }

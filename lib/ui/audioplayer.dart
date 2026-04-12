@@ -324,8 +324,11 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (_downloadingAttachmentIDs.contains(attachment.attachmentID)) return;
     setState(() => _downloadingAttachmentIDs.add(attachment.attachmentID));
     try {
-      final filePath = await AudioDownloadService.downloadAttachment(attachment,
-          onlyOnWifi: widget.appState.downloadAudioOnlyOnWifi);
+      final filePath = await AudioDownloadService.downloadAttachment(
+        attachment,
+        onlyOnWifi: widget.appState.downloadAudioOnlyOnWifi,
+        news: widget.news,
+      );
       if (filePath != null) {
         _downloadedPaths[attachment.attachmentID] = filePath;
         await _loadChaptersForAttachment(attachment, filePath: filePath);
