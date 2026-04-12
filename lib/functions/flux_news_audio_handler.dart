@@ -6,6 +6,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/dynamic_island_service.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
@@ -61,6 +62,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   final FluxNewsState _downloadQueryState = FluxNewsState();
   final Map<String, MediaItem> _downloadMediaItems = <String, MediaItem>{};
   DateTime? _lastPeriodicPersistAt;
+  final DynamicIslandService _dynamicIslandService = DynamicIslandService();
 
   String _downloadsTitleLocalized() {
     final languageCode = ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase();
@@ -240,12 +242,14 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     _player.playbackEventStream.listen((event) {
       playbackState.add(_buildPlaybackState());
+      _updateDynamicIsland();
     });
 
     _player.positionStream.listen((pos) {
       // intentionally low-noise — uncomment if needed:
       playbackState.add(_buildPlaybackState());
       _persistCurrentProgressPeriodically();
+      _updateDynamicIsland();
     });
 
     _player.bufferedPositionStream.listen((_) {
@@ -258,6 +262,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         mediaItem.add(_currentMediaItem!);
       }
       playbackState.add(_buildPlaybackState());
+      _updateDynamicIsland();
     });
   }
 
@@ -305,6 +310,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await _player.play();
     final state = _buildPlaybackState();
     playbackState.add(state);
+    _startDynamicIsland();
   }
 
   @override
@@ -313,6 +319,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await _persistCurrentProgress();
     final state = _buildPlaybackState();
     playbackState.add(state);
+    _updateDynamicIsland();
   }
 
   @override
@@ -519,6 +526,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await _player.stop();
     _currentUrl = null; // force setAudioSource on next play of the same track
     playbackState.add(_buildPlaybackState().copyWith(processingState: AudioProcessingState.idle));
+    await _endDynamicIsland();
   }
 
   @override
@@ -540,6 +548,47 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   @override
   Future<void> skipToPrevious() async {
     await rewind();
+  }
+
+  Future<void> _startDynamicIsland() async {
+    if (!Platform.isIOS) return;
+
+    final item = _currentMediaItem;
+    if (item == null) return;
+
+    final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+
+    await _dynamicIslandService.startActivity(
+      itemTitle: item.title,
+      feedTitle: item.artist ?? 'Flux News',
+      isPlaying: _player.playing,
+      currentPosition: _player.position.inSeconds,
+      duration: _player.duration?.inSeconds ?? 0,
+      artworkUrl: defaultArtworkUri?.toString(),
+    );
+  }
+
+  Future<void> _updateDynamicIsland() async {
+    if (!Platform.isIOS) return;
+
+    final item = _currentMediaItem;
+    if (item == null) return;
+
+    final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+
+    await _dynamicIslandService.updateActivity(
+      itemTitle: item.title,
+      feedTitle: item.artist ?? 'Flux News',
+      isPlaying: _player.playing,
+      currentPosition: _player.position.inSeconds,
+      duration: _player.duration?.inSeconds ?? 0,
+      artworkUrl: defaultArtworkUri?.toString(),
+    );
+  }
+
+  Future<void> _endDynamicIsland() async {
+    if (!Platform.isIOS) return;
+    await _dynamicIslandService.endActivity();
   }
 
   PlaybackState _buildPlaybackState() {
