@@ -72,6 +72,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />
         </provider>
+
+        <provider
+            android:name=".DefaultArtworkProvider"
+            android:authorities="de.circle_dev.flux_news.defaultart"
+            android:exported="true"
+            android:grantUriPermissions="false" />
     </application>
     
 </manifest>

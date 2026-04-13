@@ -173,6 +173,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String artworkCacheDirectoryName = 'audio_artwork_cache';
   static const String artworkFilePrefix = 'artwork_';
   static const String downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
+  static const String androidDefaultArtworkProviderAuthority = 'de.circle_dev.flux_news.defaultart';
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*

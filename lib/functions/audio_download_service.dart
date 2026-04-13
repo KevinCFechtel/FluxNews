@@ -89,6 +89,7 @@ class AudioDownloadService {
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
   static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
   static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;
+  static const String _androidDefaultArtworkProviderAuthority = FluxNewsState.androidDefaultArtworkProviderAuthority;
   static const String _artworkCacheDirectoryName = FluxNewsState.artworkCacheDirectoryName;
   static final _activeDownloads = <int, AudioDownloadProgress>{};
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
@@ -203,30 +204,41 @@ class AudioDownloadService {
     return _isWifiConnected();
   }
 
-  static const _artworkProviderChannel = MethodChannel('ArtworkProvider');
+  static Future<File> _ensureDefaultArtworkFile() async {
+    final appSupport = await getApplicationSupportDirectory();
+    final filePath = p.join(appSupport.path, _defaultArtworkFileName);
+    final file = File(filePath);
+
+    if (!await file.exists()) {
+      final byteData = await rootBundle.load(_defaultArtworkAssetPath);
+      await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
+    }
+
+    return file;
+  }
+
+  static Uri _buildAndroidDefaultArtworkContentUri() {
+    return Uri.parse(
+      'content://$_androidDefaultArtworkProviderAuthority/${Uri.encodeComponent(_defaultArtworkFileName)}',
+    );
+  }
+
+  static Future<String?> getDefaultArtworkFilePath() async {
+    try {
+      final file = await _ensureDefaultArtworkFile();
+      return file.path;
+    } catch (e, st) {
+      logThis('artwork', 'getDefaultArtworkFilePath error: $e\n$st', LogLevel.ERROR);
+      return null;
+    }
+  }
 
   static Future<Uri?> getDefaultArtworkUri() async {
     try {
-      final appSupport = await getApplicationSupportDirectory();
-      final filePath = p.join(appSupport.path, _defaultArtworkFileName);
-      final file = File(filePath);
+      final file = await _ensureDefaultArtworkFile();
 
-      if (!await file.exists()) {
-        final byteData = await rootBundle.load(_defaultArtworkAssetPath);
-        await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
-      }
-
-      // Auf Android: content:// URI via FileProvider liefern, damit andere
-      // Prozesse (z. B. Android Auto) die Datei lesen dürfen.
       if (Platform.isAndroid) {
-        final contentUriString = await _artworkProviderChannel.invokeMethod<String>(
-          'getContentUri',
-          {'filePath': file.path},
-        );
-        if (contentUriString != null) {
-          final contentUri = Uri.parse(contentUriString);
-          return contentUri;
-        }
+        return _buildAndroidDefaultArtworkContentUri();
       }
 
       final uri = Uri.file(file.path);

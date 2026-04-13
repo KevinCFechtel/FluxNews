@@ -107,6 +107,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Future<List<MediaItem>> _buildDownloadedMediaItems() async {
     final downloads = await AudioDownloadService.getDownloadedAudios();
     final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+    final defaultArtworkFilePath = await AudioDownloadService.getDefaultArtworkFilePath();
     final items = <MediaItem>[];
     final nextCache = <String, MediaItem>{};
 
@@ -135,6 +136,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         extras: <String, dynamic>{
           if (attachmentID >= 0) 'attachmentID': attachmentID,
           if (newsID != null) 'newsID': newsID,
+          if (defaultArtworkFilePath != null) 'artCacheFile': defaultArtworkFilePath,
           'downloaded': true,
         },
       );
@@ -279,10 +281,18 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     }
 
     _currentUrl = url;
-    final fallbackArtworkUri = item.artUri ?? await AudioDownloadService.getDefaultArtworkUri();
+    final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+    final fallbackArtworkUri = item.artUri ?? defaultArtworkUri;
+    final defaultArtworkFilePath = await AudioDownloadService.getDefaultArtworkFilePath();
+    final preparedExtras = <String, dynamic>{
+      if (item.extras != null) ...item.extras!,
+      if (defaultArtworkFilePath != null && fallbackArtworkUri == defaultArtworkUri)
+        'artCacheFile': defaultArtworkFilePath,
+    };
     final preparedItem = item.copyWith(
       playable: true,
       artUri: fallbackArtworkUri,
+      extras: preparedExtras,
     );
     _currentMediaItem = preparedItem;
     queue.add([preparedItem]);
