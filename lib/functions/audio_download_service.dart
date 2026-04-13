@@ -89,7 +89,7 @@ class AudioDownloadService {
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
   static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
   static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;
-  static const String _artworkCacheDirectoryName = 'audio_artwork_cache';
+  static const String _artworkCacheDirectoryName = FluxNewsState.artworkCacheDirectoryName;
   static final _activeDownloads = <int, AudioDownloadProgress>{};
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
@@ -214,9 +214,6 @@ class AudioDownloadService {
       if (!await file.exists()) {
         final byteData = await rootBundle.load(_defaultArtworkAssetPath);
         await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
-        logThis('artwork', 'created file at ${file.path} (${byteData.lengthInBytes} bytes)', LogLevel.INFO);
-      } else {
-        logThis('artwork', 'file already exists at ${file.path}, size=${await file.length()}', LogLevel.INFO);
       }
 
       // Auf Android: content:// URI via FileProvider liefern, damit andere
@@ -228,14 +225,11 @@ class AudioDownloadService {
         );
         if (contentUriString != null) {
           final contentUri = Uri.parse(contentUriString);
-          logThis('artwork', 'returning content URI = $contentUri', LogLevel.INFO);
           return contentUri;
         }
-        logThis('artwork', 'getContentUri returned null, falling back to file URI', LogLevel.WARNING);
       }
 
       final uri = Uri.file(file.path);
-      logThis('artwork', 'returning file URI = $uri', LogLevel.INFO);
       return uri;
     } catch (e, st) {
       logThis('artwork', 'getDefaultArtworkUri error: $e\n$st', LogLevel.ERROR);
@@ -273,7 +267,7 @@ class AudioDownloadService {
       }
 
       final extension = _detectImageFileExtension(normalizedBytes);
-      final fileName = 'artwork_$attachmentID.$extension';
+      final fileName = '${FluxNewsState.artworkFilePrefix}$attachmentID.$extension';
       final file = File(p.join(artworkDirectory.path, fileName));
       await file.writeAsBytes(normalizedBytes, flush: true);
       return Uri.file(file.path);
@@ -373,7 +367,7 @@ class AudioDownloadService {
       }
 
       for (final extension in const ['png', 'jpg', 'gif']) {
-        final file = File(p.join(artworkDirectory.path, 'artwork_$attachmentID.$extension'));
+        final file = File(p.join(artworkDirectory.path, '${FluxNewsState.artworkFilePrefix}$attachmentID.$extension'));
         if (await file.exists()) {
           return Uri.file(file.path);
         }

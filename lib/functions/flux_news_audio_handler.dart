@@ -279,8 +279,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     }
 
     _currentUrl = url;
+    final fallbackArtworkUri = item.artUri ?? await AudioDownloadService.getDefaultArtworkUri();
     final preparedItem = item.copyWith(
       playable: true,
+      artUri: fallbackArtworkUri,
     );
     _currentMediaItem = preparedItem;
     queue.add([preparedItem]);

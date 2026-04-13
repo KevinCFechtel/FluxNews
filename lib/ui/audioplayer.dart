@@ -2,11 +2,9 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
-import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -122,6 +120,7 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
         title: Text(
           widget.news.feedTitle,
           overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
       ),
       body: audioAttachments.isEmpty
@@ -747,7 +746,6 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         : attachment.attachmentMimeType;
     final title = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
     final artworkUri = await _resolveFallbackArtworkUri();
-    logThis('audioplayer', '_buildMediaItem: artworkUri=$artworkUri, title=$title', LogLevel.INFO);
 
     return MediaItem(
       id: attachment.attachmentURL,

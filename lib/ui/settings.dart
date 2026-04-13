@@ -14,6 +14,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flux_news/ui/settings/download_storage_settings.dart';
 
 import '../state_management/flux_news_state.dart';
 import '../miniflux/miniflux_backend.dart';
@@ -275,6 +276,41 @@ class Settings extends StatelessWidget {
                   onTap: () {
                     // navigate to the search page
                     Navigator.pushNamed(context, FluxNewsState.truncateSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
+                  ),
+                ),
+
+                const Divider(),
+                ListTile(
+                  leading: const Icon(
+                    Icons.storage_rounded,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.downloadedData,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.downloadsManagerClearAll,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (context) => const DownloadStorageSettings(),
+                      ),
+                    );
                   },
                   trailing: const Icon(
                     Icons.arrow_right,

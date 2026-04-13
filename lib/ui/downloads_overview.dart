@@ -18,10 +18,10 @@ class DownloadsOverview extends StatefulWidget {
 
 class _DownloadsOverviewState extends State<DownloadsOverview> {
   late Future<List<DownloadedAudioInfo>> _downloadsFuture;
-  late Future<int> _totalSizeFuture;
   StreamSubscription<void>? _downloadedAudiosChangedSubscription;
   final Map<int, Future<String?>> _titleFutureByAttachmentId = {};
-  final Map<int, Future<String?>> _feedTitleFutureByAttachmentId = {};
+  final Map<int, Future<News?>> _newsFutureByAttachmentId = {};
+  final Map<int, Future<int?>> _newsIdFutureByAttachmentId = {};
 
   @override
   void initState() {
@@ -41,9 +41,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   void _reload() {
     _downloadsFuture = AudioDownloadService.getDownloadedAudios();
-    _totalSizeFuture = AudioDownloadService.getDownloadedAudioSizeInBytes();
     _titleFutureByAttachmentId.clear();
-    _feedTitleFutureByAttachmentId.clear();
+    _newsFutureByAttachmentId.clear();
+    _newsIdFutureByAttachmentId.clear();
   }
 
   Future<String?> _getNewsTitleByAttachmentId(int attachmentID) async {
@@ -66,37 +66,44 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Future<String?> _getFeedTitleByAttachmentId(int attachmentID) async {
-    if (attachmentID < 0) {
-      return null;
-    }
-
-    final appState = context.read<FluxNewsState>();
-    final feedTitle = await queryFeedTitleByAttachmentId(appState, attachmentID);
-    if (feedTitle != null && feedTitle.isNotEmpty) {
-      AudioDownloadService.cacheDownloadFeedTitle(attachmentID, feedTitle);
-    }
-    return feedTitle;
-  }
-
-  Future<String?> _feedTitleFutureForAttachmentId(int attachmentID) {
-    return _feedTitleFutureByAttachmentId.putIfAbsent(
-      attachmentID,
-      () => _getFeedTitleByAttachmentId(attachmentID),
-    );
-  }
-
   Future<News?> _getNewsByAttachmentId(int attachmentID) async {
     if (attachmentID < 0) {
       return null;
     }
 
     final appState = context.read<FluxNewsState>();
-    return queryNewsByAttachmentId(appState, attachmentID);
+    final news = await queryNewsByAttachmentId(appState, attachmentID);
+    if (news?.feedTitle.isNotEmpty == true) {
+      AudioDownloadService.cacheDownloadFeedTitle(attachmentID, news!.feedTitle);
+    }
+    return news;
+  }
+
+  Future<News?> _newsFutureForAttachmentId(int attachmentID) {
+    return _newsFutureByAttachmentId.putIfAbsent(
+      attachmentID,
+      () => _getNewsByAttachmentId(attachmentID),
+    );
+  }
+
+  Future<int?> _getNewsIdByAttachmentId(int attachmentID) async {
+    if (attachmentID < 0) {
+      return null;
+    }
+
+    final appState = context.read<FluxNewsState>();
+    return queryNewsIdByAttachmentId(appState, attachmentID);
+  }
+
+  Future<int?> _newsIdFutureForAttachmentId(int attachmentID) {
+    return _newsIdFutureByAttachmentId.putIfAbsent(
+      attachmentID,
+      () => _getNewsIdByAttachmentId(attachmentID),
+    );
   }
 
   Future<void> _openDownloadedItem(DownloadedAudioInfo item) async {
-    final news = await _getNewsByAttachmentId(item.attachmentID);
+    final news = await _newsFutureForAttachmentId(item.attachmentID);
     if (!mounted) return;
 
     if (news == null) {
@@ -119,7 +126,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   Future<void> _refresh() async {
     setState(_reload);
-    await Future.wait([_downloadsFuture, _totalSizeFuture]);
+    await _downloadsFuture;
   }
 
   Future<void> _deleteItem(DownloadedAudioInfo item) async {
@@ -131,223 +138,64 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Future<void> _deleteAll() async {
-    final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(AppLocalizations.of(context)!.downloadsManagerClearAllTitle),
-            content: Text(AppLocalizations.of(context)!.downloadsManagerClearAllMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(AppLocalizations.of(context)!.cancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(AppLocalizations.of(context)!.delete),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-
-    if (!confirmed) return;
-
-    await AudioDownloadService.deleteAllDownloadedAudios();
-    if (!mounted) return;
-    setState(_reload);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.downloadsManagerClearedSnackbar)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final activeAudioNewsId = context.watch<FluxNewsState>().activeAudioNews?.newsID;
+    FluxNewsState appState = context.watch<FluxNewsState>();
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings),
+        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings, style: theme.textTheme.titleLarge),
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: ListView(
-          padding: const EdgeInsets.all(12),
-          children: [
-            _buildRunningDownloadsCard(),
-            const SizedBox(height: 12),
-            _buildStorageCard(),
-            const SizedBox(height: 12),
-            _buildDownloadedList(),
-            const SizedBox(height: 12),
-            _buildDeleteAllCard(),
-          ],
-        ),
-      ),
-    );
-  }
+      body: FutureBuilder<List<DownloadedAudioInfo>>(
+        future: _downloadsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-  Widget _buildRunningDownloadsCard() {
-    return StreamBuilder<List<AudioDownloadProgress>>(
-      initialData: AudioDownloadService.getActiveDownloadsSnapshot(),
-      stream: AudioDownloadService.activeDownloadsStream,
-      builder: (context, snapshot) {
-        final activeDownloads = snapshot.data ?? const <AudioDownloadProgress>[];
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppLocalizations.of(context)!.runningDownloads, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                if (activeDownloads.isEmpty)
-                  Text(AppLocalizations.of(context)!.noActiveDownloads)
-                else
-                  ...activeDownloads.map(_buildActiveDownloadTile),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActiveDownloadTile(AudioDownloadProgress progress) {
-    final progressValue = progress.progress;
-    final subtitle = progress.totalBytes > 0
-        ? '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.from} ${AudioDownloadService.formatBytes(progress.totalBytes)}'
-        : '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.loaded}';
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FutureBuilder<String?>(
-            future: _titleFutureForAttachmentId(progress.attachmentID),
-            builder: (context, snapshot) {
-              final title = snapshot.data;
-              return Text(
-                title != null && title.isNotEmpty ? title : progress.fileName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              );
-            },
-          ),
-          const SizedBox(height: 6),
-          LinearProgressIndicator(value: progressValue),
-          const SizedBox(height: 6),
-          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStorageCard() {
-    return FutureBuilder<int>(
-      future: _totalSizeFuture,
-      builder: (context, snapshot) {
-        final totalSize = snapshot.data ?? 0;
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppLocalizations.of(context)!.downloadedData, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                Text('${AppLocalizations.of(context)!.totalStorage}: ${AudioDownloadService.formatBytes(totalSize)}'),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDeleteAllCard() {
-    return FutureBuilder<int>(
-      future: _totalSizeFuture,
-      builder: (context, snapshot) {
-        final totalSize = snapshot.data ?? 0;
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                onPressed: totalSize == 0 ? null : _deleteAll,
-                icon: const Icon(Icons.delete_sweep_outlined),
-                label: Text(AppLocalizations.of(context)!.downloadsManagerClearAll),
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(AppLocalizations.of(context)!.loadDownloadedDataError),
               ),
+            );
+          }
+
+          final downloads = snapshot.data ?? const <DownloadedAudioInfo>[];
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final horizontalPadding = appState.isTablet ? 24.0 : 12.0;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: appState.isTablet ? 1100 : double.infinity),
+                    child: ListView(
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 12),
+                      children: [
+                        _buildRunningDownloadsCard(),
+                        const SizedBox(height: 16),
+                        _buildDownloadedList(downloads, appState.isTablet, activeAudioNewsId),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildDownloadedList() {
-    return FutureBuilder<List<DownloadedAudioInfo>>(
-      future: _downloadsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(AppLocalizations.of(context)!.loadDownloadedDataError),
-            ),
-          );
-        }
-
-        final downloads = snapshot.data ?? const <DownloadedAudioInfo>[];
-        if (downloads.isEmpty) {
-          return Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(AppLocalizations.of(context)!.noAudioDownloads),
-            ),
-          );
-        }
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: Text(AppLocalizations.of(context)!.fileList, style: Theme.of(context).textTheme.titleMedium),
-                ),
-                ...downloads.map((item) => _buildDownloadedItem(item, context)),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDownloadedItem(DownloadedAudioInfo item, BuildContext context) {
-    final formattedDate = context.read<FluxNewsState>().dateFormat.format(item.downloadedAt.toLocal());
-    return Dismissible(
-      key: ValueKey(item.storageID),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        return await showDialog<bool>(
+  Future<bool> _confirmDeleteItem(BuildContext context) async {
+    return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(AppLocalizations.of(context)!.downloadsManagerDeleteTitle),
@@ -363,52 +211,278 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
               ),
             ],
           ),
+        ) ??
+        false;
+  }
+
+  Widget _buildRunningDownloadsCard() {
+    final theme = Theme.of(context);
+    return StreamBuilder<List<AudioDownloadProgress>>(
+      initialData: AudioDownloadService.getActiveDownloadsSnapshot(),
+      stream: AudioDownloadService.activeDownloadsStream,
+      builder: (context, snapshot) {
+        final activeDownloads = snapshot.data ?? const <AudioDownloadProgress>[];
+
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.downloading_rounded, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(AppLocalizations.of(context)!.runningDownloads, style: theme.textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (activeDownloads.isEmpty)
+                  Text(AppLocalizations.of(context)!.noActiveDownloads)
+                else
+                  ...activeDownloads.map(_buildActiveDownloadTile),
+              ],
+            ),
+          ),
         );
       },
-      onDismissed: (_) {
-        _deleteItem(item);
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        color: Theme.of(context).colorScheme.errorContainer,
-        child: Icon(
-          Icons.delete_outline,
-          color: Theme.of(context).colorScheme.onErrorContainer,
+    );
+  }
+
+  Widget _buildActiveDownloadTile(AudioDownloadProgress progress) {
+    final theme = Theme.of(context);
+    final progressValue = progress.progress;
+    final subtitle = progress.totalBytes > 0
+        ? '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.from} ${AudioDownloadService.formatBytes(progress.totalBytes)}'
+        : '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.loaded}';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FutureBuilder<String?>(
+              future: _titleFutureForAttachmentId(progress.attachmentID),
+              builder: (context, snapshot) {
+                final title = snapshot.data;
+                return Text(
+                  title != null && title.isNotEmpty ? title : progress.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              },
+            ),
+            const SizedBox(height: 6),
+            LinearProgressIndicator(value: progressValue, minHeight: 6),
+            const SizedBox(height: 6),
+            Text(subtitle, style: theme.textTheme.bodySmall),
+          ],
         ),
       ),
-      child: ListTile(
-        title: FutureBuilder<String?>(
-          future: _titleFutureForAttachmentId(item.attachmentID),
-          builder: (context, snapshot) {
-            final title = snapshot.data;
-            return Text(
-              title != null && title.isNotEmpty ? title : item.fileName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            );
-          },
+    );
+  }
+
+  Widget _buildDownloadedList(List<DownloadedAudioInfo> downloads, bool isTablet, int? activeAudioNewsId) {
+    final theme = Theme.of(context);
+    if (downloads.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(AppLocalizations.of(context)!.noAudioDownloads),
         ),
-        subtitle: FutureBuilder<String?>(
-          future: _feedTitleFutureForAttachmentId(item.attachmentID),
-          builder: (context, snapshot) {
-            final feedTitle = snapshot.data;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (feedTitle != null && feedTitle.isNotEmpty)
-                  Text(
-                    feedTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.library_music_rounded, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(AppLocalizations.of(context)!.fileList, style: theme.textTheme.titleMedium),
                   ),
-                Text('${AudioDownloadService.formatBytes(item.fileSize)} • $formattedDate'),
-              ],
-            );
-          },
+                  Text(
+                    downloads.length.toString(),
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ],
+              ),
+            ),
+            if (isTablet)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: downloads.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: MediaQuery.of(context).size.width >= 1200 ? 3 : 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 2.7,
+                ),
+                itemBuilder: (context, index) =>
+                    _buildDownloadedItemCard(downloads[index], dense: true, activeAudioNewsId: activeAudioNewsId),
+              )
+            else
+              ...downloads.map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _buildDownloadedItemCard(item, dense: false, activeAudioNewsId: activeAudioNewsId),
+                  )),
+          ],
         ),
-        onTap: () => _openDownloadedItem(item),
+      ),
+    );
+  }
+
+  Widget _buildDownloadedItemCard(DownloadedAudioInfo item, {required bool dense, required int? activeAudioNewsId}) {
+    final theme = Theme.of(context);
+    final appState = context.watch<FluxNewsState>();
+    final formattedDate = context.read<FluxNewsState>().dateFormat.format(item.downloadedAt.toLocal());
+    return Dismissible(
+      key: ValueKey(item.storageID),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) => _confirmDeleteItem(context),
+      onDismissed: (_) => _deleteItem(item),
+      background: const SizedBox.shrink(),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(
+          Icons.delete_outline,
+          color: theme.colorScheme.onErrorContainer,
+        ),
+      ),
+      child: Material(
+        color: theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => _openDownloadedItem(item),
+          child: Padding(
+            padding: EdgeInsets.all(dense ? 10 : 12),
+            child: Row(
+              children: [
+                Container(
+                  width: dense ? 48 : 56,
+                  height: dense ? 48 : 56,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.podcasts, color: theme.colorScheme.onPrimaryContainer),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FutureBuilder<String?>(
+                              future: _titleFutureForAttachmentId(item.attachmentID),
+                              builder: (context, snapshot) {
+                                final title = snapshot.data;
+                                return Text(
+                                  title != null && title.isNotEmpty ? title : item.fileName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleSmall,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FutureBuilder<int?>(
+                            future: _newsIdFutureForAttachmentId(item.attachmentID),
+                            builder: (context, snapshot) {
+                              final isNowPlaying = activeAudioNewsId != null && snapshot.data == activeAudioNewsId;
+                              if (!isNowPlaying) {
+                                return const SizedBox.shrink();
+                              }
+
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.graphic_eq_rounded,
+                                      size: 14,
+                                      color: theme.colorScheme.onPrimaryContainer,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      AppLocalizations.of(context)!.play,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      FutureBuilder<News?>(
+                        future: _newsFutureForAttachmentId(item.attachmentID),
+                        builder: (context, snapshot) {
+                          final news = snapshot.data;
+                          final feedTitle = news?.feedTitle;
+                          final meta = '${AudioDownloadService.formatBytes(item.fileSize)} • $formattedDate';
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (appState.showFeedIcons && news != null)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0, 0, 6, 0),
+                                  child: news.getFeedIcon(16.0, context),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  feedTitle != null && feedTitle.isNotEmpty ? '$feedTitle • $meta' : meta,
+                                  maxLines: dense ? 1 : 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

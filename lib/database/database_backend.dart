@@ -425,6 +425,9 @@ Future<News?> queryNewsByNewsId(FluxNewsState appState, int newsID) async {
   }
 
   final news = News.fromMap(rows.first);
+  if (news.feedIconID != null && news.feedIconID != 0) {
+    news.icon = appState.readFeedIconFile(news.feedIconID!);
+  }
   final attachmentRows = await appState.db!.rawQuery(
     'SELECT * FROM attachments WHERE newsID = ?',
     [news.newsID],
