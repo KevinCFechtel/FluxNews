@@ -8,6 +8,7 @@ import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:html/parser.dart' as html_parser;
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
@@ -146,6 +147,13 @@ class NewsAudioPlayer extends StatefulWidget {
 }
 
 class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
+  static final List<RegExp> _chapterTimestampPatterns = [
+    RegExp(r'(?<!\d)(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)(?!\d)'),
+    RegExp(r'(?<!\d)(?:(\d{1,2})\.)?([0-5]?\d)\.([0-5]\d)(?!\d)'),
+    RegExp(r'\((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\)'),
+    RegExp(r'\((?:(\d{1,2})\.)?([0-5]?\d)\.([0-5]\d)\)'),
+  ];
+
   static const List<int> _sleepTimerMinuteOptions = [
     30,
     45,
@@ -308,6 +316,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       }
     }
 
+    if (chapters.isEmpty) {
+      chapters = _extractChaptersFromArticleContent();
+    }
+
     _chaptersByAttachmentID[attachment.attachmentID] = chapters;
     if (!mounted || _isDisposed) {
       _loadingChapterAttachmentIDs.remove(attachment.attachmentID);
@@ -317,6 +329,66 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     setState(() {
       _loadingChapterAttachmentIDs.remove(attachment.attachmentID);
     });
+  }
+
+  List<AudioChapter> _extractChaptersFromArticleContent() {
+    final plainText = html_parser.parse(widget.news.content).body?.text ?? '';
+    if (plainText.trim().isEmpty) {
+      return const [];
+    }
+
+    final extracted = <AudioChapter>[];
+    final seenStartInSeconds = <int>{};
+
+    for (final rawLine in plainText.split('\n')) {
+      final line = rawLine.replaceAll('\u00A0', ' ').trim();
+      if (line.isEmpty) continue;
+
+      RegExpMatch? match;
+      for (final pattern in _chapterTimestampPatterns) {
+        match = pattern.firstMatch(line);
+        if (match != null) break;
+      }
+      if (match == null) continue;
+
+      final hours = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final minutes = int.tryParse(match.group(2) ?? '0') ?? 0;
+      final seconds = int.tryParse(match.group(3) ?? '0') ?? 0;
+      final start = Duration(hours: hours, minutes: minutes, seconds: seconds);
+
+      if (seenStartInSeconds.contains(start.inSeconds)) continue;
+
+      final suffix = line.substring(match.end).trim();
+      final prefix = line.substring(0, match.start).trim();
+      var title = suffix.isNotEmpty ? suffix : prefix;
+      title = title.replaceFirst(RegExp(r'^[\-:\.|\)\]\s]+'), '').trim();
+      title = title.replaceFirst(RegExp(r'^[\[(]+'), '').trim();
+
+      extracted.add(AudioChapter(
+        title: title.isNotEmpty ? title : 'Chapter ${extracted.length + 1}',
+        start: start,
+      ));
+      seenStartInSeconds.add(start.inSeconds);
+    }
+
+    if (extracted.length < 2) {
+      return const [];
+    }
+
+    extracted.sort((a, b) => a.start.compareTo(b.start));
+
+    final normalized = <AudioChapter>[];
+    for (int i = 0; i < extracted.length; i++) {
+      final current = extracted[i];
+      final next = i + 1 < extracted.length ? extracted[i + 1] : null;
+      normalized.add(AudioChapter(
+        title: current.title,
+        start: current.start,
+        end: next?.start,
+      ));
+    }
+
+    return normalized;
   }
 
   Future<void> _downloadAudio(Attachment attachment) async {
