@@ -61,7 +61,11 @@ class Welcome extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushNamed(context, FluxNewsState.loginRouteString);
                     },
-                    child: Text(AppLocalizations.of(context)!.login),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    child: Text(AppLocalizations.of(context)!.login,
+                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                   ),
           ),
           const SizedBox(height: 12),
@@ -145,7 +149,11 @@ class Welcome extends StatelessWidget {
                                 onPressed: () {
                                   Navigator.pushNamed(context, FluxNewsState.loginRouteString);
                                 },
-                                child: Text(AppLocalizations.of(context)!.login),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                ),
+                                child: Text(AppLocalizations.of(context)!.login,
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                               ),
                         const SizedBox(height: 12),
                         Platform.isIOS

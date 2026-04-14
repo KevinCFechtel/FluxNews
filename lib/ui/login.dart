@@ -295,13 +295,16 @@ class _LoginState extends State<Login> {
                 )
               : ElevatedButton(
                   onPressed: _isLoading ? null : () => _submit(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
                   child: _isLoading
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                         )
-                      : Text(localization.save),
+                      : Text(localization.save, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                 ),
         ],
       ),
