@@ -548,6 +548,11 @@ class NewsCard extends StatelessWidget {
                                     return const Icon(
                                       Icons.error,
                                     );
+                                  } else if (state.extendedImageLoadState == LoadState.loading) {
+                                    return Center(
+                                      child: CircularProgressIndicator.adaptive(
+                                          padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                                    );
                                   }
                                   return null;
                                 },

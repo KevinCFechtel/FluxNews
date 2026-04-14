@@ -1021,24 +1021,29 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     tileColor: isActiveChapter
                                         ? Theme.of(context).colorScheme.primaryContainer.withAlpha(128)
                                         : null,
-                                    title: Text(
-                                      chapter.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: isActiveChapter
-                                          ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                              )
-                                          : null,
-                                    ),
-                                    leading: isActiveChapter
-                                        ? Icon(
-                                            Icons.play_arrow,
-                                            size: 16,
-                                            color: Theme.of(context).colorScheme.primary,
-                                          )
-                                        : const SizedBox(width: 16),
+                                    title: Row(children: [
+                                      isActiveChapter
+                                          ? Icon(
+                                              Icons.play_arrow,
+                                              size: 16,
+                                              color: Theme.of(context).colorScheme.primary,
+                                            )
+                                          : const SizedBox(width: 16),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4.0),
+                                        child: Text(
+                                          chapter.title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: isActiveChapter
+                                              ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                  )
+                                              : null,
+                                        ),
+                                      )
+                                    ]),
                                     trailing: Text(_formatChapterStart(chapter.start)),
                                     onTap: () => _seekToChapter(attachment, chapter),
                                   );
