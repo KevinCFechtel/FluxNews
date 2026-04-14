@@ -22,6 +22,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   final Map<int, Future<String?>> _titleFutureByAttachmentId = {};
   final Map<int, Future<News?>> _newsFutureByAttachmentId = {};
   final Map<int, Future<int?>> _newsIdFutureByAttachmentId = {};
+  final Set<String> _dismissedStorageIds = {};
 
   @override
   void initState() {
@@ -44,6 +45,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     _titleFutureByAttachmentId.clear();
     _newsFutureByAttachmentId.clear();
     _newsIdFutureByAttachmentId.clear();
+    _dismissedStorageIds.clear();
   }
 
   Future<String?> _getNewsTitleByAttachmentId(int attachmentID) async {
@@ -136,6 +138,24 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context)!.downloadsManagerDeletedSnackbar)),
     );
+  }
+
+  Future<void> _dismissAndDeleteItem(DownloadedAudioInfo item) async {
+    setState(() {
+      _dismissedStorageIds.add(item.storageID);
+    });
+
+    try {
+      await _deleteItem(item);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _dismissedStorageIds.remove(item.storageID);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
+      );
+    }
   }
 
   @override
@@ -291,7 +311,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   Widget _buildDownloadedList(List<DownloadedAudioInfo> downloads, bool isTablet, int? activeAudioNewsId) {
     final theme = Theme.of(context);
-    if (downloads.isEmpty) {
+    final visibleDownloads = downloads.where((item) => !_dismissedStorageIds.contains(item.storageID)).toList();
+
+    if (visibleDownloads.isEmpty) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -316,7 +338,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                     child: Text(AppLocalizations.of(context)!.fileList, style: theme.textTheme.titleMedium),
                   ),
                   Text(
-                    downloads.length.toString(),
+                    visibleDownloads.length.toString(),
                     style: theme.textTheme.labelLarge,
                   ),
                 ],
@@ -326,7 +348,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: downloads.length,
+                itemCount: visibleDownloads.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
@@ -335,10 +357,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   mainAxisExtent: 120,
                 ),
                 itemBuilder: (context, index) =>
-                    _buildDownloadedItemCard(downloads[index], activeAudioNewsId: activeAudioNewsId),
+                    _buildDownloadedItemCard(visibleDownloads[index], activeAudioNewsId: activeAudioNewsId),
               )
             else
-              ...downloads.map((item) => Padding(
+              ...visibleDownloads.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: _buildDownloadedItemCard(item, activeAudioNewsId: activeAudioNewsId),
                   )),
@@ -356,7 +378,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       key: ValueKey(item.storageID),
       direction: DismissDirection.endToStart,
       confirmDismiss: (_) => _confirmDeleteItem(context),
-      onDismissed: (_) => _deleteItem(item),
+      onDismissed: (_) => _dismissAndDeleteItem(item),
       background: const SizedBox.shrink(),
       secondaryBackground: Container(
         alignment: Alignment.centerRight,
