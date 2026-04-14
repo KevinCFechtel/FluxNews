@@ -328,18 +328,19 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: downloads.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: MediaQuery.of(context).size.width >= 1200 ? 3 : 2,
+                  crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   childAspectRatio: 2.7,
+                  mainAxisExtent: 120,
                 ),
                 itemBuilder: (context, index) =>
-                    _buildDownloadedItemCard(downloads[index], dense: true, activeAudioNewsId: activeAudioNewsId),
+                    _buildDownloadedItemCard(downloads[index], activeAudioNewsId: activeAudioNewsId),
               )
             else
               ...downloads.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildDownloadedItemCard(item, dense: false, activeAudioNewsId: activeAudioNewsId),
+                    child: _buildDownloadedItemCard(item, activeAudioNewsId: activeAudioNewsId),
                   )),
           ],
         ),
@@ -347,7 +348,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Widget _buildDownloadedItemCard(DownloadedAudioInfo item, {required bool dense, required int? activeAudioNewsId}) {
+  Widget _buildDownloadedItemCard(DownloadedAudioInfo item, {required int? activeAudioNewsId}) {
     final theme = Theme.of(context);
     final appState = context.watch<FluxNewsState>();
     final formattedDate = context.read<FluxNewsState>().dateFormat.format(item.downloadedAt.toLocal());
@@ -369,93 +370,86 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
           color: theme.colorScheme.onErrorContainer,
         ),
       ),
-      child: Material(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(14),
+      child: Card(
+        color: theme.colorScheme.surfaceContainerHighest,
+        shadowColor: Colors.black,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: () => _openDownloadedItem(item),
           child: Padding(
-            padding: EdgeInsets.all(dense ? 10 : 12),
-            child: Row(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: dense ? 48 : 56,
-                  height: dense ? 48 : 56,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.podcasts, color: theme.colorScheme.onPrimaryContainer),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FutureBuilder<String?>(
-                              future: _titleFutureForAttachmentId(item.attachmentID),
-                              builder: (context, snapshot) {
-                                final title = snapshot.data;
-                                return Text(
-                                  title != null && title.isNotEmpty ? title : item.fileName,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleSmall,
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          FutureBuilder<int?>(
-                            future: _newsIdFutureForAttachmentId(item.attachmentID),
-                            builder: (context, snapshot) {
-                              final isNowPlaying = activeAudioNewsId != null && snapshot.data == activeAudioNewsId;
-                              if (!isNowPlaying) {
-                                return const SizedBox.shrink();
-                              }
-
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.graphic_eq_rounded,
-                                      size: 14,
-                                      color: theme.colorScheme.onPrimaryContainer,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      AppLocalizations.of(context)!.play,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onPrimaryContainer,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      FutureBuilder<News?>(
-                        future: _newsFutureForAttachmentId(item.attachmentID),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FutureBuilder<String?>(
+                        future: _titleFutureForAttachmentId(item.attachmentID),
                         builder: (context, snapshot) {
-                          final news = snapshot.data;
-                          final feedTitle = news?.feedTitle;
-                          final meta = '${AudioDownloadService.formatBytes(item.fileSize)} • $formattedDate';
-                          return Row(
+                          final title = snapshot.data;
+                          return Text(
+                            title != null && title.isNotEmpty ? title : item.fileName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall,
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FutureBuilder<int?>(
+                      future: _newsIdFutureForAttachmentId(item.attachmentID),
+                      builder: (context, snapshot) {
+                        final isNowPlaying = activeAudioNewsId != null && snapshot.data == activeAudioNewsId;
+                        if (!isNowPlaying) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.graphic_eq_rounded,
+                                size: 14,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                AppLocalizations.of(context)!.play,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                FutureBuilder<News?>(
+                  future: _newsFutureForAttachmentId(item.attachmentID),
+                  builder: (context, snapshot) {
+                    final news = snapshot.data;
+                    final feedTitle = news?.feedTitle;
+                    final meta = news != null && news.getFormattedPlaybackTime().isNotEmpty
+                        ? '${news.getFormattedPlaybackTime()} • $formattedDate'
+                        : formattedDate;
+                    return Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -466,18 +460,24 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                                 ),
                               Expanded(
                                 child: Text(
-                                  feedTitle != null && feedTitle.isNotEmpty ? '$feedTitle • $meta' : meta,
-                                  maxLines: dense ? 1 : 2,
+                                  feedTitle != null && feedTitle.isNotEmpty ? feedTitle : meta,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodyMedium,
                                 ),
                               ),
                             ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                          ),
+                          feedTitle != null && feedTitle.isNotEmpty
+                              ? Text(
+                                  meta,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium,
+                                )
+                              : const SizedBox.shrink(),
+                        ]);
+                  },
                 ),
               ],
             ),

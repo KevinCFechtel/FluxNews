@@ -207,7 +207,7 @@
     "noActiveDownloads": "Aktuell laufen keine Downloads.",
     "from": "von",
     "loaded": "geladen",
-    "downloadedData": "Heruntergeladene Daten",
+    "downloadedData": "Heruntergeladene Audiodateien",
     "totalStorage": "Gesamtspeicher",
     "loadDownloadedDataError": "Die heruntergeladenen Dateien konnten nicht geladen werden.",
     "noAudioDownloads": "Es wurden noch keine Audiodateien heruntergeladen.",

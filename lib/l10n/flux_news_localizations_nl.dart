@@ -677,7 +677,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get loaded => 'loaded';
 
   @override
-  String get downloadedData => 'Downloaded data';
+  String get downloadedData => 'Downloaded audio files';
 
   @override
   String get totalStorage => 'Total storage';

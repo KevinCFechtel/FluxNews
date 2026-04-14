@@ -206,7 +206,7 @@
     "noActiveDownloads": "No active downloads.",
     "from": "from",
     "loaded": "loaded",
-    "downloadedData": "Downloaded data",
+    "downloadedData": "Downloaded audio files",
     "totalStorage": "Total storage",
     "loadDownloadedDataError": "Failed to load downloaded files.",
     "noAudioDownloads": "No audio files downloaded yet.",

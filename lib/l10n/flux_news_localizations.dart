@@ -1347,7 +1347,7 @@ abstract class AppLocalizations {
   /// No description provided for @downloadedData.
   ///
   /// In en, this message translates to:
-  /// **'Downloaded data'**
+  /// **'Downloaded audio files'**
   String get downloadedData;
 
   /// No description provided for @totalStorage.

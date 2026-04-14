@@ -689,7 +689,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loaded => 'geladen';
 
   @override
-  String get downloadedData => 'Heruntergeladene Daten';
+  String get downloadedData => 'Heruntergeladene Audiodateien';
 
   @override
   String get totalStorage => 'Gesamtspeicher';
