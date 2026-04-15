@@ -709,6 +709,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get useAudioPlayer => 'Audio-Items mit dem Audio Player öffnen';
 
   @override
+  String get showPlayerDetails => 'Player-Details anzeigen';
+
+  @override
+  String get hidePlayerDetails => 'Player-Details ausblenden';
+
+  @override
   String get advancedSettings => 'Erweiterte Einstellungen';
 
   @override

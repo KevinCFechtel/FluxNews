@@ -212,6 +212,8 @@
     "noAudioDownloads": "No audio files downloaded yet.",
     "fileList": "Episodes",
     "useAudioPlayer": "Open audio items with audio player",
+    "showPlayerDetails": "Show player details",
+    "hidePlayerDetails": "Hide player details",
     "advancedSettings": "Advanced Settings",
     "loadingChapters": "Loading chapters ...",
     "noChaptersFound": "No chapters found.",

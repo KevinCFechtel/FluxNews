@@ -1380,6 +1380,18 @@ abstract class AppLocalizations {
   /// **'Open audio items with audio player'**
   String get useAudioPlayer;
 
+  /// No description provided for @showPlayerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show player details'**
+  String get showPlayerDetails;
+
+  /// No description provided for @hidePlayerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide player details'**
+  String get hidePlayerDetails;
+
   /// No description provided for @advancedSettings.
   ///
   /// In en, this message translates to:

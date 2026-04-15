@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
@@ -191,6 +192,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   bool _sleepTimerEnabled = false;
   int _sleepTimerMinutes = 30;
   DateTime? _sleepTimerEndAt;
+  bool _showPlayerDetails = false;
 
   String? _activeUrl;
   int? _activeAttachmentID;
@@ -391,7 +393,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     return normalized;
   }
 
-  Future<void> _downloadAudio(Attachment attachment) async {
+  Future<void> _downloadAudio(Attachment attachment, News news) async {
     if (_downloadingAttachmentIDs.contains(attachment.attachmentID)) return;
     setState(() => _downloadingAttachmentIDs.add(attachment.attachmentID));
     try {
@@ -413,6 +415,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
           );
         }
       }
+      NewsList newsList = NewsList(news: [news], newsCount: 1);
+      await insertNewsInDB(newsList, widget.appState);
     } finally {
       if (mounted) {
         setState(() => _downloadingAttachmentIDs.remove(attachment.attachmentID));
@@ -844,371 +848,408 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       );
     }
 
+    final localizations = AppLocalizations.of(context)!;
+
     return Column(
-      children: _audioAttachments.map((attachment) {
-        final isActive = _activeAttachmentID == attachment.attachmentID;
-        final isPlaying = isActive && _playerState.playing;
-        final isPaused = isActive && !_playerState.playing && _playerState.processingState != ProcessingState.idle;
-        final isStopped = !isActive || _playerState.processingState == ProcessingState.idle;
-        final isDownloaded = _downloadedPaths.containsKey(attachment.attachmentID);
-        final isDownloading = _downloadingAttachmentIDs.contains(attachment.attachmentID);
-        final storageAttachmentID = _storageAttachmentIDFor(attachment);
-        final downloadProgress = _activeDownloadsByStorageAttachmentID[storageAttachmentID];
-        final downloadProgressValue = downloadProgress?.progress;
-        final isLoadingChapters = _loadingChapterAttachmentIDs.contains(attachment.attachmentID);
-        final chapters = _chaptersByAttachmentID[attachment.attachmentID] ?? const <AudioChapter>[];
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _showPlayerDetails = !_showPlayerDetails;
+              });
+            },
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: const Size(0, 32),
+            ),
+            icon: Icon(
+              _showPlayerDetails ? Icons.unfold_less : Icons.unfold_more,
+              size: 18,
+            ),
+            label: Text(
+              _showPlayerDetails ? localizations.hidePlayerDetails : localizations.showPlayerDetails,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ),
+        ..._audioAttachments.map((attachment) {
+          final isActive = _activeAttachmentID == attachment.attachmentID;
+          final isPlaying = isActive && _playerState.playing;
+          final isPaused = isActive && !_playerState.playing && _playerState.processingState != ProcessingState.idle;
+          final isStopped = !isActive || _playerState.processingState == ProcessingState.idle;
+          final isDownloaded = _downloadedPaths.containsKey(attachment.attachmentID);
+          final isDownloading = _downloadingAttachmentIDs.contains(attachment.attachmentID);
+          final storageAttachmentID = _storageAttachmentIDFor(attachment);
+          final downloadProgress = _activeDownloadsByStorageAttachmentID[storageAttachmentID];
+          final downloadProgressValue = downloadProgress?.progress;
+          final isLoadingChapters = _loadingChapterAttachmentIDs.contains(attachment.attachmentID);
+          final chapters = _chaptersByAttachmentID[attachment.attachmentID] ?? const <AudioChapter>[];
 
-        final parsedUri = Uri.tryParse(attachment.attachmentURL);
-        final fallbackMediaName = parsedUri != null && parsedUri.pathSegments.isNotEmpty
-            ? parsedUri.pathSegments.last
-            : attachment.attachmentMimeType;
-        final mediaName = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
-        final chapterListHeight = chapters.length > 4 ? 224.0 : chapters.length * 56.0;
-        final chapterScrollController = _chapterControllerFor(attachment.attachmentID);
+          final parsedUri = Uri.tryParse(attachment.attachmentURL);
+          final fallbackMediaName = parsedUri != null && parsedUri.pathSegments.isNotEmpty
+              ? parsedUri.pathSegments.last
+              : attachment.attachmentMimeType;
+          final mediaName = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
+          final chapterListHeight = chapters.length > 4 ? 224.0 : chapters.length * 56.0;
+          final chapterScrollController = _chapterControllerFor(attachment.attachmentID);
 
-        final maxMs = _duration.inMilliseconds > 0 ? _duration.inMilliseconds.toDouble() : 1.0;
-        final currentMs = isActive ? _position.inMilliseconds.toDouble().clamp(0.0, maxMs) : 0.0;
-        // Show saved position in time label before playback starts
-        final displayPosition = isActive ? _position : (_savedPosition ?? Duration.zero);
+          final maxMs = _duration.inMilliseconds > 0 ? _duration.inMilliseconds.toDouble() : 1.0;
+          final currentMs = isActive ? _position.inMilliseconds.toDouble().clamp(0.0, maxMs) : 0.0;
+          // Show saved position in time label before playback starts
+          final displayPosition = isActive ? _position : (_savedPosition ?? Duration.zero);
 
-        return Card(
-          margin: const EdgeInsets.only(top: 12),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Media name
-                Row(
-                  children: [
-                    Icon(Icons.headphones, size: 18, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        mediaName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                    IconButton(
-                      color: Theme.of(context).colorScheme.primary,
-                      tooltip: isDownloaded
-                          ? AppLocalizations.of(context)!.downloaded
-                          : AppLocalizations.of(context)!.downloadAudio,
-                      onPressed: isDownloaded || isDownloading ? null : () => _downloadAudio(attachment),
-                      icon: isDownloading
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                value: downloadProgressValue,
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                              ),
-                            )
-                          : Icon(
-                              isDownloaded ? Icons.download_done : Icons.download,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                      iconSize: 20,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Progress slider
-                Slider(
-                  value: currentMs,
-                  max: maxMs,
-                  onChanged: isActive
-                      ? (value) async {
-                          await _audioHandler!.seek(Duration(milliseconds: value.toInt()));
-                        }
-                      : null,
-                ),
-
-                // Time display
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return Card(
+            margin: const EdgeInsets.only(top: 12),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Media name
+                  Row(
                     children: [
-                      Text(
-                        _formatDuration(displayPosition),
-                        style: Theme.of(context).textTheme.bodySmall,
+                      Icon(Icons.headphones, size: 18, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          mediaName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ),
-                      Text(
-                        isActive && _duration > Duration.zero ? _formatDuration(_duration) : '--:--',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      IconButton(
+                        color: Theme.of(context).colorScheme.primary,
+                        tooltip: isDownloaded
+                            ? AppLocalizations.of(context)!.downloaded
+                            : AppLocalizations.of(context)!.downloadAudio,
+                        onPressed: isDownloaded || isDownloading ? null : () => _downloadAudio(attachment, widget.news),
+                        icon: isDownloading
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  value: downloadProgressValue,
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                ),
+                              )
+                            : Icon(
+                                isDownloaded ? Icons.download_done : Icons.download,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        iconSize: 20,
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 12),
 
-                const SizedBox(height: 8),
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: EdgeInsets.zero,
-                  title: Text(
-                    AppLocalizations.of(context)!.chapters,
-                    style: Theme.of(context).textTheme.titleSmall,
+                  // Progress slider
+                  Slider(
+                    value: currentMs,
+                    max: maxMs,
+                    onChanged: isActive
+                        ? (value) async {
+                            await _audioHandler!.seek(Duration(milliseconds: value.toInt()));
+                          }
+                        : null,
                   ),
-                  children: [
-                    if (isLoadingChapters)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+
+                  // Time display
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatDuration(displayPosition),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          isActive && _duration > Duration.zero ? _formatDuration(_duration) : '--:--',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+                  if (_showPlayerDetails) ...[
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: EdgeInsets.zero,
+                      shape: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+                      collapsedShape: LinearBorder.none,
+                      title: Text(
+                        localizations.chapters,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      children: [
+                        if (isLoadingChapters)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(localizations.loadingChapters),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Text(AppLocalizations.of(context)!.loadingChapters),
-                          ],
-                        ),
-                      )
-                    else if (chapters.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Center(
-                          child: Text(
-                            AppLocalizations.of(context)!.noChaptersFound,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      )
-                    else
-                      SizedBox(
-                        height: chapterListHeight,
-                        child: Scrollbar(
-                          controller: chapterScrollController,
-                          child: Builder(
-                            builder: (context) {
-                              final activeChapterIdx = isActive ? _activeChapterIndex(chapters, _position) : -1;
+                          )
+                        else if (chapters.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: Text(
+                                localizations.noChaptersFound,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            height: chapterListHeight,
+                            child: Scrollbar(
+                              controller: chapterScrollController,
+                              child: Builder(
+                                builder: (context) {
+                                  final activeChapterIdx = isActive ? _activeChapterIndex(chapters, _position) : -1;
 
-                              // Auto-Scroll zum aktiven Kapitel nach dem Build
-                              if (isActive && activeChapterIdx >= 0) {
-                                final previousAutoScrolledIdx =
-                                    _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID];
-                                if (previousAutoScrolledIdx != activeChapterIdx) {
-                                  _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID] =
-                                      activeChapterIdx;
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    _scrollToActiveChapter(
-                                      chapterScrollController,
-                                      activeChapterIdx,
-                                      56.0,
-                                    );
-                                  });
-                                }
-                              }
+                                  if (isActive && activeChapterIdx >= 0) {
+                                    final previousAutoScrolledIdx =
+                                        _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID];
+                                    if (previousAutoScrolledIdx != activeChapterIdx) {
+                                      _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID] =
+                                          activeChapterIdx;
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        _scrollToActiveChapter(
+                                          chapterScrollController,
+                                          activeChapterIdx,
+                                          56.0,
+                                        );
+                                      });
+                                    }
+                                  }
 
-                              return ListView.builder(
-                                controller: chapterScrollController,
-                                primary: false,
-                                padding: EdgeInsets.zero,
-                                itemCount: chapters.length,
-                                itemBuilder: (context, index) {
-                                  final chapter = chapters[index];
-                                  final isActiveChapter = index == activeChapterIdx;
-                                  return ListTile(
-                                    dense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    tileColor: isActiveChapter
-                                        ? Theme.of(context).colorScheme.primaryContainer.withAlpha(128)
-                                        : null,
-                                    title: Row(children: [
-                                      isActiveChapter
-                                          ? Icon(
-                                              Icons.play_arrow,
-                                              size: 16,
-                                              color: Theme.of(context).colorScheme.primary,
-                                            )
-                                          : const SizedBox(width: 16),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 4.0),
-                                        child: Text(
-                                          chapter.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: isActiveChapter
-                                              ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                                  )
-                                              : null,
+                                  return ListView.builder(
+                                    controller: chapterScrollController,
+                                    primary: false,
+                                    padding: EdgeInsets.zero,
+                                    itemCount: chapters.length,
+                                    itemBuilder: (context, index) {
+                                      final chapter = chapters[index];
+                                      final isActiveChapter = index == activeChapterIdx;
+                                      return ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        tileColor: isActiveChapter
+                                            ? Theme.of(context).colorScheme.primaryContainer.withAlpha(128)
+                                            : null,
+                                        title: Row(children: [
+                                          isActiveChapter
+                                              ? Icon(
+                                                  Icons.play_arrow,
+                                                  size: 16,
+                                                  color: Theme.of(context).colorScheme.primary,
+                                                )
+                                              : const SizedBox(width: 16),
+                                          Expanded(
+                                              child: Padding(
+                                            padding: const EdgeInsets.only(left: 4.0),
+                                            child: Text(
+                                              chapter.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: isActiveChapter
+                                                  ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                      )
+                                                  : Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                          )),
+                                        ]),
+                                        trailing: Text(
+                                          _formatChapterStart(chapter.start),
+                                          style: Theme.of(context).textTheme.bodySmall,
                                         ),
-                                      )
-                                    ]),
-                                    trailing: Text(_formatChapterStart(chapter.start)),
-                                    onTap: () => _seekToChapter(attachment, chapter),
+                                        onTap: () => _seekToChapter(attachment, chapter),
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 4),
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: EdgeInsets.zero,
-                  title: Text(
-                    AppLocalizations.of(context)!.advancedSettings,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  children: [
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.speed, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${AppLocalizations.of(context)!.speed}: ${_playbackSpeed.toStringAsFixed(1)}x (${_formatSignedAdjustment(_playbackSpeed - 1.0)})',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Slider(
-                      value: (_playbackSpeed - 1.0).clamp(-0.5, 2.0),
-                      min: -0.5,
-                      max: 2.0,
-                      divisions: 25,
-                      label: _formatSignedAdjustment(_playbackSpeed - 1.0),
-                      onChanged: (value) async {
-                        await _setPlaybackSpeedFromAdjustment(value);
-                      },
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(Icons.bedtime_outlined, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _formatSleepTimerLabel(),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                        Switch.adaptive(
-                          value: _sleepTimerEnabled,
-                          onChanged: (value) {
-                            _toggleSleepTimer(value);
-                          },
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(width: 26),
-                        Expanded(
-                          child: Text(
-                            AppLocalizations.of(context)!.interval,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                        DropdownButton<int>(
-                          value: _sleepTimerMinutes,
-                          onChanged: (value) {
-                            if (value != null) {
-                              _updateSleepTimerMinutes(value);
-                            }
-                          },
-                          items: _sleepTimerMinuteOptions
-                              .map((minutes) => DropdownMenuItem<int>(
-                                    value: minutes,
-                                    child: Text('$minutes ${AppLocalizations.of(context)!.minutes}'),
-                                  ))
-                              .toList(),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                  ],
-                ),
-
-                // Control buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Rewind 30s
-                    IconButton(
-                      tooltip: '-30s',
-                      onPressed: isActive ? () => _seek(const Duration(seconds: -30)) : null,
-                      icon: const Icon(Icons.replay_30),
-                      iconSize: 32,
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Play / Pause / Resume
-                    SizedBox(
-                      width: 72,
-                      height: 72,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          if (_isLoading && isActive)
-                            SizedBox(
-                              width: 64,
-                              height: 64,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Theme.of(context).colorScheme.primary,
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: EdgeInsets.zero,
+                      shape: LinearBorder.none,
+                      collapsedShape: LinearBorder.none,
+                      title: Text(
+                        localizations.advancedSettings,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      children: [
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.speed, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${localizations.speed}: ${_playbackSpeed.toStringAsFixed(1)}x (${_formatSignedAdjustment(_playbackSpeed - 1.0)})',
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
-                          IconButton(
-                            tooltip: isPlaying
-                                ? AppLocalizations.of(context)!.pause
-                                : isPaused
-                                    ? AppLocalizations.of(context)!.resume
-                                    : AppLocalizations.of(context)!.play,
-                            onPressed: () => _play(attachment),
-                            icon: Icon(
-                              isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                              color: Theme.of(context).colorScheme.primary,
+                          ],
+                        ),
+                        Slider(
+                          value: (_playbackSpeed - 1.0).clamp(-0.5, 2.0),
+                          min: -0.5,
+                          max: 2.0,
+                          divisions: 25,
+                          label: _formatSignedAdjustment(_playbackSpeed - 1.0),
+                          onChanged: (value) async {
+                            await _setPlaybackSpeedFromAdjustment(value);
+                          },
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.bedtime_outlined, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _formatSleepTimerLabel(),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                             ),
-                            iconSize: 56,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Stop
-                    IconButton(
-                      tooltip: AppLocalizations.of(context)!.stop,
-                      onPressed: isActive && !isStopped ? _stop : null,
-                      icon: const Icon(Icons.stop_circle_outlined),
-                      iconSize: 32,
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Forward 30s
-                    IconButton(
-                      tooltip: '+30s',
-                      onPressed: isActive ? () => _seek(const Duration(seconds: 30)) : null,
-                      icon: const Icon(Icons.forward_30),
-                      iconSize: 32,
+                            Switch.adaptive(
+                              value: _sleepTimerEnabled,
+                              onChanged: (value) {
+                                _toggleSleepTimer(value);
+                              },
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const SizedBox(width: 26),
+                            Expanded(
+                              child: Text(
+                                localizations.interval,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                            DropdownButton<int>(
+                              value: _sleepTimerMinutes,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  _updateSleepTimerMinutes(value);
+                                }
+                              },
+                              items: _sleepTimerMinuteOptions
+                                  .map((minutes) => DropdownMenuItem<int>(
+                                        value: minutes,
+                                        child: Text('$minutes ${localizations.minutes}'),
+                                      ))
+                                  .toList(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                     ),
                   ],
-                ),
-              ],
+
+                  // Control buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Rewind 30s
+                      IconButton(
+                        tooltip: '-30s',
+                        onPressed: isActive ? () => _seek(const Duration(seconds: -30)) : null,
+                        icon: const Icon(Icons.replay_30),
+                        iconSize: 32,
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Play / Pause / Resume
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (_isLoading && isActive)
+                              SizedBox(
+                                width: 64,
+                                height: 64,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            IconButton(
+                              tooltip: isPlaying
+                                  ? AppLocalizations.of(context)!.pause
+                                  : isPaused
+                                      ? AppLocalizations.of(context)!.resume
+                                      : AppLocalizations.of(context)!.play,
+                              onPressed: () => _play(attachment),
+                              icon: Icon(
+                                isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              iconSize: 56,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Stop
+                      IconButton(
+                        tooltip: AppLocalizations.of(context)!.stop,
+                        onPressed: isActive && !isStopped ? _stop : null,
+                        icon: const Icon(Icons.stop_circle_outlined),
+                        iconSize: 32,
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Forward 30s
+                      IconButton(
+                        tooltip: '+30s',
+                        onPressed: isActive ? () => _seek(const Duration(seconds: 30)) : null,
+                        icon: const Icon(Icons.forward_30),
+                        iconSize: 32,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }),
+      ],
     );
   }
 }

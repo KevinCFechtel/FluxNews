@@ -173,8 +173,10 @@ class FluxNews extends StatelessWidget {
             textTheme: const TextTheme(
               headlineMedium: TextStyle(color: Colors.black54),
               headlineSmall: TextStyle(color: Colors.black54),
+              bodySmall: TextStyle(color: Colors.black54),
               bodyMedium: TextStyle(color: Colors.black54),
               bodyLarge: TextStyle(color: Colors.black54),
+              titleSmall: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
               titleLarge: TextStyle(color: Colors.black54, fontSize: 18, fontWeight: FontWeight.bold),
               labelLarge: TextStyle(color: Colors.black54, fontSize: 16),
               labelMedium: TextStyle(color: Colors.black54),
@@ -225,8 +227,10 @@ class FluxNews extends StatelessWidget {
             textTheme: const TextTheme(
               headlineMedium: TextStyle(color: Colors.white70),
               headlineSmall: TextStyle(color: Colors.white70),
+              bodySmall: TextStyle(color: Colors.white70),
               bodyMedium: TextStyle(color: Colors.white70),
               bodyLarge: TextStyle(color: Colors.white70),
+              titleSmall: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
               titleLarge: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
               labelLarge: TextStyle(color: Colors.white70, fontSize: 16),
               labelMedium: TextStyle(color: Colors.white70),

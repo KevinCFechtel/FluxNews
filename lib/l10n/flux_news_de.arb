@@ -213,6 +213,8 @@
     "noAudioDownloads": "Es wurden noch keine Audiodateien heruntergeladen.",
     "fileList": "Folgen",
     "useAudioPlayer": "Audio-Items mit dem Audio Player öffnen",
+    "showPlayerDetails": "Player-Details anzeigen",
+    "hidePlayerDetails": "Player-Details ausblenden",
     "advancedSettings": "Erweiterte Einstellungen",
     "loadingChapters": "Kapitel werden geladen ...",
     "noChaptersFound": "Keine Kapitel gefunden.",

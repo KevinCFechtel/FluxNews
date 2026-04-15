@@ -695,6 +695,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get useAudioPlayer => 'Open audio items with audio player';
 
   @override
+  String get showPlayerDetails => 'Show player details';
+
+  @override
+  String get hidePlayerDetails => 'Hide player details';
+
+  @override
   String get advancedSettings => 'Advanced Settings';
 
   @override
