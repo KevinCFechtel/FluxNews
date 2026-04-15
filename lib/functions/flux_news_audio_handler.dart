@@ -103,6 +103,49 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   MediaItem? _currentMediaItem;
   String? _currentUrl;
+  ProcessingState _lastProcessingState = ProcessingState.idle;
+  bool _isHandlingCompletion = false;
+
+  Future<int?> _resolveCurrentAttachmentId() async {
+    final item = _currentMediaItem;
+    final extras = item?.extras;
+    final attachmentID = extras?['attachmentID'];
+    if (attachmentID is int) {
+      return attachmentID;
+    }
+
+    final mediaId = item?.id ?? _currentUrl;
+    final uri = mediaId == null ? null : Uri.tryParse(mediaId);
+    if (uri == null || uri.scheme != 'file') {
+      return null;
+    }
+
+    final filePath = uri.toFilePath();
+    final downloads = await AudioDownloadService.getDownloadedAudios();
+    final matched = downloads.where((download) => download.filePath == filePath).fold<DownloadedAudioInfo?>(
+          null,
+          (previous, download) => previous ?? download,
+        );
+
+    return matched?.attachmentID;
+  }
+
+  Future<void> _handleCompletedPlayback() async {
+    await _persistCurrentProgress(clear: true);
+
+    final deleteAfterPlaybackValue = await _storage.read(key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey);
+    final shouldDeleteAfterPlayback = deleteAfterPlaybackValue == FluxNewsState.secureStorageTrueString;
+    if (!shouldDeleteAfterPlayback) {
+      return;
+    }
+
+    final attachmentID = await _resolveCurrentAttachmentId();
+    if (attachmentID == null) {
+      return;
+    }
+
+    await AudioDownloadService.deleteDownloadedAudio(attachmentID);
+  }
 
   Future<List<MediaItem>> _buildDownloadedMediaItems() async {
     final downloads = await AudioDownloadService.getDownloadedAudios();
@@ -241,6 +284,24 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
     await session.setActive(true);
+
+    _player.playerStateStream.listen((state) {
+      final isCompleted = state.processingState == ProcessingState.completed;
+      final enteredCompletedState = isCompleted && _lastProcessingState != ProcessingState.completed;
+
+      if (enteredCompletedState && !_isHandlingCompletion) {
+        _isHandlingCompletion = true;
+        _handleCompletedPlayback().whenComplete(() {
+          _isHandlingCompletion = false;
+        }).ignore();
+      }
+
+      if (!isCompleted) {
+        _isHandlingCompletion = false;
+      }
+
+      _lastProcessingState = state.processingState;
+    });
 
     _player.playbackEventStream.listen((event) {
       playbackState.add(_buildPlaybackState());
