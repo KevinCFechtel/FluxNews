@@ -142,6 +142,10 @@ class AudioDownloadService {
     return attachment.attachmentID;
   }
 
+  static int resolveStorageAttachmentId(Attachment attachment) {
+    return _resolveStorageAttachmentId(attachment);
+  }
+
   static Future<String?> _findCachedFileForStorageAttachmentId(int storageAttachmentId) async {
     final appSupport = await getApplicationSupportDirectory();
     final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));

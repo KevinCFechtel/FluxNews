@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/android_url_launcher.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -172,6 +173,24 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
                 ),
               )
             ])),
+        // download audio
+        if (news.getAudioAttachments().isNotEmpty)
+          PopupMenuItem(
+              value: FluxNewsState.swipeActionDownloadString,
+              child: Row(children: [
+                const Padding(
+                  padding: EdgeInsets.only(right: 5),
+                  child: Icon(
+                    Icons.download,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context)!.downloadAudio,
+                    overflow: TextOverflow.visible,
+                  ),
+                )
+              ])),
       ]);
   switch (result) {
     case FluxNewsState.contextMenuBookmarkString:
@@ -224,6 +243,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
               uri: Uri.parse(news.url), sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
         }
       }
+      break;
+    case FluxNewsState.swipeActionDownloadString:
+      downloadAudioAction(news, appState, context);
       break;
   }
 }
@@ -315,6 +337,87 @@ Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildCont
       ScaffoldMessenger.of(context).showSnackBar(successflulSaveSnackBar);
     }
   }
+}
+
+void _showDownloadSnackBar(BuildContext context, String message) {
+  if (!context.mounted) {
+    return;
+  }
+
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(SnackBar(content: Text(message)));
+}
+
+Future<bool> _isAudioAlreadyDownloaded(Attachment attachment, FluxNewsState appState) async {
+  final downloadedPaths = await AudioDownloadService.loadDownloadedPathsForAttachments(
+    [attachment],
+    appState.audioDownloadRetentionDays,
+  );
+  return downloadedPaths[attachment.attachmentID] != null;
+}
+
+Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext context) async {
+  final audioAttachments = news.getAudioAttachments();
+  if (audioAttachments.isEmpty) {
+    return;
+  }
+
+  final attachment = audioAttachments.first;
+  final storageAttachmentId = AudioDownloadService.resolveStorageAttachmentId(attachment);
+  final isAlreadyDownloading =
+      AudioDownloadService.getActiveDownloadsSnapshot().any((progress) => progress.attachmentID == storageAttachmentId);
+  if (isAlreadyDownloading) {
+    _showDownloadSnackBar(context, AppLocalizations.of(context)!.runningDownloads);
+    return;
+  }
+
+  AudioDownloadService.cacheDownloadTitle(storageAttachmentId, news.title);
+  AudioDownloadService.cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+
+  if (await _isAudioAlreadyDownloaded(attachment, appState)) {
+    if (context.mounted) {
+      _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloaded);
+    }
+    return;
+  }
+
+  if (appState.downloadAudioOnlyOnWifi) {
+    final isWifiConnected = await AudioDownloadService.isWifiConnected();
+    if (!isWifiConnected) {
+      if (context.mounted) {
+        _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloadWLANWarning);
+      }
+      return;
+    }
+  }
+
+  if (context.mounted) {
+    _showDownloadSnackBar(context, AppLocalizations.of(context)!.runningDownloads);
+  }
+
+  unawaited(() async {
+    try {
+      final filePath = await AudioDownloadService.downloadAttachment(
+        attachment,
+        onlyOnWifi: appState.downloadAudioOnlyOnWifi,
+        news: news,
+      );
+
+      if (filePath != null) {
+        if (context.mounted) {
+          _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloaded);
+        }
+      }
+    } catch (error) {
+      logThis('downloadAudioAction', 'Caught an error in downloadAudioAction function! : ${error.toString()}',
+          LogLevel.ERROR);
+
+      if (context.mounted) {
+        _showDownloadSnackBar(context, AppLocalizations.of(context)!.loadDownloadedDataError);
+      }
+    }
+  }());
 }
 
 Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContext context, bool searchView,
@@ -830,6 +933,18 @@ List<Widget> getIOSContextMenuActions(
           AppLocalizations.of(context)!.open,
           overflow: TextOverflow.visible,
         )),
+    news.getAudioAttachments().isNotEmpty
+        ? CupertinoContextMenuAction(
+            onPressed: () async {
+              Navigator.pop(context);
+              await downloadAudioAction(news, appState, context);
+            },
+            trailingIcon: Icons.download,
+            child: Text(
+              AppLocalizations.of(context)!.downloadAudio,
+              overflow: TextOverflow.visible,
+            ))
+        : SizedBox.shrink(),
     news.commentsUrl.isNotEmpty
         ? CupertinoContextMenuAction(
             onPressed: () {

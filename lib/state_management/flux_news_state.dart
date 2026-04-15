@@ -137,6 +137,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionOpenMinifluxString = 'openMiniflux';
   static const String swipeActionShareString = 'share';
   static const String swipeActionOpenString = 'open';
+  static const String swipeActionDownloadString = 'downloadAudio';
   static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
@@ -1531,6 +1532,8 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
           KeyValueRecordType(
+              key: FluxNewsState.swipeActionDownloadString, value: AppLocalizations.of(context)!.downloadAudio),
+          KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesSecondSwipeActions = <KeyValueRecordType>[
@@ -1544,6 +1547,8 @@ class FluxNewsState extends ChangeNotifier {
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionDownloadString, value: AppLocalizations.of(context)!.downloadAudio),
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];

@@ -34,6 +34,7 @@ class NewsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
+    final hasAudioAttachment = news.getAudioAttachments().isNotEmpty;
     List<Widget> rightSwipeActions = [];
     List<Widget> leftSwipeActions = [];
     Widget bookmarkSlidableAction = Expanded(
@@ -139,6 +140,39 @@ class NewsRow extends StatelessWidget {
         ),
         onTap: () {
           saveToThirdPartyAction(news, appState, context);
+        },
+      ),
+    );
+    Widget downloadSlidableAction = Expanded(
+      child: InkWell(
+        child: Card(
+          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+              ? MediaQuery.of(context).platformBrightness == Brightness.dark
+                  ? const Color.fromARGB(200, 24, 115, 185)
+                  : const Color.fromARGB(220, 109, 192, 255)
+              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                  ? const Color.fromARGB(200, 24, 115, 185)
+                  : const Color.fromARGB(220, 109, 192, 255),
+          child: Padding(
+            padding: news.expanded ? EdgeInsets.only(top: 140) : EdgeInsets.zero,
+            child: Column(
+              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.download,
+                ),
+                Text(
+                  AppLocalizations.of(context)!.downloadAudio,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
+          ),
+        ),
+        onTap: () async {
+          await downloadAudioAction(news, appState, context);
         },
       ),
     );
@@ -309,6 +343,8 @@ class NewsRow extends StatelessWidget {
       leftSwipeActions.add(shareSlidableAction);
     } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenString) {
       leftSwipeActions.add(openAction);
+    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+      leftSwipeActions.add(downloadSlidableAction);
     } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
       leftSwipeActions.add(openCommentsAction);
     }
@@ -325,6 +361,8 @@ class NewsRow extends StatelessWidget {
       rightSwipeActions.add(shareSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
       rightSwipeActions.add(openAction);
+    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+      rightSwipeActions.add(downloadSlidableAction);
     } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
       rightSwipeActions.add(openCommentsAction);
     }
@@ -341,6 +379,8 @@ class NewsRow extends StatelessWidget {
       rightSwipeActions.add(shareSlidableAction);
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenString) {
       rightSwipeActions.add(openAction);
+    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+      rightSwipeActions.add(downloadSlidableAction);
     } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
       rightSwipeActions.add(openCommentsAction);
     }
@@ -357,6 +397,8 @@ class NewsRow extends StatelessWidget {
       leftSwipeActions.add(shareSlidableAction);
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
       leftSwipeActions.add(openAction);
+    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+      leftSwipeActions.add(downloadSlidableAction);
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
       leftSwipeActions.add(openCommentsAction);
     }
@@ -406,6 +448,8 @@ class NewsRow extends StatelessWidget {
                     } else {
                       openNewsAction(news, appState, context, false);
                     }
+                  } else if (appState.rightSwipeAction == FluxNewsState.swipeActionDownloadString) {
+                    await downloadAudioAction(news, appState, context);
                   } else if (appState.rightSwipeAction == FluxNewsState.swipeActionShareString) {
                     if (Platform.isAndroid) {
                       SharePlus.instance.share(ShareParams(
@@ -474,6 +518,8 @@ class NewsRow extends StatelessWidget {
                     } else {
                       openNewsAction(news, appState, context, false);
                     }
+                  } else if (appState.leftSwipeAction == FluxNewsState.swipeActionDownloadString) {
+                    await downloadAudioAction(news, appState, context);
                   } else if (appState.leftSwipeAction == FluxNewsState.swipeActionShareString) {
                     if (Platform.isAndroid) {
                       SharePlus.instance.share(ShareParams(
