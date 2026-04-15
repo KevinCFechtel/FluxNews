@@ -1415,6 +1415,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically delete audio downloads when finished'**
   String get autoDeleteDownloadAfterFinish;
+
+  /// No description provided for @downloadStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Download started'**
+  String get downloadStarted;
 }
 
 class _AppLocalizationsDelegate

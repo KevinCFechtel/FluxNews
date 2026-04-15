@@ -217,5 +217,6 @@
     "advancedSettings": "Advanced Settings",
     "loadingChapters": "Loading chapters ...",
     "noChaptersFound": "No chapters found.",
-    "autoDeleteDownloadAfterFinish": "Automatically delete audio downloads when finished"
+    "autoDeleteDownloadAfterFinish": "Automatically delete audio downloads when finished",
+    "downloadStarted": "Download started"
 }

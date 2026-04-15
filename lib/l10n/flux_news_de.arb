@@ -193,7 +193,7 @@
     "SleepTimerActive": "Sleep Timer: aktiv ",
     "SleepTimerRemaining": "min verbleibend",
     "downloaded": "Heruntergeladen",
-    "downloadAudio": "Audio herunterladen",
+    "downloadAudio": "Download Audio",
     "speed": "Geschwindigkeit",
     "chapters": "Kapitel",
     "interval": "Intervall",
@@ -218,5 +218,6 @@
     "advancedSettings": "Erweiterte Einstellungen",
     "loadingChapters": "Kapitel werden geladen ...",
     "noChaptersFound": "Keine Kapitel gefunden.",
-    "autoDeleteDownloadAfterFinish": "Audio Downloads nach dem Beenden automatisch löschen"
+    "autoDeleteDownloadAfterFinish": "Audio Downloads nach dem Beenden automatisch löschen",
+    "downloadStarted": "Download gestartet"
 }

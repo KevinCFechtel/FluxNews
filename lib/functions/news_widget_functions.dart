@@ -368,7 +368,7 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
   final isAlreadyDownloading =
       AudioDownloadService.getActiveDownloadsSnapshot().any((progress) => progress.attachmentID == storageAttachmentId);
   if (isAlreadyDownloading) {
-    _showDownloadSnackBar(context, AppLocalizations.of(context)!.runningDownloads);
+    _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloadStarted);
     return;
   }
 
@@ -393,7 +393,7 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
   }
 
   if (context.mounted) {
-    _showDownloadSnackBar(context, AppLocalizations.of(context)!.runningDownloads);
+    _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloadStarted);
   }
 
   unawaited(() async {

@@ -650,7 +650,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get downloaded => 'Heruntergeladen';
 
   @override
-  String get downloadAudio => 'Audio herunterladen';
+  String get downloadAudio => 'Download Audio';
 
   @override
   String get speed => 'Geschwindigkeit';
@@ -726,4 +726,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get autoDeleteDownloadAfterFinish =>
       'Audio Downloads nach dem Beenden automatisch löschen';
+
+  @override
+  String get downloadStarted => 'Download gestartet';
 }

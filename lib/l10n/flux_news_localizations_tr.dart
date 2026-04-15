@@ -710,4 +710,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get autoDeleteDownloadAfterFinish =>
       'Automatically delete audio downloads when finished';
+
+  @override
+  String get downloadStarted => 'Download started';
 }
