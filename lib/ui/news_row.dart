@@ -144,36 +144,39 @@ class NewsRow extends StatelessWidget {
       ),
     );
     Widget downloadSlidableAction = Expanded(
-      child: InkWell(
-        child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
-              ? MediaQuery.of(context).platformBrightness == Brightness.dark
-                  ? const Color.fromARGB(200, 24, 115, 185)
-                  : const Color.fromARGB(220, 109, 192, 255)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
-                  ? const Color.fromARGB(200, 24, 115, 185)
-                  : const Color.fromARGB(220, 109, 192, 255),
-          child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 140) : EdgeInsets.zero,
-            child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.download,
-                ),
-                Text(
-                  AppLocalizations.of(context)!.downloadAudio,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.visible,
-                ),
-              ],
+      child: Builder(
+        builder: (actionContext) => InkWell(
+          child: Card(
+            color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+                ? MediaQuery.of(context).platformBrightness == Brightness.dark
+                    ? const Color.fromARGB(200, 24, 115, 185)
+                    : const Color.fromARGB(220, 109, 192, 255)
+                : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                    ? const Color.fromARGB(200, 24, 115, 185)
+                    : const Color.fromARGB(220, 109, 192, 255),
+            child: Padding(
+              padding: news.expanded ? EdgeInsets.only(top: 140) : EdgeInsets.zero,
+              child: Column(
+                mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.download,
+                  ),
+                  Text(
+                    AppLocalizations.of(context)!.downloadAudio,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.visible,
+                  ),
+                ],
+              ),
             ),
           ),
+          onTap: () async {
+            Slidable.of(actionContext)?.close();
+            await downloadAudioAction(news, appState, context);
+          },
         ),
-        onTap: () async {
-          await downloadAudioAction(news, appState, context);
-        },
       ),
     );
     Widget openMinifluxAction = Expanded(
