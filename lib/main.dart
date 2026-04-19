@@ -9,6 +9,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/feed_settings.dart';
@@ -53,7 +54,10 @@ Future<void> main() async {
     FlutterLogs.clearLogs();
   }
 
-  await initFluxNewsAudioHandler();
+  final audioHandler = await initFluxNewsAudioHandler();
+  if (Platform.isIOS) {
+    initFluxNewsCarPlayService(audioHandler);
+  }
 
   runApp(const SDTFScope(child: FluxNews()));
 }

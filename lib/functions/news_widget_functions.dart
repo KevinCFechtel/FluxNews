@@ -194,42 +194,60 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       ]);
   switch (result) {
     case FluxNewsState.contextMenuBookmarkString:
-      bookmarkAction(news, appState, context, searchView);
+      if (context.mounted) {
+        bookmarkAction(news, appState, context, searchView);
+      }
       break;
     case FluxNewsState.unreadNewsStatus:
-      markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+      if (context.mounted) {
+        markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+      }
       break;
     case FluxNewsState.readNewsStatus:
-      markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+      if (context.mounted) {
+        markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+      }
       if (appState.removeNewsFromListWhenRead && !searchView) {
         newsList?.removeAt(itemIndex);
       }
       break;
     case FluxNewsState.contextMenuSaveString:
-      saveToThirdPartyAction(news, appState, context);
+      if (context.mounted) {
+        saveToThirdPartyAction(news, appState, context);
+      }
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
       if (news.status == FluxNewsState.unreadNewsStatus) {
-        openNewsAction(news, appState, context, true);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, true);
+        }
         if (appState.removeNewsFromListWhenRead && !searchView) {
           newsList?.removeAt(itemIndex);
         }
       } else {
-        openNewsAction(news, appState, context, true);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, true);
+        }
       }
       break;
     case FluxNewsState.contextMenuOpenString:
       if (news.status == FluxNewsState.unreadNewsStatus) {
-        openNewsAction(news, appState, context, false);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, false);
+        }
         if (appState.removeNewsFromListWhenRead && !searchView) {
           newsList?.removeAt(itemIndex);
         }
       } else {
-        openNewsAction(news, appState, context, false);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, false);
+        }
       }
       break;
     case FluxNewsState.swipeActionOpenCommentsString:
-      openNewsCommentsAction(news, context);
+      if (context.mounted) {
+        openNewsCommentsAction(news, context);
+      }
       break;
     case FluxNewsState.swipeActionShareString:
       if (Platform.isAndroid) {
@@ -245,7 +263,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       }
       break;
     case FluxNewsState.swipeActionDownloadString:
-      downloadAudioAction(news, appState, context);
+      if (context.mounted) {
+        downloadAudioAction(news, appState, context);
+      }
       break;
   }
 }

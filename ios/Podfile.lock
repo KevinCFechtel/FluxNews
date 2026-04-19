@@ -41,6 +41,8 @@ PODS:
     - DKImagePickerController/PhotoGallery
     - Flutter
   - Flutter (1.0.0)
+  - flutter_carplay (1.1.0):
+    - Flutter
   - flutter_logs (0.0.1):
     - Flutter
     - ZIPFoundation
@@ -76,6 +78,7 @@ DEPENDENCIES:
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
+  - flutter_carplay (from `.symlinks/plugins/flutter_carplay/ios`)
   - flutter_logs (from `.symlinks/plugins/flutter_logs/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
@@ -105,6 +108,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/file_picker/ios"
   Flutter:
     :path: Flutter
+  flutter_carplay:
+    :path: ".symlinks/plugins/flutter_carplay/ios"
   flutter_logs:
     :path: ".symlinks/plugins/flutter_logs/ios"
   flutter_native_splash:
@@ -132,6 +137,7 @@ SPEC CHECKSUMS:
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_carplay: 0e3f943484e00399dac7f599715ae6761288f0db
   flutter_logs: 30a36079651dcdfb260dbff875bf882bbbcaa22e
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
@@ -145,6 +151,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
 
-PODFILE CHECKSUM: 0dbd5a87e0ace00c9610d2037ac22083a01f861d
+PODFILE CHECKSUM: 7d3949c7ca138a860b6bec31eac6928e9bdf8e37
 
 COCOAPODS: 1.16.2
