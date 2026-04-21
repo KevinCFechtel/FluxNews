@@ -14,6 +14,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     window = UIWindow(windowScene: windowScene)
     let controller = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
+    controller.view.backgroundColor = .systemBackground
+    window?.backgroundColor = .systemBackground
     window?.rootViewController = controller
     window?.makeKeyAndVisible()
   }
