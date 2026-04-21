@@ -16,6 +16,7 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:path/path.dart' as path;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class AudioChapter {
   const AudioChapter({
@@ -95,20 +96,91 @@ class AudioDownloadService {
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
 
-  // Cache for download titles (attachmentID → news title) used by Android Auto
+  static const String _downloadTitleKeyPrefix = FluxNewsState.downloadTitleKeyPrefix;
+  static const String _downloadFeedTitleKeyPrefix = FluxNewsState.downloadFeedTitleKeyPrefix;
+
+  // Cache for download titles (attachmentID → news title) used by CarPlay / Android Auto
   static final _downloadTitleCache = <int, String>{};
   static final _downloadFeedTitleCache = <int, String>{};
 
   static void cacheDownloadTitle(int attachmentID, String title) {
     _downloadTitleCache[attachmentID] = title;
+    _storage.write(key: '$_downloadTitleKeyPrefix$attachmentID', value: title);
   }
 
   static void cacheDownloadFeedTitle(int attachmentID, String feedTitle) {
     _downloadFeedTitleCache[attachmentID] = feedTitle;
+    _storage.write(key: '$_downloadFeedTitleKeyPrefix$attachmentID', value: feedTitle);
   }
 
   static String? getDownloadTitle(int attachmentID) => _downloadTitleCache[attachmentID];
   static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
+
+  /// Loads titles into the memory cache for the given downloads.
+  /// Checks memory cache → SecureStorage → SQLite DB (headless-safe).
+  static Future<void> loadTitlesForDownloads(List<DownloadedAudioInfo> downloads) async {
+    final needsLookup = <int>[];
+    for (final d in downloads) {
+      final id = d.attachmentID;
+      if (id < 0) continue;
+      if (_downloadTitleCache.containsKey(id)) continue;
+      final title = await _storage.read(key: '$_downloadTitleKeyPrefix$id');
+      final feedTitle = await _storage.read(key: '$_downloadFeedTitleKeyPrefix$id');
+      if (title != null && title.isNotEmpty) _downloadTitleCache[id] = title;
+      if (feedTitle != null && feedTitle.isNotEmpty) _downloadFeedTitleCache[id] = feedTitle;
+      if (!_downloadTitleCache.containsKey(id)) needsLookup.add(id);
+    }
+
+    if (needsLookup.isEmpty) return;
+
+    // Fall back to a direct read-only query of the SQLite database.
+    Database? db;
+    try {
+      databaseFactory = databaseFactoryFfi;
+      final dbPath = await _resolveDatabasePath();
+      if (dbPath == null || !await File(dbPath).exists()) return;
+
+      db = await databaseFactoryFfi.openDatabase(dbPath);
+      for (final id in needsLookup) {
+        final rows = await db.rawQuery(
+          '''SELECT news.title, news.feedTitle
+             FROM attachments
+             INNER JOIN news ON attachments.newsID = news.newsID
+             WHERE attachments.attachmentID = ?
+             LIMIT 1''',
+          [id],
+        );
+        if (rows.isEmpty) continue;
+        final title = rows.first['title'] as String?;
+        final feedTitle = rows.first['feedTitle'] as String?;
+        if (title != null && title.isNotEmpty) cacheDownloadTitle(id, title);
+        if (feedTitle != null && feedTitle.isNotEmpty) cacheDownloadFeedTitle(id, feedTitle);
+      }
+    } catch (_) {
+      // DB unavailable — titles will fall back to filenames
+    } finally {
+      await db?.close();
+    }
+  }
+
+  static Future<String?> _resolveDatabasePath() async {
+    try {
+      if (Platform.isIOS) {
+        final libraryDir = await getLibraryDirectory();
+        return p.join(libraryDir.path, FluxNewsState.databasePathString);
+      } else {
+        final appSupport = await getApplicationSupportDirectory();
+        final parts = appSupport.path.split('/');
+        var dir = '/';
+        for (int i = 0; i < parts.length - 1; i++) {
+          if (parts[i].isNotEmpty) dir = p.join(dir, parts[i]);
+        }
+        return p.join(dir, FluxNewsState.androidDatabaseDirectory, FluxNewsState.databasePathString);
+      }
+    } catch (_) {
+      return null;
+    }
+  }
 
   static String _downloadPathKey(int attachmentID) => '$_downloadPathKeyPrefix$attachmentID';
   static String _downloadPathByUrlKey(String attachmentURL) {
@@ -1027,6 +1099,12 @@ class AudioDownloadService {
     }
     await _storage.delete(key: _downloadPathKey(attachmentID));
     await _storage.delete(key: _downloadTimestampKey(attachmentID));
+    if (attachmentID >= 0) {
+      await _storage.delete(key: '$_downloadTitleKeyPrefix$attachmentID');
+      await _storage.delete(key: '$_downloadFeedTitleKeyPrefix$attachmentID');
+      _downloadTitleCache.remove(attachmentID);
+      _downloadFeedTitleCache.remove(attachmentID);
+    }
     _emitDownloadedAudiosChanged();
   }
 
@@ -1045,6 +1123,10 @@ class AudioDownloadService {
     if (attachmentID >= 0) {
       await _storage.delete(key: _downloadPathKey(attachmentID));
       await _storage.delete(key: _downloadTimestampKey(attachmentID));
+      await _storage.delete(key: '$_downloadTitleKeyPrefix$attachmentID');
+      await _storage.delete(key: '$_downloadFeedTitleKeyPrefix$attachmentID');
+      _downloadTitleCache.remove(attachmentID);
+      _downloadFeedTitleCache.remove(attachmentID);
     }
 
     _emitDownloadedAudiosChanged();
@@ -1086,6 +1168,10 @@ class AudioDownloadService {
         if (attachmentID >= 0) {
           await _storage.delete(key: _downloadPathKey(attachmentID));
           await _storage.delete(key: _downloadTimestampKey(attachmentID));
+          await _storage.delete(key: '$_downloadTitleKeyPrefix$attachmentID');
+          await _storage.delete(key: '$_downloadFeedTitleKeyPrefix$attachmentID');
+          _downloadTitleCache.remove(attachmentID);
+          _downloadFeedTitleCache.remove(attachmentID);
         }
         _emitDownloadedAudiosChanged();
       }
@@ -1233,6 +1319,10 @@ class AudioDownloadService {
         downloadedFilePath: filePath,
         news: news,
       );
+      if (news != null && storageAttachmentId >= 0) {
+        cacheDownloadTitle(storageAttachmentId, news.title);
+        cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+      }
       _emitDownloadedAudiosChanged();
       _removeActiveDownload(storageAttachmentId);
 
