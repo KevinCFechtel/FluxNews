@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -19,9 +20,10 @@ class DownloadsOverview extends StatefulWidget {
 class _DownloadsOverviewState extends State<DownloadsOverview> {
   late Future<List<DownloadedAudioInfo>> _downloadsFuture;
   StreamSubscription<void>? _downloadedAudiosChangedSubscription;
+  FluxNewsAudioHandler? _audioHandler;
+  StreamSubscription<dynamic>? _mediaItemSubscription;
   final Map<int, Future<String?>> _titleFutureByAttachmentId = {};
   final Map<int, Future<News?>> _newsFutureByAttachmentId = {};
-  final Map<int, Future<int?>> _newsIdFutureByAttachmentId = {};
   final Set<String> _dismissedStorageIds = {};
 
   @override
@@ -32,11 +34,19 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       if (!mounted) return;
       setState(_reload);
     });
+    initFluxNewsAudioHandler().then((handler) {
+      if (!mounted) return;
+      setState(() => _audioHandler = handler);
+      _mediaItemSubscription = handler.mediaItem.listen((_) {
+        if (mounted) setState(() {});
+      });
+    });
   }
 
   @override
   void dispose() {
     _downloadedAudiosChangedSubscription?.cancel();
+    _mediaItemSubscription?.cancel();
     super.dispose();
   }
 
@@ -44,7 +54,6 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     _downloadsFuture = AudioDownloadService.getDownloadedAudios();
     _titleFutureByAttachmentId.clear();
     _newsFutureByAttachmentId.clear();
-    _newsIdFutureByAttachmentId.clear();
     _dismissedStorageIds.clear();
   }
 
@@ -85,22 +94,6 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     return _newsFutureByAttachmentId.putIfAbsent(
       attachmentID,
       () => _getNewsByAttachmentId(attachmentID),
-    );
-  }
-
-  Future<int?> _getNewsIdByAttachmentId(int attachmentID) async {
-    if (attachmentID < 0) {
-      return null;
-    }
-
-    final appState = context.read<FluxNewsState>();
-    return queryNewsIdByAttachmentId(appState, attachmentID);
-  }
-
-  Future<int?> _newsIdFutureForAttachmentId(int attachmentID) {
-    return _newsIdFutureByAttachmentId.putIfAbsent(
-      attachmentID,
-      () => _getNewsIdByAttachmentId(attachmentID),
     );
   }
 
@@ -161,7 +154,6 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final activeAudioNewsId = context.watch<FluxNewsState>().activeAudioNews?.newsID;
     FluxNewsState appState = context.watch<FluxNewsState>();
     return Scaffold(
       appBar: AppBar(
@@ -201,7 +193,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                       children: [
                         _buildRunningDownloadsCard(),
                         const SizedBox(height: 16),
-                        _buildDownloadedList(downloads, appState.isTablet, activeAudioNewsId),
+                        _buildDownloadedList(downloads, appState.isTablet),
                       ],
                     ),
                   ),
@@ -309,7 +301,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Widget _buildDownloadedList(List<DownloadedAudioInfo> downloads, bool isTablet, int? activeAudioNewsId) {
+  Widget _buildDownloadedList(List<DownloadedAudioInfo> downloads, bool isTablet) {
     final theme = Theme.of(context);
     final visibleDownloads = downloads.where((item) => !_dismissedStorageIds.contains(item.storageID)).toList();
 
@@ -356,13 +348,12 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   childAspectRatio: 2.7,
                   mainAxisExtent: 120,
                 ),
-                itemBuilder: (context, index) =>
-                    _buildDownloadedItemCard(visibleDownloads[index], activeAudioNewsId: activeAudioNewsId),
+                itemBuilder: (context, index) => _buildDownloadedItemCard(visibleDownloads[index]),
               )
             else
               ...visibleDownloads.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildDownloadedItemCard(item, activeAudioNewsId: activeAudioNewsId),
+                    child: _buildDownloadedItemCard(item),
                   )),
           ],
         ),
@@ -370,7 +361,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Widget _buildDownloadedItemCard(DownloadedAudioInfo item, {required int? activeAudioNewsId}) {
+  Widget _buildDownloadedItemCard(DownloadedAudioInfo item) {
     final theme = Theme.of(context);
     final appState = context.watch<FluxNewsState>();
     final formattedDate = context.read<FluxNewsState>().dateFormat.format(item.downloadedAt.toLocal());
@@ -421,10 +412,11 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    FutureBuilder<int?>(
-                      future: _newsIdFutureForAttachmentId(item.attachmentID),
-                      builder: (context, snapshot) {
-                        final isNowPlaying = activeAudioNewsId != null && snapshot.data == activeAudioNewsId;
+                    Builder(
+                      builder: (context) {
+                        final currentUrl = _audioHandler?.currentUrl;
+                        final fileUri = Uri.file(item.filePath).toString();
+                        final isNowPlaying = currentUrl == fileUri;
                         if (!isNowPlaying) {
                           return const SizedBox.shrink();
                         }

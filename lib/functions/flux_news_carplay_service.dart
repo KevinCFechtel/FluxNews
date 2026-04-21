@@ -25,24 +25,45 @@ class FluxNewsCarPlayService {
       _setupCarPlayTemplates();
     }
 
-    // Headless launch: the connected event may fire before Dart is listening.
-    // After a short delay, attempt setup unconditionally — forceUpdateRootTemplate
-    // is a no-op when the CarPlay interface controller is not connected.
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!_isConnected) {
-        _setupCarPlayTemplates();
-      }
-    });
+    // Headless launch: the connected event fires before Dart's listener is ready,
+    // and the CarPlay interface controller may not be available immediately.
+    // Retry at increasing intervals until setup succeeds or CarPlay disconnects.
+    _scheduleHeadlessRetry(const [2, 5, 10, 20]);
 
     _downloadsChangedSubscription = AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
       refreshIfConnected();
+    });
+
+    _mediaItemSubscription = _audioHandler.mediaItem.listen((_) {
+      _updateNowPlayingIndicator();
     });
   }
 
   final FlutterCarplay _carplay = FlutterCarplay();
   final FluxNewsAudioHandler _audioHandler;
   bool _isConnected = false;
+  bool _headlessSetupDone = false;
+  CPListTemplate? _rootTemplate;
+  // fileUri → CPListItem; stable IDs allow setIsPlaying() to find items on the native side
+  final Map<String, CPListItem> _episodeItems = {};
   StreamSubscription<void>? _downloadsChangedSubscription;
+  StreamSubscription<dynamic>? _mediaItemSubscription;
+
+  void _scheduleHeadlessRetry(List<int> remainingDelays) {
+    if (remainingDelays.isEmpty) return;
+    Future.delayed(Duration(seconds: remainingDelays.first), () async {
+      if (_headlessSetupDone) return;
+      final isConnected = _isConnected || FlutterCarplay.connectionStatus == ConnectionStatusTypes.connected.name;
+      if (isConnected) {
+        _isConnected = true;
+        _rootTemplate = null;
+        await _setupCarPlayTemplates();
+        _headlessSetupDone = true;
+      } else {
+        _scheduleHeadlessRetry(remainingDelays.sublist(1));
+      }
+    });
+  }
 
   String _localizedEpisodesTitle() {
     final locale = ui.PlatformDispatcher.instance.locale;
@@ -52,19 +73,41 @@ class FluxNewsCarPlayService {
   void _onConnectionStatusChanged(ConnectionStatusTypes status) {
     _isConnected = status == ConnectionStatusTypes.connected;
     if (_isConnected) {
+      _headlessSetupDone = true;
+      // Reset so _setupCarPlayTemplates always uses setRootTemplate +
+      // forceUpdateRootTemplate with the new interfaceController on reconnect.
+      _rootTemplate = null;
       _setupCarPlayTemplates();
     }
   }
 
   Future<void> _setupCarPlayTemplates() async {
-    final template = await _buildEpisodesTemplate();
-    await FlutterCarplay.setRootTemplate(rootTemplate: template, animated: false);
-    await _carplay.forceUpdateRootTemplate();
+    final sections = await _buildEpisodesSections();
+    if (_rootTemplate == null) {
+      final template = CPListTemplate(
+        sections: sections,
+        title: FluxNewsState.applicationName,
+        systemIcon: 'music.note',
+      );
+      _rootTemplate = template;
+      await FlutterCarplay.setRootTemplate(rootTemplate: template, animated: false);
+      await _carplay.forceUpdateRootTemplate();
+    } else {
+      await _carplay.updateListTemplateSections(
+        elementId: _rootTemplate!.uniqueId,
+        sections: sections,
+      );
+    }
   }
 
-  Future<CPListTemplate> _buildEpisodesTemplate() async {
+  Future<List<CPListSection>> _buildEpisodesSections() async {
     final downloads = await AudioDownloadService.getDownloadedAudios();
     await AudioDownloadService.loadTitlesForDownloads(downloads);
+    final currentPlayingId = _audioHandler.currentUrl;
+
+    // Rebuild item map with stable IDs derived from fileUri so that
+    // setIsPlaying() can find the correct native CPListItem by elementId.
+    _episodeItems.clear();
     final items = <CPListItem>[];
 
     for (final download in downloads) {
@@ -80,17 +123,26 @@ class FluxNewsCarPlayService {
       }
 
       final capturedUri = fileUri;
-      items.add(
-        CPListItem(
-          text: title,
-          detailText: feedTitle,
-          onPress: (completer, item) async {
+      final item = CPListItem(
+        id: fileUri,
+        text: title,
+        detailText: feedTitle,
+        isPlaying: fileUri == currentPlayingId,
+        playingIndicatorLocation: CPListItemPlayingIndicatorLocation.leading,
+        onPress: (completer, item) async {
+          try {
             await _audioHandler.playFromMediaId(capturedUri);
+            // Give the playback state time to propagate to CarPlay before
+            // navigating — without this delay CarPlay may not show NowPlaying.
+            //await Future.delayed(const Duration(milliseconds: 500));
             FlutterCarplay.showSharedNowPlaying(animated: true);
+          } finally {
             completer();
-          },
-        ),
+          }
+        },
       );
+      _episodeItems[fileUri] = item;
+      items.add(item);
     }
 
     final section = CPListSection(
@@ -99,11 +151,17 @@ class FluxNewsCarPlayService {
       sectionIndexEnabled: false,
     );
 
-    return CPListTemplate(
-      sections: [section],
-      title: FluxNewsState.applicationName,
-      systemIcon: 'music.note.list',
-    );
+    return [section];
+  }
+
+  /// Updates only the isPlaying indicator on existing items without rebuilding
+  /// the whole template. Requires stable item IDs (set via id: fileUri).
+  void _updateNowPlayingIndicator() {
+    if (!_isConnected || _episodeItems.isEmpty) return;
+    final currentUrl = _audioHandler.currentUrl;
+    for (final entry in _episodeItems.entries) {
+      entry.value.setIsPlaying(entry.key == currentUrl);
+    }
   }
 
   /// Call this after a download completes or is deleted to refresh the CarPlay list.
@@ -116,6 +174,7 @@ class FluxNewsCarPlayService {
   void dispose() {
     if (!Platform.isIOS) return;
     _downloadsChangedSubscription?.cancel();
+    _mediaItemSubscription?.cancel();
     _carplay.removeListenerOnConnectionChange();
   }
 }
