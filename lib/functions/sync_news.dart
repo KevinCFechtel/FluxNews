@@ -80,7 +80,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       }
       return NewsList(news: [], newsCount: 0);
     });
-    if (!appState.longSyncAborted) {
+    if (!appState.longSyncAborted && appState.errorString == '') {
       // if news in this app are marked as unread, but don't exist in the list from
       // the previous step, this news must be marked as read by another app.
       // So this step mark news, which are not fetched previous as read in this app.
@@ -131,7 +131,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       });
     }
 
-    if (!appState.longSyncAborted) {
+    if (!appState.longSyncAborted && appState.errorString == '') {
       // insert or update the fetched news in the database
       await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
         logThis('insertNewsInDB', 'Caught an error in insertNewsInDB function! : ${error.toString()}', LogLevel.ERROR);
@@ -284,12 +284,16 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     appState.syncProcess = false;
     appState.refreshView();
   } else {
-    // end the sync process
+    // Auth failed or network error before sync — load locally cached news as fallback.
+    appState.newsList = queryNewsFromDB(appState);
+    if (context.mounted) {
+      try {
+        updateStarredCounter(appState, context);
+        await renewAllNewsCount(appState, context);
+      } catch (_) {}
+    }
     appState.syncProcess = false;
     appState.refreshView();
-    // remove the native splash after updating the list view
-    // Moved to the beginning of sync
-    //FlutterNativeSplash.remove();
   }
   if (appState.debugMode) {
     // Debugging execution time with many news
