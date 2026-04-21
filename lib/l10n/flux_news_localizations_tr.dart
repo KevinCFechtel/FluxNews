@@ -429,6 +429,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get skipLongSync => 'Skip long sync dialog';
 
   @override
+  String get syncReadStatusImmediately =>
+      'Immediately sync read status to server';
+
+  @override
   String get headerSettings =>
       'Set additional custom headers for accessing Miniflux';
 

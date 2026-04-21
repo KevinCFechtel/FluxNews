@@ -461,13 +461,24 @@ Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContex
   // of the news counter
   news.status = FluxNewsState.readNewsStatus;
 
+  if (appState.syncReadStatusImmediately) {
+    unawaited(pushNewsStatusToServer(
+      [news.newsID],
+      FluxNewsState.readNewsStatus,
+      appState,
+      context.mounted ? ScaffoldMessenger.of(context) : null,
+      context.mounted ? AppLocalizations.of(context)!.communicateionMinifluxError : '',
+    ));
+  }
   if (searchView) {
-    // update the news status at the miniflux server
-    try {
-      toggleOneNewsAsRead(appState, news);
-    } catch (e) {
-      logThis(
-          'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+    // update the news status at the miniflux server (search view always syncs immediately)
+    if (!appState.syncReadStatusImmediately) {
+      try {
+        toggleOneNewsAsRead(appState, news);
+      } catch (e) {
+        logThis(
+            'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+      }
     }
     // update the news list of the main view
     appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
@@ -507,13 +518,24 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
   // set the new unread status to the news object and toggle the recalculation
   // of the news counter
   news.status = FluxNewsState.unreadNewsStatus;
+  if (appState.syncReadStatusImmediately) {
+    unawaited(pushNewsStatusToServer(
+      [news.newsID],
+      FluxNewsState.unreadNewsStatus,
+      appState,
+      context.mounted ? ScaffoldMessenger.of(context) : null,
+      context.mounted ? AppLocalizations.of(context)!.communicateionMinifluxError : '',
+    ));
+  }
   if (searchView) {
-    // update the news status at the miniflux server
-    try {
-      toggleOneNewsAsRead(appState, news);
-    } catch (e) {
-      logThis(
-          'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+    // update the news status at the miniflux server (search view always syncs immediately)
+    if (!appState.syncReadStatusImmediately) {
+      try {
+        toggleOneNewsAsRead(appState, news);
+      } catch (e) {
+        logThis(
+            'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+      }
     }
     // update the news list of the main view
     appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
@@ -549,6 +571,15 @@ Future<void> openNewsAction(
         appState.refreshView();
       }
     }
+  }
+  if (appState.syncReadStatusImmediately && context.mounted) {
+    unawaited(pushNewsStatusToServer(
+      [news.newsID],
+      FluxNewsState.readNewsStatus,
+      appState,
+      ScaffoldMessenger.of(context),
+      AppLocalizations.of(context)!.communicateionMinifluxError,
+    ));
   }
   // update the status to read on the news list and notify the categories
   // to recalculate the news count
@@ -647,8 +678,29 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
               TextButton(
                 child: Text(AppLocalizations.of(context)!.ok),
                 onPressed: () async {
+                  // capture context-dependent values before async gap
+                  final messenger = appState.syncReadStatusImmediately
+                      ? ScaffoldMessenger.of(context)
+                      : null;
+                  final errorMsg = appState.syncReadStatusImmediately
+                      ? AppLocalizations.of(context)!.communicateionMinifluxError
+                      : '';
+                  // collect IDs before marking so we can push to server
+                  final List<int> idsToSync = appState.syncReadStatusImmediately
+                      ? await queryUnreadNewsIDsForCurrentView(appState)
+                      : <int>[];
                   // mark news as read
                   markNewsAsReadInDB(appState);
+                  if (appState.syncReadStatusImmediately && idsToSync.isNotEmpty) {
+                    unawaited(pushNewsStatusToServer(
+                      idsToSync,
+                      FluxNewsState.readNewsStatus,
+                      appState,
+                      messenger,
+                      errorMsg,
+                    ));
+                  }
+                  if (!context.mounted) return;
                   if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
                     await queryNextCategoryFromDB(appState, context).then((value) {
                       if (context.mounted) {

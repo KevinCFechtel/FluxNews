@@ -439,6 +439,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unterdrücke den Dialog zur langsamen Synchronisation';
 
   @override
+  String get syncReadStatusImmediately =>
+      'Gelesenenstatus sofort an den Server senden';
+
+  @override
   String get headerSettings =>
       'Setze zusätzliche Header für den Miniflux Zugriff';
 

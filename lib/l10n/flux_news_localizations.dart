@@ -876,6 +876,12 @@ abstract class AppLocalizations {
   /// **'Skip long sync dialog'**
   String get skipLongSync;
 
+  /// No description provided for @syncReadStatusImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately sync read status to server'**
+  String get syncReadStatusImmediately;
+
   /// No description provided for @headerSettings.
   ///
   /// In en, this message translates to:

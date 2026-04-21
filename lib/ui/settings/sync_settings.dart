@@ -482,6 +482,37 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   ),
                 ],
               ),
+              const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.sync,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.syncReadStatusImmediately,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.syncReadStatusImmediately,
+                    onChanged: (bool value) {
+                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      if (value == true) {
+                        stringValue = FluxNewsState.secureStorageTrueString;
+                      }
+                      appState.syncReadStatusImmediately = value;
+                      appState.storage.write(
+                          key: FluxNewsState.secureStorageSyncReadStatusImmediatelyKey, value: stringValue);
+                      appState.refreshView();
+                    },
+                  ),
+                ],
+              ),
             ])));
   }
 }

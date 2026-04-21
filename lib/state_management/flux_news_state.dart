@@ -108,6 +108,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
   static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
   static const String secureStorageSkipLongSyncKey = 'skipLongSync';
+  static const String secureStorageSyncReadStatusImmediatelyKey = 'syncReadStatusImmediately';
   static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
   static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
   static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
@@ -305,6 +306,7 @@ class FluxNewsState extends ChangeNotifier {
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
+  bool syncReadStatusImmediately = false;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
   bool glassAppBar = Platform.isIOS ? true : false;
@@ -2153,6 +2155,17 @@ class FluxNewsState extends ChangeNotifier {
             skipLongSync = true;
           } else {
             skipLongSync = false;
+          }
+        }
+      }
+
+      // assign the sync read status immediately selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSyncReadStatusImmediatelyKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            syncReadStatusImmediately = true;
+          } else {
+            syncReadStatusImmediately = false;
           }
         }
       }

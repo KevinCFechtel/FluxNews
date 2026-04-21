@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -175,6 +178,7 @@ class BodyNewsList extends StatelessWidget {
                                   // to ensure that the list is at the bottom edge and not at the top edge
                                   // the amount of scrolled pixels must be greater 0
                                   // iterate through the whole news list and mark news as read
+                                  final List<int> scrollIds = [];
                                   for (int i = 0; i < snapshot.data!.length; i++) {
                                     try {
                                       updateNewsStatusInDB(
@@ -193,15 +197,26 @@ class BodyNewsList extends StatelessWidget {
                                         context.read<FluxNewsState>().refreshView();
                                       }
                                     }
+                                    scrollIds.add(snapshot.data![i].newsID);
                                     snapshot.data![i].status = FluxNewsState.readNewsStatus;
                                     // set the scroll position back to the top of the list
                                     appState.scrollPosition = 0;
+                                  }
+                                  if (appState.syncReadStatusImmediately && scrollIds.isNotEmpty) {
+                                    unawaited(pushNewsStatusToServer(
+                                      scrollIds,
+                                      FluxNewsState.readNewsStatus,
+                                      appState,
+                                      ScaffoldMessenger.of(context),
+                                      AppLocalizations.of(context)!.communicateionMinifluxError,
+                                    ));
                                   }
                                 } else {
                                   // if the list doesn't reached the bottom,
                                   // mark the news which got scrolled over as read.
                                   // Iterate through the news list from start
                                   // to the actual position and mark them as read
+                                  final List<int> scrollIds = [];
                                   for (int i = 0; i < appState.scrollPosition; i++) {
                                     if (snapshot.data![i].status != FluxNewsState.readNewsStatus) {
                                       try {
@@ -219,8 +234,18 @@ class BodyNewsList extends StatelessWidget {
                                           appState.refreshView();
                                         }
                                       }
+                                      scrollIds.add(snapshot.data![i].newsID);
                                       snapshot.data![i].status = FluxNewsState.readNewsStatus;
                                     }
+                                  }
+                                  if (appState.syncReadStatusImmediately && scrollIds.isNotEmpty) {
+                                    unawaited(pushNewsStatusToServer(
+                                      scrollIds,
+                                      FluxNewsState.readNewsStatus,
+                                      appState,
+                                      ScaffoldMessenger.of(context),
+                                      AppLocalizations.of(context)!.communicateionMinifluxError,
+                                    ));
                                   }
                                 }
                               }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cronet_http/cronet_http.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -552,6 +553,51 @@ Future<void> toggleOneNewsAsRead(FluxNewsState appState, News news) async {
   }
   if (appState.debugMode) {
     logThis('toggleOneNewsAsRead', 'Finished toggle one news as read at miniflux server', LogLevel.INFO);
+  }
+}
+
+/// Sends the read/unread status of the given [newsIDs] to the Miniflux server
+/// in the background. Shows a snackbar via [scaffoldMessenger] on failure.
+Future<void> pushNewsStatusToServer(
+  List<int> newsIDs,
+  String status,
+  FluxNewsState appState,
+  ScaffoldMessengerState? scaffoldMessenger,
+  String errorMessage,
+) async {
+  if (newsIDs.isEmpty) return;
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) return;
+
+  try {
+    final Client client;
+    if (Platform.isAndroid) {
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+      client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+    } else {
+      client = IOClient(HttpClient());
+    }
+    final header = {
+      FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+      FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+    };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
+    final body = ReadNewsList(newsIds: newsIDs, status: status);
+    final response = await client.put(
+      Uri.parse('${appState.minifluxURL!}entries'),
+      headers: header,
+      body: jsonEncode(body),
+    );
+    client.close();
+    if (response.statusCode != 204) {
+      logThis('pushNewsStatusToServer',
+          'Unexpected response ${response.statusCode} for IDs $newsIDs', LogLevel.ERROR);
+      scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
+  } catch (e) {
+    logThis('pushNewsStatusToServer', 'Error syncing status to server: ${e.toString()}', LogLevel.ERROR);
+    scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
   }
 }
 

@@ -904,6 +904,32 @@ void markNewsAsReadInDB(FluxNewsState appState) async {
   }
 }
 
+/// Returns the IDs of all currently unread news that would be marked as read
+/// by [markNewsAsReadInDB] for the current view selection.
+Future<List<int>> queryUnreadNewsIDsForCurrentView(FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return [];
+
+  List<Map<String, Object?>> rows = [];
+  if (appState.selectedCategoryElementType == FluxNewsState.allNewsElementType) {
+    rows = await appState.db!
+        .rawQuery('SELECT newsID FROM news WHERE status = ?', [FluxNewsState.unreadNewsStatus]);
+  } else if (appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType) {
+    rows = await appState.db!.rawQuery('SELECT newsID FROM news WHERE starred = ?', [1]);
+  } else if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType ||
+      appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+    if (appState.feedIDs != null) {
+      for (final feedID in appState.feedIDs!) {
+        final feedRows = await appState.db!.rawQuery(
+            'SELECT newsID FROM news WHERE status = ? AND feedID = ?',
+            [FluxNewsState.unreadNewsStatus, feedID]);
+        rows = [...rows, ...feedRows];
+      }
+    }
+  }
+  return rows.map((r) => r['newsID'] as int).toList();
+}
+
 // update the counter of the bookmarked news
 void updateStarredCounter(FluxNewsState appState, BuildContext context) async {
   FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
