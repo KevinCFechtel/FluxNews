@@ -558,15 +558,30 @@ Future<void> toggleOneNewsAsRead(FluxNewsState appState, News news) async {
 
 /// Sends the read/unread status of the given [newsIDs] to the Miniflux server
 /// in the background. Shows a snackbar via [scaffoldMessenger] on failure.
+/// When [suppressAfterFirstError] is true (scroll-over path), the snackbar is
+/// shown only on the first failure; subsequent failures are suppressed until a
+/// successful full sync resets [FluxNewsState.scrolloverSyncFailed].
 Future<void> pushNewsStatusToServer(
   List<int> newsIDs,
   String status,
   FluxNewsState appState,
   ScaffoldMessengerState? scaffoldMessenger,
-  String errorMessage,
-) async {
+  String errorMessage, {
+  bool suppressAfterFirstError = false,
+}) async {
   if (newsIDs.isEmpty) return;
   if (appState.minifluxURL == null || appState.minifluxAPIKey == null) return;
+
+  void handleError() {
+    if (suppressAfterFirstError) {
+      if (!appState.scrolloverSyncFailed) {
+        appState.scrolloverSyncFailed = true;
+        scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } else {
+      scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
+  }
 
   try {
     final Client client;
@@ -593,11 +608,11 @@ Future<void> pushNewsStatusToServer(
     if (response.statusCode != 204) {
       logThis('pushNewsStatusToServer',
           'Unexpected response ${response.statusCode} for IDs $newsIDs', LogLevel.ERROR);
-      scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+      handleError();
     }
   } catch (e) {
     logThis('pushNewsStatusToServer', 'Error syncing status to server: ${e.toString()}', LogLevel.ERROR);
-    scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+    handleError();
   }
 }
 

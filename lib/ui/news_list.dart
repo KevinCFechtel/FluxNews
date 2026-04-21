@@ -209,6 +209,7 @@ class BodyNewsList extends StatelessWidget {
                                       appState,
                                       ScaffoldMessenger.of(context),
                                       AppLocalizations.of(context)!.communicateionMinifluxError,
+                                      suppressAfterFirstError: true,
                                     ));
                                   }
                                 } else {
@@ -245,6 +246,7 @@ class BodyNewsList extends StatelessWidget {
                                       appState,
                                       ScaffoldMessenger.of(context),
                                       AppLocalizations.of(context)!.communicateionMinifluxError,
+                                      suppressAfterFirstError: true,
                                     ));
                                   }
                                 }

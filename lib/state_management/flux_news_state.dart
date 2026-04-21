@@ -307,6 +307,7 @@ class FluxNewsState extends ChangeNotifier {
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
   bool syncReadStatusImmediately = false;
+  bool scrolloverSyncFailed = false;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
   bool glassAppBar = Platform.isIOS ? true : false;

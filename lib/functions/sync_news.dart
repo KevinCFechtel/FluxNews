@@ -282,6 +282,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     // end the sync process
     appState.syncProcess = false;
+    appState.scrolloverSyncFailed = false;
     appState.refreshView();
   } else {
     // Auth failed or network error before sync — load locally cached news as fallback.
