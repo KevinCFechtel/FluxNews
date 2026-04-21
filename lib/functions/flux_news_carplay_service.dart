@@ -43,6 +43,7 @@ class FluxNewsCarPlayService {
   Future<void> _setupCarPlayTemplates() async {
     final template = await _buildEpisodesTemplate();
     await FlutterCarplay.setRootTemplate(rootTemplate: template, animated: false);
+    await _carplay.forceUpdateRootTemplate();
   }
 
   Future<CPListTemplate> _buildEpisodesTemplate() async {

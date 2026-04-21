@@ -205,6 +205,7 @@ class FluxNewsState extends ChangeNotifier {
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
   bool syncNow = false;
+  bool startUp = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);

@@ -40,6 +40,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     }
 
     return FluxNewsBodyStatefulWrapper(onInit: () {
+      appState.startUp = true;
+      appState.syncProcess = true;
       initConfig(context, appState);
       appState.categoryList = queryCategoriesFromDB(appState, context);
 
@@ -140,6 +142,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         }
       }
 
+      appState.startUp = false;
+
       if (appState.syncOnStart || appState.syncNow) {
         // sync on startup or now
         if (context.mounted) {
@@ -153,6 +157,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             updateStarredCounter(appState, context);
             await renewAllNewsCount(appState, context);
           }
+          appState.syncProcess = false;
         } catch (e) {
           logThis('initConfig', 'Caught an error in initConfig function!', LogLevel.ERROR);
 
@@ -163,6 +168,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               appState.refreshView();
             }
           }
+          appState.syncProcess = false;
         }
         FlutterNativeSplash.remove();
       }
@@ -185,6 +191,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         // show the welcome screen once before the login screen on first app start
         Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
       } else {
+        appState.startUp = false;
         // if everything is fine with the settings, present the list view
         appState.refreshView();
       }
@@ -195,7 +202,11 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     bool useSliverAppBar = appState.useSliverAppBar;
     if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
-      useSliverAppBar = false;
+      if (appState.startUp) {
+        useSliverAppBar = true;
+      } else {
+        useSliverAppBar = false;
+      }
     } else if (appState.errorString != '' && appState.newError) {
       useSliverAppBar = false;
     } else if (appState.longSync) {
@@ -1018,7 +1029,8 @@ class FluxNewsBodyList extends StatelessWidget {
     // if errors had occurred, the error widget is returned
     // if the miniflux settings are incorrect a corresponding message is shown
     // otherwise the normal list view is returned
-    if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
+    if ((appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) &&
+        !appState.startUp) {
       return const NoSettings();
     } else if (appState.errorString != '' && appState.newError) {
       return const ErrorWidget();
