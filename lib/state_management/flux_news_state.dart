@@ -175,6 +175,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String artworkFilePrefix = 'artwork_';
   static const String downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
   static const String androidDefaultArtworkProviderAuthority = 'de.circle_dev.flux_news.defaultart';
+  static const String downloadTitleKeyPrefix = 'flux_download_title_';
+  static const String downloadFeedTitleKeyPrefix = 'flux_download_feed_title_';
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*
@@ -205,6 +207,7 @@ class FluxNewsState extends ChangeNotifier {
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
   bool syncNow = false;
+  bool startUp = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
