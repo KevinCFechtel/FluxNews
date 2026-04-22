@@ -27,7 +27,7 @@ import '../models/news_model.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
 
-class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
+class FluxNewsBody extends StatelessWidget {
   const FluxNewsBody({super.key});
 
   @override
@@ -39,15 +39,24 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       appState.isTablet = false;
     }
 
-    return FluxNewsBodyStatefulWrapper(onInit: () {
-      appState.startUp = true;
-      appState.syncProcess = true;
-      initConfig(context, appState);
-      appState.categoryList = queryCategoriesFromDB(appState, context);
-
-      appState.newsList = Future<List<News>>.value([]);
-      WidgetsBinding.instance.addObserver(this);
-    }, child: OrientationBuilder(
+    return FluxNewsBodyStatefulWrapper(
+      onInit: () {
+        appState.startUp = true;
+        appState.syncProcess = true;
+        initConfig(context, appState);
+        appState.categoryList = queryCategoriesFromDB(appState, context);
+        appState.newsList = Future<List<News>>.value([]);
+      },
+      onResume: () {
+        // Re-initialize config if a headless CarPlay launch left storageValues
+        // empty (readAll failed while screen was locked). Now that the app is
+        // in the foreground, the Keychain is accessible again.
+        if (appState.minifluxURL == null && !appState.syncProcess) {
+          logThis('FluxNewsBody', 'Resumed with null minifluxURL — re-running initConfig', LogLevel.INFO);
+          initConfig(context, appState);
+        }
+      },
+      child: OrientationBuilder(
       builder: (context, orientation) {
         appState.orientation = orientation;
 
@@ -64,6 +73,12 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
     // read persistent saved config
     bool completed = await appState.readConfigValues();
+
+    // One-time migration: rewrite all Keychain items with first_unlock
+    // accessibility so they are accessible during headless CarPlay launches.
+    if (appState.storageValues.isNotEmpty) {
+      appState.migrateKeychainAccessibility().ignore();
+    }
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
@@ -756,7 +771,11 @@ class PersistentAudioMiniPlayer extends StatefulWidget {
 class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   FluxNewsAudioHandler? _audioHandler;
   StreamSubscription<PlaybackState>? _completionSubscription;
-  final _storage = const sec_store.FlutterSecureStorage();
+  final _storage = sec_store.FlutterSecureStorage(
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
 
   @override
   void initState() {
@@ -1608,20 +1627,35 @@ class FeedTile extends StatelessWidget {
 
 class FluxNewsBodyStatefulWrapper extends StatefulWidget {
   final Function onInit;
+  final Function onResume;
   final Widget child;
-  const FluxNewsBodyStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsBodyStatefulWrapper({super.key, required this.onInit, required this.onResume, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }
 
 // extend class to save actual scroll state of the list view
 class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
-    with AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper> {
+    with AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper>, WidgetsBindingObserver {
   // init the state of FluxNewsBody to load the config and the data on startup
   @override
   void initState() {
     widget.onInit();
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.onResume();
+    }
   }
 
   @override

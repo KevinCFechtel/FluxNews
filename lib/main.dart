@@ -48,14 +48,40 @@ Future<void> main() async {
         isDebuggable: kDebugMode ? true : false);
 
     // clear the logs on startup
-    FlutterLogs.clearLogs();
+    // NOTE: disabled temporarily to preserve headless CarPlay launch logs.
+    // Re-enable once CarPlay cold-start is confirmed working.
+    // FlutterLogs.clearLogs();
   }
 
-  final audioHandler = await initFluxNewsAudioHandler();
+  if (Platform.isAndroid || Platform.isIOS) {
+    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'App starting — platform: ${Platform.operatingSystem}');
+  }
+
+  // Start audio handler init without blocking — on iOS, AudioService.init()
+  // may hang in headless CarPlay launch (no UIWindowScene). The handler is
+  // cached; any code that needs it calls initFluxNewsAudioHandler() and awaits.
+  if (Platform.isAndroid || Platform.isIOS) {
+    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'Starting AudioService.init() asynchronously');
+  }
+  final audioHandlerFuture = initFluxNewsAudioHandler();
+  audioHandlerFuture.then((_) {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'AudioService.init() completed');
+    }
+  }).onError((e, _) {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterLogs.logError(FluxNewsState.logTag, 'main', 'AudioService.init() failed: $e');
+    }
+  });
+
   if (Platform.isIOS) {
-    initFluxNewsCarPlayService(audioHandler);
+    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'Initializing CarPlay service');
+    initFluxNewsCarPlayService(audioHandlerFuture);
   }
 
+  if (Platform.isAndroid || Platform.isIOS) {
+    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'Calling runApp()');
+  }
   runApp(const SDTFScope(child: FluxNews()));
 }
 

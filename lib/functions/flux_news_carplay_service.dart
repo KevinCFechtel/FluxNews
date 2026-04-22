@@ -2,68 +2,71 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_carplay/flutter_carplay.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 
 FluxNewsCarPlayService? _fluxNewsCarPlayService;
 
-FluxNewsCarPlayService initFluxNewsCarPlayService(FluxNewsAudioHandler audioHandler) {
-  _fluxNewsCarPlayService ??= FluxNewsCarPlayService._(audioHandler);
+FluxNewsCarPlayService initFluxNewsCarPlayService(Future<FluxNewsAudioHandler> audioHandlerFuture) {
+  _fluxNewsCarPlayService ??= FluxNewsCarPlayService._(audioHandlerFuture);
   return _fluxNewsCarPlayService!;
 }
 
 class FluxNewsCarPlayService {
-  FluxNewsCarPlayService._(this._audioHandler) {
+  FluxNewsCarPlayService._(Future<FluxNewsAudioHandler> audioHandlerFuture) {
     if (!Platform.isIOS) return;
+
+    logThis('CarPlayService', 'Service init', LogLevel.INFO);
+
+    // Wire up audio-handler-dependent listeners once the handler is ready.
+    // We don't await here so CarPlay setup starts immediately without blocking
+    // on AudioService.init().
+    audioHandlerFuture.then((handler) {
+      logThis('CarPlayService', 'AudioHandler ready — wiring up mediaItem listener', LogLevel.INFO);
+      _audioHandler = handler;
+      _mediaItemSubscription = handler.mediaItem.listen((_) {
+        _updateNowPlayingIndicator();
+      });
+    }).onError((e, _) {
+      logThis('CarPlayService', 'AudioHandler future failed: $e', LogLevel.ERROR);
+    });
+
     _carplay.addListenerOnConnectionChange(_onConnectionStatusChanged);
 
-    if (FlutterCarplay.connectionStatus == ConnectionStatusTypes.connected.name) {
-      _setupCarPlayTemplates();
-    }
-
-    // Headless launch: the connected event fires before Dart's listener is ready,
-    // and the CarPlay interface controller may not be available immediately.
-    // Retry at increasing intervals until setup succeeds or CarPlay disconnects.
-    _scheduleHeadlessRetry(const [2, 5, 10, 20]);
+    // Always attempt setup at init. In headless launch, templateApplicationScene
+    // (_:didConnect:) fires before Dart's listener is registered, so the
+    // "connected" event is lost — but interfaceController IS already set by iOS
+    // at this point. forceUpdateRootTemplate() uses optional chaining
+    // (interfaceController?.setRootTemplate), so it is a safe nil no-op when
+    // CarPlay is not connected at all.
+    _setupCarPlayTemplates();
 
     _downloadsChangedSubscription = AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
+      logThis('CarPlayService', 'Downloads changed — triggering refresh', LogLevel.INFO);
       refreshIfConnected();
     });
 
-    _mediaItemSubscription = _audioHandler.mediaItem.listen((_) {
-      _updateNowPlayingIndicator();
-    });
+    _audioHandlerFuture = audioHandlerFuture;
   }
 
   final FlutterCarplay _carplay = FlutterCarplay();
-  final FluxNewsAudioHandler _audioHandler;
+  Future<FluxNewsAudioHandler>? _audioHandlerFuture;
+  FluxNewsAudioHandler? _audioHandler;
   bool _isConnected = false;
-  bool _headlessSetupDone = false;
+  bool _setupInProgress = false;
+  bool _pendingRefresh = false;
   CPListTemplate? _rootTemplate;
   // fileUri → CPListItem; stable IDs allow setIsPlaying() to find items on the native side
   final Map<String, CPListItem> _episodeItems = {};
   StreamSubscription<void>? _downloadsChangedSubscription;
   StreamSubscription<dynamic>? _mediaItemSubscription;
-
-  void _scheduleHeadlessRetry(List<int> remainingDelays) {
-    if (remainingDelays.isEmpty) return;
-    Future.delayed(Duration(seconds: remainingDelays.first), () async {
-      if (_headlessSetupDone) return;
-      final isConnected = _isConnected || FlutterCarplay.connectionStatus == ConnectionStatusTypes.connected.name;
-      if (isConnected) {
-        _isConnected = true;
-        _rootTemplate = null;
-        await _setupCarPlayTemplates();
-        _headlessSetupDone = true;
-      } else {
-        _scheduleHeadlessRetry(remainingDelays.sublist(1));
-      }
-    });
-  }
 
   String _localizedEpisodesTitle() {
     final locale = ui.PlatformDispatcher.instance.locale;
@@ -72,38 +75,92 @@ class FluxNewsCarPlayService {
 
   void _onConnectionStatusChanged(ConnectionStatusTypes status) {
     _isConnected = status == ConnectionStatusTypes.connected;
-    if (_isConnected) {
-      _headlessSetupDone = true;
+    logThis('CarPlayService', 'Connection status changed → $status (_isConnected=$_isConnected)', LogLevel.INFO);
+    if (status == ConnectionStatusTypes.background) {
+      // Pre-build the template while the app is still in the background so it
+      // is ready the moment the user focuses our app (connected event fires).
+      // Do NOT reset _rootTemplate here — keep any existing template so that
+      // the connected handler can force a clean rebuild with the new controller.
+      logThis('CarPlayService', 'Background event — preloading template', LogLevel.INFO);
+      _setupCarPlayTemplates();
+    } else if (_isConnected) {
       // Reset so _setupCarPlayTemplates always uses setRootTemplate +
       // forceUpdateRootTemplate with the new interfaceController on reconnect.
       _rootTemplate = null;
+      // Re-activate audio session — iOS may have suspended it during inactivity.
+      AudioSession.instance.then((session) => session.setActive(true)).ignore();
       _setupCarPlayTemplates();
     }
   }
 
   Future<void> _setupCarPlayTemplates() async {
-    final sections = await _buildEpisodesSections();
-    if (_rootTemplate == null) {
-      final template = CPListTemplate(
-        sections: sections,
-        title: FluxNewsState.applicationName,
-        systemIcon: 'music.note',
-      );
-      _rootTemplate = template;
-      await FlutterCarplay.setRootTemplate(rootTemplate: template, animated: false);
-      await _carplay.forceUpdateRootTemplate();
-    } else {
-      await _carplay.updateListTemplateSections(
-        elementId: _rootTemplate!.uniqueId,
-        sections: sections,
-      );
+    if (_setupInProgress) {
+      logThis('CarPlayService', '_setupCarPlayTemplates skipped — setup already in progress, pendingRefresh set', LogLevel.INFO);
+      _pendingRefresh = true;
+      return;
+    }
+    _setupInProgress = true;
+    _pendingRefresh = false;
+    logThis('CarPlayService', '_setupCarPlayTemplates start — rootTemplate=${_rootTemplate == null ? "null (will setRoot)" : "exists (will update)"}', LogLevel.INFO);
+    try {
+      final sections = await _buildEpisodesSections();
+      if (_rootTemplate == null) {
+        final template = CPListTemplate(
+          sections: sections,
+          title: FluxNewsState.applicationName,
+          systemIcon: 'music.note',
+        );
+        _rootTemplate = template;
+        logThis('CarPlayService', 'Calling setRootTemplate', LogLevel.INFO);
+        await FlutterCarplay.setRootTemplate(rootTemplate: template, animated: false);
+        logThis('CarPlayService', 'setRootTemplate done — calling forceUpdateRootTemplate', LogLevel.INFO);
+        await _carplay.forceUpdateRootTemplate();
+        logThis('CarPlayService', 'forceUpdateRootTemplate done', LogLevel.INFO);
+        // Explicitly push sections after setRootTemplate — flutter_carplay does
+        // not always render sections from the constructor until this is called.
+        logThis('CarPlayService', 'Calling updateListTemplateSections after setRoot', LogLevel.INFO);
+        await _carplay.updateListTemplateSections(
+          elementId: _rootTemplate!.uniqueId,
+          sections: sections,
+        );
+        logThis('CarPlayService', 'updateListTemplateSections after setRoot done', LogLevel.INFO);
+        // Second forceUpdate after a short delay — interfaceController may not
+        // be fully ready on headless launch when the first call fires.
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (_isConnected) {
+            logThis('CarPlayService', 'Delayed forceUpdateRootTemplate (500ms)', LogLevel.INFO);
+            _carplay.forceUpdateRootTemplate().ignore();
+          }
+        });
+      } else {
+        logThis('CarPlayService', 'Calling updateListTemplateSections', LogLevel.INFO);
+        await _carplay.updateListTemplateSections(
+          elementId: _rootTemplate!.uniqueId,
+          sections: sections,
+        );
+        logThis('CarPlayService', 'updateListTemplateSections done', LogLevel.INFO);
+      }
+    } catch (e) {
+      logThis('CarPlayService', '_setupCarPlayTemplates error: $e', LogLevel.ERROR);
+      // Reset so the next attempt re-tries setRootTemplate instead of
+      // updateListTemplateSections on a template that was never accepted.
+      _rootTemplate = null;
+    } finally {
+      _setupInProgress = false;
+      if (_pendingRefresh) {
+        logThis('CarPlayService', 'pendingRefresh — re-running setup', LogLevel.INFO);
+        _pendingRefresh = false;
+        _setupCarPlayTemplates();
+      }
     }
   }
 
   Future<List<CPListSection>> _buildEpisodesSections() async {
     final downloads = await AudioDownloadService.getDownloadedAudios();
+    logThis('CarPlayService', '_buildEpisodesSections: ${downloads.length} downloads — loading titles', LogLevel.INFO);
     await AudioDownloadService.loadTitlesForDownloads(downloads);
-    final currentPlayingId = _audioHandler.currentUrl;
+    final currentPlayingId = _audioHandler?.currentUrl;
+    logThis('CarPlayService', '_buildEpisodesSections: titles loaded, currentPlayingId=$currentPlayingId', LogLevel.INFO);
 
     // Rebuild item map with stable IDs derived from fileUri so that
     // setIsPlaying() can find the correct native CPListItem by elementId.
@@ -130,12 +187,18 @@ class FluxNewsCarPlayService {
         isPlaying: fileUri == currentPlayingId,
         playingIndicatorLocation: CPListItemPlayingIndicatorLocation.leading,
         onPress: (completer, item) async {
+          logThis('CarPlayService', 'Item pressed: $capturedUri', LogLevel.INFO);
           try {
-            await _audioHandler.playFromMediaId(capturedUri);
-            // Give the playback state time to propagate to CarPlay before
-            // navigating — without this delay CarPlay may not show NowPlaying.
-            //await Future.delayed(const Duration(milliseconds: 500));
+            logThis('CarPlayService', 'Awaiting AudioHandler (timeout 15s)', LogLevel.INFO);
+            final handler = await _audioHandlerFuture!
+                .timeout(const Duration(seconds: 15));
+            logThis('CarPlayService', 'AudioHandler ready — calling playFromMediaId', LogLevel.INFO);
+            await handler.playFromMediaId(capturedUri)
+                .timeout(const Duration(seconds: 15));
+            logThis('CarPlayService', 'playFromMediaId done — showing NowPlaying', LogLevel.INFO);
             FlutterCarplay.showSharedNowPlaying(animated: true);
+          } catch (e) {
+            logThis('CarPlayService', 'onPress error (timeout or playback failure): $e', LogLevel.ERROR);
           } finally {
             completer();
           }
@@ -158,7 +221,7 @@ class FluxNewsCarPlayService {
   /// the whole template. Requires stable item IDs (set via id: fileUri).
   void _updateNowPlayingIndicator() {
     if (!_isConnected || _episodeItems.isEmpty) return;
-    final currentUrl = _audioHandler.currentUrl;
+    final currentUrl = _audioHandler?.currentUrl;
     for (final entry in _episodeItems.entries) {
       entry.value.setIsPlaying(entry.key == currentUrl);
     }

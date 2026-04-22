@@ -26,7 +26,12 @@ sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
 
 class FluxNewsState extends ChangeNotifier {
   // init the persistent flutter secure storage
-  final storage = sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
+  final storage = sec_store.FlutterSecureStorage(
+    aOptions: _getAndroidOptions(),
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
@@ -1444,11 +1449,41 @@ class FluxNewsState extends ChangeNotifier {
   Future<bool> readConfigValues() async {
     logThis('readConfigValues', 'Starting read config values', LogLevel.INFO);
 
-    storageValues = await storage.readAll();
+    try {
+      // Timeout guards against the headless CarPlay case: if the device was
+      // never unlocked since boot, pre-migration WhenUnlocked Keychain items
+      // would make readAll() hang indefinitely.
+      storageValues = await storage.readAll().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      logThis('readConfigValues', 'readAll failed or timed out: $e — using empty config', LogLevel.WARNING);
+      storageValues = {};
+    }
 
     logThis('readConfigValues', 'Finished read config values', LogLevel.INFO);
 
     return true;
+  }
+
+  // One-time migration: rewrite every Keychain item so iOS updates the
+  // kSecAttrAccessible attribute from WhenUnlocked to first_unlock. After this
+  // runs once, readAll() no longer fails with -25308 during headless CarPlay
+  // launches (screen locked). Safe to call multiple times — writes are idempotent.
+  Future<void> migrateKeychainAccessibility() async {
+    const migrationKey = '_keychain_migrated_first_unlock_v1';
+    final alreadyDone = storageValues[migrationKey];
+    if (alreadyDone == 'true') return;
+    logThis('migrateKeychainAccessibility', 'Starting Keychain first_unlock migration', LogLevel.INFO);
+    try {
+      for (final entry in storageValues.entries) {
+        if (entry.key == migrationKey) continue;
+        await storage.write(key: entry.key, value: entry.value);
+      }
+      await storage.write(key: migrationKey, value: 'true');
+      storageValues[migrationKey] = 'true';
+      logThis('migrateKeychainAccessibility', 'Migration complete — ${storageValues.length} items updated', LogLevel.INFO);
+    } catch (e) {
+      logThis('migrateKeychainAccessibility', 'Migration error: $e', LogLevel.WARNING);
+    }
   }
 
   // read the some persistent saved configuration

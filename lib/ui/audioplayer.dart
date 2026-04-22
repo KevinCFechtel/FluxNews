@@ -171,7 +171,11 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   FluxNewsAudioHandler? _audioHandler;
   late final List<Attachment> _audioAttachments;
-  final _storage = const sec_store.FlutterSecureStorage();
+  final _storage = sec_store.FlutterSecureStorage(
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
   Timer? _autoSaveTimer;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;

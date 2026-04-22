@@ -58,7 +58,11 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   static const String _rootMediaId = 'flux_news_root';
   static const String _downloadsMediaId = 'flux_news_downloads';
-  final _storage = const sec_store.FlutterSecureStorage();
+  final _storage = sec_store.FlutterSecureStorage(
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
   final FluxNewsState _downloadQueryState = FluxNewsState();
   final Map<String, MediaItem> _downloadMediaItems = <String, MediaItem>{};
   DateTime? _lastPeriodicPersistAt;
@@ -133,7 +137,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Future<void> _handleCompletedPlayback() async {
     await _persistCurrentProgress(clear: true);
 
-    final deleteAfterPlaybackValue = await _storage.read(key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey);
+    String? deleteAfterPlaybackValue;
+    try {
+      deleteAfterPlaybackValue = await _storage.read(key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey);
+    } catch (_) {
+      // Keychain inaccessible (screen locked, pre-migration WhenUnlocked item) — skip delete.
+    }
     final shouldDeleteAfterPlayback = deleteAfterPlaybackValue == FluxNewsState.secureStorageTrueString;
     if (!shouldDeleteAfterPlayback) {
       return;
@@ -202,10 +211,15 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final newsID = mergedExtras['newsID'];
     if (newsID is int) {
-      final saved = await _storage.read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
-      final localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
-      if (localMs > 0) {
-        return Duration(milliseconds: localMs);
+      try {
+        final saved = await _storage.read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
+        final localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
+        if (localMs > 0) {
+          return Duration(milliseconds: localMs);
+        }
+      } catch (_) {
+        // Keychain may be inaccessible (e.g. -25308 for items written before
+        // first_unlock migration while screen is locked) — start from beginning.
       }
     }
 
@@ -380,7 +394,9 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Future<void> play() async {
     final session = await AudioSession.instance;
     await session.setActive(true);
-    await _player.play();
+    // just_audio's play() completes when playback STOPS, not when it starts.
+    // Awaiting it would block the entire call chain until the episode ends.
+    _player.play().ignore();
     final state = _buildPlaybackState();
     playbackState.add(state);
     _startDynamicIsland();

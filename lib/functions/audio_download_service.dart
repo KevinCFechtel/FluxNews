@@ -80,7 +80,14 @@ class _ArtworkImageInfo {
 }
 
 class AudioDownloadService {
-  static const _storage = sec_store.FlutterSecureStorage();
+  // AfterFirstUnlock: readable in background after device has been unlocked
+  // at least once since boot — required for CarPlay headless launch with
+  // locked screen. WhenUnlocked (default) fails with errSecInteractionNotAllowed.
+  static final _storage = sec_store.FlutterSecureStorage(
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
   static const int _remoteId3HeaderLength = 10;
   static const int _maxArtworkBytes = 3 * 1024 * 1024;
   static const int _maxArtworkDownloadBytes = 12 * 1024 * 1024;
@@ -124,10 +131,14 @@ class AudioDownloadService {
       final id = d.attachmentID;
       if (id < 0) continue;
       if (_downloadTitleCache.containsKey(id)) continue;
-      final title = await _storage.read(key: '$_downloadTitleKeyPrefix$id');
-      final feedTitle = await _storage.read(key: '$_downloadFeedTitleKeyPrefix$id');
-      if (title != null && title.isNotEmpty) _downloadTitleCache[id] = title;
-      if (feedTitle != null && feedTitle.isNotEmpty) _downloadFeedTitleCache[id] = feedTitle;
+      try {
+        final title = await _storage.read(key: '$_downloadTitleKeyPrefix$id');
+        final feedTitle = await _storage.read(key: '$_downloadFeedTitleKeyPrefix$id');
+        if (title != null && title.isNotEmpty) _downloadTitleCache[id] = title;
+        if (feedTitle != null && feedTitle.isNotEmpty) _downloadFeedTitleCache[id] = feedTitle;
+      } catch (e) {
+        logThis('AudioDownloadService', 'loadTitlesForDownloads: Keychain read failed for id=$id: $e', LogLevel.WARNING);
+      }
       if (!_downloadTitleCache.containsKey(id)) needsLookup.add(id);
     }
 
