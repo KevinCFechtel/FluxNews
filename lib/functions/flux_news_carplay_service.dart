@@ -194,8 +194,15 @@ class FluxNewsCarPlayService {
             final handler = await _audioHandlerFuture!
                 .timeout(const Duration(seconds: 15));
             logThis('CarPlayService', 'AudioHandler ready — calling playFromMediaId', LogLevel.INFO);
+            final newsID = capturedAttachmentID >= 0
+                ? AudioDownloadService.getDownloadNewsId(capturedAttachmentID)
+                : null;
             final extras = capturedAttachmentID >= 0
-                ? <String, dynamic>{'attachmentID': capturedAttachmentID}
+                ? <String, dynamic>{
+                    'attachmentID': capturedAttachmentID,
+                    if (newsID != null) 'newsID': newsID,
+                    'downloaded': true,
+                  }
                 : null;
             await handler.playFromMediaId(capturedUri, extras)
                 .timeout(const Duration(seconds: 15));

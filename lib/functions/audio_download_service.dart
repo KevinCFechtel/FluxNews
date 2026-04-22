@@ -106,9 +106,12 @@ class AudioDownloadService {
   static const String _downloadTitleKeyPrefix = FluxNewsState.downloadTitleKeyPrefix;
   static const String _downloadFeedTitleKeyPrefix = FluxNewsState.downloadFeedTitleKeyPrefix;
 
-  // Cache for download titles (attachmentID → news title) used by CarPlay / Android Auto
+  // Cache for download metadata (attachmentID → value) used by CarPlay / Android Auto
   static final _downloadTitleCache = <int, String>{};
   static final _downloadFeedTitleCache = <int, String>{};
+  // newsID is memory-only — it is always derivable from the DB and does not
+  // need SecureStorage persistence (unlike titles which are cached for headless launches).
+  static final _downloadNewsIdCache = <int, int>{};
 
   static void cacheDownloadTitle(int attachmentID, String title) {
     _downloadTitleCache[attachmentID] = title;
@@ -120,8 +123,13 @@ class AudioDownloadService {
     _storage.write(key: '$_downloadFeedTitleKeyPrefix$attachmentID', value: feedTitle);
   }
 
+  static void cacheDownloadNewsId(int attachmentID, int newsID) {
+    _downloadNewsIdCache[attachmentID] = newsID;
+  }
+
   static String? getDownloadTitle(int attachmentID) => _downloadTitleCache[attachmentID];
   static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
+  static int? getDownloadNewsId(int attachmentID) => _downloadNewsIdCache[attachmentID];
 
   /// Loads titles into the memory cache for the given downloads.
   /// Checks memory cache → SecureStorage → SQLite DB (headless-safe).
@@ -154,7 +162,7 @@ class AudioDownloadService {
       db = await databaseFactoryFfi.openDatabase(dbPath);
       for (final id in needsLookup) {
         final rows = await db.rawQuery(
-          '''SELECT news.title, news.feedTitle
+          '''SELECT news.title, news.feedTitle, attachments.newsID
              FROM attachments
              INNER JOIN news ON attachments.newsID = news.newsID
              WHERE attachments.attachmentID = ?
@@ -164,8 +172,10 @@ class AudioDownloadService {
         if (rows.isEmpty) continue;
         final title = rows.first['title'] as String?;
         final feedTitle = rows.first['feedTitle'] as String?;
+        final newsID = rows.first['newsID'] as int?;
         if (title != null && title.isNotEmpty) cacheDownloadTitle(id, title);
         if (feedTitle != null && feedTitle.isNotEmpty) cacheDownloadFeedTitle(id, feedTitle);
+        if (newsID != null) cacheDownloadNewsId(id, newsID);
       }
     } catch (_) {
       // DB unavailable — titles will fall back to filenames
@@ -1115,6 +1125,7 @@ class AudioDownloadService {
       await _storage.delete(key: '$_downloadFeedTitleKeyPrefix$attachmentID');
       _downloadTitleCache.remove(attachmentID);
       _downloadFeedTitleCache.remove(attachmentID);
+      _downloadNewsIdCache.remove(attachmentID);
     }
     _emitDownloadedAudiosChanged();
   }
@@ -1138,6 +1149,7 @@ class AudioDownloadService {
       await _storage.delete(key: '$_downloadFeedTitleKeyPrefix$attachmentID');
       _downloadTitleCache.remove(attachmentID);
       _downloadFeedTitleCache.remove(attachmentID);
+      _downloadNewsIdCache.remove(attachmentID);
     }
 
     _emitDownloadedAudiosChanged();
@@ -1183,6 +1195,7 @@ class AudioDownloadService {
           await _storage.delete(key: '$_downloadFeedTitleKeyPrefix$attachmentID');
           _downloadTitleCache.remove(attachmentID);
           _downloadFeedTitleCache.remove(attachmentID);
+          _downloadNewsIdCache.remove(attachmentID);
         }
         _emitDownloadedAudiosChanged();
       }
@@ -1333,6 +1346,7 @@ class AudioDownloadService {
       if (news != null && storageAttachmentId >= 0) {
         cacheDownloadTitle(storageAttachmentId, news.title);
         cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+        cacheDownloadNewsId(storageAttachmentId, news.newsID);
       }
       _emitDownloadedAudiosChanged();
       _removeActiveDownload(storageAttachmentId);
