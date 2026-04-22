@@ -180,6 +180,7 @@ class FluxNewsCarPlayService {
       }
 
       final capturedUri = fileUri;
+      final capturedAttachmentID = attachmentID;
       final item = CPListItem(
         id: fileUri,
         text: title,
@@ -193,7 +194,10 @@ class FluxNewsCarPlayService {
             final handler = await _audioHandlerFuture!
                 .timeout(const Duration(seconds: 15));
             logThis('CarPlayService', 'AudioHandler ready — calling playFromMediaId', LogLevel.INFO);
-            await handler.playFromMediaId(capturedUri)
+            final extras = capturedAttachmentID >= 0
+                ? <String, dynamic>{'attachmentID': capturedAttachmentID}
+                : null;
+            await handler.playFromMediaId(capturedUri, extras)
                 .timeout(const Duration(seconds: 15));
             logThis('CarPlayService', 'playFromMediaId done — showing NowPlaying', LogLevel.INFO);
             FlutterCarplay.showSharedNowPlaying(animated: true);

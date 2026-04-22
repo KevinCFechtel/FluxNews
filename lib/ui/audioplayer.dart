@@ -409,6 +409,12 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       if (filePath != null) {
         _downloadedPaths[attachment.attachmentID] = filePath;
         await _loadChaptersForAttachment(attachment, filePath: filePath);
+        // Re-download: reset position so the episode starts from the beginning.
+        await _storage.delete(key: _progressKey());
+        syncMediaProgression(widget.appState, widget.news.newsID, attachment.attachmentID, 0).ignore();
+        if (mounted && !_isDisposed) {
+          setState(() => _savedPosition = null);
+        }
       } else if (widget.appState.downloadAudioOnlyOnWifi) {
         final isWifiConnected = await AudioDownloadService.isWifiConnected();
         if (!isWifiConnected && mounted) {
@@ -520,29 +526,37 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   Future<void> _handlePlaybackCompleted() async {
     final completedAttachmentID = _activeAttachmentID;
-    final shouldDeleteDownloadedAudio = widget.appState.deleteAudioAfterPlayback && completedAttachmentID != null;
-
-    await _storage.delete(key: _progressKey());
-    final completedAttachment = _activeAttachmentID == null
+    final completedAttachment = completedAttachmentID == null
         ? null
         : _audioAttachments
-            .where((a) => a.attachmentID == _activeAttachmentID)
+            .where((a) => a.attachmentID == completedAttachmentID)
             .fold<Attachment?>(null, (prev, e) => prev ?? e);
+
+    // Stop without saving progress — episode is done, position should be 0.
+    // The handler's stop() internally calls _persistCurrentProgress, so we
+    // delete the Keychain entry afterwards to ensure a clean reset.
+    await _stop(saveProgress: false);
+    await _storage.delete(key: _progressKey());
+    if (mounted && !_isDisposed) {
+      setState(() => _savedPosition = null);
+    }
+
     if (completedAttachment != null) {
       syncMediaProgression(widget.appState, widget.news.newsID, completedAttachment.attachmentID, 0).ignore();
     }
 
-    if (shouldDeleteDownloadedAudio) {
-      final attachmentIDToDelete = completedAttachmentID;
-      final downloadedPath = _downloadedPaths[attachmentIDToDelete];
+    if (widget.appState.deleteAudioAfterPlayback && completedAttachmentID != null) {
+      final downloadedPath = _downloadedPaths[completedAttachmentID];
       if (downloadedPath != null) {
-        await AudioDownloadService.deleteDownloadedAudio(attachmentIDToDelete);
-        _downloadedPaths.remove(attachmentIDToDelete);
-        _chaptersByAttachmentID.remove(attachmentIDToDelete);
+        await AudioDownloadService.deleteDownloadedAudio(completedAttachmentID);
+        if (mounted && !_isDisposed) {
+          setState(() {
+            _downloadedPaths.remove(completedAttachmentID);
+            _chaptersByAttachmentID.remove(completedAttachmentID);
+          });
+        }
       }
     }
-
-    await _stop();
   }
 
   void _startSleepTimer() {
@@ -654,12 +668,27 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     final url = downloadedPath != null ? Uri.file(downloadedPath).toString() : attachment.attachmentURL;
     if (url.isEmpty) return;
 
-    if (_activeUrl == url && _playerState.playing) {
+    // Use the handler's actual current URL as source of truth. _activeUrl can
+    // diverge from url when _downloadedPaths is populated asynchronously after
+    // initState: the first Play press may compute url=https:// while the handler
+    // already has file://, or vice versa on the subsequent Pause press. Both the
+    // file URI and the HTTP URL identify the same attachment content.
+    final handlerUrl = _audioHandler!.currentUrl;
+    final isCurrentAttachment = url == handlerUrl ||
+        url == _activeUrl ||
+        attachment.attachmentURL == handlerUrl ||
+        (downloadedPath != null && Uri.file(downloadedPath).toString() == handlerUrl);
+
+    if (isCurrentAttachment && _playerState.playing) {
       await _audioHandler!.pause();
       await _saveProgress();
       return;
     }
-    if (_activeUrl == url && !_playerState.playing && _playerState.processingState != ProcessingState.completed) {
+    if (isCurrentAttachment && !_playerState.playing && _playerState.processingState != ProcessingState.completed) {
+      // Clear stale saved position so a subsequent URL mismatch (async
+      // _downloadedPaths race) cannot trigger an unintended seek back to the
+      // CarPlay pause position via the full-load path.
+      setState(() => _savedPosition = null);
       await _audioHandler!.play();
       return;
     }
@@ -684,9 +713,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     }
   }
 
-  Future<void> _stop() async {
+  Future<void> _stop({bool saveProgress = true}) async {
     if (_audioHandler == null) return;
-    await _saveProgress();
+    if (saveProgress) await _saveProgress();
     await _audioHandler!.stop();
     _sleepTimer?.cancel();
     if (!mounted || _isDisposed) return;

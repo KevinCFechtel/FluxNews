@@ -892,8 +892,6 @@ bool _openAudioPlayerIfAvailable(
     }
   }
 
-  appState.setActiveAudioNews(news);
-
   Navigator.push(
     context,
     MaterialPageRoute(

@@ -325,8 +325,6 @@ class FluxNewsState extends ChangeNotifier {
   // vars for app bar text
   String appBarText = '';
   int? selectedID;
-  News? activeAudioNews;
-
   // vars for detecting device orientation and device type
   bool isTablet = false;
   Orientation orientation = Orientation.portrait;
@@ -2472,10 +2470,6 @@ class FluxNewsState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setActiveAudioNews(News news) {
-    activeAudioNews = news;
-    notifyListeners();
-  }
 }
 
 // helper class to generate the drop down lists in options

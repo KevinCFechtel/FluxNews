@@ -803,72 +803,62 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   }
 
   Future<News?> _resolveCurrentPlaybackNews(FluxNewsAudioHandler handler) async {
-    final activeNews = widget.appState.activeAudioNews;
     final media = handler.mediaItem.value;
-    if (media == null) {
-      return activeNews;
-    }
+    if (media == null) return null;
 
     final extras = media.extras;
+
     final newsIdFromExtras = extras?['newsID'];
     if (newsIdFromExtras is int) {
-      if (activeNews != null && activeNews.newsID == newsIdFromExtras) {
-        return activeNews;
-      }
-      final byNewsId = await queryNewsByNewsId(widget.appState, newsIdFromExtras);
-      if (byNewsId != null) {
-        return byNewsId;
-      }
-    }
-
-    if (activeNews != null) {
-      final matchingAttachment = activeNews
-          .getAudioAttachments()
-          .where((a) => a.attachmentURL == media.id)
-          .fold<Attachment?>(null, (prev, e) => prev ?? e);
-      if (matchingAttachment != null) {
-        return activeNews;
-      }
+      final news = await queryNewsByNewsId(widget.appState, newsIdFromExtras);
+      if (news != null) return news;
     }
 
     final attachmentIdFromExtras = extras?['attachmentID'];
-    int? newsID;
     if (attachmentIdFromExtras is int) {
-      newsID = await queryNewsIdByAttachmentId(widget.appState, attachmentIdFromExtras);
-    } else {
-      newsID = await queryNewsIdByAttachmentUrl(widget.appState, media.id);
+      final newsID = await queryNewsIdByAttachmentId(widget.appState, attachmentIdFromExtras);
+      if (newsID != null) return await queryNewsByNewsId(widget.appState, newsID);
     }
 
-    if (newsID == null) {
-      return activeNews;
-    }
-    return await queryNewsByNewsId(widget.appState, newsID) ?? activeNews;
+    final newsID = await queryNewsIdByAttachmentUrl(widget.appState, media.id);
+    if (newsID == null) return null;
+    return await queryNewsByNewsId(widget.appState, newsID);
   }
 
   Future<void> _handleCompletion(FluxNewsAudioHandler handler) async {
     final activeNews = await _resolveCurrentPlaybackNews(handler);
     if (activeNews != null) {
-      final mediaItemId = handler.mediaItem.value?.id;
       final attachments = activeNews.getAudioAttachments();
-      final completedAttachment =
-          attachments.where((a) => a.attachmentURL == mediaItemId).fold<Attachment?>(null, (prev, e) => prev ?? e);
 
-      // Fortschritt aus Secure Storage löschen
+      // Prefer attachmentID from extras — the media item ID may be a file://
+      // URI (CarPlay/downloaded playback) which won't match attachmentURL.
+      final extras = handler.mediaItem.value?.extras;
+      final attachmentIdFromExtras = extras?['attachmentID'];
+      final completedAttachment = attachmentIdFromExtras is int
+          ? attachments
+              .where((a) => a.attachmentID == attachmentIdFromExtras)
+              .fold<Attachment?>(null, (prev, e) => prev ?? e)
+          : attachments
+              .where((a) => a.attachmentURL == handler.mediaItem.value?.id)
+              .fold<Attachment?>(null, (prev, e) => prev ?? e);
+
+      // Stop first — handler.stop() internally re-saves progress, so we
+      // delete the Keychain entry afterwards to ensure a clean reset to 0.
+      await handler.stop();
       await _storage.delete(
         key: '${FluxNewsState.audioProgressKeyPrefix}${activeNews.newsID}',
       );
 
       if (completedAttachment != null) {
-        // Fortschritt auf Server zurücksetzen
         syncMediaProgression(widget.appState, activeNews.newsID, completedAttachment.attachmentID, 0).ignore();
 
-        // Download löschen, wenn konfiguriert
         if (widget.appState.deleteAudioAfterPlayback) {
           await AudioDownloadService.deleteDownloadedAudio(completedAttachment.attachmentID);
         }
       }
+    } else {
+      await handler.stop();
     }
-    await handler.stop();
   }
 
   Future<void> _openFullPlayer() async {
@@ -877,10 +867,6 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
 
     final activeNews = await _resolveCurrentPlaybackNews(handler);
     if (!mounted || activeNews == null) return;
-
-    if (widget.appState.activeAudioNews?.newsID != activeNews.newsID) {
-      widget.appState.setActiveAudioNews(activeNews);
-    }
 
     await Navigator.push(
       context,
@@ -899,7 +885,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
       initialData: _audioHandler!.mediaItem.value,
       builder: (context, mediaSnapshot) {
         final media = mediaSnapshot.data;
-        if (media == null || widget.appState.activeAudioNews == null) {
+        if (media == null) {
           return const SizedBox.shrink();
         }
 

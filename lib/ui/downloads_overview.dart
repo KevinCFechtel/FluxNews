@@ -108,9 +108,6 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       return;
     }
 
-    final appState = context.read<FluxNewsState>();
-    appState.setActiveAudioNews(news);
-
     await Navigator.push(
       context,
       MaterialPageRoute(
