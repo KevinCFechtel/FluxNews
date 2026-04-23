@@ -178,17 +178,26 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         newsID = await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
       }
 
+      Uri? artUri;
+      String? artCacheFile;
+      if (attachmentID >= 0) {
+        artUri = await AudioDownloadService.getCachedArtworkUriForAttachment(attachmentID);
+        artCacheFile = await AudioDownloadService.getCachedArtworkFilePathForAttachment(attachmentID);
+      }
+      artUri ??= defaultArtworkUri;
+      artCacheFile ??= defaultArtworkFilePath;
+
       final mediaItem = MediaItem(
         id: fileUri,
         title: title ?? download.fileName,
         artist: feedTitle ?? 'Flux News',
         album: feedTitle ?? 'Flux News',
-        artUri: defaultArtworkUri,
+        artUri: artUri,
         playable: true,
         extras: <String, dynamic>{
           if (attachmentID >= 0) 'attachmentID': attachmentID,
           if (newsID != null) 'newsID': newsID,
-          if (defaultArtworkFilePath != null) 'artCacheFile': defaultArtworkFilePath,
+          if (artCacheFile != null) 'artCacheFile': artCacheFile,
           'downloaded': true,
         },
       );
@@ -646,6 +655,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     if (item == null) return;
 
     final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+    final artworkUri = item.artUri ?? defaultArtworkUri;
 
     await _dynamicIslandService.startActivity(
       itemTitle: item.title,
@@ -653,7 +663,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       isPlaying: _player.playing,
       currentPosition: _player.position.inSeconds,
       duration: _player.duration?.inSeconds ?? 0,
-      artworkUrl: defaultArtworkUri?.toString(),
+      artworkUrl: artworkUri?.toString(),
     );
   }
 
@@ -664,6 +674,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     if (item == null) return;
 
     final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+    final artworkUri = item.artUri ?? defaultArtworkUri;
 
     await _dynamicIslandService.updateActivity(
       itemTitle: item.title,
@@ -671,7 +682,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       isPlaying: _player.playing,
       currentPosition: _player.position.inSeconds,
       duration: _player.duration?.inSeconds ?? 0,
-      artworkUrl: defaultArtworkUri?.toString(),
+      artworkUrl: artworkUri?.toString(),
     );
   }
 

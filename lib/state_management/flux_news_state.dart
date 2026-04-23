@@ -174,7 +174,9 @@ class FluxNewsState extends ChangeNotifier {
   static const String downloadPathKeyPrefix = 'audio_download_path_';
   static const String downloadTimestampKeyPrefix = 'audio_download_ts_';
   static const String defaultArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_IOS.png';
+  static const String defaultAndroidArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_Android.png';
   static const String defaultArtworkFileName = 'default_audio_artwork.png';
+  static const String defaultAndroidArtworkFileName = 'default_audio_artwork_android.png';
   static const String audioCachePath = 'audio_cache';
   static const String audioFilePrefix = 'audio_';
   static const String artworkCacheDirectoryName = 'audio_artwork_cache';
@@ -1478,7 +1480,8 @@ class FluxNewsState extends ChangeNotifier {
       }
       await storage.write(key: migrationKey, value: 'true');
       storageValues[migrationKey] = 'true';
-      logThis('migrateKeychainAccessibility', 'Migration complete — ${storageValues.length} items updated', LogLevel.INFO);
+      logThis(
+          'migrateKeychainAccessibility', 'Migration complete — ${storageValues.length} items updated', LogLevel.INFO);
     } catch (e) {
       logThis('migrateKeychainAccessibility', 'Migration error: $e', LogLevel.WARNING);
     }
@@ -2469,7 +2472,6 @@ class FluxNewsState extends ChangeNotifier {
   void refreshView() {
     notifyListeners();
   }
-
 }
 
 // helper class to generate the drop down lists in options

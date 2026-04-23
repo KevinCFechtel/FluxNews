@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -356,6 +357,9 @@ class Settings extends StatelessWidget {
                         }
                         appState.debugMode = value;
                         appState.storage.write(key: FluxNewsState.secureStorageDebugModeKey, value: stringValue);
+                        if (Platform.isIOS) {
+                          FluxNewsCarPlayService.setDebugMode(value);
+                        }
                         appState.refreshView();
                       },
                     ),

@@ -97,6 +97,8 @@ class AudioDownloadService {
   static const String _downloadTimestampKeyPrefix = FluxNewsState.downloadTimestampKeyPrefix;
   static const String _defaultArtworkAssetPath = FluxNewsState.defaultArtworkAssetPath;
   static const String _defaultArtworkFileName = FluxNewsState.defaultArtworkFileName;
+  static const String _defaultAndroidArtworkAssetPath = FluxNewsState.defaultAndroidArtworkAssetPath;
+  static const String _defaultAndroidArtworkFileName = FluxNewsState.defaultAndroidArtworkFileName;
   static const String _androidDefaultArtworkProviderAuthority = FluxNewsState.androidDefaultArtworkProviderAuthority;
   static const String _artworkCacheDirectoryName = FluxNewsState.artworkCacheDirectoryName;
   static final _activeDownloads = <int, AudioDownloadProgress>{};
@@ -302,12 +304,14 @@ class AudioDownloadService {
   }
 
   static Future<File> _ensureDefaultArtworkFile() async {
+    final assetPath = Platform.isAndroid ? _defaultAndroidArtworkAssetPath : _defaultArtworkAssetPath;
+    final fileName = Platform.isAndroid ? _defaultAndroidArtworkFileName : _defaultArtworkFileName;
+
     final appSupport = await getApplicationSupportDirectory();
-    final filePath = p.join(appSupport.path, _defaultArtworkFileName);
-    final file = File(filePath);
+    final file = File(p.join(appSupport.path, fileName));
 
     if (!await file.exists()) {
-      final byteData = await rootBundle.load(_defaultArtworkAssetPath);
+      final byteData = await rootBundle.load(assetPath);
       await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
     }
 
@@ -316,7 +320,7 @@ class AudioDownloadService {
 
   static Uri _buildAndroidDefaultArtworkContentUri() {
     return Uri.parse(
-      'content://$_androidDefaultArtworkProviderAuthority/${Uri.encodeComponent(_defaultArtworkFileName)}',
+      'content://$_androidDefaultArtworkProviderAuthority/${Uri.encodeComponent(_defaultAndroidArtworkFileName)}',
     );
   }
 
@@ -369,17 +373,92 @@ class AudioDownloadService {
         return null;
       }
 
+      // On Android, add a mean-color border so the notification artwork is not
+      // cropped/zoomed. The border makes the image square and adds ~15 % padding
+      // on each side, filled with the average colour of the image.
+      final finalBytes = Platform.isAndroid
+          ? await _addAndroidArtworkPadding(normalizedBytes) ?? normalizedBytes
+          : normalizedBytes;
+
       final appSupport = await getApplicationSupportDirectory();
       final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
       if (!await artworkDirectory.exists()) {
         await artworkDirectory.create(recursive: true);
       }
 
-      final extension = _detectImageFileExtension(normalizedBytes);
+      // Padding always produces PNG; detect extension from the final bytes.
+      final extension = _detectImageFileExtension(finalBytes);
       final fileName = '${FluxNewsState.artworkFilePrefix}$attachmentID.$extension';
       final file = File(p.join(artworkDirectory.path, fileName));
-      await file.writeAsBytes(normalizedBytes, flush: true);
+      await file.writeAsBytes(finalBytes, flush: true);
       return Uri.file(file.path);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Adds a mean-colour border to make the artwork square with ~15 % padding on
+  /// each side. Required on Android because the media notification crops artwork
+  /// to a circle/square and the launcher zooms in to fill the frame.
+  static Future<Uint8List?> _addAndroidArtworkPadding(Uint8List imageBytes) async {
+    try {
+      final codec = await ui.instantiateImageCodec(imageBytes);
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+      final width = image.width;
+      final height = image.height;
+
+      // Compute average colour from raw RGBA pixel data.
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (byteData == null) {
+        image.dispose();
+        codec.dispose();
+        return null;
+      }
+
+      final pixels = byteData.buffer.asUint8List();
+      final pixelCount = width * height;
+      int sumR = 0, sumG = 0, sumB = 0;
+      for (int i = 0; i < pixels.length; i += 4) {
+        sumR += pixels[i];
+        sumG += pixels[i + 1];
+        sumB += pixels[i + 2];
+      }
+      final avgColor = ui.Color.fromARGB(
+        255,
+        sumR ~/ pixelCount,
+        sumG ~/ pixelCount,
+        sumB ~/ pixelCount,
+      );
+
+      // Compute output dimensions: square canvas with 15 % padding per side.
+      final maxDim = width > height ? width : height;
+      final padding = (maxDim * 0.15).round();
+      final outputSize = maxDim + 2 * padding;
+
+      // Offset to centre the original image on the square canvas.
+      final offsetX = (padding + (maxDim - width) ~/ 2).toDouble();
+      final offsetY = (padding + (maxDim - height) ~/ 2).toDouble();
+
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      canvas.drawRect(
+        ui.Rect.fromLTWH(0, 0, outputSize.toDouble(), outputSize.toDouble()),
+        ui.Paint()..color = avgColor,
+      );
+      canvas.drawImage(image, ui.Offset(offsetX, offsetY), ui.Paint());
+
+      image.dispose();
+      codec.dispose();
+
+      final picture = recorder.endRecording();
+      final output = await picture.toImage(outputSize, outputSize);
+      picture.dispose();
+
+      final resultData = await output.toByteData(format: ui.ImageByteFormat.png);
+      output.dispose();
+
+      return resultData?.buffer.asUint8List();
     } catch (_) {
       return null;
     }
@@ -467,6 +546,19 @@ class AudioDownloadService {
     }
   }
 
+  static Future<String?> getCachedArtworkFilePathForAttachment(int attachmentID) async {
+    try {
+      final appSupport = await getApplicationSupportDirectory();
+      final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
+      if (!await artworkDirectory.exists()) return null;
+      for (final extension in const ['png', 'jpg', 'gif']) {
+        final file = File(p.join(artworkDirectory.path, '${FluxNewsState.artworkFilePrefix}$attachmentID.$extension'));
+        if (await file.exists()) return file.path;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   static Future<Uri?> getCachedArtworkUriForAttachment(int attachmentID) async {
     try {
       final appSupport = await getApplicationSupportDirectory();
@@ -476,8 +568,14 @@ class AudioDownloadService {
       }
 
       for (final extension in const ['png', 'jpg', 'gif']) {
-        final file = File(p.join(artworkDirectory.path, '${FluxNewsState.artworkFilePrefix}$attachmentID.$extension'));
+        final fileName = '${FluxNewsState.artworkFilePrefix}$attachmentID.$extension';
+        final file = File(p.join(artworkDirectory.path, fileName));
         if (await file.exists()) {
+          if (Platform.isAndroid) {
+            return Uri.parse(
+              'content://$_androidDefaultArtworkProviderAuthority/$_artworkCacheDirectoryName/${Uri.encodeComponent(fileName)}',
+            );
+          }
           return Uri.file(file.path);
         }
       }

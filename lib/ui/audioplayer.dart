@@ -854,7 +854,15 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         ? parsedUri.pathSegments.last
         : attachment.attachmentMimeType;
     final title = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
-    final artworkUri = await _resolveFallbackArtworkUri();
+
+    Uri? artworkUri;
+    String? artCacheFile;
+    if (attachment.attachmentID >= 0) {
+      artworkUri = await AudioDownloadService.getCachedArtworkUriForAttachment(attachment.attachmentID);
+      artCacheFile = await AudioDownloadService.getCachedArtworkFilePathForAttachment(attachment.attachmentID);
+    }
+    artworkUri ??= await _resolveFallbackArtworkUri();
+    artCacheFile ??= await AudioDownloadService.getDefaultArtworkFilePath();
 
     return MediaItem(
       id: attachment.attachmentURL,
@@ -865,6 +873,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       extras: <String, dynamic>{
         'newsID': widget.news.newsID,
         'attachmentID': attachment.attachmentID,
+        if (artCacheFile != null) 'artCacheFile': artCacheFile,
       },
     );
   }

@@ -122,6 +122,12 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   }
 
   Future<void> _deleteItem(DownloadedAudioInfo item) async {
+    // If this file is currently loaded in the audio handler, stop playback
+    // so the Now Playing notification / lock screen widget is cleared.
+    final fileUri = Uri.file(item.filePath).toString();
+    if (_audioHandler != null && _audioHandler!.currentUrl == fileUri) {
+      await _audioHandler!.stop();
+    }
     await AudioDownloadService.deleteDownloadedAudioByStorageId(item.storageID);
     if (!mounted) return;
     setState(_reload);
