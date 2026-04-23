@@ -45,11 +45,11 @@ Future<void> main() async {
         logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
         logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
         debugFileOperations: false,
+        logsRetentionPeriodInDays: 7,
         isDebuggable: kDebugMode ? true : false);
 
     // clear the logs on startup
-    // NOTE: disabled temporarily to preserve headless CarPlay launch logs.
-    // Re-enable once CarPlay cold-start is confirmed working.
+    // NOTE: Replaced by log retention. See logsRetentionPeriodInDays in FlutterLogs.initLogs() above.
     // FlutterLogs.clearLogs();
   }
 
