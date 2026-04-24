@@ -21,56 +21,66 @@ class LogEntry {
   final String message;
 
   /// Parses a single log line produced by flutter_logs.
-  /// Format: "TIMESTAMP: {tag} {module} {message} {LEVEL}"
+  ///
+  /// iOS:     "TIMESTAMP: {tag} {module} {message} {LEVEL}"
+  /// Android: "{tag}  {module}  {message}  {TIMESTAMP}  {LEVEL}"
+  ///   (PLog's formatCurly puts timestamp 4th, not 1st)
   static LogEntry? parse(String line) {
     final trimmed = line.trim();
     if (trimmed.isEmpty) return null;
 
-    // Locate the timestamp/body boundary
-    final colonBrace = trimmed.indexOf(': {');
-    if (colonBrace < 0) return null;
-    final timestamp = trimmed.substring(0, colonBrace);
-    final rest = trimmed.substring(colonBrace + 2); // starts with "{"
-
-    // Level is always the last {TOKEN}
+    // Level is always the last {TOKEN}.
     String? level;
     int levelStart = -1;
     for (final lvl in const ['INFO', 'WARNING', 'ERROR', 'SEVERE']) {
-      if (rest.endsWith('{$lvl}')) {
+      if (trimmed.endsWith('{$lvl}')) {
         level = lvl;
-        levelStart = rest.length - lvl.length - 2;
+        levelStart = trimmed.length - lvl.length - 2;
         break;
       }
     }
     if (level == null) return null;
 
-    // Strip level from end → "{tag} {module} {message}"
-    final middle = rest.substring(0, levelStart).trim();
+    final withoutLevel = trimmed.substring(0, levelStart).trim();
 
-    // Skip {tag}
-    if (!middle.startsWith('{')) return null;
-    final tagEnd = middle.indexOf('}');
-    if (tagEnd < 0) return null;
-
-    // Parse {module}
-    final afterTag = middle.substring(tagEnd + 1).trim();
-    if (!afterTag.startsWith('{')) return null;
-    final moduleEnd = afterTag.indexOf('}');
-    if (moduleEnd < 0) return null;
-    final module = afterTag.substring(1, moduleEnd);
-
-    // Everything remaining is {message}
-    var message = afterTag.substring(moduleEnd + 1).trim();
-    if (message.startsWith('{') && message.endsWith('}')) {
-      message = message.substring(1, message.length - 1);
+    if (withoutLevel.startsWith('{')) {
+      // Android: {tag}  {module}  {message}  {timestamp}
+      final blocks = _blocks(withoutLevel);
+      if (blocks.length < 4) return null;
+      return LogEntry(
+        timestamp: blocks[3],
+        level: level,
+        module: blocks[1],
+        message: blocks[2],
+      );
+    } else {
+      // iOS: TIMESTAMP: {tag} {module} {message}
+      final sep = withoutLevel.indexOf(': {');
+      if (sep < 0) return null;
+      final blocks = _blocks(withoutLevel.substring(sep + 2));
+      if (blocks.length < 3) return null;
+      return LogEntry(
+        timestamp: withoutLevel.substring(0, sep),
+        level: level,
+        module: blocks[1],
+        message: blocks[2],
+      );
     }
+  }
 
-    return LogEntry(
-      timestamp: timestamp,
-      level: level,
-      module: module,
-      message: message,
-    );
+  /// Extracts all `{...}` blocks from [s], ignoring nested braces.
+  static List<String> _blocks(String s) {
+    final result = <String>[];
+    int i = 0;
+    while (i < s.length) {
+      final open = s.indexOf('{', i);
+      if (open < 0) break;
+      final close = s.indexOf('}', open);
+      if (close < 0) break;
+      result.add(s.substring(open + 1, close));
+      i = close + 1;
+    }
+    return result;
   }
 }
 
@@ -102,6 +112,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
   final List<LogEntry> _entries = [];
   StreamSubscription<String>? _sub;
+  Timer? _loadingDebounce;
   bool _loading = false;
   bool _capped = false; // true when older entries were dropped due to cap
   String _search = '';
@@ -158,7 +169,15 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     _filteredCache = null; // invalidate cache
   }
 
+  void _resetLoadingDebounce() {
+    _loadingDebounce?.cancel();
+    _loadingDebounce = Timer(const Duration(milliseconds: 800), () {
+      if (mounted) setState(() => _loading = false);
+    });
+  }
+
   Future<void> _load() async {
+    _loadingDebounce?.cancel();
     setState(() {
       _entries.clear();
       _filteredCache = null;
@@ -171,9 +190,14 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       if (newEntries.isNotEmpty && mounted) {
         setState(() => _addEntries(newEntries));
       }
+      // Reset debounce on every chunk — loading ends 800 ms after last chunk.
+      _resetLoadingDebounce();
     });
-    await FlutterLogs.printLogs(exportType: ExportType.ALL);
-    if (mounted) setState(() => _loading = false);
+    // Android's printLogs never calls result() so await would hang forever.
+    // Fire-and-forget; the debounce timer above handles _loading = false.
+    // The fallback timer covers the case where no chunks arrive (empty log).
+    FlutterLogs.printLogs(exportType: ExportType.ALL).ignore();
+    _resetLoadingDebounce(); // fallback: stop loading after 800 ms even if no data
   }
 
   @override
@@ -184,6 +208,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
   @override
   void dispose() {
+    _loadingDebounce?.cancel();
     _sub?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -321,6 +346,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -334,31 +360,33 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    entry.module,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                                  Flexible(
+                                    child: Text(
+                                      entry.module,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      softWrap: true,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      entry.timestamp,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant.withAlpha(150),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                                  Text(
+                                    entry.timestamp,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant.withAlpha(150),
                                     ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 2),
-                              SelectableText(
-                                entry.message,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontFamily: 'monospace',
+                              if (entry.message.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  entry.message,
+                                  style: theme.textTheme.bodySmall,
+                                  softWrap: true,
                                 ),
-                              ),
+                              ],
                             ],
                           ),
                         ),
