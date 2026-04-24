@@ -225,5 +225,6 @@
     "clearList": "Clear list",
     "loading": "loading...",
     "noEntries": "No entries",
-    "copyClipboard": "Copy to clipboard"
+    "copyClipboard": "Copy to clipboard",
+    "last": "last"
 }

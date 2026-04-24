@@ -737,4 +737,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get copyClipboard => 'Copy to clipboard';
+
+  @override
+  String get last => 'last';
 }

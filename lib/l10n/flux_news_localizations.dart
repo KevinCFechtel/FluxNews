@@ -1463,6 +1463,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy to clipboard'**
   String get copyClipboard;
+
+  /// No description provided for @last.
+  ///
+  /// In en, this message translates to:
+  /// **'last'**
+  String get last;
 }
 
 class _AppLocalizationsDelegate

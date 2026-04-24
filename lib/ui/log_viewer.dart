@@ -139,8 +139,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       if (_levelFilter != 'ALL' && e.level != _levelFilter) return false;
       if (_search.isNotEmpty) {
         final q = _search.toLowerCase();
-        return e.message.toLowerCase().contains(q) ||
-            e.module.toLowerCase().contains(q);
+        return e.message.toLowerCase().contains(q) || e.module.toLowerCase().contains(q);
       }
       return true;
     }).toList(growable: false);
@@ -168,11 +167,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     });
     _sub?.cancel();
     _sub = LogPrintedService.instance.stream.listen((chunk) {
-      final newEntries = chunk
-          .split('\n')
-          .map(LogEntry.parse)
-          .whereType<LogEntry>()
-          .toList(growable: false);
+      final newEntries = chunk.split('\n').map(LogEntry.parse).whereType<LogEntry>().toList(growable: false);
       if (newEntries.isNotEmpty && mounted) {
         setState(() => _addEntries(newEntries));
       }
@@ -208,7 +203,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
           _loading
               ? 'Logs …'
               : _capped
-                  ? 'Logs (${filtered.length}) — letzte $_maxEntries'
+                  ? 'Logs (${filtered.length}) — ${AppLocalizations.of(context)!.last} $_maxEntries'
                   : 'Logs (${filtered.length})',
           style: theme.textTheme.titleLarge,
         ),

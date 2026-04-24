@@ -226,5 +226,6 @@
     "clearList": "Liste leeren",
     "loading": "laden...",
     "noEntries": "Keine Einträge",
-    "copyClippboard": "In Zwischenablage kopiert"
+    "copyClippboard": "In Zwischenablage kopiert",
+    "last": "letzte"
 }
