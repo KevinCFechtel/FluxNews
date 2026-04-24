@@ -733,4 +733,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get downloadStarted => 'Download gestartet';
+
+  @override
+  String get showLogs => 'Logs anzeigen';
+
+  @override
+  String get reload => 'Neu laden';
+
+  @override
+  String get clearList => 'Liste leeren';
+
+  @override
+  String get loading => 'laden...';
+
+  @override
+  String get noEntries => 'Keine Einträge';
+
+  @override
+  String get copyClipboard => 'Copy to clipboard';
 }

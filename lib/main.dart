@@ -9,6 +9,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
+import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/feed_settings.dart';
@@ -48,9 +49,14 @@ Future<void> main() async {
         logsRetentionPeriodInDays: 7,
         isDebuggable: kDebugMode ? true : false);
 
-    // clear the logs on startup
-    // NOTE: Replaced by log retention. See logsRetentionPeriodInDays in FlutterLogs.initLogs() above.
-    // FlutterLogs.clearLogs();
+    // On iOS the flutter_logs plugin ignores all initLogs parameters (initLogs
+    // is a no-op in the Swift plugin), including logsRetentionPeriodInDays.
+    // iOS also writes one file per month to Application Support/Logs/ using
+    // the hardcoded directory name "Logs" — independent of logsWriteDirectoryName.
+    // We therefore run our own cleanup on iOS at startup.
+    if (Platform.isIOS) {
+      await _cleanupIosLogs(retentionDays: 7);
+    }
   }
 
   if (Platform.isAndroid || Platform.isIOS) {
@@ -85,6 +91,43 @@ Future<void> main() async {
   runApp(const SDTFScope(child: FluxNews()));
 }
 
+/// Deletes monthly iOS log files (Log-YYYY-MM.txt) whose entire month ended
+/// more than [retentionDays] ago.  The iOS flutter_logs plugin writes one file
+/// per calendar month into Application Support/Logs/ and ignores the
+/// logsRetentionPeriodInDays parameter, so we handle cleanup ourselves.
+Future<void> _cleanupIosLogs({required int retentionDays}) async {
+  try {
+    final appSupport = await getApplicationSupportDirectory();
+    final logsDir = Directory('${appSupport.path}/Logs');
+    if (!logsDir.existsSync()) return;
+
+    final cutoff = DateTime.now().subtract(Duration(days: retentionDays));
+
+    await for (final entity in logsDir.list(followLinks: false)) {
+      if (entity is! File) continue;
+      final name = entity.path.split('/').last;
+
+      // Match Log-YYYY-MM.txt or Log-YYYY-MM.log
+      final match = RegExp(r'^Log-(\d{4})-(\d{2})\.\w+$').firstMatch(name);
+      if (match == null) continue;
+
+      final year = int.parse(match.group(1)!);
+      final month = int.parse(match.group(2)!);
+
+      // Last day of that month: first day of next month minus one day.
+      final lastDayOfMonth = (month < 12)
+          ? DateTime(year, month + 1, 1).subtract(const Duration(days: 1))
+          : DateTime(year + 1, 1, 1).subtract(const Duration(days: 1));
+
+      if (lastDayOfMonth.isBefore(cutoff)) {
+        await entity.delete();
+      }
+    }
+  } catch (_) {
+    // Non-critical — skip silently if the directory is inaccessible.
+  }
+}
+
 class FluxNews extends StatelessWidget {
   const FluxNews({super.key});
 
@@ -92,7 +135,9 @@ class FluxNews extends StatelessWidget {
   Widget build(BuildContext context) {
     // init the log export channel to receive the exported log file name and share the file
     FlutterLogs.channel.setMethodCallHandler((call) async {
-      if (call.method == 'logsExported') {
+      if (call.method == 'logsPrinted') {
+        LogPrintedService.instance.addChunk(call.arguments.toString());
+      } else if (call.method == 'logsExported') {
         String zipName = call.arguments.toString();
         Directory? externalDirectory;
 

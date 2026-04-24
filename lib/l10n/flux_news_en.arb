@@ -219,5 +219,11 @@
     "loadingChapters": "Loading chapters ...",
     "noChaptersFound": "No chapters found.",
     "autoDeleteDownloadAfterFinish": "Automatically delete audio downloads when finished",
-    "downloadStarted": "Download started"
+    "downloadStarted": "Download started",
+    "showLogs": "Show Logs",
+    "reload": "Reload",
+    "clearList": "Clear list",
+    "loading": "loading...",
+    "noEntries": "No entries",
+    "copyClipboard": "Copy to clipboard"
 }

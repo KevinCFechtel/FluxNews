@@ -220,5 +220,11 @@
     "loadingChapters": "Kapitel werden geladen ...",
     "noChaptersFound": "Keine Kapitel gefunden.",
     "autoDeleteDownloadAfterFinish": "Audio Downloads nach dem Beenden automatisch löschen",
-    "downloadStarted": "Download gestartet"
+    "downloadStarted": "Download gestartet",
+    "showLogs": "Logs anzeigen",
+    "reload": "Neu laden",
+    "clearList": "Liste leeren",
+    "loading": "laden...",
+    "noEntries": "Keine Einträge",
+    "copyClippboard": "In Zwischenablage kopiert"
 }

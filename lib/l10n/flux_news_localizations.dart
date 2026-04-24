@@ -1427,6 +1427,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download started'**
   String get downloadStarted;
+
+  /// No description provided for @showLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Logs'**
+  String get showLogs;
+
+  /// No description provided for @reload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get reload;
+
+  /// No description provided for @clearList.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear list'**
+  String get clearList;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'loading...'**
+  String get loading;
+
+  /// No description provided for @noEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries'**
+  String get noEntries;
+
+  /// No description provided for @copyClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard'**
+  String get copyClipboard;
 }
 
 class _AppLocalizationsDelegate

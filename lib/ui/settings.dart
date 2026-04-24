@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
+import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -366,6 +367,28 @@ class Settings extends StatelessWidget {
                       },
                     ),
                   ],
+                ),
+                const Divider(),
+                // Log viewer
+                ListTile(
+                  leading: const Icon(Icons.list_alt),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.showLogs,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LogViewerScreen(),
+                      ),
+                    );
+                  },
+                  trailing: const Icon(Icons.arrow_right),
                 ),
                 const Divider(),
                 // this list tile contains the ability to export the collected logs

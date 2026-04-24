@@ -719,4 +719,22 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get downloadStarted => 'Download started';
+
+  @override
+  String get showLogs => 'Show Logs';
+
+  @override
+  String get reload => 'Reload';
+
+  @override
+  String get clearList => 'Clear list';
+
+  @override
+  String get loading => 'loading...';
+
+  @override
+  String get noEntries => 'No entries';
+
+  @override
+  String get copyClipboard => 'Copy to clipboard';
 }
