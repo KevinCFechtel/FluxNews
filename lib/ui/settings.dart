@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
@@ -360,6 +361,7 @@ class Settings extends StatelessWidget {
                         if (Platform.isIOS) {
                           FluxNewsCarPlayService.setDebugMode(value);
                         }
+                        FluxNewsAudioHandler.setDebugMode(value);
                         appState.refreshView();
                       },
                     ),

@@ -3,10 +3,12 @@ import 'dart:ui' as ui;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/dynamic_island_service.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:just_audio/just_audio.dart';
@@ -54,6 +56,27 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
 class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   FluxNewsAudioHandler() {
     _initFuture = _init();
+    _loadDebugMode();
+  }
+
+  static bool _debugMode = false;
+  static final _debugStorage = sec_store.FlutterSecureStorage(
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
+
+  static void setDebugMode(bool value) => _debugMode = value;
+
+  static void _debugLog(String message) {
+    if (_debugMode) logThis('AudioHandler', message, LogLevel.INFO);
+  }
+
+  static Future<void> _loadDebugMode() async {
+    try {
+      final value = await _debugStorage.read(key: FluxNewsState.secureStorageDebugModeKey);
+      _debugMode = value == FluxNewsState.secureStorageTrueString;
+    } catch (_) {}
   }
 
   static const String _rootMediaId = 'flux_news_root';
@@ -234,6 +257,15 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final attachmentID = mergedExtras['attachmentID'];
     if (attachmentID is int && attachmentID >= 0) {
+      // Check the in-memory cache first — populated by loadTitlesForDownloads
+      // during CarPlay/Android Auto template setup. This avoids a DB query on
+      // the CarPlay audio-grant hot path, which can delay play() long enough
+      // for the session grant to expire (!int error).
+      final cached = AudioDownloadService.getDownloadMediaProgression(attachmentID);
+      if (cached != null && cached > 0) {
+        return Duration(seconds: cached);
+      }
+      // Cache miss (first access before template setup) — fall back to DB.
       final news = await queryNewsByAttachmentId(_downloadQueryState, attachmentID);
       final attachment = news?.attachments
           ?.where((candidate) => candidate.attachmentID == attachmentID)
@@ -305,8 +337,27 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   Future<void> _init() async {
     final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
-    await session.setActive(true);
+    // longFormAudio is required for CarPlay audio routing (routes to car
+    // speakers) and keeps the app as the "Now Playing" owner so Dynamic Island
+    // and Lock Screen controls continue to work. mixWithOthers would fix the
+    // !int error but silently breaks Dynamic Island by demoting the app from
+    // primary audio owner.
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionMode: AVAudioSessionMode.defaultMode,
+      avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.longFormAudio,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+    ));
+    // setActive may still fail with !int if a non-interruptible source is
+    // active at startup. just_audio activates the session internally via
+    // AVPlayer, so we ignore the error to keep _initFuture successful.
+    try {
+      await session.setActive(true);
+    } catch (_) {}
 
     _player.playerStateStream.listen((state) {
       final isCompleted = state.processingState == ProcessingState.completed;
@@ -402,7 +453,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   @override
   Future<void> play() async {
     final session = await AudioSession.instance;
-    await session.setActive(true);
+    // Same rationale as in _init(): CarPlay grants audio focus at AVPlayer
+    // level; explicit setActive may fail with !int when another source is
+    // non-interruptible. just_audio handles the session internally.
+    try {
+      await session.setActive(true);
+    } catch (_) {}
     // just_audio's play() completes when playback STOPS, not when it starts.
     // Awaiting it would block the entire call chain until the episode ends.
     _player.play().ignore();
@@ -517,8 +573,11 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   @override
   Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
+    _debugLog('playFromMediaId start — mediaId=$mediaId extras=$extras');
+
     if (_isRootId(mediaId)) {
       if (_currentMediaItem != null) {
+        _debugLog('playFromMediaId — root id, resuming current item');
         await play();
       }
       return;
@@ -528,13 +587,20 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
         ? _currentMediaItem
         : queue.value.where((item) => item.id == mediaId).fold<MediaItem?>(null, (prev, e) => prev ?? e);
 
-    target ??= await getMediaItem(mediaId);
+    if (target != null) {
+      _debugLog('playFromMediaId — target found in current/queue: ${target.title}');
+    } else {
+      _debugLog('playFromMediaId — target not in cache, calling getMediaItem');
+      target = await getMediaItem(mediaId);
+      _debugLog('playFromMediaId — getMediaItem returned: ${target?.title ?? "null"}');
+    }
 
     // Check if it's a download (file:// URI)
     if (target == null) {
       final uri = Uri.tryParse(mediaId);
       if (uri != null && uri.scheme == 'file') {
         final title = uri.pathSegments.isNotEmpty ? Uri.decodeComponent(uri.pathSegments.last) : mediaId;
+        _debugLog('playFromMediaId — building fallback MediaItem for file:// URI');
         target = MediaItem(
           id: mediaId,
           title: title,
@@ -549,6 +615,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       final uri = Uri.tryParse(mediaId);
       if (uri != null && uri.hasScheme) {
         final fallbackTitle = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
+        _debugLog('playFromMediaId — building generic fallback MediaItem');
         target = MediaItem(
           id: mediaId,
           album: 'Flux News',
@@ -559,17 +626,22 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     }
 
     if (target == null) {
+      _debugLog('playFromMediaId — no target resolved, aborting');
       return;
     }
 
+    _debugLog('playFromMediaId — resolving saved position for: ${target.title}');
     final initialPosition = await _resolveSavedPosition(target, extras);
+    _debugLog('playFromMediaId — initialPosition=$initialPosition, calling loadMediaItem');
 
     await loadMediaItem(
       url: target.id,
       item: target,
       initialPosition: initialPosition,
     );
+    _debugLog('playFromMediaId — loadMediaItem done, calling play()');
     await play();
+    _debugLog('playFromMediaId — play() done');
   }
 
   @override

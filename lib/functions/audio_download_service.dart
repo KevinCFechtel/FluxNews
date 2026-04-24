@@ -111,9 +111,11 @@ class AudioDownloadService {
   // Cache for download metadata (attachmentID → value) used by CarPlay / Android Auto
   static final _downloadTitleCache = <int, String>{};
   static final _downloadFeedTitleCache = <int, String>{};
-  // newsID is memory-only — it is always derivable from the DB and does not
-  // need SecureStorage persistence (unlike titles which are cached for headless launches).
+  // newsID and mediaProgression are memory-only — always derivable from the DB.
+  // They are cached here so _resolveSavedPosition can avoid a DB query on the
+  // CarPlay audio-grant hot path.
   static final _downloadNewsIdCache = <int, int>{};
+  static final _downloadMediaProgressionCache = <int, int>{};
 
   static void cacheDownloadTitle(int attachmentID, String title) {
     _downloadTitleCache[attachmentID] = title;
@@ -129,9 +131,14 @@ class AudioDownloadService {
     _downloadNewsIdCache[attachmentID] = newsID;
   }
 
+  static void cacheDownloadMediaProgression(int attachmentID, int mediaProgression) {
+    _downloadMediaProgressionCache[attachmentID] = mediaProgression;
+  }
+
   static String? getDownloadTitle(int attachmentID) => _downloadTitleCache[attachmentID];
   static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
   static int? getDownloadNewsId(int attachmentID) => _downloadNewsIdCache[attachmentID];
+  static int? getDownloadMediaProgression(int attachmentID) => _downloadMediaProgressionCache[attachmentID];
 
   /// Loads titles into the memory cache for the given downloads.
   /// Checks memory cache → SecureStorage → SQLite DB (headless-safe).
@@ -164,7 +171,8 @@ class AudioDownloadService {
       db = await databaseFactoryFfi.openDatabase(dbPath);
       for (final id in needsLookup) {
         final rows = await db.rawQuery(
-          '''SELECT news.title, news.feedTitle, attachments.newsID
+          '''SELECT news.title, news.feedTitle, attachments.newsID,
+                    attachments.mediaProgression
              FROM attachments
              INNER JOIN news ON attachments.newsID = news.newsID
              WHERE attachments.attachmentID = ?
@@ -175,9 +183,13 @@ class AudioDownloadService {
         final title = rows.first['title'] as String?;
         final feedTitle = rows.first['feedTitle'] as String?;
         final newsID = rows.first['newsID'] as int?;
+        final mediaProgression = rows.first['mediaProgression'] as int?;
         if (title != null && title.isNotEmpty) cacheDownloadTitle(id, title);
         if (feedTitle != null && feedTitle.isNotEmpty) cacheDownloadFeedTitle(id, feedTitle);
         if (newsID != null) cacheDownloadNewsId(id, newsID);
+        if (mediaProgression != null && mediaProgression > 0) {
+          cacheDownloadMediaProgression(id, mediaProgression);
+        }
       }
     } catch (_) {
       // DB unavailable — titles will fall back to filenames
@@ -1224,6 +1236,7 @@ class AudioDownloadService {
       _downloadTitleCache.remove(attachmentID);
       _downloadFeedTitleCache.remove(attachmentID);
       _downloadNewsIdCache.remove(attachmentID);
+      _downloadMediaProgressionCache.remove(attachmentID);
     }
     _emitDownloadedAudiosChanged();
   }
@@ -1248,6 +1261,7 @@ class AudioDownloadService {
       _downloadTitleCache.remove(attachmentID);
       _downloadFeedTitleCache.remove(attachmentID);
       _downloadNewsIdCache.remove(attachmentID);
+      _downloadMediaProgressionCache.remove(attachmentID);
     }
 
     _emitDownloadedAudiosChanged();
@@ -1294,6 +1308,7 @@ class AudioDownloadService {
           _downloadTitleCache.remove(attachmentID);
           _downloadFeedTitleCache.remove(attachmentID);
           _downloadNewsIdCache.remove(attachmentID);
+          _downloadMediaProgressionCache.remove(attachmentID);
         }
         _emitDownloadedAudiosChanged();
       }
