@@ -1469,6 +1469,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'last'**
   String get last;
+
+  /// No description provided for @cancelAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel all'**
+  String get cancelAll;
 }
 
 class _AppLocalizationsDelegate

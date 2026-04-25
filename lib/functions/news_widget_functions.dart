@@ -359,16 +359,6 @@ Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildCont
   }
 }
 
-void _showDownloadSnackBar(BuildContext context, String message) {
-  if (!context.mounted) {
-    return;
-  }
-
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.hideCurrentSnackBar();
-  messenger.showSnackBar(SnackBar(content: Text(message)));
-}
-
 Future<bool> _isAudioAlreadyDownloaded(Attachment attachment, FluxNewsState appState) async {
   final downloadedPaths = await AudioDownloadService.loadDownloadedPathsForAttachments(
     [attachment],
@@ -379,62 +369,54 @@ Future<bool> _isAudioAlreadyDownloaded(Attachment attachment, FluxNewsState appS
 
 Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext context) async {
   final audioAttachments = news.getAudioAttachments();
-  if (audioAttachments.isEmpty) {
-    return;
-  }
+  if (audioAttachments.isEmpty) return;
 
   final attachment = audioAttachments.first;
   final storageAttachmentId = AudioDownloadService.resolveStorageAttachmentId(attachment);
+
+  // Already downloading or already on disk — nothing to do.
   final isAlreadyDownloading =
-      AudioDownloadService.getActiveDownloadsSnapshot().any((progress) => progress.attachmentID == storageAttachmentId);
-  if (isAlreadyDownloading) {
-    _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloadStarted);
-    return;
-  }
+      AudioDownloadService.getActiveDownloadsSnapshot().any((p) => p.attachmentID == storageAttachmentId);
+  if (isAlreadyDownloading) return;
 
   AudioDownloadService.cacheDownloadTitle(storageAttachmentId, news.title);
   AudioDownloadService.cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+  // Manual download always works — clear any previous user-skipped flag.
+  await AudioDownloadService.clearUserSkipped(storageAttachmentId);
 
-  if (await _isAudioAlreadyDownloaded(attachment, appState)) {
-    if (context.mounted) {
-      _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloaded);
-    }
-    return;
-  }
+  if (await _isAudioAlreadyDownloaded(attachment, appState)) return;
 
   if (appState.downloadAudioOnlyOnWifi) {
     final isWifiConnected = await AudioDownloadService.isWifiConnected();
     if (!isWifiConnected) {
       if (context.mounted) {
-        _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloadWLANWarning);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.downloadWLANWarning)),
+        );
       }
       return;
     }
   }
 
-  if (context.mounted) {
-    _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloadStarted);
-  }
-
   unawaited(() async {
     try {
-      final filePath = await AudioDownloadService.downloadAttachment(
+      await AudioDownloadService.downloadAttachment(
         attachment,
         onlyOnWifi: appState.downloadAudioOnlyOnWifi,
         news: news,
       );
-
-      if (filePath != null) {
-        if (context.mounted) {
-          _showDownloadSnackBar(context, AppLocalizations.of(context)!.downloaded);
-        }
-      }
     } catch (error) {
+      // Consume the cancellation flag — if the user pressed cancel, no snackbar.
+      final wasCancelled = AudioDownloadService.consumeCancelledByUser(storageAttachmentId);
+      if (wasCancelled) return;
+
       logThis('downloadAudioAction', 'Caught an error in downloadAudioAction function! : ${error.toString()}',
           LogLevel.ERROR);
 
       if (context.mounted) {
-        _showDownloadSnackBar(context, AppLocalizations.of(context)!.loadDownloadedDataError);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
+        );
       }
     }
   }());

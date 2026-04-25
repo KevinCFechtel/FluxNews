@@ -227,5 +227,6 @@
     "loading": "laden...",
     "noEntries": "Keine Einträge",
     "copyClippboard": "In Zwischenablage kopiert",
-    "last": "letzte"
+    "last": "letzte",
+    "cancelAll": "Alle abbrechen"
 }

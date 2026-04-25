@@ -738,4 +738,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get last => 'last';
+
+  @override
+  String get cancelAll => 'Cancel all';
 }

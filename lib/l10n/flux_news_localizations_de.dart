@@ -754,4 +754,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get last => 'letzte';
+
+  @override
+  String get cancelAll => 'Alle abbrechen';
 }

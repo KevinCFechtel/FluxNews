@@ -226,5 +226,6 @@
     "loading": "loading...",
     "noEntries": "No entries",
     "copyClipboard": "Copy to clipboard",
-    "last": "last"
+    "last": "last",
+    "cancelAll": "Cancel all"
 }

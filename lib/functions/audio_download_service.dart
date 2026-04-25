@@ -104,6 +104,13 @@ class AudioDownloadService {
   static final _activeDownloads = <int, AudioDownloadProgress>{};
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
+  // Tracks the HttpClient per storageAttachmentId so downloads can be cancelled.
+  static final _activeClients = <int, HttpClient>{};
+  // IDs explicitly cancelled by the user — distinguishes cancellations from real errors.
+  static final _cancelledByUser = <int>{};
+  static const String _downloadSkippedKeyPrefix = FluxNewsState.downloadSkippedKeyPrefix;
+  // In-memory cache of user-skipped IDs; backed by Keychain for persistence.
+  static final _userSkippedDownloads = <int>{};
 
   static const String _downloadTitleKeyPrefix = FluxNewsState.downloadTitleKeyPrefix;
   static const String _downloadFeedTitleKeyPrefix = FluxNewsState.downloadFeedTitleKeyPrefix;
@@ -139,6 +146,72 @@ class AudioDownloadService {
   static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
   static int? getDownloadNewsId(int attachmentID) => _downloadNewsIdCache[attachmentID];
   static int? getDownloadMediaProgression(int attachmentID) => _downloadMediaProgressionCache[attachmentID];
+
+  /// Persists the user-skipped flag to Keychain so auto-downloads skip this
+  /// attachment on future syncs even after the app is restarted.
+  static Future<void> _persistUserSkipped(int storageAttachmentId) async {
+    _userSkippedDownloads.add(storageAttachmentId);
+    try {
+      await _storage.write(
+        key: '$_downloadSkippedKeyPrefix$storageAttachmentId',
+        value: FluxNewsState.secureStorageTrueString,
+      );
+    } catch (_) {}
+  }
+
+  /// Returns true if the user has previously cancelled this attachment's
+  /// auto-download. Checks the in-memory cache first, then Keychain.
+  static Future<bool> isUserSkipped(int storageAttachmentId) async {
+    if (_userSkippedDownloads.contains(storageAttachmentId)) return true;
+    try {
+      final value = await _storage.read(
+        key: '$_downloadSkippedKeyPrefix$storageAttachmentId',
+      );
+      if (value == FluxNewsState.secureStorageTrueString) {
+        _userSkippedDownloads.add(storageAttachmentId);
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  /// Marks an attachment as user-skipped without cancelling an active download.
+  /// Use this when the user explicitly deletes a downloaded file so the next
+  /// sync does not re-download it automatically.
+  static Future<void> markUserSkipped(int storageAttachmentId) =>
+      _persistUserSkipped(storageAttachmentId);
+
+  /// Clears the user-skipped flag. Called when the user manually triggers a
+  /// download or when a download completes successfully.
+  static Future<void> clearUserSkipped(int storageAttachmentId) async {
+    _userSkippedDownloads.remove(storageAttachmentId);
+    try {
+      await _storage.delete(key: '$_downloadSkippedKeyPrefix$storageAttachmentId');
+    } catch (_) {}
+  }
+
+  /// Cancels a running download by closing its HTTP connection.
+  /// The in-progress file is deleted and the active-downloads stream is updated.
+  static void cancelDownload(int storageAttachmentId) {
+    _cancelledByUser.add(storageAttachmentId);
+    _persistUserSkipped(storageAttachmentId).ignore();
+    _activeClients[storageAttachmentId]?.close(force: true);
+  }
+
+  /// Cancels all running downloads. For sequential batch downloads
+  /// (e.g. auto-download), aborting the active one propagates an exception
+  /// through the loop, which also cancels all queued downloads.
+  static void cancelAllDownloads() {
+    for (final id in List<int>.from(_activeClients.keys)) {
+      cancelDownload(id);
+    }
+  }
+
+  /// Returns true if [storageAttachmentId] was explicitly cancelled by the user.
+  /// Clears the flag on read so it is consumed exactly once.
+  static bool consumeCancelledByUser(int storageAttachmentId) {
+    return _cancelledByUser.remove(storageAttachmentId);
+  }
 
   /// Loads titles into the memory cache for the given downloads.
   /// Checks memory cache → SecureStorage → SQLite DB (headless-safe).
@@ -1387,6 +1460,7 @@ class AudioDownloadService {
     }
 
     final client = HttpClient();
+    _activeClients[storageAttachmentId] = client;
     try {
       final request = await client.getUrl(Uri.parse(attachment.attachmentURL));
       final response = await request.close();
@@ -1411,6 +1485,13 @@ class AudioDownloadService {
       final totalBytes = response.contentLength;
       var receivedBytes = 0;
       final startedAt = DateTime.now();
+      // Cache title before emitting the first progress event so the download
+      // banner shows the episode title immediately (not just the filename).
+      if (news != null && storageAttachmentId >= 0) {
+        cacheDownloadTitle(storageAttachmentId, news.title);
+        cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+        cacheDownloadNewsId(storageAttachmentId, news.newsID);
+      }
       _setActiveDownload(AudioDownloadProgress(
         attachmentID: storageAttachmentId,
         fileName: path.basename(filePath),
@@ -1437,6 +1518,7 @@ class AudioDownloadService {
         if (await file.exists()) {
           await file.delete();
         }
+        _emitDownloadedAudiosChanged();
         rethrow;
       }
 
@@ -1461,11 +1543,13 @@ class AudioDownloadService {
         cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
         cacheDownloadNewsId(storageAttachmentId, news.newsID);
       }
+      clearUserSkipped(storageAttachmentId).ignore();
       _emitDownloadedAudiosChanged();
       _removeActiveDownload(storageAttachmentId);
 
       return filePath;
     } finally {
+      _activeClients.remove(storageAttachmentId);
       _removeActiveDownload(storageAttachmentId);
       client.close(force: true);
     }
@@ -1485,6 +1569,8 @@ class AudioDownloadService {
     for (final news in newsList) {
       final attachments = news.getAudioAttachments();
       for (final attachment in attachments) {
+        final storageId = _resolveStorageAttachmentId(attachment);
+        if (await isUserSkipped(storageId)) continue;
         await downloadAttachment(attachment, onlyOnWifi: onlyOnWifi, news: news);
       }
     }

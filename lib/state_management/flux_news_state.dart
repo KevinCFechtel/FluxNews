@@ -173,6 +173,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String androidNotificationIcon = 'mipmap/ic_appicon';
   static const String downloadPathKeyPrefix = 'audio_download_path_';
   static const String downloadTimestampKeyPrefix = 'audio_download_ts_';
+  static const String downloadSkippedKeyPrefix = 'audio_download_skipped_';
   static const String defaultArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_IOS.png';
   static const String defaultAndroidArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_Android.png';
   static const String defaultArtworkFileName = 'default_audio_artwork.png';

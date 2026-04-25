@@ -18,21 +18,21 @@ class DownloadsOverview extends StatefulWidget {
 }
 
 class _DownloadsOverviewState extends State<DownloadsOverview> {
-  late Future<List<DownloadedAudioInfo>> _downloadsFuture;
+  List<DownloadedAudioInfo> _downloads = [];
+  bool _initialLoading = true;
   StreamSubscription<void>? _downloadedAudiosChangedSubscription;
   FluxNewsAudioHandler? _audioHandler;
   StreamSubscription<dynamic>? _mediaItemSubscription;
   final Map<int, Future<String?>> _titleFutureByAttachmentId = {};
   final Map<int, Future<News?>> _newsFutureByAttachmentId = {};
-  final Set<String> _dismissedStorageIds = {};
 
   @override
   void initState() {
     super.initState();
-    _reload();
+    _loadDownloads(initial: true);
     _downloadedAudiosChangedSubscription = AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
       if (!mounted) return;
-      setState(_reload);
+      _loadDownloads();
     });
     initFluxNewsAudioHandler().then((handler) {
       if (!mounted) return;
@@ -50,18 +50,17 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     super.dispose();
   }
 
-  void _reload() {
-    _downloadsFuture = AudioDownloadService.getDownloadedAudios();
-    _titleFutureByAttachmentId.clear();
-    _newsFutureByAttachmentId.clear();
-    _dismissedStorageIds.clear();
+  Future<void> _loadDownloads({bool initial = false}) async {
+    final data = await AudioDownloadService.getDownloadedAudios();
+    if (!mounted) return;
+    setState(() {
+      _downloads = data;
+      if (initial) _initialLoading = false;
+    });
   }
 
   Future<String?> _getNewsTitleByAttachmentId(int attachmentID) async {
-    if (attachmentID < 0) {
-      return null;
-    }
-
+    if (attachmentID < 0) return null;
     final appState = context.read<FluxNewsState>();
     final title = await queryNewsTitleByAttachmentId(appState, attachmentID);
     if (title != null && title.isNotEmpty) {
@@ -78,10 +77,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   }
 
   Future<News?> _getNewsByAttachmentId(int attachmentID) async {
-    if (attachmentID < 0) {
-      return null;
-    }
-
+    if (attachmentID < 0) return null;
     final appState = context.read<FluxNewsState>();
     final news = await queryNewsByAttachmentId(appState, attachmentID);
     if (news?.feedTitle.isNotEmpty == true) {
@@ -116,38 +112,37 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Future<void> _refresh() async {
-    setState(_reload);
-    await _downloadsFuture;
-  }
+  Future<void> _refresh() => _loadDownloads();
 
   Future<void> _deleteItem(DownloadedAudioInfo item) async {
-    // If this file is currently loaded in the audio handler, stop playback
-    // so the Now Playing notification / lock screen widget is cleared.
     final fileUri = Uri.file(item.filePath).toString();
     if (_audioHandler != null && _audioHandler!.currentUrl == fileUri) {
       await _audioHandler!.stop();
     }
+    // User explicitly deleted the file — prevent auto-re-download on next sync.
+    if (item.attachmentID >= 0) {
+      await AudioDownloadService.markUserSkipped(item.attachmentID);
+    }
     await AudioDownloadService.deleteDownloadedAudioByStorageId(item.storageID);
     if (!mounted) return;
-    setState(_reload);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context)!.downloadsManagerDeletedSnackbar)),
     );
   }
 
   Future<void> _dismissAndDeleteItem(DownloadedAudioInfo item) async {
-    setState(() {
-      _dismissedStorageIds.add(item.storageID);
-    });
+    // Optimistic removal — no FutureBuilder restart, no flicker.
+    setState(() => _downloads.removeWhere((d) => d.storageID == item.storageID));
+    _titleFutureByAttachmentId.remove(item.attachmentID);
+    _newsFutureByAttachmentId.remove(item.attachmentID);
 
     try {
       await _deleteItem(item);
     } catch (_) {
+      // Restore item on failure.
       if (!mounted) return;
-      setState(() {
-        _dismissedStorageIds.remove(item.storageID);
-      });
+      await _loadDownloads();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
       );
@@ -165,47 +160,29 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
         scrolledUnderElevation: 0,
         title: Text(AppLocalizations.of(context)!.audioDownloadsSettings, style: theme.textTheme.titleLarge),
       ),
-      body: FutureBuilder<List<DownloadedAudioInfo>>(
-        future: _downloadsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(AppLocalizations.of(context)!.loadDownloadedDataError),
-              ),
-            );
-          }
-
-          final downloads = snapshot.data ?? const <DownloadedAudioInfo>[];
-
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final horizontalPadding = appState.isTablet ? 24.0 : 12.0;
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: appState.isTablet ? 1100 : double.infinity),
-                    child: ListView(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 12),
-                      children: [
-                        _buildRunningDownloadsCard(),
-                        const SizedBox(height: 16),
-                        _buildDownloadedList(downloads, appState.isTablet),
-                      ],
+      body: _initialLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _refresh,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final horizontalPadding = appState.isTablet ? 24.0 : 12.0;
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: appState.isTablet ? 1100 : double.infinity),
+                      child: ListView(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 12),
+                        children: [
+                          _buildRunningDownloadsCard(),
+                          const SizedBox(height: 16),
+                          _buildDownloadedList(_downloads, appState.isTablet),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          );
-        },
-      ),
     );
   }
 
@@ -249,7 +226,20 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   children: [
                     Icon(Icons.downloading_rounded, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    Text(AppLocalizations.of(context)!.runningDownloads, style: theme.textTheme.titleMedium),
+                    Expanded(
+                      child: Text(AppLocalizations.of(context)!.runningDownloads, style: theme.textTheme.titleMedium),
+                    ),
+                    if (activeDownloads.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: AudioDownloadService.cancelAllDownloads,
+                        icon: const Icon(Icons.cancel_outlined, size: 16),
+                        label: Text(AppLocalizations.of(context)!.cancelAll),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.error,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -283,16 +273,29 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FutureBuilder<String?>(
-              future: _titleFutureForAttachmentId(progress.attachmentID),
-              builder: (context, snapshot) {
-                final title = snapshot.data;
-                return Text(
-                  title != null && title.isNotEmpty ? title : progress.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                );
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: FutureBuilder<String?>(
+                    future: _titleFutureForAttachmentId(progress.attachmentID),
+                    builder: (context, snapshot) {
+                      final title = snapshot.data;
+                      return Text(
+                        title != null && title.isNotEmpty ? title : progress.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: AppLocalizations.of(context)!.cancel,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => AudioDownloadService.cancelDownload(progress.attachmentID),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
             LinearProgressIndicator(value: progressValue, minHeight: 6),
@@ -306,7 +309,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   Widget _buildDownloadedList(List<DownloadedAudioInfo> downloads, bool isTablet) {
     final theme = Theme.of(context);
-    final visibleDownloads = downloads.where((item) => !_dismissedStorageIds.contains(item.storageID)).toList();
+    final visibleDownloads = downloads;
 
     if (visibleDownloads.isEmpty) {
       return Card(

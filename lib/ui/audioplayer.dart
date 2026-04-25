@@ -400,6 +400,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   Future<void> _downloadAudio(Attachment attachment, News news) async {
     if (_downloadingAttachmentIDs.contains(attachment.attachmentID)) return;
     setState(() => _downloadingAttachmentIDs.add(attachment.attachmentID));
+    // Manual download — clear any previous user-skipped flag.
+    final storageId = AudioDownloadService.resolveStorageAttachmentId(attachment);
+    await AudioDownloadService.clearUserSkipped(storageId);
     try {
       final filePath = await AudioDownloadService.downloadAttachment(
         attachment,
@@ -967,18 +970,33 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       ),
                       IconButton(
                         color: Theme.of(context).colorScheme.primary,
-                        tooltip: isDownloaded
-                            ? AppLocalizations.of(context)!.downloaded
-                            : AppLocalizations.of(context)!.downloadAudio,
-                        onPressed: isDownloaded || isDownloading ? null : () => _downloadAudio(attachment, widget.news),
+                        tooltip: isDownloading
+                            ? AppLocalizations.of(context)!.cancel
+                            : isDownloaded
+                                ? AppLocalizations.of(context)!.downloaded
+                                : AppLocalizations.of(context)!.downloadAudio,
+                        onPressed: isDownloaded
+                            ? null
+                            : isDownloading
+                                ? () => AudioDownloadService.cancelDownload(storageAttachmentID)
+                                : () => _downloadAudio(attachment, widget.news),
                         icon: isDownloading
                             ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  value: downloadProgressValue,
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                width: 20,
+                                height: 20,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      value: downloadProgressValue,
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context).colorScheme.primary),
+                                    ),
+                                    Icon(Icons.close,
+                                        size: 12,
+                                        color: Theme.of(context).colorScheme.primary),
+                                  ],
                                 ),
                               )
                             : Icon(

@@ -346,7 +346,7 @@ class FluxNewsBody extends StatelessWidget {
             ),
       drawer: getDrawer(context, appState),
       body: const FluxNewsBodyList(),
-      bottomNavigationBar: PersistentAudioMiniPlayer(appState: appState),
+      bottomNavigationBar: _BottomBanners(appState: appState),
     );
   }
 
@@ -435,7 +435,7 @@ class FluxNewsBody extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: PersistentAudioMiniPlayer(appState: appState),
+      bottomNavigationBar: _BottomBanners(appState: appState),
     );
   }
 
@@ -1018,6 +1018,150 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
           },
         );
       },
+    );
+  }
+}
+
+// ── Bottom banners: download progress + mini player stacked ─────────────────
+
+class _BottomBanners extends StatelessWidget {
+  const _BottomBanners({required this.appState});
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PersistentDownloadBanner(appState: appState),
+        PersistentAudioMiniPlayer(appState: appState),
+      ],
+    );
+  }
+}
+
+class PersistentDownloadBanner extends StatelessWidget {
+  const PersistentDownloadBanner({super.key, required this.appState});
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<AudioDownloadProgress>>(
+      initialData: AudioDownloadService.getActiveDownloadsSnapshot(),
+      stream: AudioDownloadService.activeDownloadsStream,
+      builder: (context, snapshot) {
+        final downloads = snapshot.data ?? const [];
+        if (downloads.isEmpty) return const SizedBox.shrink();
+
+        final colorScheme = Theme.of(context).colorScheme;
+        final bg = colorScheme.tertiaryContainer;
+        final fg = colorScheme.onTertiaryContainer;
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+        final isTablet = screenWidth >= 900 || shortestSide >= 600;
+
+        return SafeArea(
+          top: false,
+          child: Material(
+            elevation: 8,
+            color: bg,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 12 : 8,
+                vertical: isTablet ? 8 : 6,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: downloads
+                    .map((d) => _DownloadRow(
+                          progress: d,
+                          foreground: fg,
+                          isTablet: isTablet,
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DownloadRow extends StatelessWidget {
+  const _DownloadRow({
+    required this.progress,
+    required this.foreground,
+    required this.isTablet,
+  });
+
+  final AudioDownloadProgress progress;
+  final Color foreground;
+  final bool isTablet;
+
+  String _subtitle(BuildContext context) {
+    if (progress.totalBytes > 0) {
+      return '${AudioDownloadService.formatBytes(progress.receivedBytes)}'
+          ' / ${AudioDownloadService.formatBytes(progress.totalBytes)}';
+    }
+    return AudioDownloadService.formatBytes(progress.receivedBytes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = AudioDownloadService.getDownloadTitle(progress.attachmentID) ?? progress.fileName;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: isTablet ? 13 : 11,
+                              fontWeight: FontWeight.w600,
+                              color: foreground,
+                            ),
+                      ),
+                    ),
+                    Text(
+                      _subtitle(context),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: isTablet ? 11 : 10,
+                            color: foreground.withAlpha(180),
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: progress.progress,
+                  minHeight: isTablet ? 4 : 3,
+                  backgroundColor: foreground.withAlpha(50),
+                  valueColor: AlwaysStoppedAnimation<Color>(foreground),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, size: isTablet ? 20 : 18, color: foreground),
+            tooltip: AppLocalizations.of(context)!.cancel,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            constraints: const BoxConstraints(),
+            onPressed: () => AudioDownloadService.cancelDownload(progress.attachmentID),
+          ),
+        ],
+      ),
     );
   }
 }
