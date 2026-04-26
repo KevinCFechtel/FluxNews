@@ -195,6 +195,7 @@
     "SleepTimerRemaining": "min verbleibend",
     "downloaded": "Heruntergeladen",
     "downloadAudio": "Download Audio",
+    "downloadQueued": "Warteschlange",
     "speed": "Geschwindigkeit",
     "chapters": "Kapitel",
     "interval": "Intervall",

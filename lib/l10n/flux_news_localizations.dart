@@ -1278,6 +1278,12 @@ abstract class AppLocalizations {
   /// **'Download Audio'**
   String get downloadAudio;
 
+  /// No description provided for @downloadQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get downloadQueued;
+
   /// No description provided for @speed.
   ///
   /// In en, this message translates to:

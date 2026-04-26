@@ -404,7 +404,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     final storageId = AudioDownloadService.resolveStorageAttachmentId(attachment);
     await AudioDownloadService.clearUserSkipped(storageId);
     try {
-      final filePath = await AudioDownloadService.downloadAttachment(
+      final filePath = await AudioDownloadService.queueDownload(
         attachment,
         onlyOnWifi: widget.appState.downloadAudioOnlyOnWifi,
         news: widget.news,

@@ -400,7 +400,7 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
 
   unawaited(() async {
     try {
-      await AudioDownloadService.downloadAttachment(
+      await AudioDownloadService.queueDownload(
         attachment,
         onlyOnWifi: appState.downloadAudioOnlyOnWifi,
         news: news,

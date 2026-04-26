@@ -657,6 +657,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get downloadAudio => 'Download Audio';
 
   @override
+  String get downloadQueued => 'Warteschlange';
+
+  @override
   String get speed => 'Geschwindigkeit';
 
   @override

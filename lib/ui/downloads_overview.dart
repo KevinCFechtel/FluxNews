@@ -258,9 +258,11 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   Widget _buildActiveDownloadTile(AudioDownloadProgress progress) {
     final theme = Theme.of(context);
     final progressValue = progress.progress;
-    final subtitle = progress.totalBytes > 0
-        ? '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.from} ${AudioDownloadService.formatBytes(progress.totalBytes)}'
-        : '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.loaded}';
+    final subtitle = progress.isQueued
+        ? AppLocalizations.of(context)!.downloadQueued
+        : progress.totalBytes > 0
+            ? '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.from} ${AudioDownloadService.formatBytes(progress.totalBytes)}'
+            : '${AudioDownloadService.formatBytes(progress.receivedBytes)} ${AppLocalizations.of(context)!.loaded}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

@@ -37,6 +37,7 @@ class AudioDownloadProgress {
     required this.receivedBytes,
     required this.totalBytes,
     required this.startedAt,
+    this.isQueued = false,
   });
 
   final int attachmentID;
@@ -44,9 +45,11 @@ class AudioDownloadProgress {
   final int receivedBytes;
   final int totalBytes;
   final DateTime startedAt;
+  /// True while the item is waiting in the queue before the HTTP download starts.
+  final bool isQueued;
 
   double? get progress {
-    if (totalBytes <= 0) return null;
+    if (isQueued || totalBytes <= 0) return null;
     return receivedBytes / totalBytes;
   }
 }
@@ -106,6 +109,8 @@ class AudioDownloadService {
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
   // Tracks the HttpClient per storageAttachmentId so downloads can be cancelled.
   static final _activeClients = <int, HttpClient>{};
+  // Sequential queue: each new download is chained onto the previous one.
+  static var _downloadQueue = Future<void>.value();
   // IDs explicitly cancelled by the user — distinguishes cancellations from real errors.
   static final _cancelledByUser = <int>{};
   static const String _downloadSkippedKeyPrefix = FluxNewsState.downloadSkippedKeyPrefix;
@@ -205,6 +210,69 @@ class AudioDownloadService {
     for (final id in List<int>.from(_activeClients.keys)) {
       cancelDownload(id);
     }
+  }
+
+  /// Adds [attachment] to the sequential download queue. Returns a Future that
+  /// completes with the local file path when the download actually runs, or
+  /// null if the file already exists / WiFi check failed. If [attachment] is
+  /// already active or queued, returns null immediately.
+  static Future<String?> queueDownload(
+    Attachment attachment, {
+    News? news,
+    bool onlyOnWifi = false,
+  }) {
+    final storageId = _resolveStorageAttachmentId(attachment);
+
+    // Already active or queued — don't enqueue twice.
+    if (_activeDownloads.containsKey(storageId)) return Future.value(null);
+
+    // Pre-cache title so the banner shows the episode name while waiting.
+    if (news != null && storageId >= 0) {
+      cacheDownloadTitle(storageId, news.title);
+      cacheDownloadFeedTitle(storageId, news.feedTitle);
+      cacheDownloadNewsId(storageId, news.newsID);
+    }
+
+    // Show a "queued" placeholder in the active-downloads stream immediately.
+    _setActiveDownload(AudioDownloadProgress(
+      attachmentID: storageId,
+      fileName: (news != null && news.title.isNotEmpty)
+          ? news.title
+          : p.basename(attachment.attachmentURL),
+      receivedBytes: 0,
+      totalBytes: 0,
+      startedAt: DateTime.now(),
+      isQueued: true,
+    ));
+
+    final completer = Completer<String?>();
+
+    _downloadQueue = _downloadQueue.then((_) async {
+      String? result;
+      Object? downloadError;
+      try {
+        result = await downloadAttachment(attachment, news: news, onlyOnWifi: onlyOnWifi);
+      } catch (e) {
+        downloadError = e;
+      } finally {
+        // Remove queued placeholder if downloadAttachment returned early
+        // (file already exists, WiFi check failed) without replacing it.
+        final current = _activeDownloads[storageId];
+        if (current?.isQueued == true) {
+          _removeActiveDownload(storageId);
+        }
+      }
+      if (!completer.isCompleted) {
+        if (downloadError != null) {
+          completer.completeError(downloadError);
+        } else {
+          completer.complete(result);
+        }
+      }
+      // Never rethrow — a single failure must not break the queue chain.
+    });
+
+    return completer.future;
   }
 
   /// Returns true if [storageAttachmentId] was explicitly cancelled by the user.
@@ -435,16 +503,7 @@ class AudioDownloadService {
     }
   }
 
-  static Future<String> getCoverCacheDir() async {
-    final appSupport = await getApplicationSupportDirectory();
-    final coverCacheDir = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
-    if (!await coverCacheDir.exists()) {
-      await coverCacheDir.create(recursive: true);
-    }
-    return coverCacheDir.path;
-  }
-
-  static Future<Uri?> cacheArtworkBytesForAttachment({
+static Future<Uri?> cacheArtworkBytesForAttachment({
     required int attachmentID,
     required Uint8List imageBytes,
   }) async {
@@ -1571,7 +1630,7 @@ class AudioDownloadService {
       for (final attachment in attachments) {
         final storageId = _resolveStorageAttachmentId(attachment);
         if (await isUserSkipped(storageId)) continue;
-        await downloadAttachment(attachment, onlyOnWifi: onlyOnWifi, news: news);
+        await queueDownload(attachment, onlyOnWifi: onlyOnWifi, news: news);
       }
     }
   }

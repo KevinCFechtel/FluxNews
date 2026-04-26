@@ -643,6 +643,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get downloadAudio => 'Download Audio';
 
   @override
+  String get downloadQueued => 'Queued';
+
+  @override
   String get speed => 'Speed';
 
   @override

@@ -1100,6 +1100,7 @@ class _DownloadRow extends StatelessWidget {
   final bool isTablet;
 
   String _subtitle(BuildContext context) {
+    if (progress.isQueued) return AppLocalizations.of(context)!.downloadQueued;
     if (progress.totalBytes > 0) {
       return '${AudioDownloadService.formatBytes(progress.receivedBytes)}'
           ' / ${AudioDownloadService.formatBytes(progress.totalBytes)}';

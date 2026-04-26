@@ -195,6 +195,7 @@
     "sleepTimerRemaining": "min remaining",
     "downloaded": "Downloaded",
     "downloadAudio": "Download Audio",
+    "downloadQueued": "Queued",
     "speed": "Speed",
     "chapters": "Chapters",
     "interval": "Interval",
