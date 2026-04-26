@@ -1,29 +1,28 @@
-# Flux News
+# Flux News & Podcasts
 
 <img src="assets/Flux_News_Starticon_Blue_Mac.png" width="150">
 
-A Newsreader for the miniflux backend (<https://miniflux.app>).
+A privacy-first Newsreader and Podcast player for the Miniflux backend ([https://miniflux.app](https://miniflux.app)). 
 
-This Newsreader sync with the miniflux server api.
+Flux News synchronizes seamlessly with the Miniflux API to bring your favorite articles and podcasts to all your devices—including your car.
 
-Enjoy full offline support, intuitive swipe gestures, a true OLED black mode and open articles preferred in an already installed app.
-<br/><br/>
+Enjoy full offline support, intuitive gestures, a true OLED black mode, and a powerful new media engine for an uninterrupted listening experience.
 
 ## Download
-
 
 [<img alt="Get it on F-Droid" height="100" src="./screenshots/fdroid.png">](https://f-droid.org/packages/de.circle_dev.flux_news/)
 
 [<img alt="Get it on Google Play" height="100" src="./screenshots/googleplay.png">](https://play.google.com/store/apps/details?id=de.circle_dev.flux_news)
+
+[<img alt="Get it on Apple App Store" height="100" src="./screenshots/AppleAppStore.svg">](https://apps.apple.com/us/app/flux-news/id6761262233)
 
 ## Getting Started
 
 Flux News requires Miniflux version >= [2.0.29](https://miniflux.app/releases/2.0.29.html).
 
 1. In Miniflux, create an API key in Settings / API Keys.
-2. Open the app, go to the Settings page
-3. Add the server URL and the key (do **include** the `/v1/` part of the URL endpoint)
-4. Save, go back and refresh!
+2. Open the app, add the server URL and the key you just created.
+3. Save, go back and refresh!
 
 The unread articles should appear in the app.
 
@@ -32,6 +31,8 @@ The unread articles should appear in the app.
 <p float="left">
 <img src="screenshots/AllNewsLight.png" width="300">
 <img src="screenshots/AllNewsDark.png" width="300">
+<img src="screenshots/Audioplayer.png" width="300">
+<img src="screenshots/Podcast_Overview.png" width="300">
 <img src="screenshots/DrawerWithFeeds.png" width="300">
 <img src="screenshots/NavBarMenu.png" width="300">
 <img src="screenshots/Search.png" width="300">
@@ -48,35 +49,34 @@ The unread articles should appear in the app.
 
 ## Features
 
-Flux News is still in development but implements some common features for an RSS reader. Keep in
-mind that this is a personal project which is moving forward depending on my free time. At the
-moment, the following is supported:
+### 🗞 News Reading
+* **Full Offline Support:** Read the fetched article text anytime, anywhere.
+* **Intuitive Gesture Control:** Navigate your news with natural swipe gestures. Quickly triage your articles, mark them as read, or save them for later.
+* **Mark as Read on Scroll:** Articles are automatically marked as read when you scroll over them.
+* **OLED-Optimized Design:** Choose between Light, Dark, and a specialized true black mode for OLED screens.
+* **Precision Filtering & Search:** Instantly sort through your content by status, category, or individual feeds. 
+* **Native Experience:** Open articles in their respective installed apps or access comments directly.
+* **Article Management:** Support for truncating articles and sending them to third-party services.
 
-**Intuitive Gesture Control:** Navigate your news with natural swipe gestures. Quickly triage your articles, mark them as read, or save them for later.
+### 🎙 Podcast Excellence (New!)
+* **Integrated Player:** High-performance playback with variable speed control.
+* **Smart Management:** Automatic download of new episodes and automatic deletion after finishing to save storage.
+* **Advanced Audio Features:** Full chapter recognition for easy navigation and a built-in sleep timer.
+* **Backend Sync:** Your playback progress is synchronized with your Miniflux backend.
+* **Dedicated Downloads View:** Access and manage all your offline audio content in one convenient view.
 
-**Open articles in an app:** Articles can be opened in an already installed app.
-
-**Mark as read on scrollover:** Articles are marked as read when you scroll over them.
-
-**OLED-Optimized Design:** Choose between Light, Dark, and a specialized true black mode for OLED screens to save battery and reduce eye strain.
-
-**Precision Filtering & Search:** Instantly sort through your content by status (Unread, Read, Starred), category, or individual feeds. Use the powerful search to query your entire Miniflux backend.
-
-**Send an article:** Articles can be send to third-party services if enabled.
-
-**Truncate an article:** Articles can be truncated to have a teaser instead of the full article text.
-
-**Quick Access to Discussions:** Open article comments directly in the app to stay engaged with the community without leaving your newsreader.
-<br/><br/>
+### 🚗 On the Road (New!)
+* **CarPlay & Android Auto:** A safe, audio-centric interface designed specifically for your vehicle's dashboard.
+* **Seamless Integration:** Access your podcast library and control playback safely while driving using native car controls.
 
 ## Limitations:
 
-- No user management.
-- No feed or category management.
+* **No User Management:** Please use the Miniflux web interface for managing users.
+* **No Feed or Category Management:** Please use the Miniflux web interface for managing feeds and categories.
 
 ## Permissions
-
-* Internet permission is required to sync with the miniflux backend.
+* **Internet:** Required to sync with your Miniflux backend.
+* **Foreground Service:** Essential for stable audio playback and reliable Android Auto / CarPlay integration.
 <br/><br/>
 
 ## Disclaimer
