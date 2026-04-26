@@ -14,7 +14,7 @@ Enjoy full offline support, intuitive gestures, a true OLED black mode, and a po
 
 [<img alt="Get it on Google Play" height="100" src="./screenshots/googleplay.png">](https://play.google.com/store/apps/details?id=de.circle_dev.flux_news)
 
-[<img alt="Get it on Apple App Store" width="300" height="100" src="./screenshots/AppleAppStore.svg">](https://apps.apple.com/us/app/flux-news/id6761262233)
+[<img alt="Get it on Apple App Store" width="250" height="75" src="./screenshots/AppleAppStore.svg">](https://apps.apple.com/us/app/flux-news/id6761262233)
 
 ## Getting Started
 
