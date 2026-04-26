@@ -290,7 +290,7 @@ class FluxNewsState extends ChangeNotifier {
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
   String secondLeftSwipeAction =
-      Platform.isIOS ? FluxNewsState.swipeActionSaveString : FluxNewsState.swipeActionNoneString;
+      Platform.isIOS ? FluxNewsState.swipeActionDownloadString : FluxNewsState.swipeActionNoneString;
   String secondRightSwipeAction =
       Platform.isIOS ? FluxNewsState.swipeActionShareString : FluxNewsState.swipeActionNoneString;
   String tabAction = Platform.isIOS ? FluxNewsState.tabActionSplittedString : FluxNewsState.tabActionOpenString;
@@ -1691,7 +1691,7 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesSecondSwipeActions != null) {
       if (recordTypesSecondSwipeActions!.isNotEmpty) {
         if (Platform.isIOS) {
-          secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![3];
+          secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![7];
         } else {
           secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![0];
         }
