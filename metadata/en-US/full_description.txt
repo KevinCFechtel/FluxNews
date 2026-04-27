@@ -1,13 +1,33 @@
-A simple Newsreader for the miniflux backend (https://miniflux.app) 2.0.29+.
-This newsreader sync with the miniflux server api.
+Flux News: High-Performance Miniflux Client
+Elevate your reading experience. Flux News is a fast, fluid, and deeply integrated newsreader designed specifically for the Miniflux backend. Built to outperform standard web interfaces, it provides a seamless workflow that keeps your content accessible, even when you're offline.
 
-Features:
-Dark Mode: Flux News has a material design inspired look in either light or dark themes.
-Search for articles: Search for articles at the miniflux backend
-Mark as read on scroll over: Articles are marked as read when you scroll over them.
-Open articles in an app: Articles can be opened in an already installed app.
-Order articles by date: Articles can be ordered by date ascending or descanding.
-Filter articles by status: Articles can be filtered by status (unread, read, starred).
-Filter articles by category: Articles can be filtered by category.
-Filter articles by feed: Articles can be filtered by feed.
-Send an article to third-party services if enabled.
+Master Your Feed with Ease
+ •	Offline-Ready: Unlike a browser, Flux News stores your articles locally. Sync your feeds once and read them anywhere, on the plane, in the subway, or in remote areas without an internet connection.
+ •	Intuitive Gesture Control: Navigate your news with natural swipe gestures. Quickly triage your articles, mark them as read, or save them for later with a simple flick of your finger.
+ •	Effortless "Scroll-to-Read": Experience a friction-free "inbox zero" workflow. Articles are automatically marked as read as you scroll over them, so you never have to manually clear your queue again.
+ •	Deep System Integration: Share interesting finds instantly using the System Share Sheet or send articles directly to your configured third-party services.
+ •	Direct App Linking: Open articles directly in their respective installed apps for a cohesive experience that feels right at home on your device.
+
+Podcast Excellence
+ •	Integrated Player: High-performance playback with variable speed control.
+ •	Smart Management: Automatic download of new episodes and automatic deletion after listening to save space.
+ •	Advanced Audio Features: Full chapter recognition for easy navigation and a built-in sleep timer.
+ •	Backend Sync: Your playback progress is synchronized with Miniflux, so you never lose your spot.
+ •	Dedicated Downloads View: Manage all your offline audio content in one place.
+
+On the Road
+ •	CarPlay: A safe, audio-centric interface for your vehicle's dashboard.
+ •	Seamless Integration: Access your downloaded podcasts and control playback safely while driving.
+
+Tailored for Your Device
+ •	OLED-Optimized Design: Choose between Light, Dark, and a specialized True Black mode designed specifically to save battery and look stunning on high-end displays.
+ •	Precision Filtering & Search: Instantly sort through your content by status (Unread, Read, Starred), category, or individual feeds. Use the powerful search to query your entire Miniflux backend in seconds.
+ •	Quick Access to Discussions: Open article comments directly within the app to stay on top of the conversation.
+
+Privacy by Design
+Your data belongs to you. Flux News acts as a transparent window to your own server.
+ •	Direct Sync: The app communicates directly with your Miniflux API.
+ •	No Third-Party Tracking: We do not collect, store, or analyze your reading habits.
+ •	No Middlemen: Your credentials and content never pass through any external servers other than your own.
+
+Please Note: This app requires an existing Miniflux server instance or a Miniflux Cloud account.
