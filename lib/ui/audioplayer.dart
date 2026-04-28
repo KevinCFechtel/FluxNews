@@ -149,10 +149,12 @@ class NewsAudioPlayer extends StatefulWidget {
 
 class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   static final List<RegExp> _chapterTimestampPatterns = [
+    RegExp(r'\((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\)'),
+    RegExp(r'\[(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\]'),
+    RegExp(r'\((?:(\d{1,2})\.)?([0-5]?\d)\.([0-5]\d)\)'),
+    RegExp(r'\[(?:(\d{1,2})\.)?([0-5]?\d)\.([0-5]\d)\]'),
     RegExp(r'(?<!\d)(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)(?!\d)'),
     RegExp(r'(?<!\d)(?:(\d{1,2})\.)?([0-5]?\d)\.([0-5]\d)(?!\d)'),
-    RegExp(r'\((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\)'),
-    RegExp(r'\((?:(\d{1,2})\.)?([0-5]?\d)\.([0-5]\d)\)'),
   ];
 
   static const List<int> _sleepTimerMinuteOptions = [
@@ -337,8 +339,15 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     });
   }
 
+  String _htmlToPlainTextWithLineBreaks(String html) {
+    final processed = html
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'</(p|div|li|h[1-6])>', caseSensitive: false), '\n');
+    return html_parser.parse(processed).body?.text ?? '';
+  }
+
   List<AudioChapter> _extractChaptersFromArticleContent() {
-    final plainText = html_parser.parse(widget.news.content).body?.text ?? '';
+    final plainText = _htmlToPlainTextWithLineBreaks(widget.news.content);
     if (plainText.trim().isEmpty) {
       return const [];
     }
@@ -1049,6 +1058,14 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         localizations.chapters,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
+                      onExpansionChanged: (expanded) {
+                        if (!expanded) {
+                          // Clear stored index so re-opening always scrolls to
+                          // the current chapter, even if it hasn't changed.
+                          _lastAutoScrolledChapterIndexByAttachmentID
+                              .remove(attachment.attachmentID);
+                        }
+                      },
                       children: [
                         if (isLoadingChapters)
                           Padding(
