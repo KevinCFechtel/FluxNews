@@ -771,6 +771,7 @@ class PersistentAudioMiniPlayer extends StatefulWidget {
 class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   FluxNewsAudioHandler? _audioHandler;
   StreamSubscription<PlaybackState>? _completionSubscription;
+  StreamSubscription<SleepTimerEvent>? _sleepTimerSubscription;
   final _storage = sec_store.FlutterSecureStorage(
     iOptions: const sec_store.IOSOptions(
       accessibility: sec_store.KeychainAccessibility.first_unlock,
@@ -786,6 +787,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   @override
   void dispose() {
     _completionSubscription?.cancel();
+    _sleepTimerSubscription?.cancel();
     super.dispose();
   }
 
@@ -798,6 +800,16 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
     _completionSubscription = handler.playbackState.listen((state) {
       if (state.processingState == AudioProcessingState.completed) {
         _handleCompletion(handler);
+      }
+    });
+    _sleepTimerSubscription = handler.sleepTimerStream.listen((event) {
+      if (!mounted || event != SleepTimerEvent.fired) return;
+      final extras = handler.mediaItem.value?.extras;
+      final attachmentID = extras?['attachmentID'];
+      final newsID = extras?['newsID'];
+      final position = handler.position;
+      if (attachmentID is int && newsID is int && position > Duration.zero) {
+        syncMediaProgression(widget.appState, newsID, attachmentID, position.inSeconds).ignore();
       }
     });
   }
