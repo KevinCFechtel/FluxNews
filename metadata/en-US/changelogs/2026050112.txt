@@ -1,0 +1,7 @@
+What’s New:
+ •	Subscribe to your favorite shows and listen directly within the app.
+ •	Set your podcasts to download automatically for offline listening and automatically delete episodes once you've finished listening. 
+ •	Adjustable playback speeds, a built-in Sleep Timer and select chapters.
+ •	Access all your offline episodes in one organized view.
+ •	Browse and play your downloaded episodes directly from Android Auto
+ •	Your playback progress is now synchronized with your Miniflux backend.
