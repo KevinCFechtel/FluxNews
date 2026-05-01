@@ -185,6 +185,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   StreamSubscription<MediaItem?>? _mediaItemSubscription;
   StreamSubscription<PlaybackState>? _playbackStateSubscription;
   StreamSubscription<List<AudioDownloadProgress>>? _activeDownloadsSubscription;
+  StreamSubscription<SleepTimerEvent>? _sleepTimerSubscription;
   final Map<int, String> _downloadedPaths = {};
   final Map<int, AudioDownloadProgress> _activeDownloadsByStorageAttachmentID = {};
   final Map<int, List<AudioChapter>> _chaptersByAttachmentID = {};
@@ -194,10 +195,6 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   final Set<int> _downloadingAttachmentIDs = {};
   Uri? _defaultArtworkUri;
   double _playbackSpeed = 1.0;
-  Timer? _sleepTimer;
-  bool _sleepTimerEnabled = false;
-  int _sleepTimerMinutes = 30;
-  DateTime? _sleepTimerEndAt;
   bool _showPlayerDetails = false;
 
   String? _activeUrl;
@@ -494,6 +491,17 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       });
     });
 
+    _sleepTimerSubscription = audioHandler.sleepTimerStream.listen((event) {
+      if (!mounted || _isDisposed) return;
+      setState(() {});
+      if (event == SleepTimerEvent.fired) {
+        _saveProgress();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.sleepTimerNotification)),
+        );
+      }
+    });
+
     if (!mounted || _isDisposed) return;
     setState(() {});
   }
@@ -503,7 +511,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     _isDisposed = true;
     _saveProgress();
     _autoSaveTimer?.cancel();
-    _sleepTimer?.cancel();
+    _sleepTimerSubscription?.cancel();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
     _playerStateSubscription?.cancel();
@@ -571,53 +579,18 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     }
   }
 
-  void _startSleepTimer() {
-    _sleepTimer?.cancel();
-    final duration = Duration(minutes: _sleepTimerMinutes);
-    _sleepTimerEndAt = DateTime.now().add(duration);
-    _sleepTimer = Timer(duration, () async {
-      if (_playerState.playing) {
-        await _stop();
-      }
-      if (!mounted || _isDisposed) return;
-      setState(() {
-        _sleepTimerEnabled = false;
-        _sleepTimerEndAt = null;
-      });
-      if (!mounted || _isDisposed) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.sleepTimerNotification)),
-      );
-    });
-  }
-
-  Future<void> _toggleSleepTimer(bool enabled) async {
-    if (!mounted) return;
-
+  void _toggleSleepTimer(bool enabled) {
+    if (!mounted || _audioHandler == null) return;
     if (!enabled) {
-      _sleepTimer?.cancel();
-      setState(() {
-        _sleepTimerEnabled = false;
-        _sleepTimerEndAt = null;
-      });
-      return;
+      _audioHandler!.cancelSleepTimer();
+    } else {
+      _audioHandler!.startSleepTimer(_audioHandler!.sleepTimerMinutes);
     }
-
-    setState(() {
-      _sleepTimerEnabled = true;
-    });
-    _startSleepTimer();
   }
 
-  Future<void> _updateSleepTimerMinutes(int minutes) async {
-    if (!mounted) return;
-    setState(() {
-      _sleepTimerMinutes = minutes;
-    });
-
-    if (_sleepTimerEnabled) {
-      _startSleepTimer();
-    }
+  void _updateSleepTimerMinutes(int minutes) {
+    if (!mounted || _audioHandler == null) return;
+    _audioHandler!.updateSleepTimerMinutes(minutes);
   }
 
   // ---- Progress persistence ----
@@ -729,7 +702,6 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (_audioHandler == null) return;
     if (saveProgress) await _saveProgress();
     await _audioHandler!.stop();
-    _sleepTimer?.cancel();
     if (!mounted || _isDisposed) return;
     setState(() {
       _activeUrl = null;
@@ -737,17 +709,16 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       _position = Duration.zero;
       _duration = Duration.zero;
       _isLoading = false;
-      _sleepTimerEnabled = false;
-      _sleepTimerEndAt = null;
     });
   }
 
   String _formatSleepTimerLabel() {
-    if (!_sleepTimerEnabled || _sleepTimerEndAt == null) {
+    final handler = _audioHandler;
+    if (handler == null || !handler.sleepTimerEnabled || handler.sleepTimerEndAt == null) {
       return AppLocalizations.of(context)!.sleepTimerOff;
     }
 
-    final remaining = _sleepTimerEndAt!.difference(DateTime.now());
+    final remaining = handler.sleepTimerEndAt!.difference(DateTime.now());
     if (remaining.inSeconds <= 0) {
       return AppLocalizations.of(context)!.sleepTimerEndingSoon;
     }
@@ -1216,7 +1187,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                               ),
                             ),
                             Switch.adaptive(
-                              value: _sleepTimerEnabled,
+                              value: _audioHandler?.sleepTimerEnabled ?? false,
                               onChanged: (value) {
                                 _toggleSleepTimer(value);
                               },
@@ -1233,7 +1204,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                               ),
                             ),
                             DropdownButton<int>(
-                              value: _sleepTimerMinutes,
+                              value: _audioHandler?.sleepTimerMinutes ?? 30,
                               onChanged: (value) {
                                 if (value != null) {
                                   _updateSleepTimerMinutes(value);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -53,6 +54,8 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
   return _fluxNewsAudioHandlerFuture!;
 }
 
+enum SleepTimerEvent { stateChanged, fired }
+
 class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   FluxNewsAudioHandler() {
     _initFuture = _init();
@@ -90,6 +93,11 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   final Map<String, MediaItem> _downloadMediaItems = <String, MediaItem>{};
   DateTime? _lastPeriodicPersistAt;
   final DynamicIslandService _dynamicIslandService = DynamicIslandService();
+  Timer? _sleepTimer;
+  bool _sleepTimerEnabled = false;
+  DateTime? _sleepTimerEndAt;
+  int _sleepTimerMinutes = 30;
+  final StreamController<SleepTimerEvent> _sleepTimerController = StreamController<SleepTimerEvent>.broadcast();
 
   String _downloadsTitleLocalized() {
     final languageCode = ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase();
@@ -158,6 +166,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   Future<void> _handleCompletedPlayback() async {
+    cancelSleepTimer();
     await _persistCurrentProgress(clear: true);
 
     String? deleteAfterPlaybackValue;
@@ -334,6 +343,44 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   PlayerState get playerState => _player.playerState;
   String? get currentUrl => _currentUrl;
   double get speed => _player.speed;
+
+  bool get sleepTimerEnabled => _sleepTimerEnabled;
+  DateTime? get sleepTimerEndAt => _sleepTimerEndAt;
+  int get sleepTimerMinutes => _sleepTimerMinutes;
+  Stream<SleepTimerEvent> get sleepTimerStream => _sleepTimerController.stream;
+
+  void startSleepTimer(int minutes) {
+    _sleepTimer?.cancel();
+    _sleepTimerMinutes = minutes;
+    _sleepTimerEnabled = true;
+    _sleepTimerEndAt = DateTime.now().add(Duration(minutes: minutes));
+    _sleepTimerController.add(SleepTimerEvent.stateChanged);
+    _sleepTimer = Timer(Duration(minutes: minutes), () async {
+      if (_player.playing) {
+        await pause();
+      }
+      _sleepTimerEnabled = false;
+      _sleepTimerEndAt = null;
+      _sleepTimerController.add(SleepTimerEvent.fired);
+    });
+  }
+
+  void cancelSleepTimer() {
+    _sleepTimer?.cancel();
+    _sleepTimer = null;
+    _sleepTimerEnabled = false;
+    _sleepTimerEndAt = null;
+    _sleepTimerController.add(SleepTimerEvent.stateChanged);
+  }
+
+  void updateSleepTimerMinutes(int minutes) {
+    _sleepTimerMinutes = minutes;
+    if (_sleepTimerEnabled) {
+      startSleepTimer(minutes);
+    } else {
+      _sleepTimerController.add(SleepTimerEvent.stateChanged);
+    }
+  }
 
   Future<void> _init() async {
     final session = await AudioSession.instance;
@@ -692,6 +739,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   @override
   Future<void> stop() async {
+    cancelSleepTimer();
     await _persistCurrentProgress();
     await _player.stop();
     _currentUrl = null; // force setAudioSource on next play of the same track
