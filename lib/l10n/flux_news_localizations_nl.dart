@@ -672,6 +672,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get stop => 'Stop';
 
   @override
+  String get resetPlayback => 'Reset';
+
+  @override
   String get runningDownloads => 'Running downloads';
 
   @override

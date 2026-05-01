@@ -861,6 +861,22 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
     }
   }
 
+  Future<void> _stopMiniPlayer() async {
+    final handler = _audioHandler;
+    if (handler == null) return;
+
+    final position = handler.position;
+    final extras = handler.mediaItem.value?.extras;
+    final attachmentIdFromExtras = extras?['attachmentID'];
+    final newsIdFromExtras = extras?['newsID'];
+
+    await handler.stop();
+
+    if (attachmentIdFromExtras is int && newsIdFromExtras is int && position > Duration.zero) {
+      syncMediaProgression(widget.appState, newsIdFromExtras, attachmentIdFromExtras, position.inSeconds).ignore();
+    }
+  }
+
   Future<void> _openFullPlayer() async {
     final handler = _audioHandler;
     if (handler == null) return;
@@ -966,7 +982,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                                   minHeight: buttonSize,
                                 ),
                                 tooltip: AppLocalizations.of(context)!.stop,
-                                onPressed: () => _audioHandler!.stop(),
+                                onPressed: _stopMiniPlayer,
                                 icon: const Icon(Icons.stop_circle),
                               ),
                               IconButton(

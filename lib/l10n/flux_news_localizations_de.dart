@@ -684,6 +684,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stop => 'Stopp';
 
   @override
+  String get resetPlayback => 'Zurücksetzen';
+
+  @override
   String get runningDownloads => 'Laufende Downloads';
 
   @override

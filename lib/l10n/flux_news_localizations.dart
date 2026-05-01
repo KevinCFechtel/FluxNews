@@ -1332,6 +1332,12 @@ abstract class AppLocalizations {
   /// **'Stop'**
   String get stop;
 
+  /// No description provided for @resetPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetPlayback;
+
   /// No description provided for @runningDownloads.
   ///
   /// In en, this message translates to:

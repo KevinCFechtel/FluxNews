@@ -204,6 +204,7 @@
     "play": "Play",
     "resume": "Resume",
     "stop": "Stop",
+    "resetPlayback": "Reset",
     "runningDownloads": "Running downloads",
     "noActiveDownloads": "No active downloads.",
     "from": "from",

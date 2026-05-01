@@ -704,10 +704,33 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     await _audioHandler!.stop();
     if (!mounted || _isDisposed) return;
     setState(() {
+      _savedPosition = _position > Duration.zero ? _position : _savedPosition;
+      _activeUrl = null;
+      _activeAttachmentID = null;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _reset({bool saveProgress = false}) async {
+    if (_audioHandler == null) return;
+    if (saveProgress) await _saveProgress();
+    await _audioHandler!.stop();
+    await _storage.delete(key: _progressKey());
+    final activeAttachment = _activeAttachmentID == null
+        ? null
+        : _audioAttachments
+            .where((a) => a.attachmentID == _activeAttachmentID)
+            .fold<Attachment?>(null, (prev, e) => prev ?? e);
+    if (activeAttachment != null) {
+      syncMediaProgression(widget.appState, widget.news.newsID, activeAttachment.attachmentID, 0).ignore();
+    }
+    if (!mounted || _isDisposed) return;
+    setState(() {
       _activeUrl = null;
       _activeAttachmentID = null;
       _position = Duration.zero;
       _duration = Duration.zero;
+      _savedPosition = null;
       _isLoading = false;
     });
   }
@@ -970,12 +993,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     CircularProgressIndicator(
                                       value: downloadProgressValue,
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Theme.of(context).colorScheme.primary),
+                                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                                     ),
-                                    Icon(Icons.close,
-                                        size: 12,
-                                        color: Theme.of(context).colorScheme.primary),
+                                    Icon(Icons.close, size: 12, color: Theme.of(context).colorScheme.primary),
                                   ],
                                 ),
                               )
@@ -1033,8 +1053,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         if (!expanded) {
                           // Clear stored index so re-opening always scrolls to
                           // the current chapter, even if it hasn't changed.
-                          _lastAutoScrolledChapterIndexByAttachmentID
-                              .remove(attachment.attachmentID);
+                          _lastAutoScrolledChapterIndexByAttachmentID.remove(attachment.attachmentID);
                         }
                       },
                       children: [
@@ -1276,7 +1295,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       // Stop
                       IconButton(
                         tooltip: AppLocalizations.of(context)!.stop,
-                        onPressed: isActive && !isStopped ? _stop : null,
+                        onPressed: isActive && !isStopped ? () => _stop() : null,
                         icon: const Icon(Icons.stop_circle_outlined),
                         iconSize: 32,
                       ),
@@ -1288,6 +1307,16 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         tooltip: '+30s',
                         onPressed: isActive ? () => _seek(const Duration(seconds: 30)) : null,
                         icon: const Icon(Icons.forward_30),
+                        iconSize: 32,
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Reset
+                      IconButton(
+                        tooltip: AppLocalizations.of(context)!.resetPlayback,
+                        onPressed: isActive || isPaused ? () => _reset() : null,
+                        icon: const Icon(Icons.eject),
                         iconSize: 32,
                       ),
                     ],
