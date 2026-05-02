@@ -88,10 +88,44 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     if (attachmentID < 0) return null;
     final appState = context.read<FluxNewsState>();
     final news = await queryNewsByAttachmentId(appState, attachmentID);
-    if (news?.feedTitle.isNotEmpty == true) {
-      AudioDownloadService.cacheDownloadFeedTitle(attachmentID, news!.feedTitle);
+    if (news != null) {
+      AudioDownloadService.cacheDownloadFeedTitle(attachmentID, news.feedTitle);
+      AudioDownloadService.cacheDownloadFeedId(attachmentID, news.feedID);
+      if (news.feedIconID != null) {
+        AudioDownloadService.cacheDownloadFeedIconId(attachmentID, news.feedIconID!);
+      }
+      return news;
     }
-    return news;
+    // Article not in local DB (e.g. downloaded via search view) — build a
+    // minimal News object from cached metadata so the feed name and icon show.
+    final cachedFeedTitle = AudioDownloadService.getDownloadFeedTitle(attachmentID);
+    if (cachedFeedTitle == null || cachedFeedTitle.isEmpty) return null;
+    final feedIconID = AudioDownloadService.getDownloadFeedIconId(attachmentID);
+    final fallback = News(
+      newsID: -1,
+      feedID: AudioDownloadService.getDownloadFeedId(attachmentID) ?? -1,
+      title: AudioDownloadService.getDownloadTitle(attachmentID) ?? '',
+      url: '',
+      commentsUrl: '',
+      shareCode: '',
+      content: '',
+      hash: '',
+      publishedAt: '',
+      createdAt: '',
+      status: 'unread',
+      readingTime: 0,
+      starred: false,
+      feedTitle: cachedFeedTitle,
+      feedIconID: feedIconID,
+    );
+    if (feedIconID != null) {
+      fallback.icon = appState.readFeedIconFile(feedIconID);
+      final feedID = AudioDownloadService.getDownloadFeedId(attachmentID);
+      if (feedID != null && feedID >= 0) {
+        fallback.iconMimeType = await queryFeedIconMimeTypeByFeedId(appState, feedID);
+      }
+    }
+    return fallback;
   }
 
   Future<News?> _newsFutureForAttachmentId(int attachmentID) {

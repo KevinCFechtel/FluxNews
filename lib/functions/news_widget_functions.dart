@@ -381,6 +381,10 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
 
   AudioDownloadService.cacheDownloadTitle(storageAttachmentId, news.title);
   AudioDownloadService.cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+  AudioDownloadService.cacheDownloadFeedId(storageAttachmentId, news.feedID);
+  if (news.feedIconID != null) {
+    AudioDownloadService.cacheDownloadFeedIconId(storageAttachmentId, news.feedIconID!);
+  }
   // Manual download always works — clear any previous user-skipped flag.
   await AudioDownloadService.clearUserSkipped(storageAttachmentId);
 

@@ -528,6 +528,17 @@ Future<News?> queryNewsByAttachmentId(FluxNewsState appState, int attachmentID) 
   return queryNewsByNewsId(appState, newsID);
 }
 
+Future<String?> queryFeedIconMimeTypeByFeedId(FluxNewsState appState, int feedID) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return null;
+  final result = await appState.db!.rawQuery(
+    'SELECT iconMimeType FROM feeds WHERE feedID = ?',
+    [feedID],
+  );
+  if (result.isEmpty) return null;
+  return result.first['iconMimeType'] as String?;
+}
+
 // get the local saved news from the database
 Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
   if (appState.debugMode) {

@@ -123,6 +123,11 @@ class AudioDownloadService {
   // Cache for download metadata (attachmentID → value) used by CarPlay / Android Auto
   static final _downloadTitleCache = <int, String>{};
   static final _downloadFeedTitleCache = <int, String>{};
+  // feedID / feedIconID — memory-only, used to load the feed icon from the
+  // file system in the downloads overview for articles not in the local DB
+  // (e.g. downloaded via the search view).
+  static final _downloadFeedIdCache = <int, int>{};
+  static final _downloadFeedIconIdCache = <int, int>{};
   // newsID and mediaProgression are memory-only — always derivable from the DB.
   // They are cached here so _resolveSavedPosition can avoid a DB query on the
   // CarPlay audio-grant hot path.
@@ -137,6 +142,14 @@ class AudioDownloadService {
   static void cacheDownloadFeedTitle(int attachmentID, String feedTitle) {
     _downloadFeedTitleCache[attachmentID] = feedTitle;
     _storage.write(key: '$_downloadFeedTitleKeyPrefix$attachmentID', value: feedTitle);
+  }
+
+  static void cacheDownloadFeedId(int attachmentID, int feedID) {
+    _downloadFeedIdCache[attachmentID] = feedID;
+  }
+
+  static void cacheDownloadFeedIconId(int attachmentID, int feedIconID) {
+    _downloadFeedIconIdCache[attachmentID] = feedIconID;
   }
 
   static void cacheDownloadNewsId(int attachmentID, int newsID) {
@@ -166,6 +179,8 @@ class AudioDownloadService {
 
   static String? getDownloadTitle(int attachmentID) => _downloadTitleCache[attachmentID];
   static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
+  static int? getDownloadFeedId(int attachmentID) => _downloadFeedIdCache[attachmentID];
+  static int? getDownloadFeedIconId(int attachmentID) => _downloadFeedIconIdCache[attachmentID];
   static int? getDownloadNewsId(int attachmentID) => _downloadNewsIdCache[attachmentID];
   static int? getDownloadMediaProgression(int attachmentID) => _downloadMediaProgressionCache[attachmentID];
 
