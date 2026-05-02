@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:flux_news/ui/search_news_list.dart';
 import 'package:provider/provider.dart';
 
@@ -90,7 +91,14 @@ class Search extends StatelessWidget {
           ),
         ),
         // show the news list
-        body: const FluxNewsSearchBody());
+        body: const FluxNewsSearchBody(),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PersistentDownloadBanner(appState: appState),
+            PersistentAudioMiniPlayer(appState: appState),
+          ],
+        ));
   }
 }
 

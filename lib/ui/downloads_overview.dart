@@ -52,6 +52,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   Future<void> _loadDownloads({bool initial = false}) async {
     final data = await AudioDownloadService.getDownloadedAudios();
+    // Pre-populate in-memory cache from Keychain + DB so titles are available
+    // even for articles not in the local DB (e.g. downloaded via search view).
+    await AudioDownloadService.loadTitlesForDownloads(data);
     if (!mounted) return;
     setState(() {
       _downloads = data;
@@ -60,6 +63,11 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   }
 
   Future<String?> _getNewsTitleByAttachmentId(int attachmentID) async {
+    // Check in-memory cache first (populated by loadTitlesForDownloads or
+    // downloadAudioAction, covers articles not present in the local DB).
+    final cached = AudioDownloadService.getDownloadTitle(attachmentID);
+    if (cached != null && cached.isNotEmpty) return cached;
+
     if (attachmentID < 0) return null;
     final appState = context.read<FluxNewsState>();
     final title = await queryNewsTitleByAttachmentId(appState, attachmentID);

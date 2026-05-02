@@ -147,6 +147,23 @@ class AudioDownloadService {
     _downloadMediaProgressionCache[attachmentID] = mediaProgression;
   }
 
+  /// Refreshes the in-memory mediaProgression cache from a freshly synced news
+  /// list. Called after insertNewsInDB so CarPlay / Android Auto resolve the
+  /// saved position without an extra DB query.
+  static void refreshMediaProgressionCacheFromSync(List<News> newsList) {
+    for (final news in newsList) {
+      for (final attachment in news.getAudioAttachments()) {
+        if (attachment.attachmentID < 0) continue;
+        if (attachment.mediaProgression > 0) {
+          _downloadMediaProgressionCache[attachment.attachmentID] = attachment.mediaProgression;
+        } else {
+          // Server reset to 0 (e.g. episode restarted on another device) — clear stale entry.
+          _downloadMediaProgressionCache.remove(attachment.attachmentID);
+        }
+      }
+    }
+  }
+
   static String? getDownloadTitle(int attachmentID) => _downloadTitleCache[attachmentID];
   static String? getDownloadFeedTitle(int attachmentID) => _downloadFeedTitleCache[attachmentID];
   static int? getDownloadNewsId(int attachmentID) => _downloadNewsIdCache[attachmentID];

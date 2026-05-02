@@ -145,6 +145,10 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         return 0;
       });
 
+      // Refresh the in-memory mediaProgression cache so CarPlay / Android Auto
+      // pick up the server's latest position on the next playback without a DB query.
+      AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
+
       if (appState.autoDownloadAudioAfterSync) {
         unawaited(AudioDownloadService.downloadAudioForNewsList(
           newsList: newNews.news,
