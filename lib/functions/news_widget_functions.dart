@@ -409,6 +409,8 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
         onlyOnWifi: appState.downloadAudioOnlyOnWifi,
         news: news,
       );
+      final newsList = NewsList(news: [news], newsCount: 1);
+      await insertNewsInDB(newsList, appState);
     } catch (error) {
       // Consume the cancellation flag — if the user pressed cancel, no snackbar.
       final wasCancelled = AudioDownloadService.consumeCancelledByUser(storageAttachmentId);
