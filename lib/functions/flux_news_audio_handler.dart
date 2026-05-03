@@ -250,41 +250,59 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       if (extras != null) ...extras,
     };
 
+    // --- Local position from Keychain (milliseconds) ---
+    int localMs = 0;
     final newsID = mergedExtras['newsID'];
     if (newsID is int) {
       try {
         final saved = await _storage.read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
-        final localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
-        if (localMs > 0) {
-          return Duration(milliseconds: localMs);
-        }
+        localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
       } catch (_) {
         // Keychain may be inaccessible (e.g. -25308 for items written before
         // first_unlock migration while screen is locked) — start from beginning.
       }
     }
 
+    // --- Server/cache position (seconds → milliseconds) ---
+    // Check the in-memory cache first — populated by loadTitlesForDownloads
+    // during CarPlay/Android Auto template setup. This avoids a DB query on
+    // the CarPlay audio-grant hot path, which can delay play() long enough
+    // for the session grant to expire (!int error).
+    int serverMs = 0;
     final attachmentID = mergedExtras['attachmentID'];
     if (attachmentID is int && attachmentID >= 0) {
-      // Check the in-memory cache first — populated by loadTitlesForDownloads
-      // during CarPlay/Android Auto template setup. This avoids a DB query on
-      // the CarPlay audio-grant hot path, which can delay play() long enough
-      // for the session grant to expire (!int error).
       final cached = AudioDownloadService.getDownloadMediaProgression(attachmentID);
       if (cached != null && cached > 0) {
-        return Duration(seconds: cached);
-      }
-      // Cache miss (first access before template setup) — fall back to DB.
-      final news = await queryNewsByAttachmentId(_downloadQueryState, attachmentID);
-      final attachment = news?.attachments
-          ?.where((candidate) => candidate.attachmentID == attachmentID)
-          .fold<Attachment?>(null, (previous, candidate) => previous ?? candidate);
-      final mediaProgression = attachment?.mediaProgression ?? 0;
-      if (mediaProgression > 0) {
-        return Duration(seconds: mediaProgression);
+        serverMs = cached * 1000;
+      } else {
+        // Cache miss (first access before template setup) — fall back to DB.
+        final news = await queryNewsByAttachmentId(_downloadQueryState, attachmentID);
+        final attachment = news?.attachments
+            ?.where((candidate) => candidate.attachmentID == attachmentID)
+            .fold<Attachment?>(null, (previous, candidate) => previous ?? candidate);
+        final mediaProgression = attachment?.mediaProgression ?? 0;
+        if (mediaProgression > 0) {
+          serverMs = mediaProgression * 1000;
+        }
       }
     }
 
+    // Use whichever position is further ahead. If the server is ahead, also
+    // update the Keychain so the advanced position persists across app restarts.
+    if (serverMs > localMs) {
+      if (newsID is int) {
+        try {
+          await _storage.write(
+            key: '${FluxNewsState.audioProgressKeyPrefix}$newsID',
+            value: serverMs.toString(),
+          );
+        } catch (_) {}
+      }
+      return Duration(milliseconds: serverMs);
+    }
+    if (localMs > 0) {
+      return Duration(milliseconds: localMs);
+    }
     return null;
   }
 

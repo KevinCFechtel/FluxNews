@@ -602,7 +602,7 @@ class Settings extends StatelessWidget {
       final zipEncoder = ZipFileEncoder();
       zipEncoder.create(zipFilePath);
       await zipEncoder.addFile(jsonFile);
-      zipEncoder.close();
+      await zipEncoder.close();
 
       await jsonFile.delete();
 

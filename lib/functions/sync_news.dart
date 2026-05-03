@@ -115,7 +115,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       });
     }
 
-    if (!appState.longSyncAborted) {
+    if (!appState.longSyncAborted && appState.errorString == '') {
       // insert or update the fetched categories in the database
       await insertCategoriesInDB(newCategories, appState).onError((error, stackTrace) {
         logThis('insertCategoriesInDB', 'Caught an error in insertCategoriesInDB function! : ${error.toString()}',
