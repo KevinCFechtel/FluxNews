@@ -405,9 +405,9 @@ class Settings extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                  onTap: () {
+                  onTap: () async {
                     if (Platform.isAndroid || Platform.isIOS) {
-                      FlutterLogs.exportLogs(exportType: ExportType.ALL);
+                      await exportLogs(context);
                     }
                   },
                 ),
@@ -538,6 +538,77 @@ class Settings extends StatelessWidget {
     appState.refreshView();
   }
 
+  Future<void> exportLogs(BuildContext context) async {
+    try {
+      Directory? logsDir;
+      Directory? exportDirectory;
+
+      if (Platform.isIOS) {
+        final appSupport = await getApplicationSupportDirectory();
+        logsDir = Directory('${appSupport.path}/Logs');
+        exportDirectory = await getApplicationDocumentsDirectory();
+      } else if (Platform.isAndroid) {
+        final extDir = await getExternalStorageDirectory();
+        if (extDir != null) {
+          logsDir = Directory('${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
+          exportDirectory = extDir;
+        }
+      }
+
+      if (logsDir == null || !logsDir.existsSync()) {
+        logThis('exportLogs', 'Log directory not found: ${logsDir?.path}', LogLevel.ERROR);
+        return;
+      }
+
+      if (exportDirectory == null) {
+        logThis('exportLogs', 'Export directory not available', LogLevel.ERROR);
+        return;
+      }
+
+      final archive = Archive();
+      for (final entity in logsDir.listSync(recursive: true)) {
+        if (entity is! File) continue;
+        final relativePath = entity.path.substring(logsDir.path.length + 1);
+        // Skip the nested export subdirectory (native plugin artifacts) and any ZIPs
+        if (relativePath.startsWith('${FluxNewsState.logsWriteDirectoryName}/')) continue;
+        if (relativePath.endsWith('.zip')) continue;
+        final bytes = await entity.readAsBytes();
+        archive.addFile(ArchiveFile(relativePath, bytes.length, bytes));
+      }
+
+      if (archive.files.isEmpty) {
+        logThis('exportLogs', 'No log files found to export', LogLevel.WARNING);
+        return;
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final zipPath = '${exportDirectory.path}/flux_news_logs_$timestamp.zip';
+      final zipBytes = ZipEncoder().encode(archive);
+      await File(zipPath).writeAsBytes(zipBytes, flush: true);
+
+      if (context.mounted) {
+        if (Platform.isIOS) {
+          final box = context.findRenderObject() as RenderBox?;
+          await SharePlus.instance.share(ShareParams(
+            files: [XFile(zipPath)],
+            sharePositionOrigin: box != null
+                ? box.localToGlobal(Offset.zero) & const Size(100, 100)
+                : null,
+          ));
+        } else {
+          await SharePlus.instance.share(ShareParams(files: [XFile(zipPath)]));
+        }
+      }
+    } catch (e) {
+      logThis('exportLogs', 'Error exporting logs: ${e.toString()}', LogLevel.ERROR);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
+        );
+      }
+    }
+  }
+
   Future<void> exportSettingsBackup(BuildContext context, FluxNewsState appState) async {
     try {
       appState.db ??= await appState.initializeDB();
@@ -595,23 +666,26 @@ class Settings extends StatelessWidget {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final jsonFile = File('${exportDirectory.path}/flux_news_settings_backup_$timestamp.json');
-      await jsonFile.writeAsString(backupJson, flush: true);
-
       final zipFilePath = '${exportDirectory.path}/flux_news_settings_backup_$timestamp.zip';
-      final zipEncoder = ZipFileEncoder();
-      zipEncoder.create(zipFilePath);
-      await zipEncoder.addFile(jsonFile);
-      await zipEncoder.close();
 
-      await jsonFile.delete();
+      final jsonBytes = utf8.encode(backupJson);
+      final archive = Archive();
+      archive.addFile(ArchiveFile(
+        'flux_news_settings_backup_$timestamp.json',
+        jsonBytes.length,
+        jsonBytes,
+      ));
+      final zipBytes = ZipEncoder().encode(archive);
+      await File(zipFilePath).writeAsBytes(zipBytes, flush: true);
 
       if (context.mounted) {
         if (Platform.isIOS) {
           final box = context.findRenderObject() as RenderBox?;
           await SharePlus.instance.share(ShareParams(
               files: [XFile(zipFilePath)],
-              sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+              sharePositionOrigin: box != null
+                  ? box.localToGlobal(Offset.zero) & const Size(100, 100)
+                  : null));
         } else {
           await SharePlus.instance.share(ShareParams(files: [XFile(zipFilePath)]));
         }

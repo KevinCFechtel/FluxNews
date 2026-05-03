@@ -46,7 +46,8 @@ Future<void> main() async {
         logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
         logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
         debugFileOperations: false,
-        logsRetentionPeriodInDays: 7,
+        logsRetentionPeriodInDays: 14,
+        zipsRetentionPeriodInDays: 3,
         isDebuggable: kDebugMode ? true : false);
 
     // On iOS the flutter_logs plugin ignores all initLogs parameters (initLogs
@@ -57,10 +58,13 @@ Future<void> main() async {
     if (Platform.isIOS) {
       await _cleanupIosLogs(retentionDays: 7);
     }
+    if (Platform.isAndroid) {
+      await _cleanupAndroidLogs(logRetentionDays: 7, zipRetentionDays: 1);
+    }
   }
 
   if (Platform.isAndroid || Platform.isIOS) {
-    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'App starting — platform: ${Platform.operatingSystem}');
+    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'App starting - platform: ${Platform.operatingSystem}');
   }
 
   // Start audio handler init without blocking — on iOS, AudioService.init()
@@ -128,6 +132,101 @@ Future<void> _cleanupIosLogs({required int retentionDays}) async {
   }
 }
 
+/// Deletes Android log directories older than [logRetentionDays] and
+/// exported ZIP files older than [zipRetentionDays].
+/// flutter_logs' native retention logic is unreliable on Android — this
+/// Dart-side cleanup runs at every startup instead.
+///
+/// PLog names date directories with the format ddMMyyyy (e.g. "03052026").
+Future<void> _cleanupAndroidLogs({
+  required int logRetentionDays,
+  required int zipRetentionDays,
+}) async {
+  try {
+    final extDir = await getExternalStorageDirectory();
+    if (extDir == null) {
+      FlutterLogs.logError(FluxNewsState.logTag, '_cleanupAndroidLogs', 'extDir is null — skipping cleanup');
+      return;
+    }
+
+    final now = DateTime.now();
+    final logCutoff = now.subtract(Duration(days: logRetentionDays));
+    final zipCutoff = now.subtract(Duration(days: zipRetentionDays));
+
+    final logsDir = Directory('${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
+    FlutterLogs.logInfo(FluxNewsState.logTag, '_cleanupAndroidLogs',
+        'logsDir: ${logsDir.path} | exists: ${logsDir.existsSync()} | cutoff: $logCutoff');
+
+    if (logsDir.existsSync()) {
+      await _deleteOldLogDirs(logsDir, logCutoff);
+    }
+
+    // Delete Dart-exported ZIP files (flux_news_logs_*.zip) at the extDir root
+    // that are older than the ZIP retention window.
+    for (final entity in extDir.listSync(followLinks: false)) {
+      if (entity is File &&
+          entity.path.split('/').last.startsWith('flux_news_logs_') &&
+          entity.path.endsWith('.zip')) {
+        if (entity.statSync().modified.isBefore(zipCutoff)) {
+          await entity.delete();
+        }
+      }
+    }
+  } catch (e) {
+    FlutterLogs.logError(FluxNewsState.logTag, '_cleanupAndroidLogs', 'Error: $e');
+  }
+}
+
+/// Tries to parse a PLog date-directory name into a [DateTime].
+/// Attempts all formats PLog is known to use across versions:
+///   dd-MM-yyyy  (e.g. 03-05-2026)
+///   ddMMyyyy    (e.g. 03052026)
+///   MM-dd-yyyy  (e.g. 05-03-2026)
+///   yyyy-MM-dd  (e.g. 2026-05-03)
+/// Returns null when none of the patterns match.
+DateTime? _parsePLogDirDate(String name) {
+  // dd-MM-yyyy  (e.g. 03-05-2026) — most common PLog format
+  var m = RegExp(r'^(\d{2})-(\d{2})-(\d{4})$').firstMatch(name);
+  if (m != null) {
+    return DateTime(int.parse(m.group(3)!), int.parse(m.group(2)!), int.parse(m.group(1)!));
+  }
+  // ddMMyyyy  (e.g. 03052026)
+  m = RegExp(r'^(\d{2})(\d{2})(\d{4})$').firstMatch(name);
+  if (m != null) {
+    return DateTime(int.parse(m.group(3)!), int.parse(m.group(2)!), int.parse(m.group(1)!));
+  }
+  // yyyy-MM-dd  (e.g. 2026-05-03)
+  m = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(name);
+  if (m != null) {
+    return DateTime(int.parse(m.group(1)!), int.parse(m.group(2)!), int.parse(m.group(3)!));
+  }
+  return null;
+}
+
+/// Scans [dir] for date-named subdirectories and deletes those older than
+/// [cutoff]. If a subdirectory has no date name (e.g. "Logs") it descends
+/// one level deeper, which handles PLog's FluxNewsLogs/Logs/ddMMyyyy/ layout.
+/// The nested export directory (same name as [FluxNewsState.logsWriteDirectoryName])
+/// is always skipped.
+Future<void> _deleteOldLogDirs(Directory dir, DateTime cutoff) async {
+  for (final entity in dir.listSync(followLinks: false)) {
+    if (entity is! Directory) continue;
+    final name = entity.path.split('/').last;
+    if (name == FluxNewsState.logsWriteDirectoryName) continue;
+    final dirDate = _parsePLogDirDate(name);
+    if (dirDate != null) {
+      final shouldDelete = dirDate.isBefore(cutoff);
+      FlutterLogs.logInfo(FluxNewsState.logTag, '_cleanupAndroidLogs',
+          'Dir "$name" → $dirDate | delete: $shouldDelete');
+      if (shouldDelete) await entity.delete(recursive: true);
+    } else {
+      FlutterLogs.logInfo(FluxNewsState.logTag, '_cleanupAndroidLogs',
+          'Dir "$name" — descending');
+      await _deleteOldLogDirs(entity, cutoff);
+    }
+  }
+}
+
 class FluxNews extends StatelessWidget {
   const FluxNews({super.key});
 
@@ -157,9 +256,7 @@ class FluxNews extends StatelessWidget {
               final box = context.findRenderObject() as RenderBox?;
               SharePlus.instance.share(ShareParams(
                   files: [XFile("${externalDirectory.path}/$zipName")],
-                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
-              //Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")],
-              //    sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100));
+                  sharePositionOrigin: box != null ? box.localToGlobal(Offset.zero) & const Size(100, 100) : null));
             }
           }
         } else {
