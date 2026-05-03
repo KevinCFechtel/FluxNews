@@ -426,6 +426,18 @@ abstract class AppLocalizations {
   /// **'Activate debug mode'**
   String get debugModeTextSettings;
 
+  /// No description provided for @clearLogsOnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear logs on start'**
+  String get clearLogsOnStart;
+
+  /// No description provided for @clearLogsOnStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all logs when the app starts'**
+  String get clearLogsOnStartDescription;
+
   /// No description provided for @deleteLocalCache.
   ///
   /// In en, this message translates to:

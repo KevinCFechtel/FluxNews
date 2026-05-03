@@ -53,6 +53,8 @@
     "emptySearch": "Keine Nachrichten gefunden",
     "exportLogs": "Export debug Logs",
     "debugModeTextSettings": "Debug Modus aktivieren",
+    "clearLogsOnStart": "Logs beim Start löschen",
+    "clearLogsOnStartDescription": "Alle Logs beim App-Start löschen",
     "deleteLocalCache": "Lösche den lokalen Nachrichtenspeicher",
     "deleteLocalCacheDialogTitle": "Nachrichtenspeicher löschen",
     "deleteLocalCacheDialogContent": "Möchten Sie wirklich den lokalen Nachrichtenspeicher löschen?",

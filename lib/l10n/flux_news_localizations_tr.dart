@@ -177,6 +177,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get debugModeTextSettings => 'Hata ayıklama modunu etkinleştir';
 
   @override
+  String get clearLogsOnStart => 'Clear logs on start';
+
+  @override
+  String get clearLogsOnStartDescription =>
+      'Delete all logs when the app starts';
+
+  @override
   String get deleteLocalCache => 'Yerel haber deposunu temizle';
 
   @override

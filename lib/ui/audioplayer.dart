@@ -436,6 +436,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       }
       NewsList newsList = NewsList(news: [news], newsCount: 1);
       await insertNewsInDB(newsList, widget.appState);
+      AudioDownloadService.refreshMediaProgressionCacheFromSync([news]);
     } finally {
       if (mounted) {
         setState(() => _downloadingAttachmentIDs.remove(attachment.attachmentID));

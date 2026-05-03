@@ -97,6 +97,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageOpenAudioItemsInPlayerKey = 'openAudioItemsInPlayer';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
+  static const String secureStorageClearLogsOnStartKey = 'clearLogsOnStart';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
@@ -236,6 +237,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for debugging
   bool debugMode = false;
+  bool clearLogsOnStart = true;
 
   // the initial news status which should be fetched
   String newsStatus = FluxNewsState.unreadNewsStatus;
@@ -1973,6 +1975,13 @@ class FluxNewsState extends ChangeNotifier {
           } else {
             debugMode = false;
           }
+        }
+      }
+
+      // assign the clear logs on start selection from persistent saved config
+      if (key == FluxNewsState.secureStorageClearLogsOnStartKey) {
+        if (value != '') {
+          clearLogsOnStart = value == FluxNewsState.secureStorageTrueString;
         }
       }
 

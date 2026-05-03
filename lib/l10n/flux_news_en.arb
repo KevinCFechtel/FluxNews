@@ -53,6 +53,8 @@
     "emptySearch": "No News found",
     "exportLogs": "Export debug logs",
     "debugModeTextSettings": "Activate debug mode",
+    "clearLogsOnStart": "Clear logs on start",
+    "clearLogsOnStartDescription": "Delete all logs when the app starts",
     "deleteLocalCache": "Clear local news storage",
     "deleteLocalCacheDialogTitle": "Delete local cache",
     "deleteLocalCacheDialogContent": "Do you really want to delete the local news storage?",

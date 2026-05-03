@@ -158,6 +158,18 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
           // if the news is present, update the status of the news
           batch.rawUpdate('UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
               [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
+          // also update mediaProgression for existing attachments so the
+          // server's playback position is persisted and survives app restarts
+          if (news.attachments != null) {
+            for (final attachment in news.attachments!) {
+              if (attachment.attachmentID != -1 && attachment.mediaProgression > 0) {
+                batch.rawUpdate(
+                  'UPDATE attachments SET mediaProgression = ? WHERE attachmentID = ?',
+                  [attachment.mediaProgression, attachment.attachmentID],
+                );
+              }
+            }
+          }
           if (appState.debugMode) {
             logThis('insertNewsInDB', 'Updated news with id ${news.newsID} in DB', LogLevel.INFO);
           }

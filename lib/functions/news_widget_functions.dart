@@ -411,6 +411,7 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
       );
       final newsList = NewsList(news: [news], newsCount: 1);
       await insertNewsInDB(newsList, appState);
+      AudioDownloadService.refreshMediaProgressionCacheFromSync([news]);
     } catch (error) {
       // Consume the cancellation flag — if the user pressed cancel, no snackbar.
       final wasCancelled = AudioDownloadService.consumeCancelledByUser(storageAttachmentId);

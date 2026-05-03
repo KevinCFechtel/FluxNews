@@ -1,6 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
+
+import 'package:cronet_http/cronet_http.dart';
+import 'package:http/http.dart';
+import 'package:http/io_client.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
@@ -167,7 +172,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   Future<void> _handleCompletedPlayback() async {
     cancelSleepTimer();
-    await _persistCurrentProgress(clear: true);
+    await _persistCurrentProgress(clear: true, syncToServer: true);
 
     String? deleteAfterPlaybackValue;
     try {
@@ -306,7 +311,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     return null;
   }
 
-  Future<void> _persistCurrentProgress({bool clear = false}) async {
+  Future<void> _persistCurrentProgress({bool clear = false, bool syncToServer = false}) async {
     final item = _currentMediaItem;
     if (item == null) {
       return;
@@ -327,6 +332,9 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     final progressKey = '${FluxNewsState.audioProgressKeyPrefix}$newsID';
     if (clear) {
       await _storage.delete(key: progressKey);
+      if (syncToServer && attachmentID != null && attachmentID >= 0) {
+        _syncProgressionToServer(attachmentID, 0).ignore();
+      }
       return;
     }
 
@@ -337,6 +345,53 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     await _storage.write(key: progressKey, value: positionMs.toString());
     _lastPeriodicPersistAt = DateTime.now();
+
+    if (syncToServer && attachmentID != null && attachmentID >= 0) {
+      _syncProgressionToServer(attachmentID, positionMs ~/ 1000).ignore();
+    }
+  }
+
+  /// Sends the current playback position to the Miniflux server via
+  /// PUT /v1/enclosures/{id}. Requires Miniflux >= 2.2.0.
+  /// Errors are swallowed so a network failure never disrupts playback.
+  Future<void> _syncProgressionToServer(int attachmentID, int positionSeconds) async {
+    try {
+      final url = await _storage.read(key: FluxNewsState.secureStorageMinifluxURLKey);
+      final apiKey = await _storage.read(key: FluxNewsState.secureStorageMinifluxAPIKey);
+      final version = await _storage.read(key: FluxNewsState.secureStorageMinifluxVersionKey);
+      if (url == null || url.isEmpty || apiKey == null || apiKey.isEmpty) return;
+      if (!_isAtLeastMiniflux220(version)) return;
+
+      final Client client;
+      if (Platform.isAndroid) {
+        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+        client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+      } else {
+        client = IOClient(HttpClient());
+      }
+      try {
+        await client.put(
+          Uri.parse('${url}enclosures/$attachmentID'),
+          headers: {
+            FluxNewsState.httpMinifluxAuthHeaderString: apiKey,
+            FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+            FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+          },
+          body: jsonEncode({'media_progression': positionSeconds}),
+        );
+      } finally {
+        client.close();
+      }
+    } catch (_) {}
+  }
+
+  bool _isAtLeastMiniflux220(String? v) {
+    if (v == null || v.trim().isEmpty) return false;
+    final p = RegExp(r'\d+').allMatches(v).map((m) => int.parse(m.group(0)!)).toList();
+    if (p.isEmpty) return false;
+    final major = p[0];
+    final minor = p.length > 1 ? p[1] : 0;
+    return major > 2 || (major == 2 && minor >= 2);
   }
 
   void _persistCurrentProgressPeriodically() {
@@ -477,7 +532,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     final shouldReload = _currentUrl != url;
 
     if (shouldReload && _currentMediaItem != null) {
-      await _persistCurrentProgress();
+      await _persistCurrentProgress(syncToServer: true);
     }
 
     _currentUrl = url;
@@ -535,7 +590,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   @override
   Future<void> pause() async {
     await _player.pause();
-    await _persistCurrentProgress();
+    await _persistCurrentProgress(syncToServer: true);
     final state = _buildPlaybackState();
     playbackState.add(state);
     _updateDynamicIsland();

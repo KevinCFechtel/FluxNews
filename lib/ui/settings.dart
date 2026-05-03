@@ -369,6 +369,35 @@ class Settings extends StatelessWidget {
                   ],
                 ),
                 const Divider(),
+                // clear logs on start toggle
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(Icons.delete_sweep),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.clearLogsOnStart,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.clearLogsOnStart,
+                      onChanged: (bool value) {
+                        appState.clearLogsOnStart = value;
+                        appState.storage.write(
+                          key: FluxNewsState.secureStorageClearLogsOnStartKey,
+                          value: value ? FluxNewsState.secureStorageTrueString : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
                 // Log viewer
                 ListTile(
                   leading: const Icon(Icons.list_alt),

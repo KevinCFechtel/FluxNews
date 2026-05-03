@@ -179,6 +179,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get debugModeTextSettings => 'Debugmodus activeren';
 
   @override
+  String get clearLogsOnStart => 'Clear logs on start';
+
+  @override
+  String get clearLogsOnStartDescription =>
+      'Delete all logs when the app starts';
+
+  @override
   String get deleteLocalCache => 'Wis het lokale nieuwsgeheugen';
 
   @override

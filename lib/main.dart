@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -60,6 +62,16 @@ Future<void> main() async {
     }
     if (Platform.isAndroid) {
       await _cleanupAndroidLogs(logRetentionDays: 7, zipRetentionDays: 1);
+    }
+
+    // Clear all logs on start if the setting is enabled (default: true).
+    const storage = sec_store.FlutterSecureStorage(
+      iOptions: sec_store.IOSOptions(accessibility: sec_store.KeychainAccessibility.first_unlock),
+    );
+    final clearValue = await storage.read(key: FluxNewsState.secureStorageClearLogsOnStartKey);
+    final shouldClear = clearValue == null || clearValue == FluxNewsState.secureStorageTrueString;
+    if (shouldClear) {
+      await FlutterLogs.clearLogs();
     }
   }
 
