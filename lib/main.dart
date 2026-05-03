@@ -64,16 +64,32 @@ Future<void> main() async {
       await _cleanupAndroidLogs(logRetentionDays: 7, zipRetentionDays: 1);
     }
 
-    // Clear all logs on start if the setting is enabled (default: true).
-    const storage = sec_store.FlutterSecureStorage(
-      iOptions: sec_store.IOSOptions(accessibility: sec_store.KeychainAccessibility.first_unlock),
-    );
-    final clearValue = await storage.read(key: FluxNewsState.secureStorageClearLogsOnStartKey);
-    final shouldClear = clearValue == null || clearValue == FluxNewsState.secureStorageTrueString;
-    if (shouldClear) {
-      await FlutterLogs.clearLogs();
-    }
   }
+
+  // Clear all logs on start if the setting is enabled (default: true).
+  // Scheduled as a post-frame callback so runApp() is never blocked —
+  // calling FlutterLogs.clearLogs() before runApp() can deadlock on Android
+  // because PLog holds an open write handle to the log file created by initLogs().
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try {
+      final storage = sec_store.FlutterSecureStorage(
+        aOptions: const sec_store.AndroidOptions(
+          keyCipherAlgorithm: sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
+          storageCipherAlgorithm: sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
+        ),
+        iOptions: const sec_store.IOSOptions(
+          accessibility: sec_store.KeychainAccessibility.first_unlock,
+        ),
+      );
+      final clearValue = await storage.read(key: FluxNewsState.secureStorageClearLogsOnStartKey);
+      final shouldClear = clearValue == null || clearValue == FluxNewsState.secureStorageTrueString;
+      if (shouldClear) {
+        await FlutterLogs.clearLogs();
+      }
+    } catch (_) {
+      // Non-critical — swallow silently.
+    }
+  });
 
   if (Platform.isAndroid || Platform.isIOS) {
     FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'App starting - platform: ${Platform.operatingSystem}');
