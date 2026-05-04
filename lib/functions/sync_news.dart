@@ -200,6 +200,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     if (!appState.longSyncAborted) {
       // update the previous fetched starred news in the database
       // maybe some other app has marked a news a starred
+      // also refresh progression cache for starred news (includes read+starred)
       await updateStarredNewsInDB(starredNews, appState).onError((error, stackTrace) {
         logThis('updateStarredNewsInDB', 'Caught an error in updateStarredNewsInDB function! ${error.toString()}',
             LogLevel.ERROR);
@@ -212,6 +213,21 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         }
         return 0;
       });
+      // Refresh progression cache for starred (read or unread) news.
+      AudioDownloadService.refreshMediaProgressionCacheFromSync(starredNews.news);
+    }
+
+    if (!appState.longSyncAborted) {
+      // Sync media progression for downloaded episodes not covered by the
+      // regular syncs (i.e. already-read, non-starred downloaded podcasts).
+      await _syncDownloadedAudioProgressions(
+        appState,
+        alreadySyncedIds: {
+          ...newNews.news.map((n) => n.newsID),
+          ...starredNews.news.map((n) => n.newsID),
+        },
+      ).onError((e, _) => logThis('syncDownloadedAudioProgressions',
+          'Error syncing downloaded progression: $e', LogLevel.ERROR));
     }
 
     if (!appState.longSyncAborted) {
@@ -305,4 +321,48 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     logThis('syncNews', 'Syncing with miniflux server executed in ${stopwatch.elapsed}', LogLevel.INFO);
   }
   logThis('syncNews', 'Finished syncing with miniflux server.', LogLevel.INFO);
+}
+
+/// Fetches the latest media_progression from the server for all locally
+/// downloaded episodes that were not covered by the regular sync steps
+/// (i.e. read, non-starred podcasts). Updates both the DB and the
+/// in-memory cache so playback always resumes at the correct position.
+Future<void> _syncDownloadedAudioProgressions(
+  FluxNewsState appState, {
+  required Set<int> alreadySyncedIds,
+}) async {
+  // Collect all news IDs that have a downloaded audio file.
+  final downloadedNewsIds = await getDownloadedAudioNewsIds(appState);
+  if (downloadedNewsIds.isEmpty) return;
+
+  // Only fetch entries whose progression wasn't already refreshed by
+  // fetchNews (unread) or fetchStarredNews (starred).
+  final toSync = downloadedNewsIds.difference(alreadySyncedIds);
+  if (toSync.isEmpty) {
+    if (appState.debugMode) {
+      logThis('syncDownloadedAudioProgressions',
+          'All downloaded episodes already covered by regular sync.', LogLevel.INFO);
+    }
+    return;
+  }
+
+  if (appState.debugMode) {
+    logThis('syncDownloadedAudioProgressions',
+        'Fetching progression for ${toSync.length} read downloaded episode(s).', LogLevel.INFO);
+  }
+
+  final fetched = await fetchEntriesProgressionByIds(appState, toSync.toList());
+  if (fetched.news.isEmpty) return;
+
+  // Update only mediaProgression in the DB — does not touch news.status
+  // or syncStatus so the regular sync cycle is unaffected.
+  await updateAttachmentProgressionsInDB(fetched, appState);
+
+  // Update in-memory cache for immediate use by CarPlay / Android Auto.
+  AudioDownloadService.refreshMediaProgressionCacheFromSync(fetched.news);
+
+  if (appState.debugMode) {
+    logThis('syncDownloadedAudioProgressions',
+        'Progression synced for ${fetched.news.length} episode(s).', LogLevel.INFO);
+  }
 }

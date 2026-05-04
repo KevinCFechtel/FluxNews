@@ -292,9 +292,9 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       }
     }
 
-    // Use whichever position is further ahead. If the server is ahead, also
-    // update the Keychain so the advanced position persists across app restarts.
+    // Use whichever position is further ahead.
     if (serverMs > localMs) {
+      // Server is ahead — write to Keychain so it persists across restarts.
       if (newsID is int) {
         try {
           await _storage.write(
@@ -306,6 +306,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       return Duration(milliseconds: serverMs);
     }
     if (localMs > 0) {
+      // Local Keychain is ahead (e.g. app was terminated before the last
+      // _syncProgressionToServer could complete). Upload to server now so
+      // other devices and future syncs see the correct position.
+      if (attachmentID is int && attachmentID >= 0) {
+        _syncProgressionToServer(attachmentID, localMs ~/ 1000).ignore();
+      }
       return Duration(milliseconds: localMs);
     }
     return null;

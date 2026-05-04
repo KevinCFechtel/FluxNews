@@ -1382,6 +1382,54 @@ Future<bool> checkMinifluxCredentials(String? miniFluxUrl, String? miniFluxApiKe
   }
 }
 
+/// Fetches specific entries by their IDs via GET /v1/entries/{id}.
+/// Returns entries regardless of read/starred status, including enclosures
+/// with their current media_progression.
+Future<NewsList> fetchEntriesProgressionByIds(
+    FluxNewsState appState, List<int> entryIds) async {
+  if (entryIds.isEmpty) return NewsList(news: [], newsCount: 0);
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
+    return NewsList(news: [], newsCount: 0);
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  final allNews = <News>[];
+
+  try {
+    for (final entryId in entryIds) {
+      final response = await client.get(
+        Uri.parse('${appState.minifluxURL!}entries/$entryId'),
+        headers: header,
+      );
+      if (response.statusCode == 200) {
+        allNews.add(News.fromJson(jsonDecode(utf8.decode(response.bodyBytes))));
+      } else if (response.statusCode != 404) {
+        logThis('fetchEntriesProgressionByIds',
+            'Unexpected response ${response.statusCode} for entry $entryId', LogLevel.ERROR);
+      }
+    }
+  } finally {
+    client.close();
+  }
+
+  return NewsList(news: allNews, newsCount: allNews.length);
+}
+
 // sync the media progression of an enclosure with the miniflux server
 bool _isMinifluxVersionAtLeast(String? versionString, List<int> minimum) {
   if (versionString == null || versionString.trim().isEmpty) {

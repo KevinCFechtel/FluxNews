@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -610,11 +612,51 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (!mounted || _isDisposed) return;
     final localMs = saved != null ? (int.tryParse(saved) ?? 0) : 0;
 
-    // Prefer local storage; fall back to server-side media_progression if local is absent
-    if (localMs > 0) {
+    // Server value: prefer the in-memory cache (updated by refreshMediaProgressionCacheFromSync
+    // AFTER queryNewsFromDB, so it reflects the latest sync result). Fall back to the
+    // mediaProgression on the News object (may be stale if sync hasn't completed yet).
+    int serverMs = 0;
+    if (_audioAttachments.isNotEmpty) {
+      final attachmentID = _audioAttachments.first.attachmentID;
+      final cached = AudioDownloadService.getDownloadMediaProgression(attachmentID);
+      if (cached != null && cached > 0) {
+        serverMs = cached * 1000;
+      } else if (_audioAttachments.first.mediaProgression > 0) {
+        serverMs = _audioAttachments.first.mediaProgression * 1000;
+      }
+    }
+
+    if (widget.appState.debugMode) {
+      logThis(
+        'AudioPlayer._loadProgress',
+        'newsID=${widget.news.newsID} '
+        'localMs=$localMs '
+        'serverMs=$serverMs '
+        'attachmentProgression=${_audioAttachments.isNotEmpty ? _audioAttachments.first.mediaProgression : -1}s '
+        'cacheProgression=${_audioAttachments.isNotEmpty ? AudioDownloadService.getDownloadMediaProgression(_audioAttachments.first.attachmentID) : -1}s',
+        LogLevel.INFO,
+      );
+    }
+
+    // Use whichever position is further ahead. If the server is ahead, also
+    // update the Keychain so the advanced position persists across app restarts.
+    if (serverMs > localMs) {
+      try {
+        await _storage.write(key: _progressKey(), value: serverMs.toString());
+      } catch (_) {}
+      if (widget.appState.debugMode) {
+        logThis('AudioPlayer._loadProgress', 'Server wins → ${serverMs ~/ 1000}s', LogLevel.INFO);
+      }
+      setState(() => _savedPosition = Duration(milliseconds: serverMs));
+    } else if (localMs > 0) {
+      if (widget.appState.debugMode) {
+        logThis('AudioPlayer._loadProgress', 'Local wins → ${localMs ~/ 1000}s', LogLevel.INFO);
+      }
       setState(() => _savedPosition = Duration(milliseconds: localMs));
-    } else if (_audioAttachments.isNotEmpty && _audioAttachments.first.mediaProgression > 0) {
-      setState(() => _savedPosition = Duration(seconds: _audioAttachments.first.mediaProgression));
+    } else {
+      if (widget.appState.debugMode) {
+        logThis('AudioPlayer._loadProgress', 'No saved position → start from 0', LogLevel.INFO);
+      }
     }
   }
 

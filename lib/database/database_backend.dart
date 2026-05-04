@@ -51,6 +51,11 @@ Future<bool> _feedHasProtectedNews(Database db, int feedID, List<int> protectedN
   return false;
 }
 
+/// Returns the set of local news IDs that have at least one downloaded audio file.
+/// Used both for deletion protection and for the dedicated media-progression sync.
+Future<Set<int>> getDownloadedAudioNewsIds(FluxNewsState appState) =>
+    _getProtectedNewsIdsFromDownloads(appState);
+
 Future<Set<int>> _getProtectedNewsIdsFromDownloads(FluxNewsState appState) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db == null) {
@@ -95,6 +100,28 @@ Future<Set<int>> _getProtectedNewsIdsFromDownloads(FluxNewsState appState) async
   }
 
   return protectedNewsIDs;
+}
+
+/// Updates only the mediaProgression column for each attachment in [newsList].
+/// Does not touch news.status, news.syncStatus, or any other fields,
+/// so the sync cycle is not affected.
+Future<void> updateAttachmentProgressionsInDB(
+    NewsList newsList, FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return;
+
+  final batch = appState.db!.batch();
+  for (final news in newsList.news) {
+    if (news.attachments == null) continue;
+    for (final attachment in news.attachments!) {
+      if (attachment.attachmentID == -1 || attachment.mediaProgression <= 0) continue;
+      batch.rawUpdate(
+        'UPDATE attachments SET mediaProgression = ? WHERE attachmentID = ?',
+        [attachment.mediaProgression, attachment.attachmentID],
+      );
+    }
+  }
+  await batch.commit(noResult: true, continueOnError: true);
 }
 
 // function to insert news in database which are located in the newsList parameter
