@@ -324,45 +324,91 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 }
 
 /// Fetches the latest media_progression from the server for all locally
-/// downloaded episodes that were not covered by the regular sync steps
-/// (i.e. read, non-starred podcasts). Updates both the DB and the
-/// in-memory cache so playback always resumes at the correct position.
+/// Syncs media progression for all locally downloaded episodes in both
+/// directions:
+///
+/// INBOUND (Server → App): fetches the latest media_progression from the
+/// server for episodes not covered by the regular sync (read, non-starred),
+/// then updates the DB and in-memory cache.
+///
+/// OUTBOUND (App → Server): for every downloaded episode, compares the local
+/// Keychain position with the server cache value. If the local position is
+/// ahead (e.g. because CarPlay/Android Auto was terminated before the
+/// fire-and-forget PUT could complete), it is pushed to the server here.
 Future<void> _syncDownloadedAudioProgressions(
   FluxNewsState appState, {
   required Set<int> alreadySyncedIds,
 }) async {
-  // Collect all news IDs that have a downloaded audio file.
   final downloadedNewsIds = await getDownloadedAudioNewsIds(appState);
   if (downloadedNewsIds.isEmpty) return;
 
-  // Only fetch entries whose progression wasn't already refreshed by
-  // fetchNews (unread) or fetchStarredNews (starred).
-  final toSync = downloadedNewsIds.difference(alreadySyncedIds);
-  if (toSync.isEmpty) {
+  // ── INBOUND ──────────────────────────────────────────────────────────────
+  // Fetch server progression for read/non-starred episodes not yet covered.
+  final toFetch = downloadedNewsIds.difference(alreadySyncedIds);
+  if (toFetch.isNotEmpty) {
     if (appState.debugMode) {
       logThis('syncDownloadedAudioProgressions',
-          'All downloaded episodes already covered by regular sync.', LogLevel.INFO);
+          'INBOUND: fetching progression for ${toFetch.length} read episode(s).', LogLevel.INFO);
     }
-    return;
+    final fetched = await fetchEntriesProgressionByIds(appState, toFetch.toList());
+    if (fetched.news.isNotEmpty) {
+      await updateAttachmentProgressionsInDB(fetched, appState);
+      AudioDownloadService.refreshMediaProgressionCacheFromSync(fetched.news);
+      if (appState.debugMode) {
+        logThis('syncDownloadedAudioProgressions',
+            'INBOUND: updated ${fetched.news.length} episode(s).', LogLevel.INFO);
+      }
+    }
+  } else if (appState.debugMode) {
+    logThis('syncDownloadedAudioProgressions',
+        'INBOUND: all downloaded episodes already covered by regular sync.', LogLevel.INFO);
   }
 
-  if (appState.debugMode) {
-    logThis('syncDownloadedAudioProgressions',
-        'Fetching progression for ${toSync.length} read downloaded episode(s).', LogLevel.INFO);
+  // ── OUTBOUND ─────────────────────────────────────────────────────────────
+  // For every downloaded episode: if the local Keychain position is ahead of
+  // the server cache, push it to the server. This handles cases where
+  // CarPlay / Android Auto was terminated before the fire-and-forget PUT
+  // could complete.
+  final downloadedAudios = await AudioDownloadService.getDownloadedAudios();
+  int pushedCount = 0;
+
+  for (final download in downloadedAudios) {
+    if (download.attachmentID < 0) continue;
+
+    // Resolve newsID: in-memory cache first, then DB.
+    int? newsID = AudioDownloadService.getDownloadNewsId(download.attachmentID);
+    newsID ??= await queryNewsIdByAttachmentId(appState, download.attachmentID);
+    if (newsID == null) continue;
+
+    // Read local Keychain position (milliseconds).
+    String? localStr;
+    try {
+      localStr = await appState.storage.read(
+          key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
+    } catch (_) {
+      continue;
+    }
+    final localMs = localStr != null ? int.tryParse(localStr) ?? 0 : 0;
+    if (localMs <= 0) continue;
+
+    // Server position from in-memory cache (seconds → milliseconds).
+    final serverSeconds =
+        AudioDownloadService.getDownloadMediaProgression(download.attachmentID) ?? 0;
+
+    if (localMs > serverSeconds * 1000) {
+      if (appState.debugMode) {
+        logThis('syncDownloadedAudioProgressions',
+            'OUTBOUND: attachment ${download.attachmentID} — local ${localMs ~/ 1000}s > server ${serverSeconds}s, pushing.',
+            LogLevel.INFO);
+      }
+      await syncMediaProgression(
+          appState, newsID, download.attachmentID, localMs ~/ 1000);
+      pushedCount++;
+    }
   }
 
-  final fetched = await fetchEntriesProgressionByIds(appState, toSync.toList());
-  if (fetched.news.isEmpty) return;
-
-  // Update only mediaProgression in the DB — does not touch news.status
-  // or syncStatus so the regular sync cycle is unaffected.
-  await updateAttachmentProgressionsInDB(fetched, appState);
-
-  // Update in-memory cache for immediate use by CarPlay / Android Auto.
-  AudioDownloadService.refreshMediaProgressionCacheFromSync(fetched.news);
-
-  if (appState.debugMode) {
+  if (appState.debugMode && pushedCount > 0) {
     logThis('syncDownloadedAudioProgressions',
-        'Progression synced for ${fetched.news.length} episode(s).', LogLevel.INFO);
+        'OUTBOUND: pushed $pushedCount episode(s) to server.', LogLevel.INFO);
   }
 }

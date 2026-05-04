@@ -542,13 +542,29 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     }
 
     _currentUrl = url;
-    final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
-    final fallbackArtworkUri = item.artUri ?? defaultArtworkUri;
-    final defaultArtworkFilePath = await AudioDownloadService.getDefaultArtworkFilePath();
+
+    // Resolve artwork. For downloaded media items, artUri and artCacheFile are
+    // already set by _buildDownloadedMediaItems() — skip the expensive async
+    // lookups in that case. Only fall back to the default when artUri is absent
+    // (e.g. streaming items built without pre-resolved artwork).
+    final artCacheFileAlreadySet = item.extras?.containsKey('artCacheFile') == true;
+    final Uri? fallbackArtworkUri;
+    if (item.artUri != null) {
+      fallbackArtworkUri = item.artUri;
+    } else {
+      fallbackArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
+    }
+
+    final String? defaultArtworkFilePath;
+    if (artCacheFileAlreadySet) {
+      defaultArtworkFilePath = null; // already in item.extras, no extra lookup needed
+    } else {
+      defaultArtworkFilePath = await AudioDownloadService.getDefaultArtworkFilePath();
+    }
+
     final preparedExtras = <String, dynamic>{
       if (item.extras != null) ...item.extras!,
-      if (defaultArtworkFilePath != null && fallbackArtworkUri == defaultArtworkUri)
-        'artCacheFile': defaultArtworkFilePath,
+      if (defaultArtworkFilePath != null) 'artCacheFile': defaultArtworkFilePath,
     };
     final preparedItem = item.copyWith(
       playable: true,

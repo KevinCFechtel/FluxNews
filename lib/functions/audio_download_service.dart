@@ -104,6 +104,16 @@ class AudioDownloadService {
   static const String _defaultAndroidArtworkFileName = FluxNewsState.defaultAndroidArtworkFileName;
   static const String _androidDefaultArtworkProviderAuthority = FluxNewsState.androidDefaultArtworkProviderAuthority;
   static const String _artworkCacheDirectoryName = FluxNewsState.artworkCacheDirectoryName;
+
+  // Cached app-support directory — resolved once at startup to avoid repeated
+  // async platform-channel calls on every artwork/download path lookup.
+  static Directory? _cachedAppSupportDir;
+
+  // Cached default artwork values — resolved once by _ensureDefaultArtworkFile()
+  // so getDefaultArtworkUri() / getDefaultArtworkFilePath() return instantly.
+  static Uri? _cachedDefaultArtworkUri;
+  static String? _cachedDefaultArtworkFilePath;
+
   static final _activeDownloads = <int, AudioDownloadProgress>{};
   static final _activeDownloadsController = StreamController<List<AudioDownloadProgress>>.broadcast();
   static final _downloadedAudiosChangedController = StreamController<void>.broadcast();
@@ -377,7 +387,7 @@ class AudioDownloadService {
         final libraryDir = await getLibraryDirectory();
         return p.join(libraryDir.path, FluxNewsState.databasePathString);
       } else {
-        final appSupport = await getApplicationSupportDirectory();
+        final appSupport = await _getAppSupportDir();
         final parts = appSupport.path.split('/');
         var dir = '/';
         for (int i = 0; i < parts.length - 1; i++) {
@@ -427,7 +437,7 @@ class AudioDownloadService {
   }
 
   static Future<String?> _findCachedFileForStorageAttachmentId(int storageAttachmentId) async {
-    final appSupport = await getApplicationSupportDirectory();
+    final appSupport = await _getAppSupportDir();
     final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
     if (!await audioDirectory.exists()) return null;
 
@@ -488,17 +498,36 @@ class AudioDownloadService {
     return _isWifiConnected();
   }
 
+  /// Returns the cached app-support directory, resolving it once on first call.
+  static Future<Directory> _getAppSupportDir() async {
+    return _cachedAppSupportDir ??= await getApplicationSupportDirectory();
+  }
+
+  /// Pre-warms the app-support directory cache. Call once at app startup
+  /// so all subsequent artwork and download path lookups return instantly.
+  static Future<void> warmupAppSupportDirectory() async {
+    _cachedAppSupportDir ??= await getApplicationSupportDirectory();
+  }
+
   static Future<File> _ensureDefaultArtworkFile() async {
+    if (_cachedDefaultArtworkFilePath != null) {
+      return File(_cachedDefaultArtworkFilePath!);
+    }
     final assetPath = Platform.isAndroid ? _defaultAndroidArtworkAssetPath : _defaultArtworkAssetPath;
     final fileName = Platform.isAndroid ? _defaultAndroidArtworkFileName : _defaultArtworkFileName;
 
-    final appSupport = await getApplicationSupportDirectory();
+    final appSupport = await _getAppSupportDir();
     final file = File(p.join(appSupport.path, fileName));
 
     if (!await file.exists()) {
       final byteData = await rootBundle.load(assetPath);
       await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
     }
+
+    _cachedDefaultArtworkFilePath = file.path;
+    _cachedDefaultArtworkUri = Platform.isAndroid
+        ? _buildAndroidDefaultArtworkContentUri()
+        : Uri.file(file.path);
 
     return file;
   }
@@ -510,9 +539,10 @@ class AudioDownloadService {
   }
 
   static Future<String?> getDefaultArtworkFilePath() async {
+    if (_cachedDefaultArtworkFilePath != null) return _cachedDefaultArtworkFilePath;
     try {
-      final file = await _ensureDefaultArtworkFile();
-      return file.path;
+      await _ensureDefaultArtworkFile();
+      return _cachedDefaultArtworkFilePath;
     } catch (e, st) {
       logThis('artwork', 'getDefaultArtworkFilePath error: $e\n$st', LogLevel.ERROR);
       return null;
@@ -520,15 +550,10 @@ class AudioDownloadService {
   }
 
   static Future<Uri?> getDefaultArtworkUri() async {
+    if (_cachedDefaultArtworkUri != null) return _cachedDefaultArtworkUri;
     try {
-      final file = await _ensureDefaultArtworkFile();
-
-      if (Platform.isAndroid) {
-        return _buildAndroidDefaultArtworkContentUri();
-      }
-
-      final uri = Uri.file(file.path);
-      return uri;
+      await _ensureDefaultArtworkFile();
+      return _cachedDefaultArtworkUri;
     } catch (e, st) {
       logThis('artwork', 'getDefaultArtworkUri error: $e\n$st', LogLevel.ERROR);
       return null;
@@ -556,7 +581,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
           ? await _addAndroidArtworkPadding(normalizedBytes) ?? normalizedBytes
           : normalizedBytes;
 
-      final appSupport = await getApplicationSupportDirectory();
+      final appSupport = await _getAppSupportDir();
       final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
       if (!await artworkDirectory.exists()) {
         await artworkDirectory.create(recursive: true);
@@ -724,7 +749,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
 
   static Future<String?> getCachedArtworkFilePathForAttachment(int attachmentID) async {
     try {
-      final appSupport = await getApplicationSupportDirectory();
+      final appSupport = await _getAppSupportDir();
       final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
       if (!await artworkDirectory.exists()) return null;
       for (final extension in const ['png', 'jpg', 'gif']) {
@@ -737,7 +762,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
 
   static Future<Uri?> getCachedArtworkUriForAttachment(int attachmentID) async {
     try {
-      final appSupport = await getApplicationSupportDirectory();
+      final appSupport = await _getAppSupportDir();
       final artworkDirectory = Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
       if (!await artworkDirectory.exists()) {
         return null;
@@ -1320,7 +1345,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
   /// filesystem rather than relying on persistent key–value storage.
   static Future<List<DownloadedAudioInfo>> getDownloadedAudios() async {
     try {
-      final appSupport = await getApplicationSupportDirectory();
+      final appSupport = await _getAppSupportDir();
       final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
 
       if (!await audioDirectory.exists()) {
@@ -1378,7 +1403,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
       if (await file.exists()) await file.delete();
     } else {
       // Fall back to filesystem scan when the storage key is missing.
-      final appSupport = await getApplicationSupportDirectory();
+      final appSupport = await _getAppSupportDir();
       final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
       if (await audioDirectory.exists()) {
         await for (final entity in audioDirectory.list(followLinks: false)) {
@@ -1449,7 +1474,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
     if (retentionDays <= 0) return;
 
     final now = DateTime.now();
-    final appSupport = await getApplicationSupportDirectory();
+    final appSupport = await _getAppSupportDir();
     final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
 
     if (!await audioDirectory.exists()) return;
@@ -1559,7 +1584,7 @@ static Future<Uri?> cacheArtworkBytesForAttachment({
         return null;
       }
 
-      final appSupport = await getApplicationSupportDirectory();
+      final appSupport = await _getAppSupportDir();
       final audioDirectory = Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
       if (!await audioDirectory.exists()) {
         await audioDirectory.create(recursive: true);
