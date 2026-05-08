@@ -43,7 +43,7 @@ class FluxNewsBody extends StatelessWidget {
       onInit: () {
         appState.startUp = true;
         appState.syncProcess = true;
-        initConfig(context, appState);
+        initConfig(context, appState, false);
         appState.categoryList = queryCategoriesFromDB(appState, context);
         appState.newsList = Future<List<News>>.value([]);
       },
@@ -53,7 +53,7 @@ class FluxNewsBody extends StatelessWidget {
         // in the foreground, the Keychain is accessible again.
         if (appState.minifluxURL == null && !appState.syncProcess) {
           logThis('FluxNewsBody', 'Resumed with null minifluxURL — re-running initConfig', LogLevel.INFO);
-          initConfig(context, appState);
+          initConfig(context, appState, true);
         }
       },
       child: OrientationBuilder(
@@ -70,7 +70,7 @@ class FluxNewsBody extends StatelessWidget {
   }
 
   // helper function for the initState() to use async function on init
-  Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
+  Future<void> initConfig(BuildContext context, FluxNewsState appState, bool resume) async {
     // read persistent saved config
     bool completed = await appState.readConfigValues();
 
@@ -204,7 +204,9 @@ class FluxNewsBody extends StatelessWidget {
 
       if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
         // show the welcome screen once before the login screen on first app start
-        Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        if (!resume) {
+          Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        }
       } else {
         appState.startUp = false;
         // if everything is fine with the settings, present the list view
