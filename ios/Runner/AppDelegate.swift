@@ -1,5 +1,6 @@
 import ActivityKit
 import Flutter
+import MediaPlayer
 import UIKit
 
 let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadlessExecution: true)
@@ -16,6 +17,7 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
     if #available(iOS 16.1, *) {
       setupDynamicIslandChannel()
     }
+    setupNowPlayingChannel()
 
     NotificationCenter.default.addObserver(
       self,
@@ -132,6 +134,26 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
         await activity.end(using: activity.contentState, dismissalPolicy: .immediate)
       }
       UserDefaults.standard.removeObject(forKey: "currentActivityId")
+      result(nil)
+    }
+  }
+
+  private func setupNowPlayingChannel() {
+    let channel = FlutterMethodChannel(
+      name: "dev.kevincfechtel.fluxnews/nowplaying",
+      binaryMessenger: flutterEngine.binaryMessenger
+    )
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "setArtwork",
+            let path = call.arguments as? String,
+            let image = UIImage(contentsOfFile: path) else {
+        result(nil)
+        return
+      }
+      let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+      var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+      info[MPMediaItemPropertyArtwork] = artwork
+      MPNowPlayingInfoCenter.default().nowPlayingInfo = info
       result(nil)
     }
   }
