@@ -138,19 +138,41 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
     }
   }
 
+  // Alternates between two imperceptibly different renders so that consecutive
+  // calls with the same artwork file always produce pixel-unique images. This
+  // forces iOS to emit a MPNowPlayingInfoCenter change notification even when
+  // the source image is identical, preventing OEM infotainment (e.g. VW) from
+  // suppressing the artwork update because its cached pixel data matches.
+  private var _artworkTick = false
+
   private func setupNowPlayingChannel() {
     let channel = FlutterMethodChannel(
       name: "dev.kevincfechtel.fluxnews/nowplaying",
       binaryMessenger: flutterEngine.binaryMessenger
     )
-    channel.setMethodCallHandler { call, result in
-      guard call.method == "setArtwork",
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self,
+            call.method == "setArtwork",
             let path = call.arguments as? String,
             let image = UIImage(contentsOfFile: path) else {
         result(nil)
         return
       }
-      let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+      // Render a pixel-unique copy: one 1×1 px overlay at 1/255 opacity
+      // (≈ 0.4%) alternating between near-black and near-white each call.
+      // Visually indistinguishable from the original but always changes the
+      // pixel bytes, so iOS never suppresses the nowPlayingInfo notification.
+      self._artworkTick.toggle()
+      let tick = self._artworkTick
+      let format = UIGraphicsImageRendererFormat()
+      format.scale = image.scale
+      let renderer = UIGraphicsImageRenderer(size: image.size, format: format)
+      let uniqueImage = renderer.image { _ in
+        image.draw(at: .zero)
+        UIColor(white: tick ? 0.0 : 1.0, alpha: 1.0 / 255.0).setFill()
+        UIRectFill(CGRect(x: 0, y: 0, width: 1, height: 1))
+      }
+      let artwork = MPMediaItemArtwork(boundsSize: uniqueImage.size) { _ in uniqueImage }
       var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
       info[MPMediaItemPropertyArtwork] = artwork
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info

@@ -579,20 +579,6 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     );
     _currentMediaItem = preparedItem;
     queue.add([preparedItem]);
-
-    // Set artwork in MPNowPlayingInfoCenter BEFORE mediaItem.add() so that VW
-    // (and other OEM infotainment) sees the artwork in the same MPNowPlayingInfoCenter
-    // snapshot it reads when audio_service fires the track-change notification.
-    // preloadArtwork is disabled so audio_service never overwrites this.
-    if (Platform.isIOS) {
-      final artPath = preparedExtras['artCacheFile'] as String?;
-      if (artPath != null) {
-        try {
-          await _nowPlayingChannel.invokeMethod<void>('setArtwork', artPath);
-        } catch (_) {}
-      }
-    }
-
     mediaItem.add(preparedItem);
 
     if (shouldReload) {
