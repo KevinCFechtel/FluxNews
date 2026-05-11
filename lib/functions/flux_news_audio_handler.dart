@@ -8,7 +8,6 @@ import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter/services.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
@@ -47,12 +46,10 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
         'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_BROWSABLE_HINT': 1,
         'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_PLAYABLE_HINT': 1,
       },
-      // iOS/CarPlay: artwork is set manually via the nowplaying method channel
-      // so that MPNowPlayingInfoCenter has the artwork BEFORE audio_service
-      // calls mediaItem.add() — otherwise OEM infotainment (e.g. VW Digital
-      // Cockpit) reads MPNowPlayingInfoCenter at the track-change notification
-      // and sees no artwork because audio_service's async load hasn't finished.
-      preloadArtwork: false,
+      // iOS/CarPlay support
+      preloadArtwork: true,
+      artDownscaleWidth: 512,
+      artDownscaleHeight: 512,
     ),
   ).then((handler) {
     _fluxNewsAudioHandler = handler;
@@ -89,8 +86,6 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       _debugMode = value == FluxNewsState.secureStorageTrueString;
     } catch (_) {}
   }
-
-  static const _nowPlayingChannel = MethodChannel('dev.kevincfechtel.fluxnews/nowplaying');
 
   static const String _rootMediaId = 'flux_news_root';
   static const String _downloadsMediaId = 'flux_news_downloads';
@@ -612,21 +607,6 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     _player.play().ignore();
     final state = _buildPlaybackState();
     playbackState.add(state);
-    // Re-set artwork after triggering playback and playbackState update.
-    // audio_service's setMediaItem: (fired by mediaItem.add() in loadMediaItem)
-    // overwrites MPNowPlayingInfoCenter with the deprecated initWithImage: API.
-    // All prior native calls are FIFO on the iOS main thread, so this setArtwork
-    // dispatched here runs AFTER setMediaItem: and updateNowPlayingInfo —
-    // ensuring the correct initWithBoundsSize:requestHandler: artwork is the
-    // last value VW infotainment reads when audio output begins.
-    if (Platform.isIOS) {
-      final artPath = _currentMediaItem?.extras?['artCacheFile'] as String?;
-      if (artPath != null) {
-        try {
-          await _nowPlayingChannel.invokeMethod<void>('setArtwork', artPath);
-        } catch (_) {}
-      }
-    }
     _startDynamicIsland();
   }
 
