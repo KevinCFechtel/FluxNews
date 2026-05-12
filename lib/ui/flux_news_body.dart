@@ -857,10 +857,13 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
               .fold<Attachment?>(null, (prev, e) => prev ?? e);
 
       // Stop first — handler.stop() internally re-saves progress, so we
-      // delete the Keychain entry afterwards to ensure a clean reset to 0.
+      // write "0" afterwards to mark the episode as completed. Using "0" rather
+      // than deleting lets _loadProgress / _resolveSavedPosition distinguish
+      // "explicitly reset" from "never played" and ignore stale server values.
       await handler.stop();
-      await _storage.delete(
+      await _storage.write(
         key: '${FluxNewsState.audioProgressKeyPrefix}${activeNews.newsID}',
+        value: '0',
       );
 
       if (completedAttachment != null) {

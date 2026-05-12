@@ -421,7 +421,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         _downloadedPaths[attachment.attachmentID] = filePath;
         await _loadChaptersForAttachment(attachment, filePath: filePath);
         // Re-download: reset position so the episode starts from the beginning.
-        await _storage.delete(key: _progressKey());
+        // Write "0" so _loadProgress treats this as an explicit reset.
+        await _storage.write(key: _progressKey(), value: '0');
         syncMediaProgression(widget.appState, widget.news.newsID, attachment.attachmentID, 0).ignore();
         if (mounted && !_isDisposed) {
           setState(() => _savedPosition = null);
@@ -556,10 +557,11 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
             .fold<Attachment?>(null, (prev, e) => prev ?? e);
 
     // Stop without saving progress — episode is done, position should be 0.
-    // The handler's stop() internally calls _persistCurrentProgress, so we
-    // delete the Keychain entry afterwards to ensure a clean reset.
+    // Write "0" (not delete) so _loadProgress can distinguish between
+    // "never played" (null → server wins) and "explicitly reset" (0 → start
+    // from beginning regardless of stale server/cache value).
     await _stop(saveProgress: false);
-    await _storage.delete(key: _progressKey());
+    await _storage.write(key: _progressKey(), value: '0');
     if (mounted && !_isDisposed) {
       setState(() => _savedPosition = null);
     }
@@ -611,12 +613,16 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     final saved = await _storage.read(key: _progressKey());
     if (!mounted || _isDisposed) return;
     final localMs = saved != null ? (int.tryParse(saved) ?? 0) : 0;
+    // "0" written explicitly signals a completed or re-downloaded episode.
+    // Skip server/cache entirely so a stale in-memory value cannot override
+    // the intended fresh start.
+    final wasReset = saved != null && localMs == 0;
 
     // Server value: prefer the in-memory cache (updated by refreshMediaProgressionCacheFromSync
     // AFTER queryNewsFromDB, so it reflects the latest sync result). Fall back to the
     // mediaProgression on the News object (may be stale if sync hasn't completed yet).
     int serverMs = 0;
-    if (_audioAttachments.isNotEmpty) {
+    if (!wasReset && _audioAttachments.isNotEmpty) {
       final attachmentID = _audioAttachments.first.attachmentID;
       final cached = AudioDownloadService.getDownloadMediaProgression(attachmentID);
       if (cached != null && cached > 0) {

@@ -257,16 +257,23 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     // --- Local position from Keychain (milliseconds) ---
     int localMs = 0;
+    bool wasReset = false;
     final newsID = mergedExtras['newsID'];
     if (newsID is int) {
       try {
         final saved = await _storage.read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
         localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
+        // "0" written explicitly means the episode was completed or re-downloaded
+        // and should start from the beginning. Distinguish from null (never played
+        // locally) where the server position is the correct resume point.
+        wasReset = saved != null && localMs == 0;
       } catch (_) {
         // Keychain may be inaccessible (e.g. -25308 for items written before
         // first_unlock migration while screen is locked) — start from beginning.
       }
     }
+
+    if (wasReset) return null;
 
     // --- Server/cache position (seconds → milliseconds) ---
     // Check the in-memory cache first — populated by loadTitlesForDownloads
@@ -337,7 +344,9 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final progressKey = '${FluxNewsState.audioProgressKeyPrefix}$newsID';
     if (clear) {
-      await _storage.delete(key: progressKey);
+      // Write "0" instead of deleting so _loadProgress can distinguish between
+      // "never played locally" (null) and "completed/reset" (0).
+      await _storage.write(key: progressKey, value: '0');
       if (syncToServer && attachmentID != null && attachmentID >= 0) {
         _syncProgressionToServer(attachmentID, 0).ignore();
       }
