@@ -1,0 +1,1 @@
+vendor/flutter/bin/flutter gen-l10n

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -102,6 +104,11 @@ class NewsCardIOS extends StatelessWidget {
                     return const Icon(
                       Icons.error,
                     );
+                  } else if (state.extendedImageLoadState == LoadState.loading) {
+                    return Center(
+                      child: CircularProgressIndicator.adaptive(
+                          padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                    );
                   }
                   return null;
                 },
@@ -152,6 +159,17 @@ class NewsCardIOS extends StatelessWidget {
                                     ? Padding(
                                         padding: const EdgeInsets.only(right: 5.0),
                                         child: news.getFeedIcon(16.0, context))
+                                    : const SizedBox.shrink(),
+                                news.getAudioAttachments().isNotEmpty
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(right: 5.0),
+                                        child: Icon(
+                                          Icons.headphones,
+                                          size: 16.0,
+                                          color: news.status == FluxNewsState.unreadNewsStatus
+                                              ? Theme.of(context).primaryIconTheme.color
+                                              : Theme.of(context).disabledColor,
+                                        ))
                                     : const SizedBox.shrink(),
                                 Expanded(
                                   child: Padding(

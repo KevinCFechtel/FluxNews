@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cronet_http/cronet_http.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -552,6 +553,66 @@ Future<void> toggleOneNewsAsRead(FluxNewsState appState, News news) async {
   }
   if (appState.debugMode) {
     logThis('toggleOneNewsAsRead', 'Finished toggle one news as read at miniflux server', LogLevel.INFO);
+  }
+}
+
+/// Sends the read/unread status of the given [newsIDs] to the Miniflux server
+/// in the background. Shows a snackbar via [scaffoldMessenger] on failure.
+/// When [suppressAfterFirstError] is true (scroll-over path), the snackbar is
+/// shown only on the first failure; subsequent failures are suppressed until a
+/// successful full sync resets [FluxNewsState.scrolloverSyncFailed].
+Future<void> pushNewsStatusToServer(
+  List<int> newsIDs,
+  String status,
+  FluxNewsState appState,
+  ScaffoldMessengerState? scaffoldMessenger,
+  String errorMessage, {
+  bool suppressAfterFirstError = false,
+}) async {
+  if (newsIDs.isEmpty) return;
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) return;
+
+  void handleError() {
+    if (suppressAfterFirstError) {
+      if (!appState.scrolloverSyncFailed) {
+        appState.scrolloverSyncFailed = true;
+        scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } else {
+      scaffoldMessenger?.showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
+  }
+
+  try {
+    final Client client;
+    if (Platform.isAndroid) {
+      final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+      client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+    } else {
+      client = IOClient(HttpClient());
+    }
+    final header = {
+      FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+      FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+    };
+    if (appState.customHeaders.isNotEmpty) {
+      header.addAll(appState.customHeaders);
+    }
+    final body = ReadNewsList(newsIds: newsIDs, status: status);
+    final response = await client.put(
+      Uri.parse('${appState.minifluxURL!}entries'),
+      headers: header,
+      body: jsonEncode(body),
+    );
+    client.close();
+    if (response.statusCode != 204) {
+      logThis('pushNewsStatusToServer',
+          'Unexpected response ${response.statusCode} for IDs $newsIDs', LogLevel.ERROR);
+      handleError();
+    }
+  } catch (e) {
+    logThis('pushNewsStatusToServer', 'Error syncing status to server: ${e.toString()}', LogLevel.ERROR);
+    handleError();
   }
 }
 
@@ -1318,5 +1379,132 @@ Future<bool> checkMinifluxCredentials(String? miniFluxUrl, String? miniFluxApiKe
     }
     // if the miniflux url or api key is not set, the credentials are invalid
     return false;
+  }
+}
+
+/// Fetches specific entries by their IDs via GET /v1/entries/{id}.
+/// Returns entries regardless of read/starred status, including enclosures
+/// with their current media_progression.
+Future<NewsList> fetchEntriesProgressionByIds(
+    FluxNewsState appState, List<int> entryIds) async {
+  if (entryIds.isEmpty) return NewsList(news: [], newsCount: 0);
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
+    return NewsList(news: [], newsCount: 0);
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  final allNews = <News>[];
+
+  try {
+    for (final entryId in entryIds) {
+      final response = await client.get(
+        Uri.parse('${appState.minifluxURL!}entries/$entryId'),
+        headers: header,
+      );
+      if (response.statusCode == 200) {
+        allNews.add(News.fromJson(jsonDecode(utf8.decode(response.bodyBytes))));
+      } else if (response.statusCode != 404) {
+        logThis('fetchEntriesProgressionByIds',
+            'Unexpected response ${response.statusCode} for entry $entryId', LogLevel.ERROR);
+      }
+    }
+  } finally {
+    client.close();
+  }
+
+  return NewsList(news: allNews, newsCount: allNews.length);
+}
+
+// sync the media progression of an enclosure with the miniflux server
+bool _isMinifluxVersionAtLeast(String? versionString, List<int> minimum) {
+  if (versionString == null || versionString.trim().isEmpty) {
+    return false;
+  }
+
+  final parts = RegExp(r'\d+').allMatches(versionString).map((m) => int.parse(m.group(0)!)).toList();
+  if (parts.isEmpty) {
+    return false;
+  }
+
+  for (int i = 0; i < minimum.length; i++) {
+    final currentPart = i < parts.length ? parts[i] : 0;
+    final minPart = minimum[i];
+    if (currentPart > minPart) return true;
+    if (currentPart < minPart) return false;
+  }
+
+  return true;
+}
+
+Future<void> syncMediaProgression(FluxNewsState appState, int entryID, int attachmentID, int progressSeconds) async {
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) return;
+  const List<int> minMediaProgressionApiVersion = [2, 2, 0]; // Miniflux 2.2.0
+  if (!_isMinifluxVersionAtLeast(appState.minifluxVersionString, minMediaProgressionApiVersion)) {
+    if (appState.debugMode) {
+      logThis(
+        'syncMediaProgression',
+        'Skipping media progression sync. Miniflux version ${appState.minifluxVersionString ?? appState.minifluxVersionInt} is lower than 2.2.0.',
+        LogLevel.INFO,
+      );
+    }
+    return;
+  }
+  if (appState.debugMode) {
+    logThis('syncMediaProgression',
+        'Syncing media progression for entry $entryID, enclosure $attachmentID: ${progressSeconds}s', LogLevel.INFO);
+  }
+
+  final Client client;
+  if (Platform.isAndroid) {
+    final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+    client = CronetClient.fromCronetEngine(engine, closeEngine: true);
+  } else {
+    client = IOClient(HttpClient());
+  }
+
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
+    FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+  };
+  if (appState.customHeaders.isNotEmpty) {
+    header.addAll(appState.customHeaders);
+  }
+
+  try {
+    final response = await client.put(
+      Uri.parse('${appState.minifluxURL!}enclosures/$attachmentID'),
+      headers: header,
+      body: jsonEncode({'media_progression': progressSeconds}),
+    );
+
+    if (response.statusCode != 204) {
+      logThis(
+        'syncMediaProgression',
+        'Got unexpected response from miniflux server: ${response.statusCode} for enclosure $attachmentID',
+        LogLevel.ERROR,
+      );
+    }
+  } finally {
+    client.close();
+  }
+
+  if (appState.debugMode) {
+    logThis('syncMediaProgression', 'Finished syncing media progression for entry $entryID', LogLevel.INFO);
   }
 }

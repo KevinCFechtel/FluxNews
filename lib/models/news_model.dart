@@ -323,13 +323,70 @@ class News {
     Attachment imageAttachment = Attachment(attachmentID: -1, newsID: -1, attachmentURL: "", attachmentMimeType: "");
 
     if (attachments != null) {
-      for (var attachment in attachments!) {
-        if (attachment.attachmentMimeType.startsWith("image") && imageAttachment.attachmentID == -1) {
+      for (final attachment in attachments!) {
+        if (attachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
           imageAttachment = attachment;
+          break;
         }
       }
     }
+
+    if (imageAttachment.attachmentID == -1 &&
+        attachmentURL != null &&
+        attachmentURL!.isNotEmpty &&
+        attachmentMimeType != null &&
+        attachmentMimeType!.trim().toLowerCase().startsWith('image/')) {
+      imageAttachment = Attachment(
+        attachmentID: -1,
+        newsID: newsID,
+        attachmentURL: attachmentURL!,
+        attachmentMimeType: attachmentMimeType!,
+      );
+    }
+
     return imageAttachment;
+  }
+
+  List<Attachment> getAudioAttachments() {
+    final List<Attachment> audioAttachments = [];
+
+    if (attachments != null) {
+      for (final attachment in attachments!) {
+        if (attachment.attachmentMimeType.toLowerCase().startsWith('audio/')) {
+          audioAttachments.add(attachment);
+        }
+      }
+    }
+
+    if (audioAttachments.isEmpty &&
+        attachmentURL != null &&
+        attachmentURL!.isNotEmpty &&
+        attachmentMimeType != null &&
+        attachmentMimeType!.toLowerCase().startsWith('audio/')) {
+      audioAttachments.add(
+        Attachment(
+          attachmentID: -1,
+          newsID: newsID,
+          attachmentURL: attachmentURL!,
+          attachmentMimeType: attachmentMimeType!,
+        ),
+      );
+    }
+
+    return audioAttachments;
+  }
+
+  String getFormattedPlaybackTime() {
+    if (readingTime == 0) return '';
+    if (readingTime < 60) {
+      return '${readingTime}min';
+    }
+    final int hours = readingTime ~/ 60;
+    final int minutes = readingTime % 60;
+    if (minutes == 0) {
+      return '${hours}h';
+    }
+    return '${hours}h ${minutes}min';
   }
 
   // define the method to extract the image url from the html content
@@ -340,39 +397,78 @@ class News {
   String getImageURL() {
     String imageUrl = FluxNewsState.noImageUrlString;
     final document = parse(content);
-    if (preferAttachmentImage != null && preferAttachmentImage!) {
-      if (attachmentURL != null) {
-        imageUrl = attachmentURL!;
+
+    String? normalizeImageUrl(String? rawUrl) {
+      if (rawUrl == null) return null;
+      final trimmed = rawUrl.trim();
+      if (trimmed.isEmpty) return null;
+      if (trimmed.startsWith('//')) {
+        return 'https:$trimmed';
       }
-      if (imageUrl == FluxNewsState.noImageUrlString) {
-        var images = document.getElementsByTagName('img');
-        for (var image in images) {
-          String? attrib = image.attributes['src'];
-          if (attrib != null) {
-            if (attrib.startsWith('http')) {
-              imageUrl = attrib;
-              break;
+      final uri = Uri.tryParse(trimmed);
+      if (uri == null || !uri.hasScheme) return null;
+      final scheme = uri.scheme.toLowerCase();
+      if (scheme == 'http' || scheme == 'https') {
+        return trimmed;
+      }
+      return null;
+    }
+
+    String? firstImageFromAttachments() {
+      if (attachments != null) {
+        for (final attachment in attachments!) {
+          if (attachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
+            final normalized = normalizeImageUrl(attachment.attachmentURL);
+            if (normalized != null) {
+              return normalized;
             }
           }
         }
       }
-    } else {
-      var images = document.getElementsByTagName('img');
-      for (var image in images) {
-        String? attrib = image.attributes['src'];
-        if (attrib != null) {
-          if (attrib.startsWith('http')) {
-            imageUrl = attrib;
-            break;
+
+      if (attachmentURL != null &&
+          attachmentURL!.isNotEmpty &&
+          attachmentMimeType != null &&
+          attachmentMimeType!.trim().toLowerCase().startsWith('image/')) {
+        return normalizeImageUrl(attachmentURL);
+      }
+
+      return null;
+    }
+
+    String? firstImageFromHtml() {
+      final images = document.getElementsByTagName('img');
+      for (final image in images) {
+        final directSrc = normalizeImageUrl(image.attributes['src']);
+        if (directSrc != null) {
+          return directSrc;
+        }
+
+        final lazySrc = normalizeImageUrl(image.attributes['data-src']);
+        if (lazySrc != null) {
+          return lazySrc;
+        }
+
+        final srcSet = image.attributes['srcset'];
+        if (srcSet != null) {
+          for (final candidate in srcSet.split(',')) {
+            final urlPart = candidate.trim().split(RegExp(r'\s+')).first;
+            final normalized = normalizeImageUrl(urlPart);
+            if (normalized != null) {
+              return normalized;
+            }
           }
         }
       }
-      if (imageUrl == FluxNewsState.noImageUrlString) {
-        if (attachmentURL != null) {
-          imageUrl = attachmentURL!;
-        }
-      }
+      return null;
     }
+
+    if (preferAttachmentImage != null && preferAttachmentImage!) {
+      imageUrl = firstImageFromAttachments() ?? firstImageFromHtml() ?? FluxNewsState.noImageUrlString;
+    } else {
+      imageUrl = firstImageFromHtml() ?? firstImageFromAttachments() ?? FluxNewsState.noImageUrlString;
+    }
+
     return imageUrl;
   }
 
@@ -973,13 +1069,15 @@ class Attachment {
       {required this.attachmentID,
       required this.newsID,
       required this.attachmentURL,
-      required this.attachmentMimeType});
+      required this.attachmentMimeType,
+      this.mediaProgression = 0});
 
   // define the properties
   int attachmentID = 0;
   int newsID = 0;
   String attachmentURL = '';
   String attachmentMimeType = '';
+  int mediaProgression = 0;
 
   // define the method to convert the model from json
   factory Attachment.fromJson(Map<String, dynamic> json) {
@@ -988,6 +1086,7 @@ class Attachment {
       newsID: json['entry_id'],
       attachmentURL: json['url'],
       attachmentMimeType: json['mime_type'],
+      mediaProgression: json['media_progression'] ?? 0,
     );
   }
 
@@ -998,6 +1097,7 @@ class Attachment {
       'newsID': newsID,
       'attachmentURL': attachmentURL,
       'attachmentMimeType': attachmentMimeType,
+      'mediaProgression': mediaProgression,
     };
   }
 
@@ -1006,7 +1106,8 @@ class Attachment {
       : attachmentID = res['attachmentID'],
         newsID = res['newsID'],
         attachmentURL = res['attachmentURL'],
-        attachmentMimeType = res['attachmentMimeType'];
+        attachmentMimeType = res['attachmentMimeType'],
+        mediaProgression = res['mediaProgression'] ?? 0;
 }
 
 // define the model for Version response

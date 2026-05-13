@@ -180,6 +180,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get debugModeTextSettings => 'Debug Modus aktivieren';
 
   @override
+  String get clearLogsOnStart => 'Logs beim Start löschen';
+
+  @override
+  String get clearLogsOnStartDescription => 'Alle Logs beim App-Start löschen';
+
+  @override
   String get deleteLocalCache => 'Lösche den lokalen Nachrichtenspeicher';
 
   @override
@@ -439,6 +445,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unterdrücke den Dialog zur langsamen Synchronisation';
 
   @override
+  String get syncReadStatusImmediately =>
+      'Gelesenenstatus sofort an den Server senden';
+
+  @override
   String get headerSettings =>
       'Setze zusätzliche Header für den Miniflux Zugriff';
 
@@ -575,4 +585,188 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get feedSelectionDeleteSelection => 'Auswahl löschen';
+
+  @override
+  String get downloadsManagerDeleteTitle => 'Download löschen?';
+
+  @override
+  String get downloadsManagerDeleteMessage =>
+      'Soll dieser Download wirklich gelöscht werden?';
+
+  @override
+  String get downloadsManagerDeletedSnackbar => 'Download gelöscht';
+
+  @override
+  String get downloadsManagerClearAllTitle => 'Alle Downloads löschen?';
+
+  @override
+  String get downloadsManagerClearAllMessage =>
+      'Dies wird alle heruntergeladenen Audio-Dateien löschen. Diese Aktion kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get downloadsManagerClearedSnackbar => 'Alle Downloads gelöscht';
+
+  @override
+  String get downloadsManagerClearAll => 'Alle Downloads löschen';
+
+  @override
+  String get audioDownloadsSettings => 'Podcasts';
+
+  @override
+  String get audioDownloadsSettingsDescription =>
+      'Laufende Downloads und heruntergeladene Daten anzeigen';
+
+  @override
+  String get deleteDownloadAfterFinishing =>
+      'Download nach dem Durchhören automatisch löschen';
+
+  @override
+  String get downloadAudioWLAN => 'Audio nur über WLAN herunterladen';
+
+  @override
+  String get autoDownloadAudio => 'Audio nach Sync automatisch herunterladen';
+
+  @override
+  String get audioDownloadRetentionDays =>
+      'Anzahl der Tage, die Audio-Downloads vorgehalten werden sollen';
+
+  @override
+  String get chapterFrom => 'Kapitel ab';
+
+  @override
+  String get downloadWLANWarning =>
+      'Download nur über WLAN erlaubt. Bitte WLAN aktivieren.';
+
+  @override
+  String get noAudioFileAvailable => 'Keine Audio-Datei vorhanden.';
+
+  @override
+  String get sleepTimerNotification =>
+      'Sleep Timer: Wiedergabe wurde automatisch gestoppt.';
+
+  @override
+  String get sleepTimerOff => 'Sleep Timer: Off';
+
+  @override
+  String get sleepTimerEndingSoon => 'Sleep Timer: Ending soon';
+
+  @override
+  String get sleepTimerActive => 'Sleep Timer: active';
+
+  @override
+  String get sleepTimerRemaining => 'min remaining';
+
+  @override
+  String get downloaded => 'Heruntergeladen';
+
+  @override
+  String get downloadAudio => 'Download Audio';
+
+  @override
+  String get downloadQueued => 'Warteschlange';
+
+  @override
+  String get speed => 'Geschwindigkeit';
+
+  @override
+  String get chapters => 'Kapitel';
+
+  @override
+  String get interval => 'Intervall';
+
+  @override
+  String get minutes => 'min';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String get resume => 'Weiter';
+
+  @override
+  String get stop => 'Stopp';
+
+  @override
+  String get resetPlayback => 'Zurücksetzen';
+
+  @override
+  String get runningDownloads => 'Laufende Downloads';
+
+  @override
+  String get noActiveDownloads => 'Aktuell laufen keine Downloads.';
+
+  @override
+  String get from => 'von';
+
+  @override
+  String get loaded => 'geladen';
+
+  @override
+  String get downloadedData => 'Heruntergeladene Audiodateien';
+
+  @override
+  String get totalStorage => 'Gesamtspeicher';
+
+  @override
+  String get loadDownloadedDataError =>
+      'Die heruntergeladenen Dateien konnten nicht geladen werden.';
+
+  @override
+  String get noAudioDownloads =>
+      'Es wurden noch keine Audiodateien heruntergeladen.';
+
+  @override
+  String get fileList => 'Folgen';
+
+  @override
+  String get useAudioPlayer => 'Audio-Items mit dem Audio Player öffnen';
+
+  @override
+  String get showPlayerDetails => 'Player-Details anzeigen';
+
+  @override
+  String get hidePlayerDetails => 'Player-Details ausblenden';
+
+  @override
+  String get advancedSettings => 'Erweiterte Einstellungen';
+
+  @override
+  String get loadingChapters => 'Kapitel werden geladen ...';
+
+  @override
+  String get noChaptersFound => 'Keine Kapitel gefunden.';
+
+  @override
+  String get autoDeleteDownloadAfterFinish =>
+      'Audio Downloads nach dem Beenden automatisch löschen';
+
+  @override
+  String get downloadStarted => 'Download gestartet';
+
+  @override
+  String get showLogs => 'Logs anzeigen';
+
+  @override
+  String get reload => 'Neu laden';
+
+  @override
+  String get clearList => 'Liste leeren';
+
+  @override
+  String get loading => 'laden...';
+
+  @override
+  String get noEntries => 'Keine Einträge';
+
+  @override
+  String get copyClipboard => 'Copy to clipboard';
+
+  @override
+  String get last => 'letzte';
+
+  @override
+  String get cancelAll => 'Alle abbrechen';
 }

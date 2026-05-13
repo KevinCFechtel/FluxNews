@@ -100,7 +100,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
       ],
     ),
     _SuggestedCategory(
-      title: 'Wissenschaft',
+      title: 'Science',
       icon: Icons.science,
       feeds: <_SuggestedFeed>[
         _SuggestedFeed(
@@ -120,6 +120,56 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
           siteUrl: 'https://www.spektrum.de',
           feedUrl: 'http://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406',
           iconAssetPath: 'assets/spektrum.png',
+        ),
+      ],
+    ),
+    _SuggestedCategory(
+      title: 'Podcasts - International',
+      icon: Icons.podcasts,
+      feeds: <_SuggestedFeed>[
+        _SuggestedFeed(
+          title: 'New York Times - Daily',
+          siteUrl: 'https://www.nytimes.com',
+          feedUrl: 'https://feeds.simplecast.com/54nAGcIl',
+          iconAssetPath: 'assets/nyt.png',
+        ),
+        _SuggestedFeed(
+          title: 'Aljazeera - The Take',
+          siteUrl: 'https://www.aljazeera.com/news/',
+          feedUrl:
+              'https://www.omnycontent.com/d/playlist/9c074afa-3313-47e8-b802-a9f900789975/09af2160-238f-48b2-b20b-ad4b00ebd8e7/b86dddc1-67a5-41c2-a13c-ad4b00ebd8f5/podcast.rss',
+          iconAssetPath: 'assets/aljazeera.png',
+        ),
+        _SuggestedFeed(
+          title: 'Monocle Radio - The Globalist',
+          siteUrl: 'https://www.monocle.com/radio/shows/the-globalist/',
+          feedUrl:
+              'https://www.omnycontent.com/d/playlist/e6127ab7-b81e-456b-893c-a8d600215365/9c42dc1e-9f07-4f76-b8fb-ab8a0120014e/f2eddba2-287e-448b-a454-ab8a01200152/podcast.rss',
+          iconAssetPath: 'assets/monocle.png',
+        ),
+      ],
+    ),
+    _SuggestedCategory(
+      title: 'Podcasts - National Germany',
+      icon: Icons.podcasts,
+      feeds: <_SuggestedFeed>[
+        _SuggestedFeed(
+          title: 'Lage der Nation',
+          siteUrl: 'https://www.lagedernation.org',
+          feedUrl: 'https://feeds.lagedernation.org/feeds/ldn-mp3.xml',
+          iconAssetPath: 'assets/ldn.png',
+        ),
+        _SuggestedFeed(
+          title: 'F.A.Z. - Wissen',
+          siteUrl: 'https://www.faz.net/podcasts/f-a-z-wissen-der-podcast/',
+          feedUrl: 'https://fazwissen.podigee.io/feed/mp3',
+          iconAssetPath: 'assets/faz.png',
+        ),
+        _SuggestedFeed(
+          title: '11KM: der tagesschau-Podcast',
+          siteUrl: 'https://www.tagesschau.de/multimedia/podcasts/11km/',
+          feedUrl: 'https://www.tagesschau.de/multimedia/podcasts/11km/index~podcast.xml',
+          iconAssetPath: 'assets/tagesschau.png',
         ),
       ],
     ),

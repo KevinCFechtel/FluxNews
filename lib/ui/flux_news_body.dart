@@ -3,10 +3,15 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:extended_image/extended_image.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -19,8 +24,10 @@ import 'package:provider/provider.dart';
 import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
+import 'audioplayer.dart';
+import 'downloads_overview.dart';
 
-class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
+class FluxNewsBody extends StatelessWidget {
   const FluxNewsBody({super.key});
 
   @override
@@ -32,13 +39,24 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
       appState.isTablet = false;
     }
 
-    return FluxNewsBodyStatefulWrapper(onInit: () {
-      initConfig(context, appState);
-      appState.categoryList = queryCategoriesFromDB(appState, context);
-
-      appState.newsList = Future<List<News>>.value([]);
-      WidgetsBinding.instance.addObserver(this);
-    }, child: OrientationBuilder(
+    return FluxNewsBodyStatefulWrapper(
+      onInit: () {
+        appState.startUp = true;
+        appState.syncProcess = true;
+        initConfig(context, appState, false);
+        appState.categoryList = queryCategoriesFromDB(appState, context);
+        appState.newsList = Future<List<News>>.value([]);
+      },
+      onResume: () {
+        // Re-initialize config if a headless CarPlay launch left storageValues
+        // empty (readAll failed while screen was locked). Now that the app is
+        // in the foreground, the Keychain is accessible again.
+        if (appState.minifluxURL == null && !appState.syncProcess) {
+          logThis('FluxNewsBody', 'Resumed with null minifluxURL — re-running initConfig', LogLevel.INFO);
+          initConfig(context, appState, true);
+        }
+      },
+      child: OrientationBuilder(
       builder: (context, orientation) {
         appState.orientation = orientation;
 
@@ -52,9 +70,15 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
   }
 
   // helper function for the initState() to use async function on init
-  Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
+  Future<void> initConfig(BuildContext context, FluxNewsState appState, bool resume) async {
     // read persistent saved config
     bool completed = await appState.readConfigValues();
+
+    // One-time migration: rewrite all Keychain items with first_unlock
+    // accessibility so they are accessible during headless CarPlay launches.
+    if (appState.storageValues.isNotEmpty) {
+      appState.migrateKeychainAccessibility().ignore();
+    }
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
@@ -133,6 +157,8 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
         }
       }
 
+      appState.startUp = false;
+
       if (appState.syncOnStart || appState.syncNow) {
         // sync on startup or now
         if (context.mounted) {
@@ -146,6 +172,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             updateStarredCounter(appState, context);
             await renewAllNewsCount(appState, context);
           }
+          appState.syncProcess = false;
         } catch (e) {
           logThis('initConfig', 'Caught an error in initConfig function!', LogLevel.ERROR);
 
@@ -156,6 +183,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
               appState.refreshView();
             }
           }
+          appState.syncProcess = false;
         }
         FlutterNativeSplash.remove();
       }
@@ -176,8 +204,11 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
 
       if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
         // show the welcome screen once before the login screen on first app start
-        Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        if (!resume) {
+          Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
+        }
       } else {
+        appState.startUp = false;
         // if everything is fine with the settings, present the list view
         appState.refreshView();
       }
@@ -188,7 +219,11 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     bool useSliverAppBar = appState.useSliverAppBar;
     if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
-      useSliverAppBar = false;
+      if (appState.startUp) {
+        useSliverAppBar = true;
+      } else {
+        useSliverAppBar = false;
+      }
     } else if (appState.errorString != '' && appState.newError) {
       useSliverAppBar = false;
     } else if (appState.longSync) {
@@ -198,6 +233,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     }
     // start the main view in portrait mode
     return Scaffold(
+      extendBody: true,
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
@@ -312,6 +348,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             ),
       drawer: getDrawer(context, appState),
       body: const FluxNewsBodyList(),
+      bottomNavigationBar: _BottomBanners(appState: appState),
     );
   }
 
@@ -319,6 +356,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
+      extendBody: true,
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
@@ -399,6 +437,7 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
           ),
         ],
       ),
+      bottomNavigationBar: _BottomBanners(appState: appState),
     );
   }
 
@@ -582,9 +621,28 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              // the navigation to the settings
               PopupMenuItem<int>(
                 value: 4,
+                child: Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(
+                        Icons.podcasts,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.audioDownloadsSettings,
+                        overflow: TextOverflow.visible,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              // the navigation to the settings
+              PopupMenuItem<int>(
+                value: 5,
                 child: Row(
                   children: [
                     const Padding(
@@ -689,11 +747,456 @@ class FluxNewsBody extends StatelessWidget with WidgetsBindingObserver {
             } else if (value == 3) {
               showDeleteAllDialog(context, appState, appCounterState);
             } else if (value == 4) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const DownloadsOverview(),
+                ),
+              );
+            } else if (value == 5) {
               // navigate to the settings page
               Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
             }
           }),
     ];
+  }
+}
+
+class PersistentAudioMiniPlayer extends StatefulWidget {
+  const PersistentAudioMiniPlayer({super.key, required this.appState});
+
+  final FluxNewsState appState;
+
+  @override
+  State<PersistentAudioMiniPlayer> createState() => _PersistentAudioMiniPlayerState();
+}
+
+class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
+  FluxNewsAudioHandler? _audioHandler;
+  StreamSubscription<PlaybackState>? _completionSubscription;
+  StreamSubscription<SleepTimerEvent>? _sleepTimerSubscription;
+  final _storage = sec_store.FlutterSecureStorage(
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _initAudioHandler();
+  }
+
+  @override
+  void dispose() {
+    _completionSubscription?.cancel();
+    _sleepTimerSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initAudioHandler() async {
+    final handler = await initFluxNewsAudioHandler();
+    if (!mounted) return;
+    setState(() {
+      _audioHandler = handler;
+    });
+    _completionSubscription = handler.playbackState.listen((state) {
+      if (state.processingState == AudioProcessingState.completed) {
+        _handleCompletion(handler);
+      }
+    });
+    _sleepTimerSubscription = handler.sleepTimerStream.listen((event) {
+      if (!mounted || event != SleepTimerEvent.fired) return;
+      final extras = handler.mediaItem.value?.extras;
+      final attachmentID = extras?['attachmentID'];
+      final newsID = extras?['newsID'];
+      final position = handler.position;
+      if (attachmentID is int && newsID is int && position > Duration.zero) {
+        syncMediaProgression(widget.appState, newsID, attachmentID, position.inSeconds).ignore();
+      }
+    });
+  }
+
+  Future<News?> _resolveCurrentPlaybackNews(FluxNewsAudioHandler handler) async {
+    final media = handler.mediaItem.value;
+    if (media == null) return null;
+
+    final extras = media.extras;
+
+    final newsIdFromExtras = extras?['newsID'];
+    if (newsIdFromExtras is int) {
+      final news = await queryNewsByNewsId(widget.appState, newsIdFromExtras);
+      if (news != null) return news;
+    }
+
+    final attachmentIdFromExtras = extras?['attachmentID'];
+    if (attachmentIdFromExtras is int) {
+      final newsID = await queryNewsIdByAttachmentId(widget.appState, attachmentIdFromExtras);
+      if (newsID != null) return await queryNewsByNewsId(widget.appState, newsID);
+    }
+
+    final newsID = await queryNewsIdByAttachmentUrl(widget.appState, media.id);
+    if (newsID == null) return null;
+    return await queryNewsByNewsId(widget.appState, newsID);
+  }
+
+  Future<void> _handleCompletion(FluxNewsAudioHandler handler) async {
+    final activeNews = await _resolveCurrentPlaybackNews(handler);
+    if (activeNews != null) {
+      final attachments = activeNews.getAudioAttachments();
+
+      // Prefer attachmentID from extras — the media item ID may be a file://
+      // URI (CarPlay/downloaded playback) which won't match attachmentURL.
+      final extras = handler.mediaItem.value?.extras;
+      final attachmentIdFromExtras = extras?['attachmentID'];
+      final completedAttachment = attachmentIdFromExtras is int
+          ? attachments
+              .where((a) => a.attachmentID == attachmentIdFromExtras)
+              .fold<Attachment?>(null, (prev, e) => prev ?? e)
+          : attachments
+              .where((a) => a.attachmentURL == handler.mediaItem.value?.id)
+              .fold<Attachment?>(null, (prev, e) => prev ?? e);
+
+      // Stop first — handler.stop() internally re-saves progress, so we
+      // write "0" afterwards to mark the episode as completed. Using "0" rather
+      // than deleting lets _loadProgress / _resolveSavedPosition distinguish
+      // "explicitly reset" from "never played" and ignore stale server values.
+      await handler.stop();
+      await _storage.write(
+        key: '${FluxNewsState.audioProgressKeyPrefix}${activeNews.newsID}',
+        value: '0',
+      );
+
+      if (completedAttachment != null) {
+        syncMediaProgression(widget.appState, activeNews.newsID, completedAttachment.attachmentID, 0).ignore();
+
+        if (widget.appState.deleteAudioAfterPlayback) {
+          await AudioDownloadService.deleteDownloadedAudio(completedAttachment.attachmentID);
+        }
+      }
+    } else {
+      await handler.stop();
+    }
+  }
+
+  Future<void> _stopMiniPlayer() async {
+    final handler = _audioHandler;
+    if (handler == null) return;
+
+    final position = handler.position;
+    final extras = handler.mediaItem.value?.extras;
+    final attachmentIdFromExtras = extras?['attachmentID'];
+    final newsIdFromExtras = extras?['newsID'];
+
+    await handler.stop();
+
+    if (attachmentIdFromExtras is int && newsIdFromExtras is int && position > Duration.zero) {
+      syncMediaProgression(widget.appState, newsIdFromExtras, attachmentIdFromExtras, position.inSeconds).ignore();
+    }
+  }
+
+  Future<void> _openFullPlayer() async {
+    final handler = _audioHandler;
+    if (handler == null) return;
+
+    final activeNews = await _resolveCurrentPlaybackNews(handler);
+    if (!mounted || activeNews == null) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NewsAudioPlayerScreen(news: activeNews),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_audioHandler == null) return const SizedBox.shrink();
+
+    return StreamBuilder<MediaItem?>(
+      stream: _audioHandler!.mediaItem,
+      initialData: _audioHandler!.mediaItem.value,
+      builder: (context, mediaSnapshot) {
+        final media = mediaSnapshot.data;
+        if (media == null) {
+          return const SizedBox.shrink();
+        }
+
+        return StreamBuilder<PlaybackState>(
+          stream: _audioHandler!.playbackState,
+          initialData: _audioHandler!.playbackState.value,
+          builder: (context, playbackSnapshot) {
+            final playback = playbackSnapshot.data;
+            if (playback == null) {
+              return const SizedBox.shrink();
+            }
+
+            final colorScheme = Theme.of(context).colorScheme;
+            final miniPlayerBackground = colorScheme.primaryContainer;
+            final miniPlayerForeground = colorScheme.onPrimaryContainer;
+
+            final isVisible = playback.playing || playback.processingState != AudioProcessingState.idle;
+            if (!isVisible) {
+              return const SizedBox.shrink();
+            }
+
+            // Detect tablet layout
+            final screenWidth = MediaQuery.sizeOf(context).width;
+            final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+            final isTablet = screenWidth >= 900 || shortestSide >= 600;
+            final iconSize = isTablet ? 38.0 : 34.0;
+            final buttonSize = isTablet ? 60.0 : 52.0;
+            final textFontSize = isTablet ? 14.0 : 12.0;
+
+            return SafeArea(
+              top: false,
+              child: Material(
+                elevation: 8,
+                color: miniPlayerBackground,
+                child: InkWell(
+                  onTap: _openFullPlayer,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 12 : 8,
+                      vertical: isTablet ? 8 : 6,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconTheme(
+                          data: IconThemeData(color: miniPlayerForeground),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
+                                tooltip: '-30s',
+                                onPressed: () => _audioHandler!.rewind(),
+                                icon: const Icon(Icons.replay_30),
+                              ),
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
+                                tooltip: playback.playing
+                                    ? AppLocalizations.of(context)!.pause
+                                    : AppLocalizations.of(context)!.play,
+                                onPressed: () => playback.playing ? _audioHandler!.pause() : _audioHandler!.play(),
+                                icon: Icon(playback.playing ? Icons.pause_circle : Icons.play_circle),
+                              ),
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
+                                tooltip: AppLocalizations.of(context)!.stop,
+                                onPressed: _stopMiniPlayer,
+                                icon: const Icon(Icons.stop_circle),
+                              ),
+                              IconButton(
+                                color: miniPlayerForeground,
+                                iconSize: iconSize,
+                                constraints: BoxConstraints(
+                                  minWidth: buttonSize,
+                                  minHeight: buttonSize,
+                                ),
+                                tooltip: '+30s',
+                                onPressed: () => _audioHandler!.fastForward(),
+                                icon: const Icon(Icons.forward_30),
+                              ),
+                              SizedBox(width: isTablet ? 8 : 4),
+                              Expanded(
+                                child: Text(
+                                  media.title,
+                                  maxLines: isTablet ? 3 : 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        fontSize: textFontSize,
+                                        height: 1.15,
+                                        fontWeight: FontWeight.w600,
+                                        color: miniPlayerForeground,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: isTablet ? 6 : 4),
+                        LinearProgressIndicator(
+                          value: (() {
+                            final totalMs = media.duration?.inMilliseconds ?? 0;
+                            if (totalMs <= 0) return null;
+                            final currentMs = playback.updatePosition.inMilliseconds.clamp(0, totalMs);
+                            return currentMs / totalMs;
+                          })(),
+                          minHeight: isTablet ? 4 : 3,
+                          backgroundColor: miniPlayerForeground.withValues(alpha: 0.25),
+                          valueColor: AlwaysStoppedAnimation<Color>(miniPlayerForeground),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// ── Bottom banners: download progress + mini player stacked ─────────────────
+
+class _BottomBanners extends StatelessWidget {
+  const _BottomBanners({required this.appState});
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PersistentDownloadBanner(appState: appState),
+        PersistentAudioMiniPlayer(appState: appState),
+      ],
+    );
+  }
+}
+
+class PersistentDownloadBanner extends StatelessWidget {
+  const PersistentDownloadBanner({super.key, required this.appState});
+  final FluxNewsState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<AudioDownloadProgress>>(
+      initialData: AudioDownloadService.getActiveDownloadsSnapshot(),
+      stream: AudioDownloadService.activeDownloadsStream,
+      builder: (context, snapshot) {
+        final downloads = snapshot.data ?? const [];
+        if (downloads.isEmpty) return const SizedBox.shrink();
+
+        final colorScheme = Theme.of(context).colorScheme;
+        final bg = colorScheme.tertiaryContainer;
+        final fg = colorScheme.onTertiaryContainer;
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+        final isTablet = screenWidth >= 900 || shortestSide >= 600;
+
+        return SafeArea(
+          top: false,
+          child: Material(
+            elevation: 8,
+            color: bg,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 12 : 8,
+                vertical: isTablet ? 8 : 6,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: downloads
+                    .map((d) => _DownloadRow(
+                          progress: d,
+                          foreground: fg,
+                          isTablet: isTablet,
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DownloadRow extends StatelessWidget {
+  const _DownloadRow({
+    required this.progress,
+    required this.foreground,
+    required this.isTablet,
+  });
+
+  final AudioDownloadProgress progress;
+  final Color foreground;
+  final bool isTablet;
+
+  String _subtitle(BuildContext context) {
+    if (progress.isQueued) return AppLocalizations.of(context)!.downloadQueued;
+    if (progress.totalBytes > 0) {
+      return '${AudioDownloadService.formatBytes(progress.receivedBytes)}'
+          ' / ${AudioDownloadService.formatBytes(progress.totalBytes)}';
+    }
+    return AudioDownloadService.formatBytes(progress.receivedBytes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = AudioDownloadService.getDownloadTitle(progress.attachmentID) ?? progress.fileName;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: isTablet ? 13 : 11,
+                              fontWeight: FontWeight.w600,
+                              color: foreground,
+                            ),
+                      ),
+                    ),
+                    Text(
+                      _subtitle(context),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: isTablet ? 11 : 10,
+                            color: foreground.withAlpha(180),
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: progress.progress,
+                  minHeight: isTablet ? 4 : 3,
+                  backgroundColor: foreground.withAlpha(50),
+                  valueColor: AlwaysStoppedAnimation<Color>(foreground),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, size: isTablet ? 20 : 18, color: foreground),
+            tooltip: AppLocalizations.of(context)!.cancel,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            constraints: const BoxConstraints(),
+            onPressed: () => AudioDownloadService.cancelDownload(progress.attachmentID),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -709,7 +1212,8 @@ class FluxNewsBodyList extends StatelessWidget {
     // if errors had occurred, the error widget is returned
     // if the miniflux settings are incorrect a corresponding message is shown
     // otherwise the normal list view is returned
-    if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
+    if ((appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) &&
+        !appState.startUp) {
       return const NoSettings();
     } else if (appState.errorString != '' && appState.newError) {
       return const ErrorWidget();
@@ -1287,20 +1791,35 @@ class FeedTile extends StatelessWidget {
 
 class FluxNewsBodyStatefulWrapper extends StatefulWidget {
   final Function onInit;
+  final Function onResume;
   final Widget child;
-  const FluxNewsBodyStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsBodyStatefulWrapper({super.key, required this.onInit, required this.onResume, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }
 
 // extend class to save actual scroll state of the list view
 class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
-    with AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper> {
+    with AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper>, WidgetsBindingObserver {
   // init the state of FluxNewsBody to load the config and the data on startup
   @override
   void initState() {
     widget.onInit();
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.onResume();
+    }
   }
 
   @override

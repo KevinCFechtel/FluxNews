@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/android_url_launcher.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -12,6 +13,7 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/audioplayer.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -171,45 +173,81 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
                 ),
               )
             ])),
+        // download audio
+        if (news.getAudioAttachments().isNotEmpty)
+          PopupMenuItem(
+              value: FluxNewsState.swipeActionDownloadString,
+              child: Row(children: [
+                const Padding(
+                  padding: EdgeInsets.only(right: 5),
+                  child: Icon(
+                    Icons.download,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context)!.downloadAudio,
+                    overflow: TextOverflow.visible,
+                  ),
+                )
+              ])),
       ]);
   switch (result) {
     case FluxNewsState.contextMenuBookmarkString:
-      bookmarkAction(news, appState, context, searchView);
+      if (context.mounted) {
+        bookmarkAction(news, appState, context, searchView);
+      }
       break;
     case FluxNewsState.unreadNewsStatus:
-      markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+      if (context.mounted) {
+        markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+      }
       break;
     case FluxNewsState.readNewsStatus:
-      markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+      if (context.mounted) {
+        markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+      }
       if (appState.removeNewsFromListWhenRead && !searchView) {
         newsList?.removeAt(itemIndex);
       }
       break;
     case FluxNewsState.contextMenuSaveString:
-      saveToThirdPartyAction(news, appState, context);
+      if (context.mounted) {
+        saveToThirdPartyAction(news, appState, context);
+      }
       break;
     case FluxNewsState.contextMenuOpenMinifluxString:
       if (news.status == FluxNewsState.unreadNewsStatus) {
-        openNewsAction(news, appState, context, true);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, true);
+        }
         if (appState.removeNewsFromListWhenRead && !searchView) {
           newsList?.removeAt(itemIndex);
         }
       } else {
-        openNewsAction(news, appState, context, true);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, true);
+        }
       }
       break;
     case FluxNewsState.contextMenuOpenString:
       if (news.status == FluxNewsState.unreadNewsStatus) {
-        openNewsAction(news, appState, context, false);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, false);
+        }
         if (appState.removeNewsFromListWhenRead && !searchView) {
           newsList?.removeAt(itemIndex);
         }
       } else {
-        openNewsAction(news, appState, context, false);
+        if (context.mounted) {
+          openNewsAction(news, appState, context, false);
+        }
       }
       break;
     case FluxNewsState.swipeActionOpenCommentsString:
-      openNewsCommentsAction(news, context);
+      if (context.mounted) {
+        openNewsCommentsAction(news, context);
+      }
       break;
     case FluxNewsState.swipeActionShareString:
       if (Platform.isAndroid) {
@@ -222,6 +260,11 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
           SharePlus.instance.share(ShareParams(
               uri: Uri.parse(news.url), sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
         }
+      }
+      break;
+    case FluxNewsState.swipeActionDownloadString:
+      if (context.mounted) {
+        downloadAudioAction(news, appState, context);
       }
       break;
   }
@@ -316,6 +359,76 @@ Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildCont
   }
 }
 
+Future<bool> _isAudioAlreadyDownloaded(Attachment attachment, FluxNewsState appState) async {
+  final downloadedPaths = await AudioDownloadService.loadDownloadedPathsForAttachments(
+    [attachment],
+    appState.audioDownloadRetentionDays,
+  );
+  return downloadedPaths[attachment.attachmentID] != null;
+}
+
+Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext context) async {
+  final audioAttachments = news.getAudioAttachments();
+  if (audioAttachments.isEmpty) return;
+
+  final attachment = audioAttachments.first;
+  final storageAttachmentId = AudioDownloadService.resolveStorageAttachmentId(attachment);
+
+  // Already downloading or already on disk — nothing to do.
+  final isAlreadyDownloading =
+      AudioDownloadService.getActiveDownloadsSnapshot().any((p) => p.attachmentID == storageAttachmentId);
+  if (isAlreadyDownloading) return;
+
+  AudioDownloadService.cacheDownloadTitle(storageAttachmentId, news.title);
+  AudioDownloadService.cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+  AudioDownloadService.cacheDownloadFeedId(storageAttachmentId, news.feedID);
+  if (news.feedIconID != null) {
+    AudioDownloadService.cacheDownloadFeedIconId(storageAttachmentId, news.feedIconID!);
+  }
+  // Manual download always works — clear any previous user-skipped flag.
+  await AudioDownloadService.clearUserSkipped(storageAttachmentId);
+
+  if (await _isAudioAlreadyDownloaded(attachment, appState)) return;
+
+  if (appState.downloadAudioOnlyOnWifi) {
+    final isWifiConnected = await AudioDownloadService.isWifiConnected();
+    if (!isWifiConnected) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.downloadWLANWarning)),
+        );
+      }
+      return;
+    }
+  }
+
+  unawaited(() async {
+    try {
+      await AudioDownloadService.queueDownload(
+        attachment,
+        onlyOnWifi: appState.downloadAudioOnlyOnWifi,
+        news: news,
+      );
+      final newsList = NewsList(news: [news], newsCount: 1);
+      await insertNewsInDB(newsList, appState);
+      AudioDownloadService.refreshMediaProgressionCacheFromSync([news]);
+    } catch (error) {
+      // Consume the cancellation flag — if the user pressed cancel, no snackbar.
+      final wasCancelled = AudioDownloadService.consumeCancelledByUser(storageAttachmentId);
+      if (wasCancelled) return;
+
+      logThis('downloadAudioAction', 'Caught an error in downloadAudioAction function! : ${error.toString()}',
+          LogLevel.ERROR);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
+        );
+      }
+    }
+  }());
+}
+
 Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContext context, bool searchView,
     FluxNewsCounterState appCounterState) async {
   // mark a news as read, update the news read status in database
@@ -337,13 +450,24 @@ Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContex
   // of the news counter
   news.status = FluxNewsState.readNewsStatus;
 
+  if (appState.syncReadStatusImmediately) {
+    unawaited(pushNewsStatusToServer(
+      [news.newsID],
+      FluxNewsState.readNewsStatus,
+      appState,
+      context.mounted ? ScaffoldMessenger.of(context) : null,
+      context.mounted ? AppLocalizations.of(context)!.communicateionMinifluxError : '',
+    ));
+  }
   if (searchView) {
-    // update the news status at the miniflux server
-    try {
-      toggleOneNewsAsRead(appState, news);
-    } catch (e) {
-      logThis(
-          'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+    // update the news status at the miniflux server (search view always syncs immediately)
+    if (!appState.syncReadStatusImmediately) {
+      try {
+        toggleOneNewsAsRead(appState, news);
+      } catch (e) {
+        logThis(
+            'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+      }
     }
     // update the news list of the main view
     appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
@@ -383,13 +507,24 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
   // set the new unread status to the news object and toggle the recalculation
   // of the news counter
   news.status = FluxNewsState.unreadNewsStatus;
+  if (appState.syncReadStatusImmediately) {
+    unawaited(pushNewsStatusToServer(
+      [news.newsID],
+      FluxNewsState.unreadNewsStatus,
+      appState,
+      context.mounted ? ScaffoldMessenger.of(context) : null,
+      context.mounted ? AppLocalizations.of(context)!.communicateionMinifluxError : '',
+    ));
+  }
   if (searchView) {
-    // update the news status at the miniflux server
-    try {
-      toggleOneNewsAsRead(appState, news);
-    } catch (e) {
-      logThis(
-          'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+    // update the news status at the miniflux server (search view always syncs immediately)
+    if (!appState.syncReadStatusImmediately) {
+      try {
+        toggleOneNewsAsRead(appState, news);
+      } catch (e) {
+        logThis(
+            'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+      }
     }
     // update the news list of the main view
     appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
@@ -425,6 +560,15 @@ Future<void> openNewsAction(
         appState.refreshView();
       }
     }
+  }
+  if (appState.syncReadStatusImmediately && context.mounted) {
+    unawaited(pushNewsStatusToServer(
+      [news.newsID],
+      FluxNewsState.readNewsStatus,
+      appState,
+      ScaffoldMessenger.of(context),
+      AppLocalizations.of(context)!.communicateionMinifluxError,
+    ));
   }
   // update the status to read on the news list and notify the categories
   // to recalculate the news count
@@ -523,8 +667,29 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
               TextButton(
                 child: Text(AppLocalizations.of(context)!.ok),
                 onPressed: () async {
+                  // capture context-dependent values before async gap
+                  final messenger = appState.syncReadStatusImmediately
+                      ? ScaffoldMessenger.of(context)
+                      : null;
+                  final errorMsg = appState.syncReadStatusImmediately
+                      ? AppLocalizations.of(context)!.communicateionMinifluxError
+                      : '';
+                  // collect IDs before marking so we can push to server
+                  final List<int> idsToSync = appState.syncReadStatusImmediately
+                      ? await queryUnreadNewsIDsForCurrentView(appState)
+                      : <int>[];
                   // mark news as read
                   markNewsAsReadInDB(appState);
+                  if (appState.syncReadStatusImmediately && idsToSync.isNotEmpty) {
+                    unawaited(pushNewsStatusToServer(
+                      idsToSync,
+                      FluxNewsState.readNewsStatus,
+                      appState,
+                      messenger,
+                      errorMsg,
+                    ));
+                  }
+                  if (!context.mounted) return;
                   if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
                     await queryNextCategoryFromDB(appState, context).then((value) {
                       if (context.mounted) {
@@ -612,6 +777,10 @@ Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext contex
 
 void onTabAction(
     FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (_openAudioPlayerIfAvailable(news, appState, context, searchView, itemIndex, newsList)) {
+    return;
+  }
+
   if (appState.tabAction != FluxNewsState.tabActionExpandString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
       if (news.openMinifluxEntry != null) {
@@ -649,6 +818,10 @@ void onTabAction(
 
 void onTabContentAction(
     FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
+  if (_openAudioPlayerIfAvailable(news, appState, context, searchView, itemIndex, newsList)) {
+    return;
+  }
+
   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
       if (news.openMinifluxEntry != null) {
@@ -682,6 +855,40 @@ void onTabContentAction(
     }
     markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
   }
+}
+
+bool _openAudioPlayerIfAvailable(
+  News news,
+  FluxNewsState appState,
+  BuildContext context,
+  bool searchView,
+  int itemIndex,
+  List<News>? newsList,
+) {
+  if (!appState.openAudioItemsInPlayer) {
+    return false;
+  }
+
+  final hasAudio = news.getAudioAttachments().isNotEmpty;
+  if (!hasAudio) {
+    return false;
+  }
+
+  if (news.status == FluxNewsState.unreadNewsStatus) {
+    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+    if (appState.removeNewsFromListWhenRead && !searchView) {
+      newsList?.removeAt(itemIndex);
+    }
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => NewsAudioPlayerScreen(news: news),
+    ),
+  );
+
+  return true;
 }
 
 List<Widget> getIOSContextMenuActions(
@@ -785,6 +992,18 @@ List<Widget> getIOSContextMenuActions(
           AppLocalizations.of(context)!.open,
           overflow: TextOverflow.visible,
         )),
+    news.getAudioAttachments().isNotEmpty
+        ? CupertinoContextMenuAction(
+            onPressed: () async {
+              Navigator.pop(context);
+              await downloadAudioAction(news, appState, context);
+            },
+            trailingIcon: Icons.download,
+            child: Text(
+              AppLocalizations.of(context)!.downloadAudio,
+              overflow: TextOverflow.visible,
+            ))
+        : SizedBox.shrink(),
     news.commentsUrl.isNotEmpty
         ? CupertinoContextMenuAction(
             onPressed: () {

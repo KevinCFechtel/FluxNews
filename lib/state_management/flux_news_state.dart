@@ -26,11 +26,16 @@ sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
 
 class FluxNewsState extends ChangeNotifier {
   // init the persistent flutter secure storage
-  final storage = sec_store.FlutterSecureStorage(aOptions: _getAndroidOptions());
+  final storage = sec_store.FlutterSecureStorage(
+    aOptions: _getAndroidOptions(),
+    iOptions: const sec_store.IOSOptions(
+      accessibility: sec_store.KeychainAccessibility.first_unlock,
+    ),
+  );
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '1.16.0';
+  static const String applicationVersion = '2.0.0';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
@@ -85,8 +90,14 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
   static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
   static const String secureStorageSyncReadNewsKey = 'syncReadNews';
+  static const String secureStorageAutoDownloadAudioAfterSyncKey = 'autoDownloadAudioAfterSync';
+  static const String secureStorageDownloadAudioOnlyOnWifiKey = 'downloadAudioOnlyOnWifi';
+  static const String secureStorageDeleteAudioAfterPlaybackKey = 'deleteAudioAfterPlayback';
+  static const String secureStorageAudioDownloadRetentionDaysKey = 'audioDownloadRetentionDays';
+  static const String secureStorageOpenAudioItemsInPlayerKey = 'openAudioItemsInPlayer';
   static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
+  static const String secureStorageClearLogsOnStartKey = 'clearLogsOnStart';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
@@ -103,6 +114,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
   static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
   static const String secureStorageSkipLongSyncKey = 'skipLongSync';
+  static const String secureStorageSyncReadStatusImmediatelyKey = 'syncReadStatusImmediately';
   static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
   static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
   static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
@@ -132,6 +144,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String swipeActionOpenMinifluxString = 'openMiniflux';
   static const String swipeActionShareString = 'share';
   static const String swipeActionOpenString = 'open';
+  static const String swipeActionDownloadString = 'downloadAudio';
   static const String swipeActionNoneString = 'none';
   static const String tabActionOpenString = 'open';
   static const String tabActionExpandString = 'expand';
@@ -155,6 +168,25 @@ class FluxNewsState extends ChangeNotifier {
   static const String apiVersionPath = "v1/";
   static const String minifluxEntryPathPrefix = "unread/feed/";
   static const String minifluxEntryPathSuffix = "/entry/";
+  static const String audioProgressKeyPrefix = "audio_progress_";
+  static const String androidNotificationChannelId = 'de.kevincfechtel.flux_news.audio';
+  static const String androidNotificationChannelName = 'Flux News Audio';
+  static const String androidNotificationIcon = 'mipmap/ic_appicon';
+  static const String downloadPathKeyPrefix = 'audio_download_path_';
+  static const String downloadTimestampKeyPrefix = 'audio_download_ts_';
+  static const String downloadSkippedKeyPrefix = 'audio_download_skipped_';
+  static const String defaultArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_IOS.png';
+  static const String defaultAndroidArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_Android.png';
+  static const String defaultArtworkFileName = 'default_audio_artwork.png';
+  static const String defaultAndroidArtworkFileName = 'default_audio_artwork_android.png';
+  static const String audioCachePath = 'audio_cache';
+  static const String audioFilePrefix = 'audio_';
+  static const String artworkCacheDirectoryName = 'audio_artwork_cache';
+  static const String artworkFilePrefix = 'artwork_';
+  static const String downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
+  static const String androidDefaultArtworkProviderAuthority = 'de.circle_dev.flux_news.defaultart';
+  static const String downloadTitleKeyPrefix = 'flux_download_title_';
+  static const String downloadFeedTitleKeyPrefix = 'flux_download_feed_title_';
   static const String urlValidationRegex =
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,256}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)';
   /*
@@ -185,6 +217,7 @@ class FluxNewsState extends ChangeNotifier {
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
   bool syncNow = false;
+  bool startUp = false;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);
@@ -204,6 +237,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for debugging
   bool debugMode = false;
+  bool clearLogsOnStart = true;
 
   // the initial news status which should be fetched
   String newsStatus = FluxNewsState.unreadNewsStatus;
@@ -258,7 +292,7 @@ class FluxNewsState extends ChangeNotifier {
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
   String secondLeftSwipeAction =
-      Platform.isIOS ? FluxNewsState.swipeActionSaveString : FluxNewsState.swipeActionNoneString;
+      Platform.isIOS ? FluxNewsState.swipeActionDownloadString : FluxNewsState.swipeActionNoneString;
   String secondRightSwipeAction =
       Platform.isIOS ? FluxNewsState.swipeActionShareString : FluxNewsState.swipeActionNoneString;
   String tabAction = Platform.isIOS ? FluxNewsState.tabActionSplittedString : FluxNewsState.tabActionOpenString;
@@ -273,10 +307,17 @@ class FluxNewsState extends ChangeNotifier {
   int? startupFeedSelectionKey;
   bool categorieStartup = false;
   bool removeNewsFromListWhenRead = false;
+  bool openAudioItemsInPlayer = true;
   bool syncReadNews = false;
+  bool autoDownloadAudioAfterSync = false;
+  bool downloadAudioOnlyOnWifi = false;
+  bool deleteAudioAfterPlayback = false;
+  int audioDownloadRetentionDays = 30;
   int syncReadNewsAfterDays = 0;
   KeyValueRecordType? syncReadNewsAfterDaysSelection;
   bool skipLongSync = false;
+  bool syncReadStatusImmediately = false;
+  bool scrolloverSyncFailed = false;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
   bool glassAppBar = Platform.isIOS ? true : false;
@@ -289,7 +330,6 @@ class FluxNewsState extends ChangeNotifier {
   // vars for app bar text
   String appBarText = '';
   int? selectedID;
-
   // vars for detecting device orientation and device type
   bool isTablet = false;
   Orientation orientation = Orientation.portrait;
@@ -376,7 +416,8 @@ class FluxNewsState extends ChangeNotifier {
           '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
                           newsID INTEGER, 
                           attachmentURL TEXT, 
-                          attachmentMimeType TEXT)''',
+                          attachmentMimeType TEXT,
+                          mediaProgression INTEGER NOT NULL DEFAULT 0)''',
         );
 
         logThis('initializeDB', 'Finished creating DB', LogLevel.INFO);
@@ -392,7 +433,8 @@ class FluxNewsState extends ChangeNotifier {
             '''CREATE TABLE attachments(attachmentID INTEGER PRIMARY KEY, 
                           newsID INTEGER, 
                           attachmentURL TEXT, 
-                          attachmentMimeType TEXT)''',
+                          attachmentMimeType TEXT,
+                          mediaProgression INTEGER NOT NULL DEFAULT 0)''',
           );
           await db.execute(
             '''ALTER TABLE "categories" 
@@ -624,6 +666,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 5) {
           logThis('upgradeDB', 'Upgrading DB from version 5', LogLevel.INFO);
 
@@ -838,6 +883,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 6) {
           logThis('upgradeDB', 'Upgrading DB from version 6', LogLevel.INFO);
 
@@ -1052,6 +1100,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 7) {
           logThis('upgradeDB', 'Upgrading DB from version 7', LogLevel.INFO);
 
@@ -1266,6 +1317,9 @@ class FluxNewsState extends ChangeNotifier {
                         syncStatus 
                   from tempNews;''');
           await db.execute('DROP TABLE IF EXISTS tempNews');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         } else if (oldVersion == 8) {
           logThis('upgradeDB', 'Upgrading DB from version 8', LogLevel.INFO);
 
@@ -1377,11 +1431,20 @@ class FluxNewsState extends ChangeNotifier {
                         categoryID  
                   from tempFeeds;''');
           await db.execute('DROP TABLE IF EXISTS tempFeeds');
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
+        } else if (oldVersion == 9) {
+          logThis('upgradeDB', 'Upgrading DB from version 9', LogLevel.INFO);
+
+          await db.execute(
+            '''ALTER TABLE attachments ADD COLUMN mediaProgression INTEGER NOT NULL DEFAULT 0''',
+          );
         }
 
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 9,
+      version: 10,
     );
   }
 
@@ -1389,11 +1452,42 @@ class FluxNewsState extends ChangeNotifier {
   Future<bool> readConfigValues() async {
     logThis('readConfigValues', 'Starting read config values', LogLevel.INFO);
 
-    storageValues = await storage.readAll();
+    try {
+      // Timeout guards against the headless CarPlay case: if the device was
+      // never unlocked since boot, pre-migration WhenUnlocked Keychain items
+      // would make readAll() hang indefinitely.
+      storageValues = await storage.readAll().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      logThis('readConfigValues', 'readAll failed or timed out: $e — using empty config', LogLevel.WARNING);
+      storageValues = {};
+    }
 
     logThis('readConfigValues', 'Finished read config values', LogLevel.INFO);
 
     return true;
+  }
+
+  // One-time migration: rewrite every Keychain item so iOS updates the
+  // kSecAttrAccessible attribute from WhenUnlocked to first_unlock. After this
+  // runs once, readAll() no longer fails with -25308 during headless CarPlay
+  // launches (screen locked). Safe to call multiple times — writes are idempotent.
+  Future<void> migrateKeychainAccessibility() async {
+    const migrationKey = '_keychain_migrated_first_unlock_v1';
+    final alreadyDone = storageValues[migrationKey];
+    if (alreadyDone == 'true') return;
+    logThis('migrateKeychainAccessibility', 'Starting Keychain first_unlock migration', LogLevel.INFO);
+    try {
+      for (final entry in storageValues.entries) {
+        if (entry.key == migrationKey) continue;
+        await storage.write(key: entry.key, value: entry.value);
+      }
+      await storage.write(key: migrationKey, value: 'true');
+      storageValues[migrationKey] = 'true';
+      logThis(
+          'migrateKeychainAccessibility', 'Migration complete — ${storageValues.length} items updated', LogLevel.INFO);
+    } catch (e) {
+      logThis('migrateKeychainAccessibility', 'Migration error: $e', LogLevel.WARNING);
+    }
   }
 
   // read the some persistent saved configuration
@@ -1483,6 +1577,8 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
           KeyValueRecordType(
+              key: FluxNewsState.swipeActionDownloadString, value: AppLocalizations.of(context)!.downloadAudio),
+          KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesSecondSwipeActions = <KeyValueRecordType>[
@@ -1496,6 +1592,8 @@ class FluxNewsState extends ChangeNotifier {
               key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
           KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionDownloadString, value: AppLocalizations.of(context)!.downloadAudio),
           KeyValueRecordType(
               key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
         ];
@@ -1595,7 +1693,7 @@ class FluxNewsState extends ChangeNotifier {
     if (recordTypesSecondSwipeActions != null) {
       if (recordTypesSecondSwipeActions!.isNotEmpty) {
         if (Platform.isIOS) {
-          secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![3];
+          secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![7];
         } else {
           secondLeftSwipeActionSelection = recordTypesSecondSwipeActions![0];
         }
@@ -1880,6 +1978,13 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
+      // assign the clear logs on start selection from persistent saved config
+      if (key == FluxNewsState.secureStorageClearLogsOnStartKey) {
+        if (value != '') {
+          clearLogsOnStart = value == FluxNewsState.secureStorageTrueString;
+        }
+      }
+
       // assign the activate swiping gestures selection from persistent saved config
       if (key == FluxNewsState.secureStorageActivateSwipeGesturesKey) {
         if (value != '') {
@@ -2039,6 +2144,57 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
+      // assign the auto-download audio after sync selection from persistent saved config
+      if (key == FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            autoDownloadAudioAfterSync = true;
+          } else {
+            autoDownloadAudioAfterSync = false;
+          }
+        }
+      }
+
+      // assign the download audio only on wifi selection from persistent saved config
+      if (key == FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            downloadAudioOnlyOnWifi = true;
+          } else {
+            downloadAudioOnlyOnWifi = false;
+          }
+        }
+      }
+
+      // assign the delete downloaded audio after playback selection from persistent saved config
+      if (key == FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            deleteAudioAfterPlayback = true;
+          } else {
+            deleteAudioAfterPlayback = false;
+          }
+        }
+      }
+
+      // assign the audio download retention duration from persistent saved config
+      if (key == FluxNewsState.secureStorageAudioDownloadRetentionDaysKey) {
+        if (value != '') {
+          audioDownloadRetentionDays = int.parse(value);
+        }
+      }
+
+      // assign the open audio items in player selection from persistent saved config
+      if (key == FluxNewsState.secureStorageOpenAudioItemsInPlayerKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            openAudioItemsInPlayer = true;
+          } else {
+            openAudioItemsInPlayer = false;
+          }
+        }
+      }
+
       // assign the skip long sync selection from persistent saved config
       if (key == FluxNewsState.secureStorageSkipLongSyncKey) {
         if (value != '') {
@@ -2046,6 +2202,17 @@ class FluxNewsState extends ChangeNotifier {
             skipLongSync = true;
           } else {
             skipLongSync = false;
+          }
+        }
+      }
+
+      // assign the sync read status immediately selection from persistent saved config
+      if (key == FluxNewsState.secureStorageSyncReadStatusImmediatelyKey) {
+        if (value != '') {
+          if (value == FluxNewsState.secureStorageTrueString) {
+            syncReadStatusImmediately = true;
+          } else {
+            syncReadStatusImmediately = false;
           }
         }
       }

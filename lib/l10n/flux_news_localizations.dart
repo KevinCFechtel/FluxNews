@@ -426,6 +426,18 @@ abstract class AppLocalizations {
   /// **'Activate debug mode'**
   String get debugModeTextSettings;
 
+  /// No description provided for @clearLogsOnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear logs on start'**
+  String get clearLogsOnStart;
+
+  /// No description provided for @clearLogsOnStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all logs when the app starts'**
+  String get clearLogsOnStartDescription;
+
   /// No description provided for @deleteLocalCache.
   ///
   /// In en, this message translates to:
@@ -876,6 +888,12 @@ abstract class AppLocalizations {
   /// **'Skip long sync dialog'**
   String get skipLongSync;
 
+  /// No description provided for @syncReadStatusImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately sync read status to server'**
+  String get syncReadStatusImmediately;
+
   /// No description provided for @headerSettings.
   ///
   /// In en, this message translates to:
@@ -1133,6 +1151,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear selection'**
   String get feedSelectionDeleteSelection;
+
+  /// No description provided for @downloadsManagerDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Download?'**
+  String get downloadsManagerDeleteTitle;
+
+  /// No description provided for @downloadsManagerDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this download?'**
+  String get downloadsManagerDeleteMessage;
+
+  /// No description provided for @downloadsManagerDeletedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Download deleted'**
+  String get downloadsManagerDeletedSnackbar;
+
+  /// No description provided for @downloadsManagerClearAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all downloads?'**
+  String get downloadsManagerClearAllTitle;
+
+  /// No description provided for @downloadsManagerClearAllMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all downloaded audio files. This action cannot be undone.'**
+  String get downloadsManagerClearAllMessage;
+
+  /// No description provided for @downloadsManagerClearedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'All downloads deleted'**
+  String get downloadsManagerClearedSnackbar;
+
+  /// No description provided for @downloadsManagerClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all downloads'**
+  String get downloadsManagerClearAll;
+
+  /// No description provided for @audioDownloadsSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get audioDownloadsSettings;
+
+  /// No description provided for @audioDownloadsSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'View active downloads and downloaded data'**
+  String get audioDownloadsSettingsDescription;
+
+  /// No description provided for @deleteDownloadAfterFinishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically delete downloads after listening'**
+  String get deleteDownloadAfterFinishing;
+
+  /// No description provided for @downloadAudioWLAN.
+  ///
+  /// In en, this message translates to:
+  /// **'Download audio via Wi-Fi only'**
+  String get downloadAudioWLAN;
+
+  /// No description provided for @autoDownloadAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-download audio after sync'**
+  String get autoDownloadAudio;
+
+  /// No description provided for @audioDownloadRetentionDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of days to keep audio downloads'**
+  String get audioDownloadRetentionDays;
+
+  /// No description provided for @chapterFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter from'**
+  String get chapterFrom;
+
+  /// No description provided for @downloadWLANWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads allowed via Wi-Fi only. Please enable Wi-Fi.'**
+  String get downloadWLANWarning;
+
+  /// No description provided for @noAudioFileAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio file available.'**
+  String get noAudioFileAvailable;
+
+  /// No description provided for @sleepTimerNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer: Playback stopped automatically.'**
+  String get sleepTimerNotification;
+
+  /// No description provided for @sleepTimerOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer: Off'**
+  String get sleepTimerOff;
+
+  /// No description provided for @sleepTimerEndingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer: Ending soon'**
+  String get sleepTimerEndingSoon;
+
+  /// No description provided for @sleepTimerActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer: active'**
+  String get sleepTimerActive;
+
+  /// No description provided for @sleepTimerRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'min remaining'**
+  String get sleepTimerRemaining;
+
+  /// No description provided for @downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get downloaded;
+
+  /// No description provided for @downloadAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Audio'**
+  String get downloadAudio;
+
+  /// No description provided for @downloadQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get downloadQueued;
+
+  /// No description provided for @speed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get speed;
+
+  /// No description provided for @chapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapters'**
+  String get chapters;
+
+  /// No description provided for @interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval'**
+  String get interval;
+
+  /// No description provided for @minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get minutes;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stop;
+
+  /// No description provided for @resetPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetPlayback;
+
+  /// No description provided for @runningDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Running downloads'**
+  String get runningDownloads;
+
+  /// No description provided for @noActiveDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'No active downloads.'**
+  String get noActiveDownloads;
+
+  /// No description provided for @from.
+  ///
+  /// In en, this message translates to:
+  /// **'from'**
+  String get from;
+
+  /// No description provided for @loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'loaded'**
+  String get loaded;
+
+  /// No description provided for @downloadedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded audio files'**
+  String get downloadedData;
+
+  /// No description provided for @totalStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Total storage'**
+  String get totalStorage;
+
+  /// No description provided for @loadDownloadedDataError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load downloaded files.'**
+  String get loadDownloadedDataError;
+
+  /// No description provided for @noAudioDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio files downloaded yet.'**
+  String get noAudioDownloads;
+
+  /// No description provided for @fileList.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get fileList;
+
+  /// No description provided for @useAudioPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open audio items with audio player'**
+  String get useAudioPlayer;
+
+  /// No description provided for @showPlayerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show player details'**
+  String get showPlayerDetails;
+
+  /// No description provided for @hidePlayerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide player details'**
+  String get hidePlayerDetails;
+
+  /// No description provided for @advancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Settings'**
+  String get advancedSettings;
+
+  /// No description provided for @loadingChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading chapters ...'**
+  String get loadingChapters;
+
+  /// No description provided for @noChaptersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No chapters found.'**
+  String get noChaptersFound;
+
+  /// No description provided for @autoDeleteDownloadAfterFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically delete audio downloads when finished'**
+  String get autoDeleteDownloadAfterFinish;
+
+  /// No description provided for @downloadStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Download started'**
+  String get downloadStarted;
+
+  /// No description provided for @showLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Logs'**
+  String get showLogs;
+
+  /// No description provided for @reload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get reload;
+
+  /// No description provided for @clearList.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear list'**
+  String get clearList;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'loading...'**
+  String get loading;
+
+  /// No description provided for @noEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries'**
+  String get noEntries;
+
+  /// No description provided for @copyClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard'**
+  String get copyClipboard;
+
+  /// No description provided for @last.
+  ///
+  /// In en, this message translates to:
+  /// **'last'**
+  String get last;
+
+  /// No description provided for @cancelAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel all'**
+  String get cancelAll;
 }
 
 class _AppLocalizationsDelegate
