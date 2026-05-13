@@ -592,6 +592,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       } else {
         await _player.setAudioSource(AudioSource.uri(uri));
       }
+    } else if (_player.processingState == ProcessingState.completed) {
+      // Same audio source but player already completed — seek to the beginning
+      // so a subsequent play() starts from 0 instead of replaying from the end.
+      await _player.seek(Duration.zero);
     }
 
     if (initialPosition != null) {
