@@ -4,7 +4,7 @@
 
 A privacy-first Newsreader and Podcast player for the Miniflux backend ([https://miniflux.app](https://miniflux.app)). 
 
-Flux News synchronizes seamlessly with the Miniflux API to bring your favorite articles and podcasts to all your devices—including your car.
+Flux News synchronizes seamlessly with the Miniflux API to bring your favorite articles and podcasts to all your devices - including your car.
 
 Enjoy full offline support, intuitive gestures, a true OLED black mode, and a powerful new media engine for an uninterrupted listening experience.
 
