@@ -76,9 +76,10 @@ class FluxNewsBody extends StatelessWidget {
 
     // One-time migration: rewrite all Keychain items with first_unlock
     // accessibility so they are accessible during headless CarPlay launches.
-    if (appState.storageValues.isNotEmpty) {
-      appState.migrateKeychainAccessibility().ignore();
-    }
+    // Awaited so migration completes before readConfig() processes storageValues.
+    // No isNotEmpty guard — the migration must also run when storageValues was
+    // populated by the WhenUnlocked fallback read in readConfigValues().
+    await appState.migrateKeychainAccessibility();
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
