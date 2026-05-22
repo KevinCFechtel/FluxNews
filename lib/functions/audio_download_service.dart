@@ -347,7 +347,7 @@ class AudioDownloadService {
     // Fall back to a direct read-only query of the SQLite database.
     Database? db;
     try {
-      databaseFactory = databaseFactoryFfi;
+      //databaseFactory = databaseFactoryFfi;
       final dbPath = await _resolveDatabasePath();
       if (dbPath == null || !await File(dbPath).exists()) return;
 

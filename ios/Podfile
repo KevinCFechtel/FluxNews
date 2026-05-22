@@ -1,5 +1,5 @@
-# CarPlay requires iOS 14.0+
-platform :ios, '14.0'
+# Home screen widgets require iOS 17.0 in this app.
+platform :ios, '17.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

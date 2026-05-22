@@ -8,6 +8,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/android_url_launcher.dart';
+import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -20,22 +21,32 @@ import 'package:url_launcher/url_launcher.dart';
 
 // this is a helper function to get the actual tab position
 // this position is used to open the context menu of the news card here
-void getTapPosition(TapDownDetails details, BuildContext context, FluxNewsState appState) {
+void getTapPosition(
+    TapDownDetails details, BuildContext context, FluxNewsState appState) {
   appState.tapPosition = details.globalPosition;
 }
 
 // here is the function to show the context menu
 // this menu give the option to mark a news as read or unread and to bookmark a news
-void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsState appState,
-    FluxNewsCounterState appCounterState, int itemIndex, List<News>? newsList) async {
+void showContextMenu(
+    News news,
+    BuildContext context,
+    bool searchView,
+    FluxNewsState appState,
+    FluxNewsCounterState appCounterState,
+    int itemIndex,
+    List<News>? newsList) async {
   //Offset offset = details.globalPosition;
   final RenderObject overlay = Overlay.of(context).context.findRenderObject()!;
 
   final result = await showMenu(
       context: context,
       // open the menu on the previous recognized position
-      position: RelativeRect.fromRect(Rect.fromLTWH(appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
-          Rect.fromLTWH(0, 0, overlay.paintBounds.size.width, overlay.paintBounds.size.height)),
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(
+              appState.tapPosition.dx, appState.tapPosition.dy, 100, 100),
+          Rect.fromLTWH(0, 0, overlay.paintBounds.size.width,
+              overlay.paintBounds.size.height)),
       items: [
         // bookmark the news
         PopupMenuItem(
@@ -69,7 +80,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
             Padding(
               padding: const EdgeInsets.only(right: 5),
               child: Icon(
-                news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
+                news.status == FluxNewsState.readNewsStatus
+                    ? Icons.fiber_new
+                    : Icons.check,
               ),
             ),
             Expanded(
@@ -86,9 +99,11 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         ),
         // save the news to third party service
         PopupMenuItem(
-            enabled: appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
-                ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion
-                : true,
+            enabled:
+                appState.minifluxVersionString!.startsWith(RegExp(r'[01]|2\.0'))
+                    ? appState.minifluxVersionInt >=
+                        FluxNewsState.minifluxSaveMinVersion
+                    : true,
             value: FluxNewsState.contextMenuSaveString,
             child: Row(children: [
               const Padding(
@@ -200,12 +215,14 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
       break;
     case FluxNewsState.unreadNewsStatus:
       if (context.mounted) {
-        markNewsAsUnreadAction(news, appState, context, searchView, appCounterState);
+        markNewsAsUnreadAction(
+            news, appState, context, searchView, appCounterState);
       }
       break;
     case FluxNewsState.readNewsStatus:
       if (context.mounted) {
-        markNewsAsReadAction(news, appState, context, searchView, appCounterState);
+        markNewsAsReadAction(
+            news, appState, context, searchView, appCounterState);
       }
       if (appState.removeNewsFromListWhenRead && !searchView) {
         newsList?.removeAt(itemIndex);
@@ -258,7 +275,9 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
         if (context.mounted) {
           final box = context.findRenderObject() as RenderBox?;
           SharePlus.instance.share(ShareParams(
-              uri: Uri.parse(news.url), sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+              uri: Uri.parse(news.url),
+              sharePositionOrigin:
+                  box!.localToGlobal(Offset.zero) & const Size(100, 100)));
         }
       }
       break;
@@ -270,7 +289,8 @@ void showContextMenu(News news, BuildContext context, bool searchView, FluxNewsS
   }
 }
 
-Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext context, bool searchView) async {
+Future<void> bookmarkAction(News news, FluxNewsState appState,
+    BuildContext context, bool searchView) async {
 // switch between bookmarked or not bookmarked depending on the previous status
   if (news.starred) {
     news.starred = false;
@@ -280,10 +300,15 @@ Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext cont
 
   // toggle the news as bookmarked or not bookmarked at the miniflux server
   await toggleBookmark(appState, news).onError((error, stackTrace) {
-    logThis('toggleBookmark', 'Caught an error in toggleBookmark function! : ${error.toString()}', LogLevel.ERROR);
+    logThis(
+        'toggleBookmark',
+        'Caught an error in toggleBookmark function! : ${error.toString()}',
+        LogLevel.ERROR);
     if (context.mounted) {
-      if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-        appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+      if (appState.errorString !=
+          AppLocalizations.of(context)!.communicateionMinifluxError) {
+        appState.errorString =
+            AppLocalizations.of(context)!.communicateionMinifluxError;
         appState.newError = true;
         appState.refreshView();
       }
@@ -297,7 +322,9 @@ Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext cont
       updateStarredCounter(appState, context);
     }
   } catch (e) {
-    logThis('updateNewsStarredStatusInDB', 'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}',
+    logThis(
+        'updateNewsStarredStatusInDB',
+        'Caught an error in updateNewsStarredStatusInDB function! : ${e.toString()}',
         LogLevel.ERROR);
 
     if (context.mounted) {
@@ -321,9 +348,12 @@ Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext cont
     } else {
       if (searchView) {
         // update the news list of the main view
-        appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
+        appState.newsList =
+            queryNewsFromDB(appState).onError((error, stackTrace) {
           logThis(
-              'queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
+              'queryNewsFromDB',
+              'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+              LogLevel.ERROR);
           if (context.mounted) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
           }
@@ -335,14 +365,19 @@ Future<void> bookmarkAction(News news, FluxNewsState appState, BuildContext cont
   }
 }
 
-Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildContext context) async {
-  await saveNewsToThirdPartyService(appState, news).onError((error, stackTrace) {
-    logThis('saveNewsToThirdPartyService',
-        'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}', LogLevel.ERROR);
+Future<void> saveToThirdPartyAction(
+    News news, FluxNewsState appState, BuildContext context) async {
+  await saveNewsToThirdPartyService(appState, news)
+      .onError((error, stackTrace) {
+    logThis(
+        'saveNewsToThirdPartyService',
+        'Caught an error in saveNewsToThirdPartyService function! : ${error.toString()}',
+        LogLevel.ERROR);
 
     if (!appState.newError) {
       if (context.mounted) {
-        appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+        appState.errorString =
+            AppLocalizations.of(context)!.communicateionMinifluxError;
       }
       appState.newError = true;
       appState.refreshView();
@@ -352,38 +387,45 @@ Future<void> saveToThirdPartyAction(News news, FluxNewsState appState, BuildCont
   if (context.mounted) {
     if (!appState.newError) {
       var successflulSaveSnackBar = SnackBar(
-        content: Text(AppLocalizations.of(context)!.successfullSaveToThirdParty),
+        content:
+            Text(AppLocalizations.of(context)!.successfullSaveToThirdParty),
       );
       ScaffoldMessenger.of(context).showSnackBar(successflulSaveSnackBar);
     }
   }
 }
 
-Future<bool> _isAudioAlreadyDownloaded(Attachment attachment, FluxNewsState appState) async {
-  final downloadedPaths = await AudioDownloadService.loadDownloadedPathsForAttachments(
+Future<bool> _isAudioAlreadyDownloaded(
+    Attachment attachment, FluxNewsState appState) async {
+  final downloadedPaths =
+      await AudioDownloadService.loadDownloadedPathsForAttachments(
     [attachment],
     appState.audioDownloadRetentionDays,
   );
   return downloadedPaths[attachment.attachmentID] != null;
 }
 
-Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext context) async {
+Future<void> downloadAudioAction(
+    News news, FluxNewsState appState, BuildContext context) async {
   final audioAttachments = news.getAudioAttachments();
   if (audioAttachments.isEmpty) return;
 
   final attachment = audioAttachments.first;
-  final storageAttachmentId = AudioDownloadService.resolveStorageAttachmentId(attachment);
+  final storageAttachmentId =
+      AudioDownloadService.resolveStorageAttachmentId(attachment);
 
   // Already downloading or already on disk — nothing to do.
-  final isAlreadyDownloading =
-      AudioDownloadService.getActiveDownloadsSnapshot().any((p) => p.attachmentID == storageAttachmentId);
+  final isAlreadyDownloading = AudioDownloadService.getActiveDownloadsSnapshot()
+      .any((p) => p.attachmentID == storageAttachmentId);
   if (isAlreadyDownloading) return;
 
   AudioDownloadService.cacheDownloadTitle(storageAttachmentId, news.title);
-  AudioDownloadService.cacheDownloadFeedTitle(storageAttachmentId, news.feedTitle);
+  AudioDownloadService.cacheDownloadFeedTitle(
+      storageAttachmentId, news.feedTitle);
   AudioDownloadService.cacheDownloadFeedId(storageAttachmentId, news.feedID);
   if (news.feedIconID != null) {
-    AudioDownloadService.cacheDownloadFeedIconId(storageAttachmentId, news.feedIconID!);
+    AudioDownloadService.cacheDownloadFeedIconId(
+        storageAttachmentId, news.feedIconID!);
   }
   // Manual download always works — clear any previous user-skipped flag.
   await AudioDownloadService.clearUserSkipped(storageAttachmentId);
@@ -395,7 +437,8 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
     if (!isWifiConnected) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.downloadWLANWarning)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.downloadWLANWarning)),
         );
       }
       return;
@@ -414,29 +457,40 @@ Future<void> downloadAudioAction(News news, FluxNewsState appState, BuildContext
       AudioDownloadService.refreshMediaProgressionCacheFromSync([news]);
     } catch (error) {
       // Consume the cancellation flag — if the user pressed cancel, no snackbar.
-      final wasCancelled = AudioDownloadService.consumeCancelledByUser(storageAttachmentId);
+      final wasCancelled =
+          AudioDownloadService.consumeCancelledByUser(storageAttachmentId);
       if (wasCancelled) return;
 
-      logThis('downloadAudioAction', 'Caught an error in downloadAudioAction function! : ${error.toString()}',
+      logThis(
+          'downloadAudioAction',
+          'Caught an error in downloadAudioAction function! : ${error.toString()}',
           LogLevel.ERROR);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
         );
       }
     }
   }());
 }
 
-Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContext context, bool searchView,
+Future<void> markNewsAsReadAction(
+    News news,
+    FluxNewsState appState,
+    BuildContext context,
+    bool searchView,
     FluxNewsCounterState appCounterState) async {
   // mark a news as read, update the news read status in database
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
   } catch (e) {
     logThis(
-        'updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
+        'updateNewsStatusInDB',
+        'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+        LogLevel.ERROR);
 
     if (context.mounted) {
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
@@ -456,7 +510,9 @@ Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContex
       FluxNewsState.readNewsStatus,
       appState,
       context.mounted ? ScaffoldMessenger.of(context) : null,
-      context.mounted ? AppLocalizations.of(context)!.communicateionMinifluxError : '',
+      context.mounted
+          ? AppLocalizations.of(context)!.communicateionMinifluxError
+          : '',
     ));
   }
   if (searchView) {
@@ -466,12 +522,17 @@ Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContex
         toggleOneNewsAsRead(appState, news);
       } catch (e) {
         logThis(
-            'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+            'toggleOneNewsAsRead',
+            'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
+            LogLevel.ERROR);
       }
     }
     // update the news list of the main view
     appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
-      logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
+      logThis(
+          'queryNewsFromDB',
+          'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+          LogLevel.ERROR);
       if (context.mounted) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
       }
@@ -485,16 +546,23 @@ Future<void> markNewsAsReadAction(News news, FluxNewsState appState, BuildContex
     appCounterState.refreshView();
     appState.refreshView();
   }
+  unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
 }
 
-Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildContext context, bool searchView,
+Future<void> markNewsAsUnreadAction(
+    News news,
+    FluxNewsState appState,
+    BuildContext context,
+    bool searchView,
     FluxNewsCounterState appCounterState) async {
   // mark a news as unread, update the news unread status in database
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.unreadNewsStatus, appState);
   } catch (e) {
     logThis(
-        'updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
+        'updateNewsStatusInDB',
+        'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+        LogLevel.ERROR);
 
     if (context.mounted) {
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
@@ -513,7 +581,9 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
       FluxNewsState.unreadNewsStatus,
       appState,
       context.mounted ? ScaffoldMessenger.of(context) : null,
-      context.mounted ? AppLocalizations.of(context)!.communicateionMinifluxError : '',
+      context.mounted
+          ? AppLocalizations.of(context)!.communicateionMinifluxError
+          : '',
     ));
   }
   if (searchView) {
@@ -523,12 +593,17 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
         toggleOneNewsAsRead(appState, news);
       } catch (e) {
         logThis(
-            'toggleOneNewsAsRead', 'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}', LogLevel.ERROR);
+            'toggleOneNewsAsRead',
+            'Caught an error in toggleOneNewsAsRead function! : ${e.toString()}',
+            LogLevel.ERROR);
       }
     }
     // update the news list of the main view
     appState.newsList = queryNewsFromDB(appState).onError((error, stackTrace) {
-      logThis('queryNewsFromDB', 'Caught an error in queryNewsFromDB function! : ${error.toString()}', LogLevel.ERROR);
+      logThis(
+          'queryNewsFromDB',
+          'Caught an error in queryNewsFromDB function! : ${error.toString()}',
+          LogLevel.ERROR);
       if (context.mounted) {
         appState.errorString = AppLocalizations.of(context)!.databaseError;
       }
@@ -542,16 +617,19 @@ Future<void> markNewsAsUnreadAction(News news, FluxNewsState appState, BuildCont
     appCounterState.refreshView();
     appState.refreshView();
   }
+  unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
 }
 
-Future<void> openNewsAction(
-    News news, FluxNewsState appState, BuildContext context, bool overwriteOpenInMiniflux) async {
+Future<void> openNewsAction(News news, FluxNewsState appState,
+    BuildContext context, bool overwriteOpenInMiniflux) async {
   // on tab we update the status of the news to read and open the news
   try {
     updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
   } catch (e) {
     logThis(
-        'updateNewsStatusInDB', 'Caught an error in updateNewsStatusInDB function! : ${e.toString()}', LogLevel.ERROR);
+        'updateNewsStatusInDB',
+        'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
+        LogLevel.ERROR);
 
     if (context.mounted) {
       if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
@@ -576,6 +654,7 @@ Future<void> openNewsAction(
   context.read<FluxNewsCounterState>().listUpdated = true;
   context.read<FluxNewsCounterState>().refreshView();
   appState.refreshView();
+  unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
 
   // there are difference on launching the news url between the platforms
   // on android and ios it's preferred to check first if the link can be opened
@@ -585,7 +664,8 @@ Future<void> openNewsAction(
     if (appState.minifluxURL != null) {
       String minifluxBaseURL = appState.minifluxURL!;
       if (minifluxBaseURL.endsWith('/v1/')) {
-        minifluxBaseURL = minifluxBaseURL.substring(0, minifluxBaseURL.length - 3);
+        minifluxBaseURL =
+            minifluxBaseURL.substring(0, minifluxBaseURL.length - 3);
       }
       url = minifluxBaseURL +
           FluxNewsState.minifluxEntryPathPrefix +
@@ -657,7 +737,8 @@ Future<bool> openUrlAction(String url, BuildContext context) async {
   return true;
 }
 
-void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsCounterState appCounterState) {
+void showDeleteAllDialog(BuildContext context, FluxNewsState appState,
+    FluxNewsCounterState appCounterState) {
   showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog.adaptive(
@@ -672,7 +753,8 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
                       ? ScaffoldMessenger.of(context)
                       : null;
                   final errorMsg = appState.syncReadStatusImmediately
-                      ? AppLocalizations.of(context)!.communicateionMinifluxError
+                      ? AppLocalizations.of(context)!
+                          .communicateionMinifluxError
                       : '';
                   // collect IDs before marking so we can push to server
                   final List<int> idsToSync = appState.syncReadStatusImmediately
@@ -680,7 +762,8 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
                       : <int>[];
                   // mark news as read
                   markNewsAsReadInDB(appState);
-                  if (appState.syncReadStatusImmediately && idsToSync.isNotEmpty) {
+                  if (appState.syncReadStatusImmediately &&
+                      idsToSync.isNotEmpty) {
                     unawaited(pushNewsStatusToServer(
                       idsToSync,
                       FluxNewsState.readNewsStatus,
@@ -690,13 +773,16 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
                     ));
                   }
                   if (!context.mounted) return;
-                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                    await queryNextCategoryFromDB(appState, context).then((value) {
+                  if (appState.selectedCategoryElementType ==
+                      FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context)
+                        .then((value) {
                       if (context.mounted) {
                         setNextCategory(value, appState, context);
                       }
                     });
-                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                  } else if (appState.selectedCategoryElementType ==
+                      FluxNewsState.feedElementType) {
                     await queryNextFeedFromDB(appState, context).then((value) {
                       if (context.mounted) {
                         setNextFeed(value, appState, context);
@@ -704,7 +790,8 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
                     });
                   } else {
                     // refresh news list with the all news state
-                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                    appState.newsList =
+                        queryNewsFromDB(appState).whenComplete(() {
                       appState.jumpToItem(0);
                     });
 
@@ -730,7 +817,8 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState, FluxNewsC
 
 // if the title of the category is clicked,
 // we want all the news of this category in the news view.
-Future<void> setNextCategory(Category? category, FluxNewsState appState, BuildContext context) async {
+Future<void> setNextCategory(
+    Category? category, FluxNewsState appState, BuildContext context) async {
   if (category != null) {
     // add the according feeds of this category as a filter
     appState.feedIDs = category.getFeedIDs();
@@ -751,7 +839,8 @@ Future<void> setNextCategory(Category? category, FluxNewsState appState, BuildCo
   }
 }
 
-Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext context) async {
+Future<void> setNextFeed(
+    Feed? feed, FluxNewsState appState, BuildContext context) async {
   if (feed != null) {
     // if the title of the feed is clicked,
     // we want all the news of this feed in the news view.
@@ -775,9 +864,10 @@ Future<void> setNextFeed(Feed? feed, FluxNewsState appState, BuildContext contex
   }
 }
 
-void onTabAction(
-    FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
-  if (_openAudioPlayerIfAvailable(news, appState, context, searchView, itemIndex, newsList)) {
+void onTabAction(FluxNewsState appState, BuildContext context, News news,
+    bool searchView, int itemIndex, List<News>? newsList) {
+  if (_openAudioPlayerIfAvailable(
+      news, appState, context, searchView, itemIndex, newsList)) {
     return;
   }
 
@@ -812,13 +902,15 @@ void onTabAction(
     } else {
       news.expanded = true;
     }
-    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+    markNewsAsReadAction(news, appState, context, searchView,
+        context.read<FluxNewsCounterState>());
   }
 }
 
-void onTabContentAction(
-    FluxNewsState appState, BuildContext context, News news, bool searchView, int itemIndex, List<News>? newsList) {
-  if (_openAudioPlayerIfAvailable(news, appState, context, searchView, itemIndex, newsList)) {
+void onTabContentAction(FluxNewsState appState, BuildContext context, News news,
+    bool searchView, int itemIndex, List<News>? newsList) {
+  if (_openAudioPlayerIfAvailable(
+      news, appState, context, searchView, itemIndex, newsList)) {
     return;
   }
 
@@ -853,7 +945,8 @@ void onTabContentAction(
     } else {
       news.expanded = true;
     }
-    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+    markNewsAsReadAction(news, appState, context, searchView,
+        context.read<FluxNewsCounterState>());
   }
 }
 
@@ -875,7 +968,8 @@ bool _openAudioPlayerIfAvailable(
   }
 
   if (news.status == FluxNewsState.unreadNewsStatus) {
-    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+    markNewsAsReadAction(news, appState, context, searchView,
+        context.read<FluxNewsCounterState>());
     if (appState.removeNewsFromListWhenRead && !searchView) {
       newsList?.removeAt(itemIndex);
     }
@@ -892,7 +986,12 @@ bool _openAudioPlayerIfAvailable(
 }
 
 List<Widget> getIOSContextMenuActions(
-    FluxNewsState appState, News news, BuildContext context, bool searchView, int itemIndex, List<News>? newsList) {
+    FluxNewsState appState,
+    News news,
+    BuildContext context,
+    bool searchView,
+    int itemIndex,
+    List<News>? newsList) {
   return [
     CupertinoContextMenuAction(
       onPressed: () {
@@ -913,18 +1012,21 @@ List<Widget> getIOSContextMenuActions(
     CupertinoContextMenuAction(
       onPressed: () {
         if (news.status == FluxNewsState.readNewsStatus) {
-          markNewsAsUnreadAction(
-              news, context.read<FluxNewsState>(), context, searchView, context.read<FluxNewsCounterState>());
+          markNewsAsUnreadAction(news, context.read<FluxNewsState>(), context,
+              searchView, context.read<FluxNewsCounterState>());
         } else {
-          markNewsAsReadAction(
-              news, context.read<FluxNewsState>(), context, searchView, context.read<FluxNewsCounterState>());
-          if (context.read<FluxNewsState>().removeNewsFromListWhenRead && !searchView) {
+          markNewsAsReadAction(news, context.read<FluxNewsState>(), context,
+              searchView, context.read<FluxNewsCounterState>());
+          if (context.read<FluxNewsState>().removeNewsFromListWhenRead &&
+              !searchView) {
             newsList?.removeAt(itemIndex);
           }
         }
         Navigator.pop(context);
       },
-      trailingIcon: news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
+      trailingIcon: news.status == FluxNewsState.readNewsStatus
+          ? Icons.fiber_new
+          : Icons.check,
       child: news.status == FluxNewsState.readNewsStatus
           ? Text(
               AppLocalizations.of(context)!.markAsUnread,
@@ -939,7 +1041,8 @@ List<Widget> getIOSContextMenuActions(
         ? appState.minifluxVersionInt >= FluxNewsState.minifluxSaveMinVersion
             ? CupertinoContextMenuAction(
                 onPressed: () {
-                  saveToThirdPartyAction(news, context.read<FluxNewsState>(), context);
+                  saveToThirdPartyAction(
+                      news, context.read<FluxNewsState>(), context);
                   Navigator.pop(context);
                 },
                 trailingIcon: Icons.save,
@@ -950,7 +1053,8 @@ List<Widget> getIOSContextMenuActions(
             : SizedBox.shrink()
         : CupertinoContextMenuAction(
             onPressed: () {
-              saveToThirdPartyAction(news, context.read<FluxNewsState>(), context);
+              saveToThirdPartyAction(
+                  news, context.read<FluxNewsState>(), context);
               Navigator.pop(context);
             },
             trailingIcon: Icons.save,
@@ -1027,7 +1131,8 @@ List<Widget> getIOSContextMenuActions(
               final box = context.findRenderObject() as RenderBox?;
               SharePlus.instance.share(ShareParams(
                   uri: Uri.parse(news.url),
-                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+                  sharePositionOrigin:
+                      box!.localToGlobal(Offset.zero) & const Size(100, 100)));
             }
           }
           Navigator.pop(context);

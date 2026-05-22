@@ -1,8 +1,11 @@
 import ActivityKit
 import Flutter
 import UIKit
+import WidgetKit
 
 let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadlessExecution: true)
+private let fluxNewsWidgetGroup = "group.dev.kevincfechtel.fluxNews"
+var pendingWidgetAction: [String: String]?
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -16,6 +19,7 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
     if #available(iOS 16.1, *) {
       setupDynamicIslandChannel()
     }
+    setupWidgetChannel()
 
     NotificationCenter.default.addObserver(
       self,
@@ -32,6 +36,61 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
     )
 
     return true
+  }
+
+  private func setupWidgetChannel() {
+    let methodChannel = FlutterMethodChannel(
+      name: "dev.kevincfechtel.fluxnews/widgets",
+      binaryMessenger: flutterEngine.binaryMessenger
+    )
+
+    methodChannel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "saveSnapshot":
+        guard let args = call.arguments as? [String: Any],
+              let snapshot = args["snapshot"] as? String,
+              let defaults = UserDefaults(suiteName: fluxNewsWidgetGroup) else {
+          result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid widget snapshot", details: nil))
+          return
+        }
+        defaults.set(snapshot, forKey: "snapshot")
+        result(nil)
+      case "reloadWidgets":
+        if #available(iOS 14.0, *) {
+          WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+        }
+        result(nil)
+      case "peekPendingAction":
+        result(pendingWidgetAction)
+      case "takePendingAction":
+        result(pendingWidgetAction)
+        pendingWidgetAction = nil
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    pendingWidgetAction = parseWidgetAction(url)
+    return pendingWidgetAction != nil
+  }
+
+  func parseWidgetAction(_ url: URL) -> [String: String]? {
+    guard url.scheme == "fluxnews", url.host == "widget" else { return nil }
+    if url.path == "/sync" {
+      return ["action": "sync"]
+    }
+    if url.path == "/openNews",
+       let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+       let newsID = components.queryItems?.first(where: { $0.name == "newsID" })?.value {
+      return ["action": "openNews", "newsID": newsID]
+    }
+    return nil
   }
 
   @available(iOS 16.1, *)

@@ -6,7 +6,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'
+    as sec_store;
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:intl/intl.dart';
@@ -20,8 +21,10 @@ import '../models/news_model.dart';
 
 // generate android options to usw with flutter secure storage
 sec_store.AndroidOptions _getAndroidOptions() => const sec_store.AndroidOptions(
-      keyCipherAlgorithm: sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
-      storageCipherAlgorithm: sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
+      keyCipherAlgorithm:
+          sec_store.KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
+      storageCipherAlgorithm:
+          sec_store.StorageCipherAlgorithm.AES_GCM_NoPadding,
     );
 
 class FluxNewsState extends ChangeNotifier {
@@ -37,7 +40,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String applicationName = 'Flux News';
   static const String applicationVersion = '2.0.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
-  static const String applicationProjectUrl = ' https://github.com/KevinCFechtel/FluxNews';
+  static const String applicationProjectUrl =
+      ' https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
   static const String databasePathString = 'news_database.db';
   static const String androidDatabaseDirectory = 'databases';
@@ -54,6 +58,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String newsItemSettingsRouteString = '/newsItemSettings';
   static const String truncateSettingsRouteString = '/truncateSettings';
   static const String headerSettingsRouteString = '/headerSettings';
+  static const String widgetSettingsRouteString = '/widgetSettings';
   static const int amountOfNewlyCaughtNews = 1000;
   static const String unreadNewsStatus = 'unread';
   static const String readNewsStatus = 'read';
@@ -75,56 +80,85 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageMinifluxVersionKey = 'minifluxVersionKey';
   static const String secureStorageBrightnessModeKey = 'brightnessMode';
   static const String secureStorageAmountOfSyncedNewsKey = 'amountOfSyncedNews';
-  static const String secureStorageAmountOfSearchedNewsKey = 'amountOfSearchedNews';
+  static const String secureStorageAmountOfSearchedNewsKey =
+      'amountOfSearchedNews';
   static const String secureStorageSortOrderKey = 'sortOrder';
-  static const String secureStorageSavedScrollPositionKey = 'savedScrollPosition';
-  static const String secureStorageMarkAsReadOnScrollOverKey = 'markAsReadOnScrollOver';
+  static const String secureStorageSavedScrollPositionKey =
+      'savedScrollPosition';
+  static const String secureStorageMarkAsReadOnScrollOverKey =
+      'markAsReadOnScrollOver';
   static const String secureStorageSyncOnStartKey = 'syncOnStart';
   static const String secureStorageNewsStatusKey = 'newsStatus';
   static const String secureStorageAmountOfSavedNewsKey = 'amountOfSavedNews';
-  static const String secureStorageAmountOfSavedStarredNewsKey = 'amountOfSavedStarredNews';
-  static const String secureStorageMultilineAppBarTextKey = 'multilineAppBarText';
+  static const String secureStorageAmountOfSavedStarredNewsKey =
+      'amountOfSavedStarredNews';
+  static const String secureStorageMultilineAppBarTextKey =
+      'multilineAppBarText';
   static const String secureStorageShowFeedIconsTextKey = 'showFeedIcons';
   static const String secureStorageActivateTruncateKey = 'activateTruncate';
   static const String secureStorageTruncateModeKey = 'truncateMode';
-  static const String secureStorageCharactersToTruncateKey = 'charactersToTruncate';
-  static const String secureStorageCharactersToTruncateLimitKey = 'charactersToTruncateLimit';
+  static const String secureStorageCharactersToTruncateKey =
+      'charactersToTruncate';
+  static const String secureStorageCharactersToTruncateLimitKey =
+      'charactersToTruncateLimit';
   static const String secureStorageSyncReadNewsKey = 'syncReadNews';
-  static const String secureStorageAutoDownloadAudioAfterSyncKey = 'autoDownloadAudioAfterSync';
-  static const String secureStorageDownloadAudioOnlyOnWifiKey = 'downloadAudioOnlyOnWifi';
-  static const String secureStorageDeleteAudioAfterPlaybackKey = 'deleteAudioAfterPlayback';
-  static const String secureStorageAudioDownloadRetentionDaysKey = 'audioDownloadRetentionDays';
-  static const String secureStorageOpenAudioItemsInPlayerKey = 'openAudioItemsInPlayer';
-  static const String secureStorageSyncReadNewsAfterDaysKey = 'syncReadNewsAfterDays';
+  static const String secureStorageAutoDownloadAudioAfterSyncKey =
+      'autoDownloadAudioAfterSync';
+  static const String secureStorageDownloadAudioOnlyOnWifiKey =
+      'downloadAudioOnlyOnWifi';
+  static const String secureStorageDeleteAudioAfterPlaybackKey =
+      'deleteAudioAfterPlayback';
+  static const String secureStorageAudioDownloadRetentionDaysKey =
+      'audioDownloadRetentionDays';
+  static const String secureStorageOpenAudioItemsInPlayerKey =
+      'openAudioItemsInPlayer';
+  static const String secureStorageSyncReadNewsAfterDaysKey =
+      'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';
   static const String secureStorageClearLogsOnStartKey = 'clearLogsOnStart';
   static const String secureStorageActivateSwipeGesturesKey = 'activateSwiping';
   static const String secureStorageLeftSwipeActionKey = 'leftSwipeAction';
   static const String secureStorageRightSwipeActionKey = 'rightSwipeAction';
-  static const String secureStorageSecondLeftSwipeActionKey = 'secondLeftSwipeAction';
-  static const String secureStorageSecondRightSwipeActionKey = 'secondRightSwipeAction';
-  static const String secureStorageFloatingButtonVisibleKey = 'floatingButtonVisible';
+  static const String secureStorageSecondLeftSwipeActionKey =
+      'secondLeftSwipeAction';
+  static const String secureStorageSecondRightSwipeActionKey =
+      'secondRightSwipeAction';
+  static const String secureStorageFloatingButtonVisibleKey =
+      'floatingButtonVisible';
   static const String secureStorageUseBlackModeKey = 'useBlackMode';
   static const String secureStorageTabActionKey = 'tabAction';
   static const String secureStorageLongPressActionKey = 'LongPressAction';
   static const String secureStorageShowHeadlineOnTopKey = 'showHeadlineOnTop';
-  static const String secureStorageShowOnlyFeedCategoriesWithNewNeKey = 'showOnlyFeedCategoriesWithNewNews';
+  static const String secureStorageShowOnlyFeedCategoriesWithNewNeKey =
+      'showOnlyFeedCategoriesWithNewNews';
   static const String secureStorageStartupCategorieKey = 'startupCategorie';
-  static const String secureStorageStartupCategorieSelectionKey = 'startupCategorieSelection';
-  static const String secureStorageStartupFeedSelectionKey = 'startupFeedSelection';
-  static const String secureStorageRemoveNewsFromListWhenReadKey = 'removeNewsFromListWhenRead';
+  static const String secureStorageStartupCategorieSelectionKey =
+      'startupCategorieSelection';
+  static const String secureStorageStartupFeedSelectionKey =
+      'startupFeedSelection';
+  static const String secureStorageRemoveNewsFromListWhenReadKey =
+      'removeNewsFromListWhenRead';
   static const String secureStorageSkipLongSyncKey = 'skipLongSync';
-  static const String secureStorageSyncReadStatusImmediatelyKey = 'syncReadStatusImmediately';
-  static const String secureStorageCustomHeadersKeyPrefixKey = 'customHeadersKey_';
-  static const String secureStorageCustomHeadersValuePrefixKey = 'customHeadersValue_';
+  static const String secureStorageSyncReadStatusImmediatelyKey =
+      'syncReadStatusImmediately';
+  static const String secureStorageCustomHeadersKeyPrefixKey =
+      'customHeadersKey_';
+  static const String secureStorageCustomHeadersValuePrefixKey =
+      'customHeadersValue_';
   static const String secureStorageScrolloverAppBarKey = 'scrolloverAppBar';
   static const String secureStorageGlassAppBarKey = 'glassAppBar';
   static const String secureStorageUseSliverAppBarKey = 'useSliverAppBar';
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageAppBarTypeKey = 'appBarType';
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
-  static const String secureStorageNetworkImageCacheMigratedKey = 'networkImageCacheMigrated';
-  static const String secureStorageImageCacheDurationDaysKey = 'imageCacheDurationDays';
+  static const String secureStorageNetworkImageCacheMigratedKey =
+      'networkImageCacheMigrated';
+  static const String secureStorageImageCacheDurationDaysKey =
+      'imageCacheDurationDays';
+  static const String secureStorageWidgetNewsStatusKey = 'widgetNewsStatus';
+  static const String secureStorageWidgetSortOrderKey = 'widgetSortOrder';
+  static const String secureStorageWidgetItemLimitKey = 'widgetItemLimit';
+  static const String secureStorageWidgetOpenMinifluxKey = 'widgetOpenMiniflux';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -169,22 +203,27 @@ class FluxNewsState extends ChangeNotifier {
   static const String minifluxEntryPathPrefix = "unread/feed/";
   static const String minifluxEntryPathSuffix = "/entry/";
   static const String audioProgressKeyPrefix = "audio_progress_";
-  static const String androidNotificationChannelId = 'de.kevincfechtel.flux_news.audio';
+  static const String androidNotificationChannelId =
+      'de.kevincfechtel.flux_news.audio';
   static const String androidNotificationChannelName = 'Flux News Audio';
   static const String androidNotificationIcon = 'mipmap/ic_appicon';
   static const String downloadPathKeyPrefix = 'audio_download_path_';
   static const String downloadTimestampKeyPrefix = 'audio_download_ts_';
   static const String downloadSkippedKeyPrefix = 'audio_download_skipped_';
-  static const String defaultArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_IOS.png';
-  static const String defaultAndroidArtworkAssetPath = 'assets/Flux_News_Starticon_Blue_Android.png';
+  static const String defaultArtworkAssetPath =
+      'assets/Flux_News_Starticon_Blue_IOS.png';
+  static const String defaultAndroidArtworkAssetPath =
+      'assets/Flux_News_Starticon_Blue_Android.png';
   static const String defaultArtworkFileName = 'default_audio_artwork.png';
-  static const String defaultAndroidArtworkFileName = 'default_audio_artwork_android.png';
+  static const String defaultAndroidArtworkFileName =
+      'default_audio_artwork_android.png';
   static const String audioCachePath = 'audio_cache';
   static const String audioFilePrefix = 'audio_';
   static const String artworkCacheDirectoryName = 'audio_artwork_cache';
   static const String artworkFilePrefix = 'artwork_';
   static const String downloadPathByUrlKeyPrefix = 'audio_download_path_url_';
-  static const String androidDefaultArtworkProviderAuthority = 'de.circle_dev.flux_news.defaultart';
+  static const String androidDefaultArtworkProviderAuthority =
+      'de.circle_dev.flux_news.defaultart';
   static const String downloadTitleKeyPrefix = 'flux_download_title_';
   static const String downloadFeedTitleKeyPrefix = 'flux_download_feed_title_';
   static const String urlValidationRegex =
@@ -198,6 +237,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String categoryElementType = 'category';
   static const String allNewsElementType = 'all';
   static const String bookmarkedNewsElementType = 'bookmarked';
+  static const String widgetStatusUnreadString = 'unread';
+  static const String widgetStatusAllString = 'all';
+  static const String widgetStatusBookmarkedString = 'bookmarked';
+  static const int defaultWidgetItemLimit = 5;
 
   // vars for lists of main view
   late Future<List<News>> newsList;
@@ -291,11 +334,15 @@ class FluxNewsState extends ChangeNotifier {
   bool activateSwipeGestures = true;
   String leftSwipeAction = FluxNewsState.swipeActionReadUnreadString;
   String rightSwipeAction = FluxNewsState.swipeActionBookmarkString;
-  String secondLeftSwipeAction =
-      Platform.isIOS ? FluxNewsState.swipeActionDownloadString : FluxNewsState.swipeActionNoneString;
-  String secondRightSwipeAction =
-      Platform.isIOS ? FluxNewsState.swipeActionShareString : FluxNewsState.swipeActionNoneString;
-  String tabAction = Platform.isIOS ? FluxNewsState.tabActionSplittedString : FluxNewsState.tabActionOpenString;
+  String secondLeftSwipeAction = Platform.isIOS
+      ? FluxNewsState.swipeActionDownloadString
+      : FluxNewsState.swipeActionNoneString;
+  String secondRightSwipeAction = Platform.isIOS
+      ? FluxNewsState.swipeActionShareString
+      : FluxNewsState.swipeActionNoneString;
+  String tabAction = Platform.isIOS
+      ? FluxNewsState.tabActionSplittedString
+      : FluxNewsState.tabActionOpenString;
   String longPressAction = FluxNewsState.longPressActionMenuString;
   bool showHeadlineOnTop = false;
   int startupCategorie = 0;
@@ -318,11 +365,17 @@ class FluxNewsState extends ChangeNotifier {
   bool skipLongSync = false;
   bool syncReadStatusImmediately = false;
   bool scrolloverSyncFailed = false;
+  String widgetNewsStatus = FluxNewsState.widgetStatusUnreadString;
+  String widgetSortOrder = FluxNewsState.sortOrderNewestFirstString;
+  int widgetItemLimit = FluxNewsState.defaultWidgetItemLimit;
+  bool widgetOpenMiniflux = false;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
   bool glassAppBar = Platform.isIOS ? true : false;
   bool useSliverAppBar = Platform.isIOS ? true : false;
-  String appBarType = Platform.isIOS ? FluxNewsState.appBarGlassType : FluxNewsState.appBarNormalType;
+  String appBarType = Platform.isIOS
+      ? FluxNewsState.appBarGlassType
+      : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
@@ -344,7 +397,7 @@ class FluxNewsState extends ChangeNotifier {
   Future<Database> initializeDB() async {
     logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
     String databasePath = "/";
-    databaseFactory = databaseFactoryFfi;
+    //databaseFactory = databaseFactoryFfi;
     if (Platform.isIOS) {
       externalDirectory = await getApplicationDocumentsDirectory();
       Directory rootPath = await getLibraryDirectory();
@@ -358,7 +411,8 @@ class FluxNewsState extends ChangeNotifier {
           databasePath = path_package.join(databasePath, rootPathElements[i]);
         }
       }
-      databasePath = path_package.join(databasePath, FluxNewsState.androidDatabaseDirectory);
+      databasePath = path_package.join(
+          databasePath, FluxNewsState.androidDatabaseDirectory);
     }
     logThis('initializeDB', 'Finished initializeDB', LogLevel.INFO);
     return openDatabase(
@@ -1456,9 +1510,13 @@ class FluxNewsState extends ChangeNotifier {
       // Timeout guards against the headless CarPlay case: if the device was
       // never unlocked since boot, pre-migration WhenUnlocked Keychain items
       // would make readAll() hang indefinitely.
-      storageValues = await storage.readAll().timeout(const Duration(seconds: 5));
+      storageValues =
+          await storage.readAll().timeout(const Duration(seconds: 5));
     } catch (e) {
-      logThis('readConfigValues', 'readAll failed or timed out: $e — using empty config', LogLevel.WARNING);
+      logThis(
+          'readConfigValues',
+          'readAll failed or timed out: $e — using empty config',
+          LogLevel.WARNING);
       storageValues = {};
     }
 
@@ -1474,17 +1532,23 @@ class FluxNewsState extends ChangeNotifier {
     if (Platform.isIOS && alreadyDone != 'true') {
       try {
         const oldStorage = sec_store.FlutterSecureStorage();
-        final oldItems = await oldStorage.readAll().timeout(const Duration(seconds: 5));
+        final oldItems =
+            await oldStorage.readAll().timeout(const Duration(seconds: 5));
         if (oldItems.isNotEmpty) {
-          logThis('readConfigValues', 'Found ${oldItems.length} pre-migration WhenUnlocked items — will migrate', LogLevel.INFO);
+          logThis(
+              'readConfigValues',
+              'Found ${oldItems.length} pre-migration WhenUnlocked items — will migrate',
+              LogLevel.INFO);
           storageValues = oldItems;
         } else {
-          logThis('readConfigValues', 'No WhenUnlocked items found in fallback read', LogLevel.INFO);
+          logThis('readConfigValues',
+              'No WhenUnlocked items found in fallback read', LogLevel.INFO);
         }
         await storage.write(key: migrationKey, value: 'true');
         storageValues[migrationKey] = 'true';
       } catch (e) {
-        logThis('readConfigValues', 'WhenUnlocked fallback read failed: $e', LogLevel.WARNING);
+        logThis('readConfigValues', 'WhenUnlocked fallback read failed: $e',
+            LogLevel.WARNING);
       }
     }
 
@@ -1501,7 +1565,8 @@ class FluxNewsState extends ChangeNotifier {
     const migrationKey = '_keychain_migrated_first_unlock_v3';
     final alreadyDone = storageValues[migrationKey];
     if (alreadyDone == 'true') return;
-    logThis('migrateKeychainAccessibility', 'Starting Keychain first_unlock migration', LogLevel.INFO);
+    logThis('migrateKeychainAccessibility',
+        'Starting Keychain first_unlock migration', LogLevel.INFO);
     try {
       // Step 1: Delete all old WhenUnlocked items.
       // flutter_secure_storage's write() uses containsKey() which filters by
@@ -1512,7 +1577,8 @@ class FluxNewsState extends ChangeNotifier {
       if (Platform.isIOS) {
         const oldStorage = sec_store.FlutterSecureStorage();
         await oldStorage.deleteAll();
-        logThis('migrateKeychainAccessibility', 'Deleted old WhenUnlocked items', LogLevel.INFO);
+        logThis('migrateKeychainAccessibility',
+            'Deleted old WhenUnlocked items', LogLevel.INFO);
       }
 
       // Step 2: Write all items back with first_unlock accessibility.
@@ -1524,18 +1590,23 @@ class FluxNewsState extends ChangeNotifier {
       await storage.write(key: migrationKey, value: 'true');
       storageValues[migrationKey] = 'true';
       logThis(
-          'migrateKeychainAccessibility', 'Migration complete — ${storageValues.length} items updated', LogLevel.INFO);
+          'migrateKeychainAccessibility',
+          'Migration complete — ${storageValues.length} items updated',
+          LogLevel.INFO);
     } catch (e) {
-      logThis('migrateKeychainAccessibility', 'Migration error: $e', LogLevel.WARNING);
+      logThis('migrateKeychainAccessibility', 'Migration error: $e',
+          LogLevel.WARNING);
     }
   }
 
   // read the some persistent saved configuration
   Future<bool> readThemeConfigValues(BuildContext context) async {
-    logThis('readThemeConfigValues', 'Starting read config values', LogLevel.INFO);
+    logThis(
+        'readThemeConfigValues', 'Starting read config values', LogLevel.INFO);
     FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
 
-    var useBlackModeStoredValue = await storage.read(key: FluxNewsState.secureStorageUseBlackModeKey);
+    var useBlackModeStoredValue =
+        await storage.read(key: FluxNewsState.secureStorageUseBlackModeKey);
     if (useBlackModeStoredValue != '') {
       if (useBlackModeStoredValue == FluxNewsState.secureStorageTrueString) {
         themeState.useBlackMode = true;
@@ -1543,13 +1614,15 @@ class FluxNewsState extends ChangeNotifier {
         themeState.useBlackMode = false;
       }
     }
-    var brightnessModeStoredValue = await storage.read(key: FluxNewsState.secureStorageBrightnessModeKey);
+    var brightnessModeStoredValue =
+        await storage.read(key: FluxNewsState.secureStorageBrightnessModeKey);
     if (brightnessModeStoredValue != '' && brightnessModeStoredValue != null) {
       themeState.brightnessMode = brightnessModeStoredValue;
     }
     themeState.refreshView();
 
-    logThis('readThemeConfigValues', 'Finished read config values', LogLevel.INFO);
+    logThis(
+        'readThemeConfigValues', 'Finished read config values', LogLevel.INFO);
 
     return true;
   }
@@ -1564,21 +1637,24 @@ class FluxNewsState extends ChangeNotifier {
     if (context.mounted) {
       if (AppLocalizations.of(context) != null) {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[
-          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          KeyValueRecordType(
+              key: "0", value: AppLocalizations.of(context)!.all),
           const KeyValueRecordType(key: "1000", value: "1000"),
           const KeyValueRecordType(key: "2000", value: "2000"),
           const KeyValueRecordType(key: "5000", value: "5000"),
           const KeyValueRecordType(key: "10000", value: "10000"),
         ];
         recordTypesAmountOfSearchedNews = <KeyValueRecordType>[
-          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          KeyValueRecordType(
+              key: "0", value: AppLocalizations.of(context)!.all),
           const KeyValueRecordType(key: "1000", value: "1000"),
           const KeyValueRecordType(key: "2000", value: "2000"),
           const KeyValueRecordType(key: "5000", value: "5000"),
           const KeyValueRecordType(key: "10000", value: "10000"),
         ];
         recordTypesAmountOfCharactersToTruncateLimit = <KeyValueRecordType>[
-          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.always),
+          KeyValueRecordType(
+              key: "0", value: AppLocalizations.of(context)!.always),
           const KeyValueRecordType(key: "100", value: "100"),
           const KeyValueRecordType(key: "200", value: "200"),
           const KeyValueRecordType(key: "300", value: "300"),
@@ -1591,7 +1667,8 @@ class FluxNewsState extends ChangeNotifier {
           const KeyValueRecordType(key: "1000", value: "1000"),
         ];
         recordTypesSyncReadNewsAfterDays = <KeyValueRecordType>[
-          KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
+          KeyValueRecordType(
+              key: "0", value: AppLocalizations.of(context)!.all),
           const KeyValueRecordType(key: "7", value: "7"),
           const KeyValueRecordType(key: "14", value: "14"),
           const KeyValueRecordType(key: "30", value: "30"),
@@ -1602,63 +1679,110 @@ class FluxNewsState extends ChangeNotifier {
         ];
         recordTypesBrightnessMode = <KeyValueRecordType>[
           KeyValueRecordType(
-              key: FluxNewsState.brightnessModeSystemString, value: AppLocalizations.of(context)!.system),
-          KeyValueRecordType(key: FluxNewsState.brightnessModeDarkString, value: AppLocalizations.of(context)!.dark),
-          KeyValueRecordType(key: FluxNewsState.brightnessModeLightString, value: AppLocalizations.of(context)!.light),
+              key: FluxNewsState.brightnessModeSystemString,
+              value: AppLocalizations.of(context)!.system),
+          KeyValueRecordType(
+              key: FluxNewsState.brightnessModeDarkString,
+              value: AppLocalizations.of(context)!.dark),
+          KeyValueRecordType(
+              key: FluxNewsState.brightnessModeLightString,
+              value: AppLocalizations.of(context)!.light),
         ];
         recordTypesSwipeActions = <KeyValueRecordType>[
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
+              key: FluxNewsState.swipeActionReadUnreadString,
+              value: AppLocalizations.of(context)!.readShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
-          KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+              key: FluxNewsState.swipeActionBookmarkString,
+              value: AppLocalizations.of(context)!.bookmarkShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
-          KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
-          KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+              key: FluxNewsState.swipeActionSaveString,
+              value: AppLocalizations.of(context)!.saveShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionDownloadString, value: AppLocalizations.of(context)!.downloadAudio),
+              key: FluxNewsState.swipeActionOpenMinifluxString,
+              value: AppLocalizations.of(context)!.openMinifluxShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
+              key: FluxNewsState.swipeActionShareString,
+              value: AppLocalizations.of(context)!.share),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenString,
+              value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionDownloadString,
+              value: AppLocalizations.of(context)!.downloadAudio),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenCommentsString,
+              value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesSecondSwipeActions = <KeyValueRecordType>[
-          KeyValueRecordType(key: FluxNewsState.swipeActionNoneString, value: AppLocalizations.of(context)!.none),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionReadUnreadString, value: AppLocalizations.of(context)!.readShort),
+              key: FluxNewsState.swipeActionNoneString,
+              value: AppLocalizations.of(context)!.none),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionBookmarkString, value: AppLocalizations.of(context)!.bookmarkShort),
-          KeyValueRecordType(key: FluxNewsState.swipeActionSaveString, value: AppLocalizations.of(context)!.saveShort),
+              key: FluxNewsState.swipeActionReadUnreadString,
+              value: AppLocalizations.of(context)!.readShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionOpenMinifluxString, value: AppLocalizations.of(context)!.openMinifluxShort),
-          KeyValueRecordType(key: FluxNewsState.swipeActionShareString, value: AppLocalizations.of(context)!.share),
-          KeyValueRecordType(key: FluxNewsState.swipeActionOpenString, value: AppLocalizations.of(context)!.open),
+              key: FluxNewsState.swipeActionBookmarkString,
+              value: AppLocalizations.of(context)!.bookmarkShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionDownloadString, value: AppLocalizations.of(context)!.downloadAudio),
+              key: FluxNewsState.swipeActionSaveString,
+              value: AppLocalizations.of(context)!.saveShort),
           KeyValueRecordType(
-              key: FluxNewsState.swipeActionOpenCommentsString, value: AppLocalizations.of(context)!.openComments),
+              key: FluxNewsState.swipeActionOpenMinifluxString,
+              value: AppLocalizations.of(context)!.openMinifluxShort),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionShareString,
+              value: AppLocalizations.of(context)!.share),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenString,
+              value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionDownloadString,
+              value: AppLocalizations.of(context)!.downloadAudio),
+          KeyValueRecordType(
+              key: FluxNewsState.swipeActionOpenCommentsString,
+              value: AppLocalizations.of(context)!.openComments),
         ];
         recordTypesTabActions = <KeyValueRecordType>[
-          KeyValueRecordType(key: FluxNewsState.tabActionOpenString, value: AppLocalizations.of(context)!.open),
-          KeyValueRecordType(key: FluxNewsState.tabActionExpandString, value: AppLocalizations.of(context)!.expand),
-          KeyValueRecordType(key: FluxNewsState.tabActionSplittedString, value: AppLocalizations.of(context)!.splitted),
+          KeyValueRecordType(
+              key: FluxNewsState.tabActionOpenString,
+              value: AppLocalizations.of(context)!.open),
+          KeyValueRecordType(
+              key: FluxNewsState.tabActionExpandString,
+              value: AppLocalizations.of(context)!.expand),
+          KeyValueRecordType(
+              key: FluxNewsState.tabActionSplittedString,
+              value: AppLocalizations.of(context)!.splitted),
         ];
         recordTypesLongPressActions = <KeyValueRecordType>[
-          KeyValueRecordType(key: FluxNewsState.longPressActionMenuString, value: AppLocalizations.of(context)!.menu),
           KeyValueRecordType(
-              key: FluxNewsState.longPressActionExpandString, value: AppLocalizations.of(context)!.expand),
-          KeyValueRecordType(key: FluxNewsState.longPressActionNoneString, value: AppLocalizations.of(context)!.none),
+              key: FluxNewsState.longPressActionMenuString,
+              value: AppLocalizations.of(context)!.menu),
+          KeyValueRecordType(
+              key: FluxNewsState.longPressActionExpandString,
+              value: AppLocalizations.of(context)!.expand),
+          KeyValueRecordType(
+              key: FluxNewsState.longPressActionNoneString,
+              value: AppLocalizations.of(context)!.none),
         ];
         recordTypesFloatingButtonActions = <KeyValueRecordType>[
           KeyValueRecordType(
               key: FluxNewsState.floatingButtonMarkAsReadAction,
               value: AppLocalizations.of(context)!.markNewsAsReadButton),
           KeyValueRecordType(
-              key: FluxNewsState.floatingButtonSyncAction, value: AppLocalizations.of(context)!.syncNews),
+              key: FluxNewsState.floatingButtonSyncAction,
+              value: AppLocalizations.of(context)!.syncNews),
         ];
         recordTypesAppBarType = <KeyValueRecordType>[
-          KeyValueRecordType(key: FluxNewsState.appBarNormalType, value: AppLocalizations.of(context)!.normal),
-          KeyValueRecordType(key: FluxNewsState.appBarCollapsedType, value: AppLocalizations.of(context)!.collapsible),
-          KeyValueRecordType(key: FluxNewsState.appBarGlassType, value: AppLocalizations.of(context)!.glass),
+          KeyValueRecordType(
+              key: FluxNewsState.appBarNormalType,
+              value: AppLocalizations.of(context)!.normal),
+          KeyValueRecordType(
+              key: FluxNewsState.appBarCollapsedType,
+              value: AppLocalizations.of(context)!.collapsible),
+          KeyValueRecordType(
+              key: FluxNewsState.appBarGlassType,
+              value: AppLocalizations.of(context)!.glass),
         ];
       } else {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -1711,7 +1835,8 @@ class FluxNewsState extends ChangeNotifier {
     // init the amount of characters to truncate limit selection with the first value of the above generated maps
     if (recordTypesAmountOfCharactersToTruncateLimit != null) {
       if (recordTypesAmountOfCharactersToTruncateLimit!.isNotEmpty) {
-        amountOfCharactersToTruncateLimitSelection = recordTypesAmountOfCharactersToTruncateLimit![0];
+        amountOfCharactersToTruncateLimitSelection =
+            recordTypesAmountOfCharactersToTruncateLimit![0];
       }
     }
 
@@ -1860,7 +1985,8 @@ class FluxNewsState extends ChangeNotifier {
             amountOfSearchedNews = 0;
           }
 
-          for (KeyValueRecordType recordSet in recordTypesAmountOfSearchedNews!) {
+          for (KeyValueRecordType recordSet
+              in recordTypesAmountOfSearchedNews!) {
             if (value == recordSet.key) {
               amontOfSearchedNewsSelection = recordSet;
             }
@@ -1872,6 +1998,31 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageSortOrderKey) {
         if (value != '') {
           sortOrder = value;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetNewsStatusKey) {
+        if (value != '') {
+          widgetNewsStatus = value;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetSortOrderKey) {
+        if (value != '') {
+          widgetSortOrder = value;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetItemLimitKey) {
+        if (value != '') {
+          widgetItemLimit =
+              int.tryParse(value) ?? FluxNewsState.defaultWidgetItemLimit;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetOpenMinifluxKey) {
+        if (value != '') {
+          widgetOpenMiniflux = value == FluxNewsState.secureStorageTrueString;
         }
       }
 
@@ -1971,7 +2122,8 @@ class FluxNewsState extends ChangeNotifier {
             charactersToTruncateLimit = 0;
           }
 
-          for (KeyValueRecordType recordSet in recordTypesAmountOfCharactersToTruncateLimit!) {
+          for (KeyValueRecordType recordSet
+              in recordTypesAmountOfCharactersToTruncateLimit!) {
             if (value == recordSet.key) {
               amountOfCharactersToTruncateLimitSelection = recordSet;
             }
@@ -1988,7 +2140,8 @@ class FluxNewsState extends ChangeNotifier {
             syncReadNewsAfterDays = 0;
           }
 
-          for (KeyValueRecordType recordSet in recordTypesSyncReadNewsAfterDays!) {
+          for (KeyValueRecordType recordSet
+              in recordTypesSyncReadNewsAfterDays!) {
             if (value == recordSet.key) {
               syncReadNewsAfterDaysSelection = recordSet;
             }
@@ -2131,7 +2284,8 @@ class FluxNewsState extends ChangeNotifier {
       }
 
       // assign the show headline on top selection from persistent saved config
-      if (key == FluxNewsState.secureStorageShowOnlyFeedCategoriesWithNewNeKey) {
+      if (key ==
+          FluxNewsState.secureStorageShowOnlyFeedCategoriesWithNewNeKey) {
         if (value != '') {
           if (value == FluxNewsState.secureStorageTrueString) {
             showOnlyFeedCategoriesWithNewNews = true;
@@ -2317,7 +2471,8 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageFloatingButtonKey) {
         if (value != '') {
           floatingButtonAction = value;
-          for (KeyValueRecordType recordSet in recordTypesFloatingButtonActions!) {
+          for (KeyValueRecordType recordSet
+              in recordTypesFloatingButtonActions!) {
             if (value == recordSet.key) {
               floatingButtonActionSelection = recordSet;
             }
@@ -2351,9 +2506,11 @@ class FluxNewsState extends ChangeNotifier {
     do {
       noKeyFound = true;
       storageValues.forEach((key, value) {
-        if (key == '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter') {
+        if (key ==
+            '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter') {
           var headerName = value;
-          var headerValue = storageValues['${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter'];
+          var headerValue = storageValues[
+              '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter'];
           headerValue ??= '';
           var header = {
             headerName: headerValue,
@@ -2398,7 +2555,8 @@ class FluxNewsState extends ChangeNotifier {
 
   Future<void> deleteAllFeedIconFiles() async {
     if (externalDirectory != null) {
-      final fileIconPath = FluxNewsState.feedIconFilePath.substring(0, FluxNewsState.feedIconFilePath.lastIndexOf('/'));
+      final fileIconPath = FluxNewsState.feedIconFilePath
+          .substring(0, FluxNewsState.feedIconFilePath.lastIndexOf('/'));
       final dir = Directory(externalDirectory!.path + fileIconPath);
       final List<FileSystemEntity> entities = await dir.list().toList();
       final Iterable<File> files = entities.whereType<File>();
@@ -2453,7 +2611,8 @@ class FluxNewsState extends ChangeNotifier {
   void jumpToItem(int index) {
     waitUntilNewsListBuild().whenComplete(
       () {
-        listController.jumpToItem(index: index, scrollController: scrollController, alignment: 0.0);
+        listController.jumpToItem(
+            index: index, scrollController: scrollController, alignment: 0.0);
       },
     );
   }
@@ -2486,9 +2645,12 @@ class FluxNewsState extends ChangeNotifier {
     do {
       noKeyFound = true;
       storageValues.forEach((key, value) {
-        if (key == '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter') {
+        if (key ==
+            '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter') {
           storage.delete(key: key);
-          storage.delete(key: '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter');
+          storage.delete(
+              key:
+                  '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter');
           noKeyFound = false;
           headerCounter++;
         }
@@ -2501,21 +2663,30 @@ class FluxNewsState extends ChangeNotifier {
     // now save all current headers to the storage
     headerCounter = 0;
     customHeaders.forEach((key, value) {
-      storage.write(key: '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter', value: key);
-      storage.write(key: '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter', value: value);
+      storage.write(
+          key:
+              '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter',
+          value: key);
+      storage.write(
+          key:
+              '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter',
+          value: value);
       headerCounter++;
     });
   }
 
   // this function is needed to clean the legacy cache of the cached_network_image package which was used before
   Future<void> cleanLegacyCache() async {
-    logThis('cleanLegacyCache', 'Starting cleaning of legacy cache', LogLevel.INFO);
+    logThis(
+        'cleanLegacyCache', 'Starting cleaning of legacy cache', LogLevel.INFO);
     final temp = await getTemporaryDirectory();
     final dir = Directory('${temp.path}/libCachedImageData');
     if (await dir.exists()) await dir.delete(recursive: true);
     storage.write(
-        key: FluxNewsState.secureStorageNetworkImageCacheMigratedKey, value: FluxNewsState.secureStorageTrueString);
-    logThis('cleanLegacyCache', 'Finished cleaning of legacy cache', LogLevel.INFO);
+        key: FluxNewsState.secureStorageNetworkImageCacheMigratedKey,
+        value: FluxNewsState.secureStorageTrueString);
+    logThis(
+        'cleanLegacyCache', 'Finished cleaning of legacy cache', LogLevel.INFO);
   }
 
   // notify the listeners of FluxNewsState to refresh views

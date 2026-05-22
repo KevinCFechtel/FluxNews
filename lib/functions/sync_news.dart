@@ -6,6 +6,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
@@ -35,12 +36,18 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
   // remove the native splash after updating the list view
   FlutterNativeSplash.remove();
   // check the miniflux credentials to enable the sync
-  bool authCheck = await checkMinifluxCredentials(appState.minifluxURL, appState.minifluxAPIKey, appState)
+  bool authCheck = await checkMinifluxCredentials(
+          appState.minifluxURL, appState.minifluxAPIKey, appState)
       .onError((error, stackTrace) {
-    logThis('authCheck', 'Caught an error in authCheck function! : ${error.toString()}', LogLevel.ERROR);
+    logThis(
+        'authCheck',
+        'Caught an error in authCheck function! : ${error.toString()}',
+        LogLevel.ERROR);
     if (context.mounted) {
-      if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-        appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+      if (appState.errorString !=
+          AppLocalizations.of(context)!.communicateionMinifluxError) {
+        appState.errorString =
+            AppLocalizations.of(context)!.communicateionMinifluxError;
         appState.newError = true;
         appState.refreshView();
       }
@@ -58,10 +65,14 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     // at first toggle news as read so that this news don't show up in the next step
     await toggleNewsAsRead(appState).onError((error, stackTrace) {
       logThis(
-          'toggleNewsAsRead', 'Caught an error in toggleNewsAsRead function! : ${error.toString()}', LogLevel.ERROR);
+          'toggleNewsAsRead',
+          'Caught an error in toggleNewsAsRead function! : ${error.toString()}',
+          LogLevel.ERROR);
       if (context.mounted) {
-        if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+        if (appState.errorString !=
+            AppLocalizations.of(context)!.communicateionMinifluxError) {
+          appState.errorString =
+              AppLocalizations.of(context)!.communicateionMinifluxError;
           appState.newError = true;
           appState.refreshView();
         }
@@ -70,10 +81,15 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     // fetch only unread news from the miniflux server
     NewsList newNews = await fetchNews(appState).onError((error, stackTrace) {
-      logThis('fetchNews', 'Caught an error in fetchNews function! : ${error.toString()}', LogLevel.ERROR);
+      logThis(
+          'fetchNews',
+          'Caught an error in fetchNews function! : ${error.toString()}',
+          LogLevel.ERROR);
       if (context.mounted) {
-        if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-          appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+        if (appState.errorString !=
+            AppLocalizations.of(context)!.communicateionMinifluxError) {
+          appState.errorString =
+              AppLocalizations.of(context)!.communicateionMinifluxError;
           appState.newError = true;
           appState.refreshView();
         }
@@ -84,11 +100,15 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // if news in this app are marked as unread, but don't exist in the list from
       // the previous step, this news must be marked as read by another app.
       // So this step mark news, which are not fetched previous as read in this app.
-      await markNotFetchedNewsAsRead(newNews, appState).onError((error, stackTrace) {
-        logThis('markNotFetchedNewsAsRead',
-            'Caught an error in markNotFetchedNewsAsRead function! : ${error.toString()}', LogLevel.ERROR);
+      await markNotFetchedNewsAsRead(newNews, appState)
+          .onError((error, stackTrace) {
+        logThis(
+            'markNotFetchedNewsAsRead',
+            'Caught an error in markNotFetchedNewsAsRead function! : ${error.toString()}',
+            LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -101,12 +121,17 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     Categories newCategories = Categories(categories: []);
     if (!appState.longSyncAborted) {
       // fetch the categories from the miniflux server
-      newCategories = await fetchCategoryInformation(appState).onError((error, stackTrace) {
-        logThis('fetchCategoryInformation',
-            'Caught an error in fetchCategoryInformation function! : ${error.toString()}', LogLevel.ERROR);
+      newCategories =
+          await fetchCategoryInformation(appState).onError((error, stackTrace) {
+        logThis(
+            'fetchCategoryInformation',
+            'Caught an error in fetchCategoryInformation function! : ${error.toString()}',
+            LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.communicateionMinifluxError) {
+            appState.errorString =
+                AppLocalizations.of(context)!.communicateionMinifluxError;
             appState.newError = true;
             appState.refreshView();
           }
@@ -117,11 +142,15 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
     if (!appState.longSyncAborted && appState.errorString == '') {
       // insert or update the fetched categories in the database
-      await insertCategoriesInDB(newCategories, appState).onError((error, stackTrace) {
-        logThis('insertCategoriesInDB', 'Caught an error in insertCategoriesInDB function! : ${error.toString()}',
+      await insertCategoriesInDB(newCategories, appState)
+          .onError((error, stackTrace) {
+        logThis(
+            'insertCategoriesInDB',
+            'Caught an error in insertCategoriesInDB function! : ${error.toString()}',
             LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -134,9 +163,13 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     if (!appState.longSyncAborted && appState.errorString == '') {
       // insert or update the fetched news in the database
       await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
-        logThis('insertNewsInDB', 'Caught an error in insertNewsInDB function! : ${error.toString()}', LogLevel.ERROR);
+        logThis(
+            'insertNewsInDB',
+            'Caught an error in insertNewsInDB function! : ${error.toString()}',
+            LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -160,7 +193,8 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     if (!appState.longSyncAborted) {
       // after inserting the news, renew the list view with the new news
       appState.scrollPosition = 0;
-      appState.storage.write(key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
+      appState.storage.write(
+          key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
       appState.newsList = queryNewsFromDB(appState).whenComplete(() {
         appState.jumpToItem(0);
       });
@@ -170,7 +204,9 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // renew the news count of "All News"
       if (context.mounted) {
         await renewAllNewsCount(appState, context).onError((error, stackTrace) {
-          logThis('renewAllNewsCount', 'Caught an error in renewAllNewsCount function! : ${error.toString()}',
+          logThis(
+              'renewAllNewsCount',
+              'Caught an error in renewAllNewsCount function! : ${error.toString()}',
               LogLevel.ERROR);
         });
       }
@@ -183,12 +219,17 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     NewsList starredNews = NewsList(news: [], newsCount: 0);
     if (!appState.longSyncAborted) {
       // fetch the starred news (read or unread) from the miniflux server
-      starredNews = await fetchStarredNews(appState).onError((error, stackTrace) {
+      starredNews =
+          await fetchStarredNews(appState).onError((error, stackTrace) {
         logThis(
-            'fetchStarredNews', 'Caught an error in fetchStarredNews function! : ${error.toString()}', LogLevel.ERROR);
+            'fetchStarredNews',
+            'Caught an error in fetchStarredNews function! : ${error.toString()}',
+            LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-            appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.communicateionMinifluxError) {
+            appState.errorString =
+                AppLocalizations.of(context)!.communicateionMinifluxError;
             appState.newError = true;
             appState.refreshView();
           }
@@ -201,11 +242,15 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // update the previous fetched starred news in the database
       // maybe some other app has marked a news a starred
       // also refresh progression cache for starred news (includes read+starred)
-      await updateStarredNewsInDB(starredNews, appState).onError((error, stackTrace) {
-        logThis('updateStarredNewsInDB', 'Caught an error in updateStarredNewsInDB function! ${error.toString()}',
+      await updateStarredNewsInDB(starredNews, appState)
+          .onError((error, stackTrace) {
+        logThis(
+            'updateStarredNewsInDB',
+            'Caught an error in updateStarredNewsInDB function! ${error.toString()}',
             LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -214,7 +259,8 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         return 0;
       });
       // Refresh progression cache for starred (read or unread) news.
-      AudioDownloadService.refreshMediaProgressionCacheFromSync(starredNews.news);
+      AudioDownloadService.refreshMediaProgressionCacheFromSync(
+          starredNews.news);
     }
 
     if (!appState.longSyncAborted) {
@@ -233,10 +279,13 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
     if (!appState.longSyncAborted) {
       // delete all unstarred news depending the defined limit in the settings,
       await cleanUnstarredNews(appState).onError((error, stackTrace) {
-        logThis('cleanUnstarredNews', 'Caught an error in cleanUnstarredNews function! : ${error.toString()}',
+        logThis(
+            'cleanUnstarredNews',
+            'Caught an error in cleanUnstarredNews function! : ${error.toString()}',
             LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -249,9 +298,12 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // delete all starred news depending the defines limit in the settings
       await cleanStarredNews(appState).onError((error, stackTrace) {
         logThis(
-            'cleanStarredNews', 'Caught an error in cleanStarredNews function! : ${error.toString()}', LogLevel.ERROR);
+            'cleanStarredNews',
+            'Caught an error in cleanStarredNews function! : ${error.toString()}',
+            LogLevel.ERROR);
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -267,11 +319,14 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
           updateStarredCounter(appState, context);
         }
       } catch (e) {
-        logThis('updateStarredCounter', 'Caught an error in updateStarredCounter function! : ${e.toString()}',
+        logThis(
+            'updateStarredCounter',
+            'Caught an error in updateStarredCounter function! : ${e.toString()}',
             LogLevel.ERROR);
 
         if (context.mounted) {
-          if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
+          if (appState.errorString !=
+              AppLocalizations.of(context)!.databaseError) {
             appState.errorString = AppLocalizations.of(context)!.databaseError;
             appState.newError = true;
             appState.refreshView();
@@ -291,7 +346,9 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
           // set the list view position to the top
           appState.jumpToItem(0);
         } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
-          if (appState.feedIDs != null && appState.feedIDs!.isNotEmpty && appState.feedIDs?.first == -1) {
+          if (appState.feedIDs != null &&
+              appState.feedIDs!.isNotEmpty &&
+              appState.feedIDs?.first == -1) {
             // if new news exists and the "Bookmarked" category is selected,
             // set the list view position to the top
             appState.jumpToItem(0);
@@ -318,8 +375,16 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
   }
   if (appState.debugMode) {
     // Debugging execution time with many news
-    logThis('syncNews', 'Syncing with miniflux server executed in ${stopwatch.elapsed}', LogLevel.INFO);
+    logThis(
+        'syncNews',
+        'Syncing with miniflux server executed in ${stopwatch.elapsed}',
+        LogLevel.INFO);
   }
+  await FluxNewsWidgetService.updateWidgetSnapshot(appState)
+      .onError((error, stackTrace) {
+    logThis('syncNews', 'Could not update widget snapshot: ${error.toString()}',
+        LogLevel.ERROR);
+  });
   logThis('syncNews', 'Finished syncing with miniflux server.', LogLevel.INFO);
 }
 
@@ -347,21 +412,28 @@ Future<void> _syncDownloadedAudioProgressions(
   final toFetch = downloadedNewsIds.difference(alreadySyncedIds);
   if (toFetch.isNotEmpty) {
     if (appState.debugMode) {
-      logThis('syncDownloadedAudioProgressions',
-          'INBOUND: fetching progression for ${toFetch.length} read episode(s).', LogLevel.INFO);
+      logThis(
+          'syncDownloadedAudioProgressions',
+          'INBOUND: fetching progression for ${toFetch.length} read episode(s).',
+          LogLevel.INFO);
     }
-    final fetched = await fetchEntriesProgressionByIds(appState, toFetch.toList());
+    final fetched =
+        await fetchEntriesProgressionByIds(appState, toFetch.toList());
     if (fetched.news.isNotEmpty) {
       await updateAttachmentProgressionsInDB(fetched, appState);
       AudioDownloadService.refreshMediaProgressionCacheFromSync(fetched.news);
       if (appState.debugMode) {
-        logThis('syncDownloadedAudioProgressions',
-            'INBOUND: updated ${fetched.news.length} episode(s).', LogLevel.INFO);
+        logThis(
+            'syncDownloadedAudioProgressions',
+            'INBOUND: updated ${fetched.news.length} episode(s).',
+            LogLevel.INFO);
       }
     }
   } else if (appState.debugMode) {
-    logThis('syncDownloadedAudioProgressions',
-        'INBOUND: all downloaded episodes already covered by regular sync.', LogLevel.INFO);
+    logThis(
+        'syncDownloadedAudioProgressions',
+        'INBOUND: all downloaded episodes already covered by regular sync.',
+        LogLevel.INFO);
   }
 
   // ── OUTBOUND ─────────────────────────────────────────────────────────────
@@ -383,8 +455,8 @@ Future<void> _syncDownloadedAudioProgressions(
     // Read local Keychain position (milliseconds).
     String? localStr;
     try {
-      localStr = await appState.storage.read(
-          key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
+      localStr = await appState.storage
+          .read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
     } catch (_) {
       continue;
     }
@@ -392,12 +464,14 @@ Future<void> _syncDownloadedAudioProgressions(
     if (localMs <= 0) continue;
 
     // Server position from in-memory cache (seconds → milliseconds).
-    final serverSeconds =
-        AudioDownloadService.getDownloadMediaProgression(download.attachmentID) ?? 0;
+    final serverSeconds = AudioDownloadService.getDownloadMediaProgression(
+            download.attachmentID) ??
+        0;
 
     if (localMs > serverSeconds * 1000) {
       if (appState.debugMode) {
-        logThis('syncDownloadedAudioProgressions',
+        logThis(
+            'syncDownloadedAudioProgressions',
             'OUTBOUND: attachment ${download.attachmentID} — local ${localMs ~/ 1000}s > server ${serverSeconds}s, pushing.',
             LogLevel.INFO);
       }
