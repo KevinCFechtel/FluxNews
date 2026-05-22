@@ -2,9 +2,11 @@ import ActivityKit
 import Flutter
 import UIKit
 import WidgetKit
+import workmanager_apple
 
 let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadlessExecution: true)
 private let fluxNewsWidgetGroup = "group.dev.kevincfechtel.fluxNews"
+private let fluxNewsBackgroundSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundSync"
 var pendingWidgetAction: [String: String]?
 
 @main
@@ -20,6 +22,10 @@ var pendingWidgetAction: [String: String]?
       setupDynamicIslandChannel()
     }
     setupWidgetChannel()
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: fluxNewsBackgroundSyncIdentifier,
+      frequency: NSNumber(value: 15 * 60)
+    )
 
     NotificationCenter.default.addObserver(
       self,

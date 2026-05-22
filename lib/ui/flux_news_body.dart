@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
@@ -95,6 +96,8 @@ class FluxNewsBody extends StatelessWidget {
         appState.readConfig(context);
         appState.readThemeConfigValues(context);
       }
+      unawaited(configureFluxNewsBackgroundSync(appState));
+      unawaited(runPendingForegroundAudioDownloads(appState));
 
       // set the startup categorie if configured
       if (appState.startupCategorie != 0) {

@@ -159,6 +159,13 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageWidgetSortOrderKey = 'widgetSortOrder';
   static const String secureStorageWidgetItemLimitKey = 'widgetItemLimit';
   static const String secureStorageWidgetOpenMinifluxKey = 'widgetOpenMiniflux';
+  static const String secureStorageBackgroundSyncIntervalMinutesKey =
+      'backgroundSyncIntervalMinutes';
+  static const String secureStoragePendingAudioDownloadAfterBackgroundSyncKey =
+      'pendingAudioDownloadAfterBackgroundSync';
+  static const String
+      secureStoragePendingAudioDownloadNewsIdsAfterBackgroundSyncKey =
+      'pendingAudioDownloadNewsIdsAfterBackgroundSync';
   static const String secureStorageTrueString = 'true';
   static const String secureStorageFalseString = 'false';
   static const String httpUnexpectedResponseErrorString = 'Unexpected response';
@@ -369,6 +376,7 @@ class FluxNewsState extends ChangeNotifier {
   String widgetSortOrder = FluxNewsState.sortOrderNewestFirstString;
   int widgetItemLimit = FluxNewsState.defaultWidgetItemLimit;
   bool widgetOpenMiniflux = false;
+  int backgroundSyncIntervalMinutes = 0;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
   bool glassAppBar = Platform.isIOS ? true : false;
@@ -1557,6 +1565,95 @@ class FluxNewsState extends ChangeNotifier {
     return true;
   }
 
+  void applyStoredConfigValuesHeadless() {
+    String? valueFor(String key) {
+      final value = storageValues[key];
+      return value == null || value.isEmpty ? null : value;
+    }
+
+    bool boolFor(String key, bool fallback) {
+      final value = valueFor(key);
+      if (value == null) return fallback;
+      return value == FluxNewsState.secureStorageTrueString;
+    }
+
+    int intFor(String key, int fallback) {
+      final value = valueFor(key);
+      if (value == null) return fallback;
+      return int.tryParse(value) ?? fallback;
+    }
+
+    minifluxURL = valueFor(FluxNewsState.secureStorageMinifluxURLKey);
+    minifluxAPIKey = valueFor(FluxNewsState.secureStorageMinifluxAPIKey);
+    final minifluxVersion =
+        valueFor(FluxNewsState.secureStorageMinifluxVersionKey);
+    if (minifluxVersion != null) {
+      minifluxVersionString = minifluxVersion;
+      minifluxVersionInt =
+          int.tryParse(minifluxVersion.replaceAll(RegExp(r'\D'), '')) ?? 0;
+    }
+    if (minifluxURL != null) {
+      insecureMinifluxURL = !minifluxURL!.toLowerCase().startsWith('https');
+    }
+
+    amountOfSyncedNews = intFor(
+        FluxNewsState.secureStorageAmountOfSyncedNewsKey, amountOfSyncedNews);
+    amountOfSearchedNews = intFor(
+        FluxNewsState.secureStorageAmountOfSearchedNewsKey,
+        amountOfSearchedNews);
+    amountOfSavedNews = intFor(
+        FluxNewsState.secureStorageAmountOfSavedNewsKey, amountOfSavedNews);
+    amountOfSavedStarredNews = intFor(
+        FluxNewsState.secureStorageAmountOfSavedStarredNewsKey,
+        amountOfSavedStarredNews);
+    sortOrder = valueFor(FluxNewsState.secureStorageSortOrderKey) ?? sortOrder;
+    newsStatus =
+        valueFor(FluxNewsState.secureStorageNewsStatusKey) ?? newsStatus;
+    syncReadNews =
+        boolFor(FluxNewsState.secureStorageSyncReadNewsKey, syncReadNews);
+    syncReadNewsAfterDays = intFor(
+        FluxNewsState.secureStorageSyncReadNewsAfterDaysKey,
+        syncReadNewsAfterDays);
+    autoDownloadAudioAfterSync = boolFor(
+        FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey,
+        autoDownloadAudioAfterSync);
+    downloadAudioOnlyOnWifi = boolFor(
+        FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey,
+        downloadAudioOnlyOnWifi);
+    audioDownloadRetentionDays = intFor(
+        FluxNewsState.secureStorageAudioDownloadRetentionDaysKey,
+        audioDownloadRetentionDays);
+    skipLongSync =
+        boolFor(FluxNewsState.secureStorageSkipLongSyncKey, skipLongSync);
+    syncReadStatusImmediately = boolFor(
+        FluxNewsState.secureStorageSyncReadStatusImmediatelyKey,
+        syncReadStatusImmediately);
+    widgetNewsStatus =
+        valueFor(FluxNewsState.secureStorageWidgetNewsStatusKey) ??
+            widgetNewsStatus;
+    widgetSortOrder = valueFor(FluxNewsState.secureStorageWidgetSortOrderKey) ??
+        widgetSortOrder;
+    widgetItemLimit =
+        intFor(FluxNewsState.secureStorageWidgetItemLimitKey, widgetItemLimit);
+    widgetOpenMiniflux = boolFor(
+        FluxNewsState.secureStorageWidgetOpenMinifluxKey, widgetOpenMiniflux);
+    backgroundSyncIntervalMinutes = intFor(
+        FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey,
+        backgroundSyncIntervalMinutes);
+
+    customHeaders.clear();
+    var headerCounter = 0;
+    while (true) {
+      final headerName = valueFor(
+          '${FluxNewsState.secureStorageCustomHeadersKeyPrefixKey}$headerCounter');
+      if (headerName == null) break;
+      customHeaders[headerName] = storageValues[
+              '${FluxNewsState.secureStorageCustomHeadersValuePrefixKey}$headerCounter'] ??
+          '';
+      headerCounter++;
+    }
+  }
+
   // One-time migration: rewrite every Keychain item so iOS updates the
   // kSecAttrAccessible attribute from WhenUnlocked to first_unlock. After this
   // runs once, readAll() no longer fails with -25308 during headless CarPlay
@@ -2023,6 +2120,12 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageWidgetOpenMinifluxKey) {
         if (value != '') {
           widgetOpenMiniflux = value == FluxNewsState.secureStorageTrueString;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey) {
+        if (value != '') {
+          backgroundSyncIntervalMinutes = int.tryParse(value) ?? 0;
         }
       }
 

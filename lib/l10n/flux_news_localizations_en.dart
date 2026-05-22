@@ -440,6 +440,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Immediately sync read status to server';
 
   @override
+  String get backgroundSyncInterval => 'Background sync interval';
+
+  @override
+  String get backgroundSyncOff => 'Off';
+
+  @override
   String get headerSettings =>
       'Set additional custom headers for accessing Miniflux';
 

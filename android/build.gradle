@@ -3,6 +3,9 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.configureEach {
+        resolutionStrategy.force "androidx.work:work-runtime:2.11.2"
+    }
     gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:deprecation"
@@ -13,6 +16,14 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.afterEvaluate {
+        if (project.plugins.hasPlugin('com.android.application') ||
+                project.plugins.hasPlugin('com.android.library')) {
+            if (project.android.compileSdk == null || project.android.compileSdk < 35) {
+                project.android.compileSdk = 35
+            }
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(':app')

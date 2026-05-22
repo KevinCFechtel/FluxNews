@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/ui/log_viewer.dart';
@@ -40,6 +41,7 @@ import 'ui/restore_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeFluxNewsBackgroundSync();
 
   if (Platform.isAndroid || Platform.isIOS) {
     // init the log system
