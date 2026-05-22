@@ -876,7 +876,8 @@ Future<News?> queryNewsByIdFromDB(FluxNewsState appState, int newsID) async {
   return news;
 }
 
-Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState) async {
+Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState,
+    {int? limit}) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db == null) return [];
 
@@ -894,6 +895,9 @@ Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState) async {
     whereClause = 'news.starred = ?';
     args = [1];
   }
+
+  final limitClause = limit == null ? '' : 'LIMIT ?';
+  final queryArgs = [...args, if (limit != null) limit];
 
   final rows = await appState.db!.rawQuery('''
         SELECT news.newsID,
@@ -926,7 +930,8 @@ Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState) async {
         LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
         WHERE $whereClause
         ORDER BY news.publishedAt $sortOrder
-      ''', args);
+        $limitClause
+      ''', queryArgs);
 
   final news = rows.map((row) => News.fromMap(row)).toList();
   final feedIconCache = <int, Uint8List?>{};
@@ -950,7 +955,7 @@ Future<int> queryUnreadNewsCountFromDB(FluxNewsState appState) async {
 }
 
 // update the status (read or unread) of the news in the database
-void updateNewsStatusInDB(
+Future<void> updateNewsStatusInDB(
     int newsID, String status, FluxNewsState appState) async {
   if (appState.debugMode) {
     logThis('updateNewsStatusInDB', 'Starting updating news status in DB',

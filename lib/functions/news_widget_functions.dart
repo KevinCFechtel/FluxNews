@@ -485,7 +485,8 @@ Future<void> markNewsAsReadAction(
     FluxNewsCounterState appCounterState) async {
   // mark a news as read, update the news read status in database
   try {
-    updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
+    await updateNewsStatusInDB(
+        news.newsID, FluxNewsState.readNewsStatus, appState);
   } catch (e) {
     logThis(
         'updateNewsStatusInDB',
@@ -557,7 +558,8 @@ Future<void> markNewsAsUnreadAction(
     FluxNewsCounterState appCounterState) async {
   // mark a news as unread, update the news unread status in database
   try {
-    updateNewsStatusInDB(news.newsID, FluxNewsState.unreadNewsStatus, appState);
+    await updateNewsStatusInDB(
+        news.newsID, FluxNewsState.unreadNewsStatus, appState);
   } catch (e) {
     logThis(
         'updateNewsStatusInDB',
@@ -624,7 +626,8 @@ Future<void> openNewsAction(News news, FluxNewsState appState,
     BuildContext context, bool overwriteOpenInMiniflux) async {
   // on tab we update the status of the news to read and open the news
   try {
-    updateNewsStatusInDB(news.newsID, FluxNewsState.readNewsStatus, appState);
+    await updateNewsStatusInDB(
+        news.newsID, FluxNewsState.readNewsStatus, appState);
   } catch (e) {
     logThis(
         'updateNewsStatusInDB',
@@ -639,6 +642,7 @@ Future<void> openNewsAction(News news, FluxNewsState appState,
       }
     }
   }
+  if (!context.mounted) return;
   if (appState.syncReadStatusImmediately && context.mounted) {
     unawaited(pushNewsStatusToServer(
       [news.newsID],
@@ -654,7 +658,12 @@ Future<void> openNewsAction(News news, FluxNewsState appState,
   context.read<FluxNewsCounterState>().listUpdated = true;
   context.read<FluxNewsCounterState>().refreshView();
   appState.refreshView();
-  unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+  if (Platform.isIOS) {
+    await FluxNewsWidgetService.updateWidgetSnapshot(appState);
+  } else {
+    unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+  }
+  if (!context.mounted) return;
 
   // there are difference on launching the news url between the platforms
   // on android and ios it's preferred to check first if the link can be opened

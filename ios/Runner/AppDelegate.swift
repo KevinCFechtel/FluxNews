@@ -54,10 +54,12 @@ var pendingWidgetAction: [String: String]?
           return
         }
         defaults.set(snapshot, forKey: "snapshot")
+        defaults.synchronize()
         result(nil)
       case "reloadWidgets":
         if #available(iOS 14.0, *) {
           WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+          WidgetCenter.shared.reloadAllTimelines()
         }
         result(nil)
       case "peekPendingAction":

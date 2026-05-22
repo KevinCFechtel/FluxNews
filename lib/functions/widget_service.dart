@@ -21,7 +21,8 @@ class FluxNewsWidgetService {
   static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
-    final news = await queryWidgetNewsFromDB(appState);
+    final news =
+        await queryWidgetNewsFromDB(appState, limit: Platform.isIOS ? 7 : null);
     final unreadCount = await queryUnreadNewsCountFromDB(appState);
     final payload = <String, Object?>{
       'unreadCount': unreadCount,
