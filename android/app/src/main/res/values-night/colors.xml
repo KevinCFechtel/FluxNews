@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="flux_news_widget_background">#18252B</color>
+    <color name="flux_news_widget_primary_text">#FFFFFFFF</color>
+    <color name="flux_news_widget_secondary_text">#AAFFFFFF</color>
+    <color name="flux_news_widget_icon_adapt_background">#F2F5F7</color>
+</resources>

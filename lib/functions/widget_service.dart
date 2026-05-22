@@ -74,12 +74,12 @@ class FluxNewsWidgetService {
     }
   }
 
-  static Future<bool> shouldSkipStartupSyncForPendingOpenNews() async {
+  static Future<bool> shouldSkipStartupSyncForPendingWidgetAction() async {
     if (!Platform.isAndroid && !Platform.isIOS) return false;
 
     try {
       final action = await peekPendingWidgetAction();
-      return action?['action'] == 'openNews';
+      return action?['action'] == 'openNews' || action?['action'] == 'sync';
     } catch (_) {
       return false;
     }

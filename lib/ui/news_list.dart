@@ -5,6 +5,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -68,19 +69,26 @@ class BodyNewsList extends StatelessWidget {
                                 alignment: Alignment.center,
                                 child: Text(
                                   appState.syncProcess
-                                      ? AppLocalizations.of(context)!.syncInProgress
-                                      : AppLocalizations.of(context)!.noNewEntries,
-                                  style: Theme.of(context).textTheme.headlineSmall,
+                                      ? AppLocalizations.of(context)!
+                                          .syncInProgress
+                                      : AppLocalizations.of(context)!
+                                          .noNewEntries,
+                                  style:
+                                      Theme.of(context).textTheme.headlineSmall,
                                 )),
                           )
                         ])
                       // otherwise create list view with ScrollablePositionedList
                       // to save scroll position persistent
                       : ListViewObserver(
-                          autoTriggerObserveTypes: const [ObserverAutoTriggerObserveType.scrollEnd],
-                          triggerOnObserveType: ObserverTriggerOnObserveType.directly,
+                          autoTriggerObserveTypes: const [
+                            ObserverAutoTriggerObserveType.scrollEnd
+                          ],
+                          triggerOnObserveType:
+                              ObserverTriggerOnObserveType.directly,
                           customTargetRenderSliverType: (renderObj) {
-                            return renderObj.runtimeType.toString() == 'RenderSuperSliverList';
+                            return renderObj.runtimeType.toString() ==
+                                'RenderSuperSliverList';
                           },
                           child: !appState.isTablet
                               ? appState.useSliverAppBar
@@ -90,11 +98,14 @@ class BodyNewsList extends StatelessWidget {
                                       slivers: <Widget>[
                                           SliverGlassAppBar(emptyBody: false),
                                           SuperSliverList.builder(
-                                              key: const PageStorageKey<String>('NewsList'),
+                                              key: const PageStorageKey<String>(
+                                                  'NewsList'),
                                               itemCount: snapshot.data!.length,
-                                              listController: appState.listController,
+                                              listController:
+                                                  appState.listController,
                                               itemBuilder: (context, i) {
-                                                return appState.orientation == Orientation.landscape
+                                                return appState.orientation ==
+                                                        Orientation.landscape
                                                     ? NewsRow(
                                                         news: snapshot.data![i],
                                                         context: context,
@@ -112,12 +123,14 @@ class BodyNewsList extends StatelessWidget {
                                               }),
                                         ])
                                   : SuperListView.builder(
-                                      key: const PageStorageKey<String>('NewsList'),
+                                      key: const PageStorageKey<String>(
+                                          'NewsList'),
                                       itemCount: snapshot.data!.length,
                                       controller: appState.scrollController,
                                       listController: appState.listController,
                                       itemBuilder: (context, i) {
-                                        return appState.orientation == Orientation.landscape
+                                        return appState.orientation ==
+                                                Orientation.landscape
                                             ? NewsRow(
                                                 news: snapshot.data![i],
                                                 context: context,
@@ -139,7 +152,8 @@ class BodyNewsList extends StatelessWidget {
                                   controller: appState.scrollController,
                                   listController: appState.listController,
                                   itemBuilder: (context, i) {
-                                    return appState.orientation == Orientation.landscape
+                                    return appState.orientation ==
+                                            Orientation.landscape
                                         ? NewsRow(
                                             news: snapshot.data![i],
                                             context: context,
@@ -155,106 +169,131 @@ class BodyNewsList extends StatelessWidget {
                                             newsList: snapshot.data,
                                           );
                                   }),
-                          onObserve: (resultModel) {
+                          onObserve: (resultModel) async {
+                            final appCounterState =
+                                context.read<FluxNewsCounterState>();
+                            final databaseError =
+                                AppLocalizations.of(context)!.databaseError;
+                            final communicationMinifluxError =
+                                AppLocalizations.of(context)!
+                                    .communicateionMinifluxError;
+                            final scaffoldMessenger =
+                                ScaffoldMessenger.of(context);
                             int lastItem = 0;
                             double lastItemTrailingMarginToViewport = -1.0;
                             int firstItem = 0;
-                            if (resultModel.displayingChildIndexList.isNotEmpty) {
-                              firstItem = resultModel.displayingChildIndexList.first;
-                              lastItem = resultModel.displayingChildIndexList.last;
-                              lastItemTrailingMarginToViewport =
-                                  resultModel.displayingChildModelList.last.trailingMarginToViewport;
+                            if (resultModel
+                                .displayingChildIndexList.isNotEmpty) {
+                              firstItem =
+                                  resultModel.displayingChildIndexList.first;
+                              lastItem =
+                                  resultModel.displayingChildIndexList.last;
+                              lastItemTrailingMarginToViewport = resultModel
+                                  .displayingChildModelList
+                                  .last
+                                  .trailingMarginToViewport;
                             }
                             appState.scrollPosition = firstItem;
 
                             appState.storage.write(
-                                key: FluxNewsState.secureStorageSavedScrollPositionKey, value: firstItem.toString());
+                                key: FluxNewsState
+                                    .secureStorageSavedScrollPositionKey,
+                                value: firstItem.toString());
 
                             if (appState.markAsReadOnScrollOver) {
                               // if the sync is in progress, no news should marked as read
                               if (appState.syncProcess == false) {
+                                final List<int> scrollIds = [];
                                 // set all news as read if the list reached the bottom (the last item is more then 95% visible)
-                                if (lastItem == snapshot.data!.length - 1 && lastItemTrailingMarginToViewport >= 0) {
+                                if (lastItem == snapshot.data!.length - 1 &&
+                                    lastItemTrailingMarginToViewport >= 0) {
                                   // to ensure that the list is at the bottom edge and not at the top edge
                                   // the amount of scrolled pixels must be greater 0
                                   // iterate through the whole news list and mark news as read
-                                  final List<int> scrollIds = [];
-                                  for (int i = 0; i < snapshot.data!.length; i++) {
+                                  for (int i = 0;
+                                      i < snapshot.data!.length;
+                                      i++) {
+                                    if (snapshot.data![i].status ==
+                                        FluxNewsState.readNewsStatus) {
+                                      continue;
+                                    }
                                     try {
-                                      updateNewsStatusInDB(
-                                          snapshot.data![i].newsID, FluxNewsState.readNewsStatus, appState);
+                                      await updateNewsStatusInDB(
+                                          snapshot.data![i].newsID,
+                                          FluxNewsState.readNewsStatus,
+                                          appState);
                                     } catch (e) {
                                       logThis(
                                           'updateNewsStatusInDB',
                                           'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
                                           LogLevel.ERROR);
 
-                                      if (context.read<FluxNewsState>().errorString !=
-                                          AppLocalizations.of(context)!.databaseError) {
-                                        context.read<FluxNewsState>().errorString =
-                                            AppLocalizations.of(context)!.databaseError;
-                                        context.read<FluxNewsState>().newError = true;
-                                        context.read<FluxNewsState>().refreshView();
+                                      if (appState.errorString !=
+                                          databaseError) {
+                                        appState.errorString = databaseError;
+                                        appState.newError = true;
+                                        appState.refreshView();
                                       }
                                     }
                                     scrollIds.add(snapshot.data![i].newsID);
-                                    snapshot.data![i].status = FluxNewsState.readNewsStatus;
+                                    snapshot.data![i].status =
+                                        FluxNewsState.readNewsStatus;
                                     // set the scroll position back to the top of the list
                                     appState.scrollPosition = 0;
-                                  }
-                                  if (appState.syncReadStatusImmediately && scrollIds.isNotEmpty) {
-                                    unawaited(pushNewsStatusToServer(
-                                      scrollIds,
-                                      FluxNewsState.readNewsStatus,
-                                      appState,
-                                      ScaffoldMessenger.of(context),
-                                      AppLocalizations.of(context)!.communicateionMinifluxError,
-                                      suppressAfterFirstError: true,
-                                    ));
                                   }
                                 } else {
                                   // if the list doesn't reached the bottom,
                                   // mark the news which got scrolled over as read.
                                   // Iterate through the news list from start
                                   // to the actual position and mark them as read
-                                  final List<int> scrollIds = [];
-                                  for (int i = 0; i < appState.scrollPosition; i++) {
-                                    if (snapshot.data![i].status != FluxNewsState.readNewsStatus) {
+                                  for (int i = 0;
+                                      i < appState.scrollPosition;
+                                      i++) {
+                                    if (snapshot.data![i].status !=
+                                        FluxNewsState.readNewsStatus) {
                                       try {
-                                        updateNewsStatusInDB(
-                                            snapshot.data![i].newsID, FluxNewsState.readNewsStatus, appState);
+                                        await updateNewsStatusInDB(
+                                            snapshot.data![i].newsID,
+                                            FluxNewsState.readNewsStatus,
+                                            appState);
                                       } catch (e) {
                                         logThis(
                                             'updateNewsStatusInDB',
                                             'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
                                             LogLevel.ERROR);
 
-                                        if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-                                          appState.errorString = AppLocalizations.of(context)!.databaseError;
+                                        if (appState.errorString !=
+                                            databaseError) {
+                                          appState.errorString = databaseError;
                                           appState.newError = true;
                                           appState.refreshView();
                                         }
                                       }
                                       scrollIds.add(snapshot.data![i].newsID);
-                                      snapshot.data![i].status = FluxNewsState.readNewsStatus;
+                                      snapshot.data![i].status =
+                                          FluxNewsState.readNewsStatus;
                                     }
                                   }
-                                  if (appState.syncReadStatusImmediately && scrollIds.isNotEmpty) {
+                                }
+                                if (scrollIds.isNotEmpty) {
+                                  if (appState.syncReadStatusImmediately) {
                                     unawaited(pushNewsStatusToServer(
                                       scrollIds,
                                       FluxNewsState.readNewsStatus,
                                       appState,
-                                      ScaffoldMessenger.of(context),
-                                      AppLocalizations.of(context)!.communicateionMinifluxError,
+                                      scaffoldMessenger,
+                                      communicationMinifluxError,
                                       suppressAfterFirstError: true,
                                     ));
                                   }
+                                  unawaited(FluxNewsWidgetService
+                                      .updateWidgetSnapshot(appState));
                                 }
                               }
                               // mark the list as updated to recalculate the news count
-                              context.read<FluxNewsCounterState>().listUpdated = true;
+                              appCounterState.listUpdated = true;
                               appState.refreshView();
-                              context.read<FluxNewsCounterState>().refreshView();
+                              appCounterState.refreshView();
                             }
                           },
                         );

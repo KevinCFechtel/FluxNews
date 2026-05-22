@@ -13,6 +13,8 @@ struct FluxNewsWidgetItem: Decodable, Identifiable {
   let feedInitial: String?
   let iconData: String?
   let iconMimeType: String?
+  let manualAdaptLightModeToIcon: Bool?
+  let manualAdaptDarkModeToIcon: Bool?
 }
 
 struct FluxNewsWidgetSnapshot: Decodable {
@@ -57,6 +59,7 @@ struct FluxNewsProvider: TimelineProvider {
 
 struct FluxNewsHeadlinesWidgetView: View {
   @Environment(\.widgetFamily) private var family
+  @Environment(\.colorScheme) private var colorScheme
   let entry: FluxNewsEntry
 
   var body: some View {
@@ -119,8 +122,18 @@ struct FluxNewsHeadlinesWidgetView: View {
     .padding(.horizontal, 12)
     .padding(.top, topPadding)
     .padding(.bottom, 8)
-    .containerBackground(Color(red: 0.09, green: 0.15, blue: 0.18), for: .widget)
-    .foregroundStyle(.white)
+    .containerBackground(widgetBackground, for: .widget)
+    .foregroundStyle(widgetForeground)
+  }
+
+  private var widgetBackground: Color {
+    colorScheme == .dark
+      ? Color(red: 0.09, green: 0.15, blue: 0.18)
+      : Color(red: 0.95, green: 0.97, blue: 0.98)
+  }
+
+  private var widgetForeground: Color {
+    colorScheme == .dark ? .white : Color(red: 0.08, green: 0.11, blue: 0.13)
   }
 
   private var rowSpacing: CGFloat {
@@ -160,6 +173,7 @@ struct FluxNewsHeadlinesWidgetView: View {
 }
 
 struct FeedIconView: View {
+  @Environment(\.colorScheme) private var colorScheme
   let item: FluxNewsWidgetItem
 
   var body: some View {
@@ -167,8 +181,10 @@ struct FeedIconView: View {
       Image(uiImage: image)
         .resizable()
         .scaledToFit()
+        .frame(width: 18, height: 18)
+        .padding(1)
         .frame(width: 20, height: 20)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .background(iconBackground, in: RoundedRectangle(cornerRadius: 4))
     } else {
       Text((item.feedInitial ?? "").prefix(1).uppercased())
         .font(.caption2)
@@ -177,6 +193,16 @@ struct FeedIconView: View {
         .background(Color(red: 0.2, green: 0.37, blue: 0.42), in: RoundedRectangle(cornerRadius: 4))
         .foregroundStyle(.white)
     }
+  }
+
+  private var iconBackground: Color {
+    if colorScheme == .dark && item.manualAdaptDarkModeToIcon == true {
+      return Color.white
+    }
+    if colorScheme == .light && item.manualAdaptLightModeToIcon == true {
+      return Color.black
+    }
+    return Color.clear
   }
 
   private var image: UIImage? {

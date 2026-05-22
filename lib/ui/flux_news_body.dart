@@ -169,11 +169,11 @@ class FluxNewsBody extends StatelessWidget {
 
       appState.startUp = false;
 
-      final skipStartupSyncForWidgetOpen =
-          await FluxNewsWidgetService.shouldSkipStartupSyncForPendingOpenNews()
-              .onError((error, stackTrace) => false);
+      final skipStartupSyncForWidgetAction = await FluxNewsWidgetService
+              .shouldSkipStartupSyncForPendingWidgetAction()
+          .onError((error, stackTrace) => false);
 
-      if ((appState.syncOnStart && !skipStartupSyncForWidgetOpen) ||
+      if ((appState.syncOnStart && !skipStartupSyncForWidgetAction) ||
           appState.syncNow) {
         // sync on startup or now
         if (context.mounted) {
@@ -273,7 +273,10 @@ class FluxNewsBody extends StatelessWidget {
                 if (appState.floatingButtonAction ==
                     FluxNewsState.floatingButtonMarkAsReadAction) {
                   // mark news as read
-                  markNewsAsReadInDB(appState);
+                  await markNewsAsReadInDB(appState);
+                  unawaited(
+                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
+                  if (!context.mounted) return;
                   if (appState.selectedCategoryElementType ==
                       FluxNewsState.categoryElementType) {
                     await queryNextCategoryFromDB(appState, context)
@@ -424,7 +427,10 @@ class FluxNewsBody extends StatelessWidget {
                 if (appState.floatingButtonAction ==
                     FluxNewsState.floatingButtonMarkAsReadAction) {
                   // mark news as read
-                  markNewsAsReadInDB(appState);
+                  await markNewsAsReadInDB(appState);
+                  unawaited(
+                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
+                  if (!context.mounted) return;
                   if (appState.selectedCategoryElementType ==
                       FluxNewsState.categoryElementType) {
                     await queryNextCategoryFromDB(appState, context)

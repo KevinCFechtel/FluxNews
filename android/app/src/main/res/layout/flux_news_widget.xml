@@ -21,7 +21,7 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:text="Flux News"
-            android:textColor="@android:color/white"
+            android:textColor="@color/flux_news_widget_primary_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
-            android:textColor="@android:color/white"
+            android:textColor="@color/flux_news_widget_primary_text"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:text="unread"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/flux_news_widget_secondary_text"
             android:textSize="12sp" />
 
         <TextView
@@ -64,7 +64,7 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:text="Last sync: never"
-        android:textColor="#AAFFFFFF"
+        android:textColor="@color/flux_news_widget_secondary_text"
         android:textSize="11sp" />
 
     <ListView
@@ -84,7 +84,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:text="No news"
-        android:textColor="#AAFFFFFF"
+        android:textColor="@color/flux_news_widget_secondary_text"
         android:textSize="13sp"
         android:visibility="gone" />
 </LinearLayout>

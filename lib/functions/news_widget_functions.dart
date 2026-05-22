@@ -770,7 +770,9 @@ void showDeleteAllDialog(BuildContext context, FluxNewsState appState,
                       ? await queryUnreadNewsIDsForCurrentView(appState)
                       : <int>[];
                   // mark news as read
-                  markNewsAsReadInDB(appState);
+                  await markNewsAsReadInDB(appState);
+                  unawaited(
+                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
                   if (appState.syncReadStatusImmediately &&
                       idsToSync.isNotEmpty) {
                     unawaited(pushNewsStatusToServer(

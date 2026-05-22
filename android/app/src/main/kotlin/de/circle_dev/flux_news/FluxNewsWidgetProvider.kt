@@ -172,7 +172,7 @@ class FluxNewsWidgetFactory(private val context: Context) : RemoteViewsService.R
     val adaptInLightMode = item.optBoolean("manualAdaptLightModeToIcon", false)
     val background = when {
       darkModeEnabled && adaptInDarkMode -> R.drawable.flux_news_widget_icon_light_background
-      !darkModeEnabled && adaptInLightMode -> R.drawable.flux_news_widget_icon_dark_background
+      !darkModeEnabled && adaptInLightMode -> R.drawable.flux_news_widget_icon_light_background
       else -> 0
     }
 

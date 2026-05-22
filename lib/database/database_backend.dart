@@ -1169,7 +1169,7 @@ Future<void> updateExpandedFulltextLimitOfFeedInDB(
 }
 
 // update the status (read or unread) of the news in the database
-void markNewsAsReadInDB(FluxNewsState appState) async {
+Future<void> markNewsAsReadInDB(FluxNewsState appState) async {
   if (appState.debugMode) {
     logThis('markNewsAsReadInDB', 'Starting marking news as read in DB',
         LogLevel.INFO);
