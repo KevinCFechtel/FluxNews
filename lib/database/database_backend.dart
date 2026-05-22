@@ -34,6 +34,25 @@ String _buildChunkedNotInClause(
   return buffer.toString();
 }
 
+String _buildChunkedInClause(
+    String columnName, List<int> ids, List<Object?> parameters) {
+  if (ids.isEmpty) {
+    return '1 = 0';
+  }
+
+  final clauses = <String>[];
+  for (int i = 0; i < ids.length; i += _sqliteInChunkSize) {
+    final int end = (i + _sqliteInChunkSize < ids.length)
+        ? i + _sqliteInChunkSize
+        : ids.length;
+    final List<int> chunk = ids.sublist(i, end);
+    final String placeholders = List.filled(chunk.length, '?').join(',');
+    clauses.add('$columnName IN ($placeholders)');
+    parameters.addAll(chunk);
+  }
+  return '(${clauses.join(' OR ')})';
+}
+
 Future<bool> _feedHasProtectedNews(
     Database db, int feedID, List<int> protectedNewsIDs) async {
   if (protectedNewsIDs.isEmpty) {
@@ -706,9 +725,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
         newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
       } else {
         // if the feed id is not -1 a feed or a category with multiple feeds is selected
-        for (int feedID in appState.feedIDs!) {
-          List<Map<String, Object?>> queryResult =
-              await appState.db!.rawQuery('''
+        final feedParameters = <Object?>[];
+        final feedIdClause = _buildChunkedInClause(
+            'news.feedID', appState.feedIDs!, feedParameters);
+        List<Map<String, Object?>> queryResult = await appState.db!.rawQuery('''
                     SELECT news.newsID, 
                         news.feedID, 
                         substr(news.title, 1, 1000000) as title, 
@@ -738,10 +758,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                     FROM news 
                     LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
                     WHERE (news.status LIKE ?) 
-                      AND news.feedID LIKE ? 
-                    ORDER BY news.publishedAt $sortOrder''', [status, feedID]);
-          newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
-        }
+                      AND $feedIdClause
+                    ORDER BY news.publishedAt $sortOrder''',
+            [status, ...feedParameters]);
+        newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
       }
     } else {
       // if the feed id is null, "all news" are selected
