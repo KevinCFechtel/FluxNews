@@ -24,17 +24,25 @@ bool _backgroundSyncRunning = false;
 void fluxNewsBackgroundCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     WidgetsFlutterBinding.ensureInitialized();
+    await _initializeBackgroundLogging();
+    logThis(
+        'backgroundSync',
+        'WorkManager task received: task=$task inputData=${inputData ?? {}}',
+        LogLevel.INFO);
     if (task != fluxNewsBackgroundSyncTask &&
         task != fluxNewsBackgroundSyncUniqueName &&
         task != Workmanager.iOSBackgroundTask) {
+      logThis('backgroundSync', 'Ignored unknown WorkManager task: $task',
+          LogLevel.WARNING);
       return true;
     }
 
     try {
       await runFluxNewsBackgroundSync();
       return true;
-    } catch (e) {
-      logThis('backgroundSync', 'Background sync failed: $e', LogLevel.ERROR);
+    } catch (e, stackTrace) {
+      logThis('backgroundSync', 'Background sync failed: $e\n$stackTrace',
+          LogLevel.ERROR);
       return false;
     }
   });
@@ -42,6 +50,8 @@ void fluxNewsBackgroundCallbackDispatcher() {
 
 Future<void> initializeFluxNewsBackgroundSync() async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
+  logThis('backgroundSync', 'Initializing WorkManager background sync',
+      LogLevel.INFO);
   await Workmanager().initialize(fluxNewsBackgroundCallbackDispatcher);
 }
 
@@ -49,10 +59,19 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
   final interval = appState.backgroundSyncIntervalMinutes;
   if (interval == 0) {
+    logThis(
+        'backgroundSync',
+        'Cancelling background sync because interval is disabled',
+        LogLevel.INFO);
     await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
     return;
   }
 
+  logThis(
+      'backgroundSync',
+      'Registering periodic background sync: interval=${interval}m '
+          'platform=${Platform.operatingSystem}',
+      LogLevel.INFO);
   await Workmanager().registerPeriodicTask(
     fluxNewsBackgroundSyncUniqueName,
     fluxNewsBackgroundSyncTask,
@@ -64,20 +83,46 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
 }
 
 Future<void> runFluxNewsBackgroundSync() async {
-  if (_backgroundSyncRunning) return;
+  final startedAt = DateTime.now();
+  if (_backgroundSyncRunning) {
+    logThis(
+        'backgroundSync',
+        'Skipped: background sync already running in this isolate',
+        LogLevel.INFO);
+    return;
+  }
   _backgroundSyncRunning = true;
   final appState = FluxNewsState();
   FluxNewsSyncLock? syncLock;
 
   try {
     await _initializeBackgroundLogging();
+    logThis(
+        'backgroundSync',
+        'Background sync execution started at ${startedAt.toIso8601String()}',
+        LogLevel.INFO);
     syncLock = await FluxNewsSyncLock.tryAcquire('background');
-    if (syncLock == null) return;
+    if (syncLock == null) {
+      logThis(
+          'backgroundSync',
+          'Skipped: foreground/background sync lock is already held',
+          LogLevel.INFO);
+      return;
+    }
 
-    logThis('backgroundSync', 'Starting background sync', LogLevel.INFO);
+    logThis('backgroundSync', 'Reading background sync configuration',
+        LogLevel.INFO);
     await appState.readConfigValues();
     appState.applyStoredConfigValuesHeadless();
     appState.db = await appState.initializeDB();
+    logThis(
+        'backgroundSync',
+        'Configuration loaded: backgroundInterval='
+            '${appState.backgroundSyncIntervalMinutes}m '
+            'minifluxUrlConfigured=${appState.minifluxURL != null} '
+            'apiKeyConfigured=${appState.minifluxAPIKey != null} '
+            'autoDownloadAudioAfterSync=${appState.autoDownloadAudioAfterSync}',
+        LogLevel.INFO);
 
     if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
       logThis('backgroundSync', 'Skipped: missing Miniflux config',
@@ -91,33 +136,69 @@ Future<void> runFluxNewsBackgroundSync() async {
       logThis('backgroundSync', 'Auth check failed: $error', LogLevel.ERROR);
       return false;
     });
-    if (!authCheck) return;
+    if (!authCheck) {
+      logThis('backgroundSync', 'Skipped: Miniflux auth check failed',
+          LogLevel.WARNING);
+      return;
+    }
 
+    logThis('backgroundSync', 'Running Miniflux sync steps', LogLevel.INFO);
     await toggleNewsAsRead(appState);
-    final newNews = await fetchNews(appState)
-        .onError((_, __) => NewsList(news: [], newsCount: 0));
+    final newNews = await fetchNews(appState).onError((error, stackTrace) {
+      logThis('backgroundSync', 'Fetching news failed: $error', LogLevel.ERROR);
+      return NewsList(news: [], newsCount: 0);
+    });
+    logThis(
+        'backgroundSync',
+        'Fetched news: count=${newNews.news.length} '
+            'reportedCount=${newNews.newsCount}',
+        LogLevel.INFO);
     await markNotFetchedNewsAsRead(newNews, appState);
 
-    final categories = await fetchCategoryInformation(appState)
-        .onError((_, __) => Categories(categories: []));
+    final categories =
+        await fetchCategoryInformation(appState).onError((error, stackTrace) {
+      logThis('backgroundSync', 'Fetching categories failed: $error',
+          LogLevel.ERROR);
+      return Categories(categories: []);
+    });
+    logThis(
+        'backgroundSync',
+        'Fetched categories: count=${categories.categories.length}',
+        LogLevel.INFO);
     await insertCategoriesInDB(categories, appState);
     await insertNewsInDB(newNews, appState);
     AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
 
-    final starredNews = await fetchStarredNews(appState)
-        .onError((_, __) => NewsList(news: [], newsCount: 0));
+    final starredNews =
+        await fetchStarredNews(appState).onError((error, stackTrace) {
+      logThis('backgroundSync', 'Fetching starred news failed: $error',
+          LogLevel.ERROR);
+      return NewsList(news: [], newsCount: 0);
+    });
+    logThis(
+        'backgroundSync',
+        'Fetched starred news: count=${starredNews.news.length}',
+        LogLevel.INFO);
     await updateStarredNewsInDB(starredNews, appState);
     AudioDownloadService.refreshMediaProgressionCacheFromSync(starredNews.news);
 
     await cleanUnstarredNews(appState);
     await cleanStarredNews(appState);
+    logThis('backgroundSync', 'Updating widget snapshot after background sync',
+        LogLevel.INFO);
     await FluxNewsWidgetService.updateWidgetSnapshot(appState);
     await _markPendingForegroundAudioDownloads(appState, newNews.news);
-    logThis('backgroundSync', 'Finished background sync', LogLevel.INFO);
+    logThis(
+        'backgroundSync',
+        'Finished background sync in '
+            '${DateTime.now().difference(startedAt).inSeconds}s',
+        LogLevel.INFO);
   } finally {
     appState.db = null;
     await syncLock?.release();
     _backgroundSyncRunning = false;
+    logThis('backgroundSync', 'Background sync execution cleanup finished',
+        LogLevel.INFO);
   }
 }
 
@@ -147,12 +228,29 @@ Future<void> _initializeBackgroundLogging() async {
 
 Future<void> _markPendingForegroundAudioDownloads(
     FluxNewsState appState, List<News> newNews) async {
-  if (!appState.autoDownloadAudioAfterSync || newNews.isEmpty) return;
+  if (!appState.autoDownloadAudioAfterSync) {
+    logThis(
+        'backgroundSync',
+        'Foreground audio downloads not marked: setting disabled',
+        LogLevel.INFO);
+    return;
+  }
+  if (newNews.isEmpty) {
+    logThis('backgroundSync',
+        'Foreground audio downloads not marked: no new news', LogLevel.INFO);
+    return;
+  }
   final audioNewsIds = newNews
       .where((news) => news.attachments?.isNotEmpty == true)
       .map((news) => news.newsID)
       .toList();
-  if (audioNewsIds.isEmpty) return;
+  if (audioNewsIds.isEmpty) {
+    logThis(
+        'backgroundSync',
+        'Foreground audio downloads not marked: no audio attachments',
+        LogLevel.INFO);
+    return;
+  }
 
   await appState.storage.write(
       key:
@@ -162,6 +260,11 @@ Future<void> _markPendingForegroundAudioDownloads(
       key: FluxNewsState
           .secureStoragePendingAudioDownloadNewsIdsAfterBackgroundSyncKey,
       value: jsonEncode(audioNewsIds));
+  logThis(
+      'backgroundSync',
+      'Marked pending foreground audio downloads: '
+          'count=${audioNewsIds.length}',
+      LogLevel.INFO);
 }
 
 Future<void> runPendingForegroundAudioDownloads(FluxNewsState appState) async {
