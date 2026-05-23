@@ -43,7 +43,12 @@ struct FluxNewsProvider: TimelineProvider {
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<FluxNewsEntry>) -> Void) {
     let entry = FluxNewsEntry(date: Date(), snapshot: loadSnapshot())
-    completion(Timeline(entries: [entry], policy: .never))
+    let nextRefresh = Calendar.current.date(
+      byAdding: .minute,
+      value: 30,
+      to: Date()
+    ) ?? Date().addingTimeInterval(30 * 60)
+    completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
   }
 
   private func loadSnapshot() -> FluxNewsWidgetSnapshot {
@@ -150,17 +155,28 @@ struct FluxNewsHeadlinesWidgetView: View {
 
   private var lastUpdatedText: String {
     guard !entry.snapshot.lastUpdated.isEmpty else { return "Last sync: never" }
-    guard let date = Self.isoFormatter.date(from: entry.snapshot.lastUpdated) else {
+    guard let date = Self.date(from: entry.snapshot.lastUpdated) else {
       return "Last sync: \(entry.snapshot.lastUpdated)"
     }
     return "Last sync: \(Self.localizedDateTimeFormatter.string(from: date))"
   }
 
-  private static let isoFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
-    return formatter
+  private static func date(from value: String) -> Date? {
+    for formatter in isoFormatters {
+      if let date = formatter.date(from: value) {
+        return date
+      }
+    }
+    return nil
+  }
+
+  private static let isoFormatters: [DateFormatter] = {
+    ["yyyy-MM-dd'T'HH:mm:ss.SSSSSS", "yyyy-MM-dd'T'HH:mm:ss.SSS", "yyyy-MM-dd'T'HH:mm:ss"].map { format in
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.dateFormat = format
+      return formatter
+    }
   }()
 
   private static let localizedDateTimeFormatter: DateFormatter = {
