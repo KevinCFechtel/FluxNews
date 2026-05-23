@@ -7,13 +7,12 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    as sec_store;
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -868,11 +867,6 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   FluxNewsAudioHandler? _audioHandler;
   StreamSubscription<PlaybackState>? _completionSubscription;
   StreamSubscription<SleepTimerEvent>? _sleepTimerSubscription;
-  final _storage = sec_store.FlutterSecureStorage(
-    iOptions: const sec_store.IOSOptions(
-      accessibility: sec_store.KeychainAccessibility.first_unlock,
-    ),
-  );
 
   @override
   void initState() {
@@ -961,10 +955,8 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
       // than deleting lets _loadProgress / _resolveSavedPosition distinguish
       // "explicitly reset" from "never played" and ignore stale server values.
       await handler.stop();
-      await _storage.write(
-        key: '${FluxNewsState.audioProgressKeyPrefix}${activeNews.newsID}',
-        value: '0',
-      );
+      await AudioProgressStore.write(
+          AudioProgressStore.keyForNews(activeNews.newsID), '0');
 
       if (completedAttachment != null) {
         syncMediaProgression(widget.appState, activeNews.newsID,

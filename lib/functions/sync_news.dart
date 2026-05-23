@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/sync_lock.dart';
@@ -475,14 +476,10 @@ Future<void> _syncDownloadedAudioProgressions(
     newsID ??= await queryNewsIdByAttachmentId(appState, download.attachmentID);
     if (newsID == null) continue;
 
-    // Read local Keychain position (milliseconds).
-    String? localStr;
-    try {
-      localStr = await appState.storage
-          .read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
-    } catch (_) {
-      continue;
-    }
+    // Read local SharedPreferences position (milliseconds). Legacy Keychain
+    // values are migrated by AudioProgressStore on first read.
+    final localStr =
+        await AudioProgressStore.read(AudioProgressStore.keyForNews(newsID));
     final localMs = localStr != null ? int.tryParse(localStr) ?? 0 : 0;
     if (localMs <= 0) continue;
 
