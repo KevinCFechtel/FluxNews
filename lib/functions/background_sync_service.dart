@@ -12,6 +12,7 @@ import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 const String fluxNewsBackgroundSyncTask = 'fluxNewsBackgroundSync';
@@ -19,6 +20,8 @@ const String fluxNewsBackgroundSyncUniqueName =
     'dev.kevincfechtel.fluxNews.backgroundSync';
 
 bool _backgroundSyncRunning = false;
+const String _foregroundActiveAtKey = 'flux_news_foreground_active_at';
+const Duration _foregroundActiveStaleAfter = Duration(minutes: 2);
 
 @pragma('vm:entry-point')
 void fluxNewsBackgroundCallbackDispatcher() {
@@ -57,7 +60,7 @@ Future<void> initializeFluxNewsBackgroundSync() async {
 
 Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
-  final storedInterval = appState.backgroundSyncIntervalMinutes;
+  var storedInterval = appState.backgroundSyncIntervalMinutes;
   if (storedInterval == 0) {
     logThis(
         'backgroundSync',
@@ -68,6 +71,23 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
   }
 
   const interval = FluxNewsState.enabledBackgroundSyncIntervalMinutes;
+  if (storedInterval != interval) {
+    logThis(
+        'backgroundSync',
+        'Normalizing stored background sync interval from '
+            '${storedInterval}m to ${interval}m',
+        LogLevel.INFO);
+    storedInterval = interval;
+    appState.backgroundSyncIntervalMinutes = interval;
+    await appState.storage.write(
+        key: FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey,
+        value: interval.toString());
+  }
+
+  if (Platform.isIOS) {
+    await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
+  }
+
   logThis(
       'backgroundSync',
       'Registering periodic background sync: interval=${interval}m '
@@ -99,6 +119,12 @@ Future<void> runFluxNewsBackgroundSync() async {
 
   try {
     await _initializeBackgroundLogging();
+    if (await isFluxNewsForegroundActive()) {
+      logThis('backgroundSync',
+          'Skipped: app is currently active in foreground', LogLevel.INFO);
+      return;
+    }
+
     logThis(
         'backgroundSync',
         'Background sync execution started at ${startedAt.toIso8601String()}',
@@ -116,6 +142,21 @@ Future<void> runFluxNewsBackgroundSync() async {
         LogLevel.INFO);
     await appState.readConfigValues();
     appState.applyStoredConfigValuesHeadless();
+    if (appState.backgroundSyncIntervalMinutes > 0 &&
+        appState.backgroundSyncIntervalMinutes !=
+            FluxNewsState.enabledBackgroundSyncIntervalMinutes) {
+      logThis(
+          'backgroundSync',
+          'Normalizing loaded background sync interval from '
+              '${appState.backgroundSyncIntervalMinutes}m to '
+              '${FluxNewsState.enabledBackgroundSyncIntervalMinutes}m',
+          LogLevel.INFO);
+      appState.backgroundSyncIntervalMinutes =
+          FluxNewsState.enabledBackgroundSyncIntervalMinutes;
+      await appState.storage.write(
+          key: FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey,
+          value: FluxNewsState.enabledBackgroundSyncIntervalMinutes.toString());
+    }
     appState.db = await appState.initializeDB();
     logThis(
         'backgroundSync',
@@ -201,6 +242,71 @@ Future<void> runFluxNewsBackgroundSync() async {
     _backgroundSyncRunning = false;
     logThis('backgroundSync', 'Background sync execution cleanup finished',
         LogLevel.INFO);
+  }
+}
+
+Future<void> markFluxNewsForegroundActive() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        _foregroundActiveAtKey, DateTime.now().toIso8601String());
+    logThis('backgroundSync', 'Marked app foreground active', LogLevel.INFO);
+  } catch (e) {
+    logThis('backgroundSync', 'Could not mark app foreground active: $e',
+        LogLevel.WARNING);
+  }
+}
+
+Future<void> markFluxNewsForegroundInactive() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_foregroundActiveAtKey);
+    logThis('backgroundSync', 'Marked app foreground inactive', LogLevel.INFO);
+  } catch (e) {
+    logThis('backgroundSync', 'Could not mark app foreground inactive: $e',
+        LogLevel.WARNING);
+  }
+}
+
+Future<bool> isFluxNewsForegroundActive() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return false;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(_foregroundActiveAtKey);
+    if (value == null || value.isEmpty) return false;
+
+    final activeAt = DateTime.tryParse(value);
+    if (activeAt == null) {
+      await prefs.remove(_foregroundActiveAtKey);
+      logThis(
+          'backgroundSync',
+          'Ignoring invalid foreground active marker: $value',
+          LogLevel.WARNING);
+      return false;
+    }
+
+    final age = DateTime.now().difference(activeAt);
+    if (age > _foregroundActiveStaleAfter) {
+      await prefs.remove(_foregroundActiveAtKey);
+      logThis(
+          'backgroundSync',
+          'Ignoring stale foreground active marker: '
+              'ageSeconds=${age.inSeconds}',
+          LogLevel.INFO);
+      return false;
+    }
+
+    logThis(
+        'backgroundSync',
+        'Foreground active marker found: ageSeconds=${age.inSeconds}',
+        LogLevel.INFO);
+    return true;
+  } catch (e) {
+    logThis('backgroundSync', 'Could not read foreground active marker: $e',
+        LogLevel.WARNING);
+    return false;
   }
 }
 

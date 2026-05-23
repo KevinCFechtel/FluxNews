@@ -27,7 +27,7 @@ var pendingWidgetAction: [String: String]?
     }
     WorkmanagerPlugin.registerPeriodicTask(
       withIdentifier: fluxNewsBackgroundSyncIdentifier,
-      frequency: NSNumber(value: 15 * 60)
+      frequency: NSNumber(value: 30 * 60)
     )
 
     NotificationCenter.default.addObserver(

@@ -32,12 +32,19 @@ class FluxNewsWidgetService {
     final news =
         await queryWidgetNewsFromDB(appState, limit: Platform.isIOS ? 7 : null);
     final unreadCount = await queryUnreadNewsCountFromDB(appState);
+    final lastUpdated = DateTime.now().toIso8601String();
     final payload = <String, Object?>{
       'unreadCount': unreadCount,
-      'lastUpdated': DateTime.now().toIso8601String(),
+      'lastUpdated': lastUpdated,
       'items': news.map(_widgetItemFromNews).toList(),
     };
 
+    logThis(
+        'WidgetService',
+        'Updating widget snapshot: platform=${Platform.operatingSystem} '
+            'items=${news.length} unreadCount=$unreadCount '
+            'lastUpdated=$lastUpdated',
+        LogLevel.INFO);
     await _saveSnapshotAndReload(jsonEncode(payload));
   }
 
@@ -46,17 +53,35 @@ class FluxNewsWidgetService {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(_widgetGroup);
       }
-      await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);
-      await HomeWidget.updateWidget(
+      final saveResult =
+          await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);
+      String? savedSnapshot;
+      if (Platform.isIOS) {
+        savedSnapshot = await HomeWidget.getWidgetData<String>(_snapshotKey);
+      }
+      final updateResult = await HomeWidget.updateWidget(
         name: _iosWidgetKind,
         iOSName: _iosWidgetKind,
         androidName: 'FluxNewsWidgetProvider',
         qualifiedAndroidName: _androidWidgetProvider,
       );
+      logThis(
+          'WidgetService',
+          'Widget snapshot saved and reload requested: '
+              'saveResult=$saveResult updateResult=$updateResult '
+              'snapshotBytes=${snapshot.length} '
+              'iosReadbackBytes=${savedSnapshot?.length}',
+          LogLevel.INFO);
     } on MissingPluginException {
       logThis(
           'WidgetService',
           'home_widget plugin is unavailable in this Flutter engine',
+          LogLevel.ERROR);
+      rethrow;
+    } catch (e, stackTrace) {
+      logThis(
+          'WidgetService',
+          'Could not save or reload widget snapshot: $e\n$stackTrace',
           LogLevel.ERROR);
       rethrow;
     }

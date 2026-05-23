@@ -1953,16 +1953,21 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
     with
         AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper>,
         WidgetsBindingObserver {
+  Timer? _foregroundActiveTimer;
+
   // init the state of FluxNewsBody to load the config and the data on startup
   @override
   void initState() {
     widget.onInit();
     WidgetsBinding.instance.addObserver(this);
+    _startForegroundActiveHeartbeat();
     super.initState();
   }
 
   @override
   void dispose() {
+    _foregroundActiveTimer?.cancel();
+    unawaited(markFluxNewsForegroundInactive());
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1970,10 +1975,26 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _startForegroundActiveHeartbeat();
       widget.onResume();
       FluxNewsWidgetService.handlePendingWidgetAction(
           context, context.read<FluxNewsState>());
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      _foregroundActiveTimer?.cancel();
+      _foregroundActiveTimer = null;
+      unawaited(markFluxNewsForegroundInactive());
     }
+  }
+
+  void _startForegroundActiveHeartbeat() {
+    _foregroundActiveTimer?.cancel();
+    unawaited(markFluxNewsForegroundActive());
+    _foregroundActiveTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      unawaited(markFluxNewsForegroundActive());
+    });
   }
 
   @override
