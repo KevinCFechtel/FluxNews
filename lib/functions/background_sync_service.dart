@@ -115,7 +115,7 @@ Future<void> runFluxNewsBackgroundSync() async {
     await _markPendingForegroundAudioDownloads(appState, newNews.news);
     logThis('backgroundSync', 'Finished background sync', LogLevel.INFO);
   } finally {
-    await appState.db?.close();
+    appState.db = null;
     await syncLock?.release();
     _backgroundSyncRunning = false;
   }

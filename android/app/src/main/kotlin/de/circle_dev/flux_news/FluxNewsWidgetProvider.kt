@@ -20,7 +20,7 @@ import org.json.JSONObject
 
 class FluxNewsWidgetProvider : AppWidgetProvider() {
   companion object {
-    const val PREFS_NAME = "flux_news_widget"
+    const val PREFS_NAME = "HomeWidgetPreferences"
     const val KEY_SNAPSHOT = "snapshot"
   }
 

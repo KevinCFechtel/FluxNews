@@ -22,6 +22,9 @@ var pendingWidgetAction: [String: String]?
       setupDynamicIslandChannel()
     }
     setupWidgetChannel()
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
     WorkmanagerPlugin.registerPeriodicTask(
       withIdentifier: fluxNewsBackgroundSyncIdentifier,
       frequency: NSNumber(value: 15 * 60)
