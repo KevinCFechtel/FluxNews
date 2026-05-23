@@ -161,6 +161,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageWidgetOpenMinifluxKey = 'widgetOpenMiniflux';
   static const String secureStorageBackgroundSyncIntervalMinutesKey =
       'backgroundSyncIntervalMinutes';
+  static const int enabledBackgroundSyncIntervalMinutes = 30;
   static const String secureStoragePendingAudioDownloadAfterBackgroundSyncKey =
       'pendingAudioDownloadAfterBackgroundSync';
   static const String

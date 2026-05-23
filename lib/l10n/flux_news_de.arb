@@ -131,7 +131,7 @@
     "syncReadNewsAfterDays": "Synchronisieren die gelesenen News für die letzten Tage: ",
     "skipLongSync": "Unterdrücke den Dialog zur langsamen Synchronisation",
     "syncReadStatusImmediately": "Gelesenenstatus sofort an den Server senden",
-    "backgroundSyncInterval": "Background-Sync Intervall",
+    "backgroundSyncInterval": "Background-Sync für Widgets",
     "backgroundSyncOff": "Aus",
     "headerSettings": "Setze zusätzliche Header für den Miniflux Zugriff",
     "headerKey": "Header Name: ",

@@ -449,7 +449,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gelesenenstatus sofort an den Server senden';
 
   @override
-  String get backgroundSyncInterval => 'Background-Sync Intervall';
+  String get backgroundSyncInterval => 'Background-Sync für Widgets';
 
   @override
   String get backgroundSyncOff => 'Aus';

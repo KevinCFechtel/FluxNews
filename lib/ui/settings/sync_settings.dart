@@ -83,14 +83,6 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
     180,
     365
   ];
-  static const List<int> backgroundSyncIntervalMinutesList = <int>[
-    0,
-    15,
-    30,
-    45,
-    60
-  ];
-
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
@@ -311,33 +303,20 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<int>(
-                    value: appState.backgroundSyncIntervalMinutes,
-                    elevation: 16,
-                    underline: Container(
-                      height: 2,
-                    ),
-                    alignment: AlignmentDirectional.centerEnd,
-                    onChanged: (int? value) async {
-                      if (value != null) {
-                        appState.backgroundSyncIntervalMinutes = value;
-                        await appState.storage.write(
-                            key: FluxNewsState
-                                .secureStorageBackgroundSyncIntervalMinutesKey,
-                            value: value.toString());
-                        await configureFluxNewsBackgroundSync(appState);
-                        appState.refreshView();
-                      }
+                  Switch.adaptive(
+                    value: appState.backgroundSyncIntervalMinutes > 0,
+                    onChanged: (bool value) async {
+                      final interval = value
+                          ? FluxNewsState.enabledBackgroundSyncIntervalMinutes
+                          : 0;
+                      appState.backgroundSyncIntervalMinutes = interval;
+                      await appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageBackgroundSyncIntervalMinutesKey,
+                          value: interval.toString());
+                      await configureFluxNewsBackgroundSync(appState);
+                      appState.refreshView();
                     },
-                    items: backgroundSyncIntervalMinutesList
-                        .map<DropdownMenuItem<int>>((int value) {
-                      return DropdownMenuItem<int>(
-                        value: value,
-                        child: Text(value == 0
-                            ? AppLocalizations.of(context)!.backgroundSyncOff
-                            : '$value min'),
-                      );
-                    }).toList(),
                   ),
                 ],
               ),

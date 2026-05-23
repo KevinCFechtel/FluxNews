@@ -897,7 +897,7 @@ abstract class AppLocalizations {
   /// No description provided for @backgroundSyncInterval.
   ///
   /// In en, this message translates to:
-  /// **'Background sync interval'**
+  /// **'Background sync for widgets'**
   String get backgroundSyncInterval;
 
   /// No description provided for @backgroundSyncOff.

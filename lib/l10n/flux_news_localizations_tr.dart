@@ -440,7 +440,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Immediately sync read status to server';
 
   @override
-  String get backgroundSyncInterval => 'Background sync interval';
+  String get backgroundSyncInterval => 'Background sync for widgets';
 
   @override
   String get backgroundSyncOff => 'Off';

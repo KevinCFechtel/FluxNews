@@ -57,8 +57,8 @@ Future<void> initializeFluxNewsBackgroundSync() async {
 
 Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
-  final interval = appState.backgroundSyncIntervalMinutes;
-  if (interval == 0) {
+  final storedInterval = appState.backgroundSyncIntervalMinutes;
+  if (storedInterval == 0) {
     logThis(
         'backgroundSync',
         'Cancelling background sync because interval is disabled',
@@ -67,9 +67,11 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
     return;
   }
 
+  const interval = FluxNewsState.enabledBackgroundSyncIntervalMinutes;
   logThis(
       'backgroundSync',
       'Registering periodic background sync: interval=${interval}m '
+          'storedInterval=${storedInterval}m '
           'platform=${Platform.operatingSystem}',
       LogLevel.INFO);
   await Workmanager().registerPeriodicTask(
