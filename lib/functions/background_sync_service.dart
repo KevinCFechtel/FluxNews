@@ -71,6 +71,8 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
   }
 
   const interval = FluxNewsState.enabledBackgroundSyncIntervalMinutes;
+  final shouldResetPendingIosTask =
+      Platform.isIOS && storedInterval != interval;
   if (storedInterval != interval) {
     logThis(
         'backgroundSync',
@@ -84,7 +86,7 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
         value: interval.toString());
   }
 
-  if (Platform.isIOS) {
+  if (shouldResetPendingIosTask) {
     await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
   }
 
@@ -102,6 +104,7 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
     constraints: Constraints(networkType: NetworkType.connected),
     existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
   );
+  await _logScheduledBackgroundTasks();
 }
 
 Future<void> runFluxNewsBackgroundSync() async {
@@ -307,6 +310,30 @@ Future<bool> isFluxNewsForegroundActive() async {
     logThis('backgroundSync', 'Could not read foreground active marker: $e',
         LogLevel.WARNING);
     return false;
+  }
+}
+
+Future<void> _logScheduledBackgroundTasks() async {
+  try {
+    final isScheduled = await Workmanager()
+        .isScheduledByUniqueName(fluxNewsBackgroundSyncUniqueName);
+    logThis(
+        'backgroundSync',
+        'Background sync scheduled check: '
+            'isScheduled=$isScheduled',
+        LogLevel.INFO);
+  } catch (e) {
+    logThis('backgroundSync',
+        'Could not check scheduled background sync task: $e', LogLevel.WARNING);
+  }
+
+  try {
+    final scheduledTasks = await Workmanager().printScheduledTasks();
+    logThis('backgroundSync', 'Scheduled background tasks: $scheduledTasks',
+        LogLevel.INFO);
+  } catch (e) {
+    logThis('backgroundSync', 'Could not print scheduled background tasks: $e',
+        LogLevel.WARNING);
   }
 }
 
