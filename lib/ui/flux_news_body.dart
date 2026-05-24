@@ -47,7 +47,17 @@ class FluxNewsBody extends StatelessWidget {
       initConfig(context, appState, false);
       appState.categoryList = queryCategoriesFromDB(appState, context);
       appState.newsList = Future<List<News>>.value([]);
-    }, onResume: () {
+    }, onResume: (inactiveDuration) async {
+      logThis(
+          'FluxNewsBody',
+          'Foreground resume: '
+              'inactiveSeconds=${inactiveDuration?.inSeconds} '
+              'syncOnStart=${appState.syncOnStart} '
+              'syncProcess=${appState.syncProcess} '
+              'startupSyncHandled=${appState.startupSyncHandledForUiSession} '
+              'minifluxConfigured=${appState.minifluxURL != null && appState.minifluxAPIKey != null} '
+              'errorOnMinifluxAuth=${appState.errorOnMinifluxAuth}',
+          LogLevel.INFO);
       // Re-initialize config if a headless CarPlay launch left storageValues
       // empty (readAll failed while screen was locked). Now that the app is
       // in the foreground, the Keychain is accessible again.
@@ -57,6 +67,62 @@ class FluxNewsBody extends StatelessWidget {
             'Resumed with null minifluxURL — re-running initConfig',
             LogLevel.INFO);
         initConfig(context, appState, true);
+      }
+
+      final shouldTreatResumeAsStartup = inactiveDuration == null ||
+          inactiveDuration >= const Duration(minutes: 5);
+      final shouldRunStartupSync = appState.syncOnStart &&
+          (!appState.startupSyncHandledForUiSession ||
+              shouldTreatResumeAsStartup) &&
+          !appState.syncProcess &&
+          appState.minifluxURL != null &&
+          appState.minifluxAPIKey != null &&
+          !appState.errorOnMinifluxAuth;
+
+      if (shouldRunStartupSync) {
+        final skipStartupSyncForWidgetAction = await FluxNewsWidgetService
+                .shouldSkipStartupSyncForPendingWidgetAction()
+            .onError((error, stackTrace) => false);
+        appState.startupSyncHandledForUiSession = true;
+        if (!skipStartupSyncForWidgetAction && context.mounted) {
+          logThis(
+              'FluxNewsBody',
+              'Running deferred sync on startup after foreground resume',
+              LogLevel.INFO);
+          await syncNews(appState, context);
+        } else {
+          logThis(
+              'FluxNewsBody',
+              'Deferred sync on startup skipped because a widget action is pending',
+              LogLevel.INFO);
+        }
+      } else {
+        logThis(
+            'FluxNewsBody',
+            'Deferred sync on startup not run: '
+                'shouldTreatResumeAsStartup=$shouldTreatResumeAsStartup',
+            LogLevel.INFO);
+      }
+
+      if (!appState.syncProcess &&
+          inactiveDuration != null &&
+          inactiveDuration >= const Duration(seconds: 30) &&
+          context.mounted) {
+        try {
+          logThis(
+              'FluxNewsBody',
+              'Reloading news list from DB after foreground resume',
+              LogLevel.INFO);
+          appState.newsList = queryNewsFromDB(appState);
+          updateStarredCounter(appState, context);
+          await renewAllNewsCount(appState, context);
+          appState.refreshView();
+        } catch (e) {
+          logThis(
+              'FluxNewsBody',
+              'Could not reload news list after foreground resume: $e',
+              LogLevel.ERROR);
+        }
       }
     }, child: OrientationBuilder(
       builder: (context, orientation) {
@@ -177,11 +243,15 @@ class FluxNewsBody extends StatelessWidget {
 
       if ((appState.syncOnStart && !skipStartupSyncForWidgetAction) ||
           appState.syncNow) {
+        appState.startupSyncHandledForUiSession = true;
         // sync on startup or now
         if (context.mounted) {
           await syncNews(appState, context);
         }
       } else {
+        if (appState.syncOnStart && skipStartupSyncForWidgetAction) {
+          appState.startupSyncHandledForUiSession = true;
+        }
         // normal startup, read existing news from database and generate list view
         try {
           appState.newsList = queryNewsFromDB(appState);
@@ -1929,7 +1999,7 @@ class FeedTile extends StatelessWidget {
 
 class FluxNewsBodyStatefulWrapper extends StatefulWidget {
   final Function onInit;
-  final Function onResume;
+  final Future<void> Function(Duration? inactiveDuration) onResume;
   final Widget child;
   const FluxNewsBodyStatefulWrapper(
       {super.key,
@@ -1946,6 +2016,7 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
         AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper>,
         WidgetsBindingObserver {
   Timer? _foregroundActiveTimer;
+  DateTime? _foregroundInactiveAt;
 
   // init the state of FluxNewsBody to load the config and the data on startup
   @override
@@ -1968,13 +2039,18 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startForegroundActiveHeartbeat();
-      widget.onResume();
+      final inactiveDuration = _foregroundInactiveAt == null
+          ? null
+          : DateTime.now().difference(_foregroundInactiveAt!);
+      _foregroundInactiveAt = null;
+      unawaited(widget.onResume(inactiveDuration));
       FluxNewsWidgetService.handlePendingWidgetAction(
           context, context.read<FluxNewsState>());
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.hidden) {
+      _foregroundInactiveAt ??= DateTime.now();
       _foregroundActiveTimer?.cancel();
       _foregroundActiveTimer = null;
       unawaited(markFluxNewsForegroundInactive());

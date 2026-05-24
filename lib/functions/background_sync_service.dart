@@ -369,26 +369,32 @@ Future<bool> isFluxNewsForegroundActive() async {
 }
 
 Future<void> _logScheduledBackgroundTasks() async {
-  try {
-    final isScheduled = await Workmanager()
-        .isScheduledByUniqueName(fluxNewsBackgroundSyncUniqueName);
-    logThis(
-        'backgroundSync',
-        'Background sync scheduled check: '
-            'isScheduled=$isScheduled',
-        LogLevel.INFO);
-  } catch (e) {
-    logThis('backgroundSync',
-        'Could not check scheduled background sync task: $e', LogLevel.WARNING);
+  if (Platform.isAndroid) {
+    try {
+      final isScheduled = await Workmanager()
+          .isScheduledByUniqueName(fluxNewsBackgroundSyncUniqueName);
+      logThis(
+          'backgroundSync',
+          'Background sync scheduled check: '
+              'isScheduled=$isScheduled',
+          LogLevel.INFO);
+    } catch (e) {
+      logThis(
+          'backgroundSync',
+          'Could not check scheduled background sync task: $e',
+          LogLevel.WARNING);
+    }
   }
 
-  try {
-    final scheduledTasks = await Workmanager().printScheduledTasks();
-    logThis('backgroundSync', 'Scheduled background tasks: $scheduledTasks',
-        LogLevel.INFO);
-  } catch (e) {
-    logThis('backgroundSync', 'Could not print scheduled background tasks: $e',
-        LogLevel.WARNING);
+  if (Platform.isIOS) {
+    try {
+      final scheduledTasks = await Workmanager().printScheduledTasks();
+      logThis('backgroundSync', 'Scheduled background tasks: $scheduledTasks',
+          LogLevel.INFO);
+    } catch (e) {
+      logThis('backgroundSync',
+          'Could not print scheduled background tasks: $e', LogLevel.WARNING);
+    }
   }
 }
 

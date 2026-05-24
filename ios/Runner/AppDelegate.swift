@@ -10,6 +10,41 @@ private let fluxNewsBackgroundSyncIdentifier = "dev.kevincfechtel.fluxNews.backg
 private let fluxNewsBackgroundProcessingSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundProcessingSync"
 var pendingWidgetAction: [String: String]?
 
+private func setupFluxNewsWidgetChannel(binaryMessenger: FlutterBinaryMessenger) {
+  let methodChannel = FlutterMethodChannel(
+    name: "dev.kevincfechtel.fluxnews/widgets",
+    binaryMessenger: binaryMessenger
+  )
+
+  methodChannel.setMethodCallHandler { call, result in
+    switch call.method {
+    case "saveSnapshot":
+      guard let args = call.arguments as? [String: Any],
+            let snapshot = args["snapshot"] as? String,
+            let defaults = UserDefaults(suiteName: fluxNewsWidgetGroup) else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid widget snapshot", details: nil))
+        return
+      }
+      defaults.set(snapshot, forKey: "snapshot")
+      defaults.synchronize()
+      result(nil)
+    case "reloadWidgets":
+      if #available(iOS 14.0, *) {
+        WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+        WidgetCenter.shared.reloadAllTimelines()
+      }
+      result(nil)
+    case "peekPendingAction":
+      result(pendingWidgetAction)
+    case "takePendingAction":
+      result(pendingWidgetAction)
+      pendingWidgetAction = nil
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+}
+
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   override func application(
@@ -22,9 +57,12 @@ var pendingWidgetAction: [String: String]?
     if #available(iOS 16.1, *) {
       setupDynamicIslandChannel()
     }
-    setupWidgetChannel()
+    setupFluxNewsWidgetChannel(binaryMessenger: flutterEngine.binaryMessenger)
     WorkmanagerPlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)
+      if let engine = registry as? FlutterEngine {
+        setupFluxNewsWidgetChannel(binaryMessenger: engine.binaryMessenger)
+      }
     }
     WorkmanagerPlugin.registerPeriodicTask(
       withIdentifier: fluxNewsBackgroundSyncIdentifier,
@@ -49,41 +87,6 @@ var pendingWidgetAction: [String: String]?
     )
 
     return true
-  }
-
-  private func setupWidgetChannel() {
-    let methodChannel = FlutterMethodChannel(
-      name: "dev.kevincfechtel.fluxnews/widgets",
-      binaryMessenger: flutterEngine.binaryMessenger
-    )
-
-    methodChannel.setMethodCallHandler { call, result in
-      switch call.method {
-      case "saveSnapshot":
-        guard let args = call.arguments as? [String: Any],
-              let snapshot = args["snapshot"] as? String,
-              let defaults = UserDefaults(suiteName: fluxNewsWidgetGroup) else {
-          result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid widget snapshot", details: nil))
-          return
-        }
-        defaults.set(snapshot, forKey: "snapshot")
-        defaults.synchronize()
-        result(nil)
-      case "reloadWidgets":
-        if #available(iOS 14.0, *) {
-          WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
-          WidgetCenter.shared.reloadAllTimelines()
-        }
-        result(nil)
-      case "peekPendingAction":
-        result(pendingWidgetAction)
-      case "takePendingAction":
-        result(pendingWidgetAction)
-        pendingWidgetAction = nil
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
   }
 
   override func application(

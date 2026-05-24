@@ -65,10 +65,21 @@ class FluxNewsWidgetService {
         androidName: 'FluxNewsWidgetProvider',
         qualifiedAndroidName: _androidWidgetProvider,
       );
+      bool nativeReloadRequested = false;
+      try {
+        await _channel.invokeMethod('reloadWidgets');
+        nativeReloadRequested = true;
+      } on MissingPluginException {
+        logThis(
+            'WidgetService',
+            'Native widget reload channel is unavailable in this Flutter engine',
+            LogLevel.WARNING);
+      }
       logThis(
           'WidgetService',
           'Widget snapshot saved and reload requested: '
               'saveResult=$saveResult updateResult=$updateResult '
+              'nativeReloadRequested=$nativeReloadRequested '
               'snapshotBytes=${snapshot.length} '
               'iosReadbackBytes=${savedSnapshot?.length}',
           LogLevel.INFO);
