@@ -154,6 +154,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler
   String? _currentUrl;
   ProcessingState _lastProcessingState = ProcessingState.idle;
   bool _isHandlingCompletion = false;
+  double? _volumeBeforeDucking;
 
   Future<int?> _resolveCurrentAttachmentId() async {
     final item = _currentMediaItem;
@@ -532,9 +533,21 @@ class FluxNewsAudioHandler extends BaseAudioHandler
     // AVPlayer, so we ignore the error to keep _initFuture successful.
     try {
       await session.setActive(true);
-    } catch (_) {}
+    } catch (e) {
+      _debugLog('AudioSession.setActive during init failed: $e');
+    }
+
+    session.interruptionEventStream.listen((event) {
+      _handleAudioInterruption(event).ignore();
+    });
+
+    session.becomingNoisyEventStream.listen((_) {
+      _handleBecomingNoisy().ignore();
+    });
 
     _player.playerStateStream.listen((state) {
+      _debugLog(
+          'PlayerState: playing=${state.playing} processing=${state.processingState}');
       final isCompleted = state.processingState == ProcessingState.completed;
       final enteredCompletedState =
           isCompleted && _lastProcessingState != ProcessingState.completed;
@@ -579,6 +592,45 @@ class FluxNewsAudioHandler extends BaseAudioHandler
     });
   }
 
+  Future<void> _handleAudioInterruption(AudioInterruptionEvent event) async {
+    _debugLog(
+        'Audio interruption: begin=${event.begin} type=${event.type} playing=${_player.playing}');
+    if (event.begin) {
+      switch (event.type) {
+        case AudioInterruptionType.duck:
+          if (_volumeBeforeDucking == null) {
+            _volumeBeforeDucking = _player.volume;
+            await _player.setVolume(0.25);
+          }
+          playbackState.add(_buildPlaybackState());
+          break;
+        case AudioInterruptionType.pause:
+        case AudioInterruptionType.unknown:
+          if (_player.playing) {
+            await pause();
+          }
+          break;
+      }
+      return;
+    }
+
+    if (event.type == AudioInterruptionType.duck) {
+      final volume = _volumeBeforeDucking;
+      _volumeBeforeDucking = null;
+      if (volume != null) {
+        await _player.setVolume(volume);
+        playbackState.add(_buildPlaybackState());
+      }
+    }
+  }
+
+  Future<void> _handleBecomingNoisy() async {
+    _debugLog('Audio becoming noisy event: playing=${_player.playing}');
+    if (_player.playing) {
+      await pause();
+    }
+  }
+
   Future<void> loadMediaItem({
     required String url,
     required MediaItem item,
@@ -586,6 +638,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler
   }) async {
     await _initFuture; // ensure AVAudioSession is configured before activating
     final shouldReload = _currentUrl != url;
+    _debugLog(
+        'loadMediaItem start: title=${item.title} shouldReload=$shouldReload initialPosition=$initialPosition url=$url');
 
     if (shouldReload && _currentMediaItem != null) {
       await _persistCurrentProgress(syncToServer: true);
@@ -633,8 +687,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler
     if (shouldReload) {
       final uri = Uri.parse(url);
       if (uri.scheme == 'file') {
+        _debugLog('loadMediaItem setAudioSource file');
         await _player.setAudioSource(AudioSource.file(uri.toFilePath()));
       } else {
+        _debugLog('loadMediaItem setAudioSource uri');
         await _player.setAudioSource(AudioSource.uri(uri));
       }
     } else if (_player.processingState == ProcessingState.completed) {
@@ -649,32 +705,44 @@ class FluxNewsAudioHandler extends BaseAudioHandler
 
     final state = _buildPlaybackState();
     playbackState.add(state);
+    _debugLog(
+        'loadMediaItem done: processing=${_player.processingState} duration=${_player.duration}');
   }
 
   @override
   Future<void> play() async {
+    _debugLog(
+        'play requested: item=${_currentMediaItem?.title} processing=${_player.processingState} playing=${_player.playing}');
     final session = await AudioSession.instance;
     // Same rationale as in _init(): CarPlay grants audio focus at AVPlayer
     // level; explicit setActive may fail with !int when another source is
     // non-interruptible. just_audio handles the session internally.
     try {
       await session.setActive(true);
-    } catch (_) {}
+    } catch (e) {
+      _debugLog('AudioSession.setActive during play failed: $e');
+    }
     // just_audio's play() completes when playback STOPS, not when it starts.
     // Awaiting it would block the entire call chain until the episode ends.
     _player.play().ignore();
     final state = _buildPlaybackState();
     playbackState.add(state);
     _startDynamicIsland();
+    _debugLog(
+        'play dispatched: processing=${_player.processingState} playing=${_player.playing}');
   }
 
   @override
   Future<void> pause() async {
+    _debugLog(
+        'pause requested: item=${_currentMediaItem?.title} processing=${_player.processingState} playing=${_player.playing}');
     await _player.pause();
     await _persistCurrentProgress(syncToServer: true);
     final state = _buildPlaybackState();
     playbackState.add(state);
     _updateDynamicIsland();
+    _debugLog(
+        'pause done: processing=${_player.processingState} playing=${_player.playing}');
   }
 
   @override
