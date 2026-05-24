@@ -18,6 +18,8 @@ import 'package:workmanager/workmanager.dart';
 const String fluxNewsBackgroundSyncTask = 'fluxNewsBackgroundSync';
 const String fluxNewsBackgroundSyncUniqueName =
     'dev.kevincfechtel.fluxNews.backgroundSync';
+const String fluxNewsBackgroundProcessingSyncUniqueName =
+    'dev.kevincfechtel.fluxNews.backgroundProcessingSync';
 
 bool _backgroundSyncRunning = false;
 const String _foregroundActiveAtKey = 'flux_news_foreground_active_at';
@@ -34,6 +36,7 @@ void fluxNewsBackgroundCallbackDispatcher() {
         LogLevel.INFO);
     if (task != fluxNewsBackgroundSyncTask &&
         task != fluxNewsBackgroundSyncUniqueName &&
+        task != fluxNewsBackgroundProcessingSyncUniqueName &&
         task != Workmanager.iOSBackgroundTask) {
       logThis('backgroundSync', 'Ignored unknown WorkManager task: $task',
           LogLevel.WARNING);
@@ -47,6 +50,11 @@ void fluxNewsBackgroundCallbackDispatcher() {
       logThis('backgroundSync', 'Background sync failed: $e\n$stackTrace',
           LogLevel.ERROR);
       return false;
+    } finally {
+      if (Platform.isIOS &&
+          task == fluxNewsBackgroundProcessingSyncUniqueName) {
+        await _rescheduleIosProcessingTaskIfEnabled();
+      }
     }
   });
 }
@@ -67,6 +75,10 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
         'Cancelling background sync because interval is disabled',
         LogLevel.INFO);
     await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
+    if (Platform.isIOS) {
+      await Workmanager()
+          .cancelByUniqueName(fluxNewsBackgroundProcessingSyncUniqueName);
+    }
     return;
   }
 
@@ -88,6 +100,8 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
 
   if (shouldResetPendingIosTask) {
     await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
+    await Workmanager()
+        .cancelByUniqueName(fluxNewsBackgroundProcessingSyncUniqueName);
   }
 
   logThis(
@@ -104,7 +118,48 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
     constraints: Constraints(networkType: NetworkType.connected),
     existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
   );
+  if (Platform.isIOS) {
+    await _scheduleIosProcessingTask(interval);
+  }
   await _logScheduledBackgroundTasks();
+}
+
+Future<void> _scheduleIosProcessingTask(int intervalMinutes) async {
+  logThis(
+      'backgroundSync',
+      'Registering iOS processing background sync: '
+          'interval=${intervalMinutes}m',
+      LogLevel.INFO);
+  await Workmanager().registerProcessingTask(
+    fluxNewsBackgroundProcessingSyncUniqueName,
+    fluxNewsBackgroundSyncTask,
+    initialDelay: Duration(minutes: intervalMinutes),
+    constraints: Constraints(networkType: NetworkType.connected),
+  );
+}
+
+Future<void> _rescheduleIosProcessingTaskIfEnabled() async {
+  try {
+    final appState = FluxNewsState();
+    final storedIntervalValue = await appState.storage
+        .read(key: FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey);
+    final storedInterval = int.tryParse(storedIntervalValue ?? '') ?? 0;
+    if (storedInterval <= 0) {
+      logThis(
+          'backgroundSync',
+          'iOS processing background sync not rescheduled: disabled',
+          LogLevel.INFO);
+      return;
+    }
+
+    await _scheduleIosProcessingTask(
+        FluxNewsState.enabledBackgroundSyncIntervalMinutes);
+  } catch (e) {
+    logThis(
+        'backgroundSync',
+        'Could not reschedule iOS processing background sync: $e',
+        LogLevel.WARNING);
+  }
 }
 
 Future<void> runFluxNewsBackgroundSync() async {

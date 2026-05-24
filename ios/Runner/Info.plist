@@ -75,11 +75,13 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>dev.kevincfechtel.fluxNews.backgroundSync</string>
+		<string>dev.kevincfechtel.fluxNews.backgroundProcessingSync</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
+		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

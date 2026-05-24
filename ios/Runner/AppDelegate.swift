@@ -7,6 +7,7 @@ import workmanager_apple
 let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadlessExecution: true)
 private let fluxNewsWidgetGroup = "group.dev.kevincfechtel.fluxNews"
 private let fluxNewsBackgroundSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundSync"
+private let fluxNewsBackgroundProcessingSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundProcessingSync"
 var pendingWidgetAction: [String: String]?
 
 @main
@@ -28,6 +29,9 @@ var pendingWidgetAction: [String: String]?
     WorkmanagerPlugin.registerPeriodicTask(
       withIdentifier: fluxNewsBackgroundSyncIdentifier,
       frequency: NSNumber(value: 30 * 60)
+    )
+    WorkmanagerPlugin.registerBGProcessingTask(
+      withIdentifier: fluxNewsBackgroundProcessingSyncIdentifier
     )
 
     NotificationCenter.default.addObserver(
