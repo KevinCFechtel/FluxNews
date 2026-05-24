@@ -104,19 +104,40 @@ class FluxNewsBody extends StatelessWidget {
             LogLevel.INFO);
       }
 
-      if (!appState.syncProcess &&
-          inactiveDuration != null &&
-          inactiveDuration >= const Duration(seconds: 30) &&
-          context.mounted) {
+      if (!appState.syncProcess && context.mounted) {
         try {
-          logThis(
-              'FluxNewsBody',
-              'Reloading news list from DB after foreground resume',
-              LogLevel.INFO);
-          appState.newsList = queryNewsFromDB(appState);
-          updateStarredCounter(appState, context);
-          await renewAllNewsCount(appState, context);
-          appState.refreshView();
+          final backgroundSyncFinishedAt =
+              await readFluxNewsBackgroundSyncFinishedAt();
+          final shouldReloadFromBackgroundSync =
+              backgroundSyncFinishedAt != null &&
+                  (appState.lastNewsListLoadedAt == null ||
+                      backgroundSyncFinishedAt
+                          .isAfter(appState.lastNewsListLoadedAt!));
+
+          if (shouldReloadFromBackgroundSync) {
+            logThis(
+                'FluxNewsBody',
+                'Reloading news list from DB after background sync: '
+                    'backgroundSyncFinishedAt=${backgroundSyncFinishedAt.toIso8601String()} '
+                    'lastNewsListLoadedAt=${appState.lastNewsListLoadedAt?.toIso8601String()}',
+                LogLevel.INFO);
+            appState.scrollPosition = 0;
+            appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+              appState.jumpToItem(0);
+            });
+            appState.lastNewsListLoadedAt = DateTime.now();
+            if (!context.mounted) return;
+            updateStarredCounter(appState, context);
+            await renewAllNewsCount(appState, context);
+            appState.refreshView();
+          } else {
+            logThis(
+                'FluxNewsBody',
+                'News list reload after resume skipped: '
+                    'backgroundSyncFinishedAt=${backgroundSyncFinishedAt?.toIso8601String()} '
+                    'lastNewsListLoadedAt=${appState.lastNewsListLoadedAt?.toIso8601String()}',
+                LogLevel.INFO);
+          }
         } catch (e) {
           logThis(
               'FluxNewsBody',
@@ -257,6 +278,7 @@ class FluxNewsBody extends StatelessWidget {
         // normal startup, read existing news from database and generate list view
         try {
           appState.newsList = queryNewsFromDB(appState);
+          appState.lastNewsListLoadedAt = DateTime.now();
           if (context.mounted) {
             updateStarredCounter(appState, context);
             await renewAllNewsCount(appState, context);

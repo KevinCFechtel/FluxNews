@@ -270,6 +270,7 @@ class FluxNewsState extends ChangeNotifier {
   bool syncNow = false;
   bool startUp = false;
   bool startupSyncHandledForUiSession = false;
+  DateTime? lastNewsListLoadedAt;
 
   // vars for search view
   Future<List<News>> searchNewsList = Future<List<News>>.value([]);

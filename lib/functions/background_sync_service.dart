@@ -23,6 +23,8 @@ const String fluxNewsBackgroundProcessingSyncUniqueName =
 
 bool _backgroundSyncRunning = false;
 const String _foregroundActiveAtKey = 'flux_news_foreground_active_at';
+const String _lastBackgroundSyncFinishedAtKey =
+    'flux_news_last_background_sync_finished_at';
 const Duration _foregroundActiveStaleAfter = Duration(minutes: 2);
 
 @pragma('vm:entry-point')
@@ -288,6 +290,7 @@ Future<void> runFluxNewsBackgroundSync() async {
     logThis('backgroundSync', 'Updating widget snapshot after background sync',
         LogLevel.INFO);
     await FluxNewsWidgetService.updateWidgetSnapshot(appState);
+    await markFluxNewsBackgroundSyncFinished();
     await _markPendingForegroundAudioDownloads(appState, newNews.news);
     logThis(
         'backgroundSync',
@@ -300,6 +303,38 @@ Future<void> runFluxNewsBackgroundSync() async {
     _backgroundSyncRunning = false;
     logThis('backgroundSync', 'Background sync execution cleanup finished',
         LogLevel.INFO);
+  }
+}
+
+Future<void> markFluxNewsBackgroundSyncFinished() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  try {
+    final finishedAt = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        _lastBackgroundSyncFinishedAtKey, finishedAt.toIso8601String());
+    logThis(
+        'backgroundSync',
+        'Marked background sync finished: '
+            '${finishedAt.toIso8601String()}',
+        LogLevel.INFO);
+  } catch (e) {
+    logThis('backgroundSync', 'Could not mark background sync finished: $e',
+        LogLevel.WARNING);
+  }
+}
+
+Future<DateTime?> readFluxNewsBackgroundSyncFinishedAt() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return null;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(_lastBackgroundSyncFinishedAtKey);
+    if (value == null || value.isEmpty) return null;
+    return DateTime.tryParse(value);
+  } catch (e) {
+    logThis('backgroundSync',
+        'Could not read background sync finished marker: $e', LogLevel.WARNING);
+    return null;
   }
 }
 

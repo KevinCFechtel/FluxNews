@@ -377,6 +377,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
 
       // end the sync process
       appState.syncProcess = false;
+      appState.lastNewsListLoadedAt = DateTime.now();
       appState.scrolloverSyncFailed = false;
       appState.refreshView();
     } else {
@@ -389,6 +390,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         } catch (_) {}
       }
       appState.syncProcess = false;
+      appState.lastNewsListLoadedAt = DateTime.now();
       appState.refreshView();
     }
     if (appState.debugMode) {
