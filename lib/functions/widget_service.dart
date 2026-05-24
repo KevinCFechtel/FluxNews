@@ -122,8 +122,9 @@ class FluxNewsWidgetService {
           await openNewsAction(
               news, appState, context, appState.widgetOpenMiniflux);
           if (!context.mounted) break;
+          appState.scrollPosition = 0;
           appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-            appState.jumpToItem(appState.scrollPosition);
+            appState.jumpToItem(0);
           });
           context.read<FluxNewsCounterState>().listUpdated = true;
           context.read<FluxNewsCounterState>().refreshView();

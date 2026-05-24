@@ -45,9 +45,9 @@ struct FluxNewsProvider: TimelineProvider {
     let entry = FluxNewsEntry(date: Date(), snapshot: loadSnapshot())
     let nextRefresh = Calendar.current.date(
       byAdding: .minute,
-      value: 30,
+      value: 15,
       to: Date()
-    ) ?? Date().addingTimeInterval(30 * 60)
+    ) ?? Date().addingTimeInterval(15 * 60)
     completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
   }
 

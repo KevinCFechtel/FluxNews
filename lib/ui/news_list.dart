@@ -182,6 +182,7 @@ class BodyNewsList extends StatelessWidget {
                             int lastItem = 0;
                             double lastItemTrailingMarginToViewport = -1.0;
                             int firstItem = 0;
+                            var allItemsVisible = false;
                             if (resultModel
                                 .displayingChildIndexList.isNotEmpty) {
                               firstItem =
@@ -192,6 +193,9 @@ class BodyNewsList extends StatelessWidget {
                                   .displayingChildModelList
                                   .last
                                   .trailingMarginToViewport;
+                              allItemsVisible =
+                                  resultModel.displayingChildIndexList.length >=
+                                      snapshot.data!.length;
                             }
                             appState.scrollPosition = firstItem;
 
@@ -205,7 +209,8 @@ class BodyNewsList extends StatelessWidget {
                               if (appState.syncProcess == false) {
                                 final List<int> scrollIds = [];
                                 // set all news as read if the list reached the bottom (the last item is more then 95% visible)
-                                if (lastItem == snapshot.data!.length - 1 &&
+                                if (!allItemsVisible &&
+                                    lastItem == snapshot.data!.length - 1 &&
                                     lastItemTrailingMarginToViewport >= 0) {
                                   // to ensure that the list is at the bottom edge and not at the top edge
                                   // the amount of scrolled pixels must be greater 0

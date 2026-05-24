@@ -152,6 +152,7 @@ class FluxNewsBody extends StatelessWidget {
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
+    var skipSavedScrollRestore = false;
 
     if (completed) {
       if (context.mounted) {
@@ -240,6 +241,7 @@ class FluxNewsBody extends StatelessWidget {
       final skipStartupSyncForWidgetAction = await FluxNewsWidgetService
               .shouldSkipStartupSyncForPendingWidgetAction()
           .onError((error, stackTrace) => false);
+      skipSavedScrollRestore = skipStartupSyncForWidgetAction;
 
       if ((appState.syncOnStart && !skipStartupSyncForWidgetAction) ||
           appState.syncNow) {
@@ -299,7 +301,9 @@ class FluxNewsBody extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // set the scroll position to the persistent saved scroll position on normal startup
       // if sync on startup is enabled, the scroll position is set to the top of the list
-      if (!appState.syncOnStart && !appState.markAsReadOnScrollOver) {
+      if (!skipSavedScrollRestore &&
+          !appState.syncOnStart &&
+          !appState.markAsReadOnScrollOver) {
         appState.jumpToItem(appState.savedScrollPosition);
       }
 
@@ -2023,7 +2027,11 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
   void initState() {
     widget.onInit();
     WidgetsBinding.instance.addObserver(this);
-    _startForegroundActiveHeartbeat();
+    logThis(
+        'FluxNewsBody',
+        'Foreground heartbeat waits for lifecycle resume: '
+            'initialLifecycleState=${WidgetsBinding.instance.lifecycleState}',
+        LogLevel.INFO);
     super.initState();
   }
 
@@ -2058,10 +2066,24 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
   }
 
   void _startForegroundActiveHeartbeat() {
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      logThis(
+          'FluxNewsBody',
+          'Foreground heartbeat not started: '
+              'lifecycleState=${WidgetsBinding.instance.lifecycleState}',
+          LogLevel.INFO);
+      return;
+    }
     _foregroundActiveTimer?.cancel();
     unawaited(markFluxNewsForegroundActive());
     _foregroundActiveTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      unawaited(markFluxNewsForegroundActive());
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        unawaited(markFluxNewsForegroundActive());
+      } else {
+        _foregroundActiveTimer?.cancel();
+        _foregroundActiveTimer = null;
+        unawaited(markFluxNewsForegroundInactive());
+      }
     });
   }
 
