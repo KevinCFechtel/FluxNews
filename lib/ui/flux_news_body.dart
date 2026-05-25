@@ -104,7 +104,9 @@ class FluxNewsBody extends StatelessWidget {
             LogLevel.INFO);
       }
 
-      if (!appState.syncProcess && context.mounted) {
+      if (!appState.syncProcess &&
+          appState.backgroundSyncIntervalMinutes > 0 &&
+          context.mounted) {
         try {
           final backgroundSyncFinishedAt =
               await readFluxNewsBackgroundSyncFinishedAt();
@@ -144,6 +146,12 @@ class FluxNewsBody extends StatelessWidget {
               'Could not reload news list after foreground resume: $e',
               LogLevel.ERROR);
         }
+      } else if (!appState.syncProcess) {
+        logThis(
+            'FluxNewsBody',
+            'News list reload after resume skipped: '
+                'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0}',
+            LogLevel.INFO);
       }
     }, child: OrientationBuilder(
       builder: (context, orientation) {
