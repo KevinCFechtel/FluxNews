@@ -528,13 +528,19 @@ class FluxNewsAudioHandler extends BaseAudioHandler
       ),
       androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
     ));
-    // setActive may still fail with !int if a non-interruptible source is
-    // active at startup. just_audio activates the session internally via
-    // AVPlayer, so we ignore the error to keep _initFuture successful.
-    try {
-      await session.setActive(true);
-    } catch (e) {
-      _debugLog('AudioSession.setActive during init failed: $e');
+    // Do not request Android audio focus during handler initialization. Android
+    // Auto can create/browse the service without immediate playback; claiming
+    // focus here can leave the car route in a stale state. Playback activates
+    // the session explicitly in play().
+    if (Platform.isIOS) {
+      // setActive may still fail with !int if a non-interruptible source is
+      // active at startup. just_audio activates the session internally via
+      // AVPlayer, so we ignore the error to keep _initFuture successful.
+      try {
+        await session.setActive(true);
+      } catch (e) {
+        _debugLog('AudioSession.setActive during init failed: $e');
+      }
     }
 
     session.interruptionEventStream.listen((event) {
@@ -711,25 +717,65 @@ class FluxNewsAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
+    await _initFuture;
     _debugLog(
         'play requested: item=${_currentMediaItem?.title} processing=${_player.processingState} playing=${_player.playing}');
-    final session = await AudioSession.instance;
-    // Same rationale as in _init(): CarPlay grants audio focus at AVPlayer
-    // level; explicit setActive may fail with !int when another source is
-    // non-interruptible. just_audio handles the session internally.
-    try {
-      await session.setActive(true);
-    } catch (e) {
-      _debugLog('AudioSession.setActive during play failed: $e');
-    }
+    await _activateAudioSessionForPlayback();
     // just_audio's play() completes when playback STOPS, not when it starts.
     // Awaiting it would block the entire call chain until the episode ends.
     _player.play().ignore();
+    if (Platform.isAndroid) {
+      await _verifyAndroidPlaybackStarted();
+    }
     final state = _buildPlaybackState();
     playbackState.add(state);
     _startDynamicIsland();
     _debugLog(
         'play dispatched: processing=${_player.processingState} playing=${_player.playing}');
+  }
+
+  Future<void> _activateAudioSessionForPlayback() async {
+    final session = await AudioSession.instance;
+    try {
+      await session.setActive(true);
+      return;
+    } catch (e) {
+      if (Platform.isAndroid) {
+        logThis(
+            'AudioHandler',
+            'AudioSession.setActive during play failed, retrying: $e',
+            LogLevel.WARNING);
+        await Future.delayed(const Duration(milliseconds: 250));
+        try {
+          await session.setActive(true);
+          return;
+        } catch (retryError) {
+          logThis(
+              'AudioHandler',
+              'AudioSession.setActive retry during play failed: $retryError',
+              LogLevel.WARNING);
+          return;
+        }
+      }
+      _debugLog('AudioSession.setActive during play failed: $e');
+    }
+  }
+
+  Future<void> _verifyAndroidPlaybackStarted() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (_player.playing && _player.processingState != ProcessingState.idle) {
+      return;
+    }
+
+    logThis(
+        'AudioHandler',
+        'Android playback did not start after play dispatch: '
+            'playing=${_player.playing} '
+            'processing=${_player.processingState} '
+            'item=${_currentMediaItem?.title}',
+        LogLevel.WARNING);
+    await _activateAudioSessionForPlayback();
+    _player.play().ignore();
   }
 
   @override
