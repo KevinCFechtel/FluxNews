@@ -147,11 +147,36 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
     final saved = await AudioProgressStore.read(
         AudioProgressStore.keyForNews(news.newsID));
-    final positionMs = int.tryParse(saved ?? '');
-    if (positionMs == null || positionMs <= 0) return null;
+    final localMs = int.tryParse(saved ?? '') ?? 0;
+    // "0" is written explicitly when an episode was completed/restarted.
+    // Keep that local reset unless a newer local playback position exists.
+    final wasReset = saved != null && localMs == 0;
+
+    int serverMs = 0;
+    if (!wasReset) {
+      final audioAttachments = news.getAudioAttachments();
+      if (audioAttachments.isNotEmpty) {
+        final attachment = audioAttachments.first;
+        final cached = AudioDownloadService.getDownloadMediaProgression(
+            attachment.attachmentID);
+        if (cached != null && cached > 0) {
+          serverMs = cached * 1000;
+        } else if (attachment.mediaProgression > 0) {
+          serverMs = attachment.mediaProgression * 1000;
+        }
+      }
+    }
+
+    final positionMs = localMs > serverMs ? localMs : serverMs;
+    if (positionMs <= 0) return null;
 
     final totalMs = Duration(minutes: news.readingTime).inMilliseconds;
     if (totalMs <= 0) return null;
+
+    if (serverMs > localMs && !wasReset) {
+      await AudioProgressStore.write(
+          AudioProgressStore.keyForNews(news.newsID), serverMs.toString());
+    }
 
     return (positionMs / totalMs).clamp(0.0, 1.0);
   }
