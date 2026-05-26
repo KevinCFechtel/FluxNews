@@ -53,6 +53,7 @@ class FluxNewsBody extends StatelessWidget {
           'Foreground resume: '
               'inactiveSeconds=${inactiveDuration?.inSeconds} '
               'syncOnStart=${appState.syncOnStart} '
+              'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0} '
               'syncProcess=${appState.syncProcess} '
               'startupSyncHandled=${appState.startupSyncHandledForUiSession} '
               'minifluxConfigured=${appState.minifluxURL != null && appState.minifluxAPIKey != null} '
@@ -72,6 +73,7 @@ class FluxNewsBody extends StatelessWidget {
       final shouldTreatResumeAsStartup = inactiveDuration == null ||
           inactiveDuration >= const Duration(minutes: 5);
       final shouldRunStartupSync = appState.syncOnStart &&
+          appState.backgroundSyncIntervalMinutes > 0 &&
           (!appState.startupSyncHandledForUiSession ||
               shouldTreatResumeAsStartup) &&
           !appState.syncProcess &&
@@ -100,7 +102,8 @@ class FluxNewsBody extends StatelessWidget {
         logThis(
             'FluxNewsBody',
             'Deferred sync on startup not run: '
-                'shouldTreatResumeAsStartup=$shouldTreatResumeAsStartup',
+                'shouldTreatResumeAsStartup=$shouldTreatResumeAsStartup '
+                'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0}',
             LogLevel.INFO);
       }
 
