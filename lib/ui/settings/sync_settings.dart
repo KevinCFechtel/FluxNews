@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -53,10 +54,35 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
   });
 
   // define the selection lists for the settings of saved news and starred news
-  static const List<int> amountOfSavedNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  static const List<int> amountOfSavedStarredNewsList = <int>[50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  static const List<int> audioDownloadRetentionDaysList = <int>[7, 14, 30, 60, 90, 180, 365];
-
+  static const List<int> amountOfSavedNewsList = <int>[
+    50,
+    100,
+    200,
+    500,
+    1000,
+    2000,
+    5000,
+    10000
+  ];
+  static const List<int> amountOfSavedStarredNewsList = <int>[
+    50,
+    100,
+    200,
+    500,
+    1000,
+    2000,
+    5000,
+    10000
+  ];
+  static const List<int> audioDownloadRetentionDaysList = <int>[
+    7,
+    14,
+    30,
+    60,
+    90,
+    180,
+    365
+  ];
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
@@ -66,14 +92,16 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             alignment: Alignment.center,
             // this is the main column of the settings page
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Divider(),
               // this row contains the selection of the amount of saved news
               // if the news exceeds the amount, the oldest news were deleted
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.save_alt,
                     ),
@@ -95,12 +123,15 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                     onChanged: (int? value) {
                       if (value != null) {
                         appState.amountOfSavedNews = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageAmountOfSavedNewsKey, value: value.toString());
+                        appState.storage.write(
+                            key:
+                                FluxNewsState.secureStorageAmountOfSavedNewsKey,
+                            value: value.toString());
                         appState.refreshView();
                       }
                     },
-                    items: amountOfSavedNewsList.map<DropdownMenuItem<int>>((int value) {
+                    items: amountOfSavedNewsList
+                        .map<DropdownMenuItem<int>>((int value) {
                       return DropdownMenuItem<int>(
                         value: value,
                         child: Text(value.toString()),
@@ -115,7 +146,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.star,
                     ),
@@ -138,11 +170,14 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       if (value != null) {
                         appState.amountOfSavedStarredNews = value;
                         appState.storage.write(
-                            key: FluxNewsState.secureStorageAmountOfSavedStarredNewsKey, value: value.toString());
+                            key: FluxNewsState
+                                .secureStorageAmountOfSavedStarredNewsKey,
+                            value: value.toString());
                         appState.refreshView();
                       }
                     },
-                    items: amountOfSavedStarredNewsList.map<DropdownMenuItem<int>>((int value) {
+                    items: amountOfSavedStarredNewsList
+                        .map<DropdownMenuItem<int>>((int value) {
                       return DropdownMenuItem<int>(
                         value: value,
                         child: Text(value.toString()),
@@ -157,7 +192,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.repeat_one,
                     ),
@@ -180,17 +216,22 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       if (value != null) {
                         appState.amountOfSyncedNews = int.parse(value.key);
                         appState.amontOfSyncedNewsSelection = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageAmountOfSyncedNewsKey, value: value.key);
+                        appState.storage.write(
+                            key: FluxNewsState
+                                .secureStorageAmountOfSyncedNewsKey,
+                            value: value.key);
                         appState.refreshView();
                       }
                     },
                     items: appState.recordTypesAmountOfSyncedNews!
-                        .map<DropdownMenuItem<KeyValueRecordType>>((recordType) => DropdownMenuItem<KeyValueRecordType>(
-                              value: recordType,
-                              child: Text(
-                                recordType.value,
-                              ),
-                            ))
+                        .map<DropdownMenuItem<KeyValueRecordType>>(
+                            (recordType) =>
+                                DropdownMenuItem<KeyValueRecordType>(
+                                  value: recordType,
+                                  child: Text(
+                                    recordType.value,
+                                  ),
+                                ))
                         .toList(),
                   ),
                 ],
@@ -201,7 +242,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.manage_search,
                     ),
@@ -224,19 +266,57 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       if (value != null) {
                         appState.amountOfSearchedNews = int.parse(value.key);
                         appState.amontOfSearchedNewsSelection = value;
-                        appState.storage
-                            .write(key: FluxNewsState.secureStorageAmountOfSearchedNewsKey, value: value.key);
+                        appState.storage.write(
+                            key: FluxNewsState
+                                .secureStorageAmountOfSearchedNewsKey,
+                            value: value.key);
                         appState.refreshView();
                       }
                     },
                     items: appState.recordTypesAmountOfSearchedNews!
-                        .map<DropdownMenuItem<KeyValueRecordType>>((recordType) => DropdownMenuItem<KeyValueRecordType>(
-                              value: recordType,
-                              child: Text(
-                                recordType.value,
-                              ),
-                            ))
+                        .map<DropdownMenuItem<KeyValueRecordType>>(
+                            (recordType) =>
+                                DropdownMenuItem<KeyValueRecordType>(
+                                  value: recordType,
+                                  child: Text(
+                                    recordType.value,
+                                  ),
+                                ))
                         .toList(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    child: const Icon(
+                      Icons.update,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.backgroundSyncInterval,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: appState.backgroundSyncIntervalMinutes > 0,
+                    onChanged: (bool value) async {
+                      final interval = value
+                          ? FluxNewsState.enabledBackgroundSyncIntervalMinutes
+                          : 0;
+                      appState.backgroundSyncIntervalMinutes = interval;
+                      await appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageBackgroundSyncIntervalMinutesKey,
+                          value: interval.toString());
+                      await configureFluxNewsBackgroundSync(appState);
+                      appState.refreshView();
+                    },
                   ),
                 ],
               ),
@@ -245,7 +325,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.checklist_outlined,
                     ),
@@ -260,12 +341,15 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.syncReadNews,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.syncReadNews = value;
-                      appState.storage.write(key: FluxNewsState.secureStorageSyncReadNewsKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState.secureStorageSyncReadNewsKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -277,7 +361,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.calendar_view_day,
                           ),
@@ -298,16 +383,20 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                           alignment: AlignmentDirectional.centerEnd,
                           onChanged: (KeyValueRecordType? value) {
                             if (value != null) {
-                              appState.syncReadNewsAfterDays = int.parse(value.key);
+                              appState.syncReadNewsAfterDays =
+                                  int.parse(value.key);
                               appState.syncReadNewsAfterDaysSelection = value;
-                              appState.storage
-                                  .write(key: FluxNewsState.secureStorageSyncReadNewsAfterDaysKey, value: value.key);
+                              appState.storage.write(
+                                  key: FluxNewsState
+                                      .secureStorageSyncReadNewsAfterDaysKey,
+                                  value: value.key);
                               appState.refreshView();
                             }
                           },
                           items: appState.recordTypesSyncReadNewsAfterDays!
                               .map<DropdownMenuItem<KeyValueRecordType>>(
-                                  (recordType) => DropdownMenuItem<KeyValueRecordType>(
+                                  (recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
                                         value: recordType,
                                         child: Text(
                                           recordType.value,
@@ -322,7 +411,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.download_for_offline_outlined,
                     ),
@@ -337,13 +427,16 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.autoDownloadAudioAfterSync,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.autoDownloadAudioAfterSync = value;
-                      appState.storage
-                          .write(key: FluxNewsState.secureStorageAutoDownloadAudioAfterSyncKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageAutoDownloadAudioAfterSyncKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -353,7 +446,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.event_repeat,
                     ),
@@ -376,11 +470,14 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       if (value != null) {
                         appState.audioDownloadRetentionDays = value;
                         appState.storage.write(
-                            key: FluxNewsState.secureStorageAudioDownloadRetentionDaysKey, value: value.toString());
+                            key: FluxNewsState
+                                .secureStorageAudioDownloadRetentionDaysKey,
+                            value: value.toString());
                         appState.refreshView();
                       }
                     },
-                    items: audioDownloadRetentionDaysList.map<DropdownMenuItem<int>>((int value) {
+                    items: audioDownloadRetentionDaysList
+                        .map<DropdownMenuItem<int>>((int value) {
                       return DropdownMenuItem<int>(
                         value: value,
                         child: Text(value.toString()),
@@ -393,7 +490,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.wifi,
                     ),
@@ -408,13 +506,16 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.downloadAudioOnlyOnWifi,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.downloadAudioOnlyOnWifi = value;
-                      appState.storage
-                          .write(key: FluxNewsState.secureStorageDownloadAudioOnlyOnWifiKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageDownloadAudioOnlyOnWifiKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -424,14 +525,16 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.delete_sweep_outlined,
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      AppLocalizations.of(context)!.autoDeleteDownloadAfterFinish,
+                      AppLocalizations.of(context)!
+                          .autoDeleteDownloadAfterFinish,
                       style: Theme.of(context).textTheme.titleMedium,
                       overflow: TextOverflow.visible,
                     ),
@@ -439,13 +542,16 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.deleteAudioAfterPlayback,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.deleteAudioAfterPlayback = value;
-                      appState.storage
-                          .write(key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageDeleteAudioAfterPlaybackKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -456,7 +562,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.timelapse,
                     ),
@@ -471,12 +578,15 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.skipLongSync,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.skipLongSync = value;
-                      appState.storage.write(key: FluxNewsState.secureStorageSkipLongSyncKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState.secureStorageSkipLongSyncKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -486,7 +596,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.sync,
                     ),
@@ -501,13 +612,16 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.syncReadStatusImmediately,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.syncReadStatusImmediately = value;
                       appState.storage.write(
-                          key: FluxNewsState.secureStorageSyncReadStatusImmediatelyKey, value: stringValue);
+                          key: FluxNewsState
+                              .secureStorageSyncReadStatusImmediatelyKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -520,7 +634,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
 class FluxNewsSyncSettingsStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsSyncSettingsStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsSyncSettingsStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }

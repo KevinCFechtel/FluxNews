@@ -449,6 +449,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gelesenenstatus sofort an den Server senden';
 
   @override
+  String get backgroundSyncInterval => 'Background-Sync für Widgets';
+
+  @override
+  String get backgroundSyncOff => 'Aus';
+
+  @override
   String get headerSettings =>
       'Setze zusätzliche Header für den Miniflux Zugriff';
 

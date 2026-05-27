@@ -1,8 +1,49 @@
 import ActivityKit
 import Flutter
 import UIKit
+import WidgetKit
+import workmanager_apple
 
 let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadlessExecution: true)
+private let fluxNewsWidgetGroup = "group.dev.kevincfechtel.fluxNews"
+private let fluxNewsBackgroundSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundSync"
+private let fluxNewsBackgroundProcessingSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundProcessingSync"
+var pendingWidgetAction: [String: String]?
+
+private func setupFluxNewsWidgetChannel(binaryMessenger: FlutterBinaryMessenger) {
+  let methodChannel = FlutterMethodChannel(
+    name: "dev.kevincfechtel.fluxnews/widgets",
+    binaryMessenger: binaryMessenger
+  )
+
+  methodChannel.setMethodCallHandler { call, result in
+    switch call.method {
+    case "saveSnapshot":
+      guard let args = call.arguments as? [String: Any],
+            let snapshot = args["snapshot"] as? String,
+            let defaults = UserDefaults(suiteName: fluxNewsWidgetGroup) else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid widget snapshot", details: nil))
+        return
+      }
+      defaults.set(snapshot, forKey: "snapshot")
+      defaults.synchronize()
+      result(nil)
+    case "reloadWidgets":
+      if #available(iOS 14.0, *) {
+        WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+        WidgetCenter.shared.reloadAllTimelines()
+      }
+      result(nil)
+    case "peekPendingAction":
+      result(pendingWidgetAction)
+    case "takePendingAction":
+      result(pendingWidgetAction)
+      pendingWidgetAction = nil
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+}
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -16,6 +57,20 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
     if #available(iOS 16.1, *) {
       setupDynamicIslandChannel()
     }
+    setupFluxNewsWidgetChannel(binaryMessenger: flutterEngine.binaryMessenger)
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+      if let engine = registry as? FlutterEngine {
+        setupFluxNewsWidgetChannel(binaryMessenger: engine.binaryMessenger)
+      }
+    }
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: fluxNewsBackgroundSyncIdentifier,
+      frequency: NSNumber(value: 30 * 60)
+    )
+    WorkmanagerPlugin.registerBGProcessingTask(
+      withIdentifier: fluxNewsBackgroundProcessingSyncIdentifier
+    )
 
     NotificationCenter.default.addObserver(
       self,
@@ -32,6 +87,28 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
     )
 
     return true
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    pendingWidgetAction = parseWidgetAction(url)
+    return pendingWidgetAction != nil
+  }
+
+  func parseWidgetAction(_ url: URL) -> [String: String]? {
+    guard url.scheme == "fluxnews", url.host == "widget" else { return nil }
+    if url.path == "/sync" {
+      return ["action": "sync"]
+    }
+    if url.path == "/openNews",
+       let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+       let newsID = components.queryItems?.first(where: { $0.name == "newsID" })?.value {
+      return ["action": "openNews", "newsID": newsID]
+    }
+    return nil
   }
 
   @available(iOS 16.1, *)

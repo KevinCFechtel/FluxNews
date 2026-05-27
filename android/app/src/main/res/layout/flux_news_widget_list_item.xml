@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_list_item"
+    style="@style/FluxNewsWidgetRow">
+
+    <FrameLayout
+        android:id="@+id/widget_list_item_icon_frame"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="8dp"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/widget_list_item_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/flux_news_widget_feed_icon"
+            android:scaleType="fitCenter" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/widget_list_item_initial"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/flux_news_widget_icon_background"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_list_item_title"
+            style="@style/FluxNewsWidgetRowTitle" />
+
+        <TextView
+            android:id="@+id/widget_list_item_feed"
+            style="@style/FluxNewsWidgetRowFeed" />
+    </LinearLayout>
+</LinearLayout>

@@ -321,6 +321,28 @@ class Settings extends StatelessWidget {
                 ),
 
                 const Divider(),
+                ListTile(
+                  leading: const Icon(
+                    Icons.widgets_outlined,
+                  ),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      'Widget settings',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, FluxNewsState.widgetSettingsRouteString);
+                  },
+                  trailing: const Icon(
+                    Icons.arrow_right,
+                  ),
+                ),
+
+                const Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Row(

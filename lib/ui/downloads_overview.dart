@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -25,12 +26,14 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   StreamSubscription<dynamic>? _mediaItemSubscription;
   final Map<int, Future<String?>> _titleFutureByAttachmentId = {};
   final Map<int, Future<News?>> _newsFutureByAttachmentId = {};
+  final Map<int, Future<double?>> _playbackProgressFutureByNewsId = {};
 
   @override
   void initState() {
     super.initState();
     _loadDownloads(initial: true);
-    _downloadedAudiosChangedSubscription = AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
+    _downloadedAudiosChangedSubscription =
+        AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
       if (!mounted) return;
       _loadDownloads();
     });
@@ -58,6 +61,7 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     if (!mounted) return;
     setState(() {
       _downloads = data;
+      _playbackProgressFutureByNewsId.clear();
       if (initial) _initialLoading = false;
     });
   }
@@ -92,13 +96,15 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       AudioDownloadService.cacheDownloadFeedTitle(attachmentID, news.feedTitle);
       AudioDownloadService.cacheDownloadFeedId(attachmentID, news.feedID);
       if (news.feedIconID != null) {
-        AudioDownloadService.cacheDownloadFeedIconId(attachmentID, news.feedIconID!);
+        AudioDownloadService.cacheDownloadFeedIconId(
+            attachmentID, news.feedIconID!);
       }
       return news;
     }
     // Article not in local DB (e.g. downloaded via search view) — build a
     // minimal News object from cached metadata so the feed name and icon show.
-    final cachedFeedTitle = AudioDownloadService.getDownloadFeedTitle(attachmentID);
+    final cachedFeedTitle =
+        AudioDownloadService.getDownloadFeedTitle(attachmentID);
     if (cachedFeedTitle == null || cachedFeedTitle.isEmpty) return null;
     final feedIconID = AudioDownloadService.getDownloadFeedIconId(attachmentID);
     final fallback = News(
@@ -122,7 +128,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       fallback.icon = appState.readFeedIconFile(feedIconID);
       final feedID = AudioDownloadService.getDownloadFeedId(attachmentID);
       if (feedID != null && feedID >= 0) {
-        fallback.iconMimeType = await queryFeedIconMimeTypeByFeedId(appState, feedID);
+        fallback.iconMimeType =
+            await queryFeedIconMimeTypeByFeedId(appState, feedID);
       }
     }
     return fallback;
@@ -135,13 +142,61 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
+  Future<double?> _getPlaybackProgress(News news) async {
+    if (news.newsID < 0 || news.readingTime <= 0) return null;
+
+    final saved = await AudioProgressStore.read(
+        AudioProgressStore.keyForNews(news.newsID));
+    final localMs = int.tryParse(saved ?? '') ?? 0;
+    // "0" is written explicitly when an episode was completed/restarted.
+    // Keep that local reset unless a newer local playback position exists.
+    final wasReset = saved != null && localMs == 0;
+
+    int serverMs = 0;
+    if (!wasReset) {
+      final audioAttachments = news.getAudioAttachments();
+      if (audioAttachments.isNotEmpty) {
+        final attachment = audioAttachments.first;
+        final cached = AudioDownloadService.getDownloadMediaProgression(
+            attachment.attachmentID);
+        if (cached != null && cached > 0) {
+          serverMs = cached * 1000;
+        } else if (attachment.mediaProgression > 0) {
+          serverMs = attachment.mediaProgression * 1000;
+        }
+      }
+    }
+
+    final positionMs = localMs > serverMs ? localMs : serverMs;
+    if (positionMs <= 0) return null;
+
+    final totalMs = Duration(minutes: news.readingTime).inMilliseconds;
+    if (totalMs <= 0) return null;
+
+    if (serverMs > localMs && !wasReset) {
+      await AudioProgressStore.write(
+          AudioProgressStore.keyForNews(news.newsID), serverMs.toString());
+    }
+
+    return (positionMs / totalMs).clamp(0.0, 1.0);
+  }
+
+  Future<double?> _playbackProgressFutureForNews(News news) {
+    return _playbackProgressFutureByNewsId.putIfAbsent(
+      news.newsID,
+      () => _getPlaybackProgress(news),
+    );
+  }
+
   Future<void> _openDownloadedItem(DownloadedAudioInfo item) async {
     final news = await _newsFutureForAttachmentId(item.attachmentID);
     if (!mounted) return;
 
     if (news == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
       );
       return;
     }
@@ -152,6 +207,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
         builder: (context) => NewsAudioPlayerScreen(news: news),
       ),
     );
+    _playbackProgressFutureByNewsId.remove(news.newsID);
+    if (mounted) setState(() {});
   }
 
   Future<void> _refresh() => _loadDownloads();
@@ -168,13 +225,16 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     await AudioDownloadService.deleteDownloadedAudioByStorageId(item.storageID);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.downloadsManagerDeletedSnackbar)),
+      SnackBar(
+          content: Text(
+              AppLocalizations.of(context)!.downloadsManagerDeletedSnackbar)),
     );
   }
 
   Future<void> _dismissAndDeleteItem(DownloadedAudioInfo item) async {
     // Optimistic removal — no FutureBuilder restart, no flicker.
-    setState(() => _downloads.removeWhere((d) => d.storageID == item.storageID));
+    setState(
+        () => _downloads.removeWhere((d) => d.storageID == item.storageID));
     _titleFutureByAttachmentId.remove(item.attachmentID);
     _newsFutureByAttachmentId.remove(item.attachmentID);
 
@@ -186,7 +246,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       await _loadDownloads();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.loadDownloadedDataError)),
       );
     }
   }
@@ -200,7 +262,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings, style: theme.textTheme.titleLarge),
+        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings,
+            style: theme.textTheme.titleLarge),
       ),
       body: _initialLoading
           ? const Center(child: CircularProgressIndicator())
@@ -211,9 +274,11 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   final horizontalPadding = appState.isTablet ? 24.0 : 12.0;
                   return Center(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: appState.isTablet ? 1100 : double.infinity),
+                      constraints: BoxConstraints(
+                          maxWidth: appState.isTablet ? 1100 : double.infinity),
                       child: ListView(
-                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding, vertical: 12),
                         children: [
                           _buildRunningDownloadsCard(),
                           const SizedBox(height: 16),
@@ -232,8 +297,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text(AppLocalizations.of(context)!.downloadsManagerDeleteTitle),
-            content: Text(AppLocalizations.of(context)!.downloadsManagerDeleteMessage),
+            title:
+                Text(AppLocalizations.of(context)!.downloadsManagerDeleteTitle),
+            content: Text(
+                AppLocalizations.of(context)!.downloadsManagerDeleteMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
@@ -255,7 +322,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       initialData: AudioDownloadService.getActiveDownloadsSnapshot(),
       stream: AudioDownloadService.activeDownloadsStream,
       builder: (context, snapshot) {
-        final activeDownloads = snapshot.data ?? const <AudioDownloadProgress>[];
+        final activeDownloads =
+            snapshot.data ?? const <AudioDownloadProgress>[];
 
         return Card(
           clipBehavior: Clip.antiAlias,
@@ -266,10 +334,13 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.downloading_rounded, color: theme.colorScheme.primary),
+                    Icon(Icons.downloading_rounded,
+                        color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(AppLocalizations.of(context)!.runningDownloads, style: theme.textTheme.titleMedium),
+                      child: Text(
+                          AppLocalizations.of(context)!.runningDownloads,
+                          style: theme.textTheme.titleMedium),
                     ),
                     if (activeDownloads.isNotEmpty)
                       TextButton.icon(
@@ -311,7 +382,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -325,7 +397,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                     builder: (context, snapshot) {
                       final title = snapshot.data;
                       return Text(
-                        title != null && title.isNotEmpty ? title : progress.fileName,
+                        title != null && title.isNotEmpty
+                            ? title
+                            : progress.fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       );
@@ -337,7 +411,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   tooltip: AppLocalizations.of(context)!.cancel,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  onPressed: () => AudioDownloadService.cancelDownload(progress.attachmentID),
+                  onPressed: () => AudioDownloadService.cancelDownload(
+                      progress.attachmentID),
                 ),
               ],
             ),
@@ -351,7 +426,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
     );
   }
 
-  Widget _buildDownloadedList(List<DownloadedAudioInfo> downloads, bool isTablet) {
+  Widget _buildDownloadedList(
+      List<DownloadedAudioInfo> downloads, bool isTablet) {
     final theme = Theme.of(context);
     final visibleDownloads = downloads;
 
@@ -374,10 +450,12 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
               padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
               child: Row(
                 children: [
-                  Icon(Icons.library_music_rounded, color: theme.colorScheme.primary),
+                  Icon(Icons.library_music_rounded,
+                      color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(AppLocalizations.of(context)!.fileList, style: theme.textTheme.titleMedium),
+                    child: Text(AppLocalizations.of(context)!.fileList,
+                        style: theme.textTheme.titleMedium),
                   ),
                   Text(
                     visibleDownloads.length.toString(),
@@ -396,9 +474,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   childAspectRatio: 2.7,
-                  mainAxisExtent: 120,
+                  mainAxisExtent: 132,
                 ),
-                itemBuilder: (context, index) => _buildDownloadedItemCard(visibleDownloads[index]),
+                itemBuilder: (context, index) =>
+                    _buildDownloadedItemCard(visibleDownloads[index]),
               )
             else
               ...visibleDownloads.map((item) => Padding(
@@ -414,7 +493,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   Widget _buildDownloadedItemCard(DownloadedAudioInfo item) {
     final theme = Theme.of(context);
     final appState = context.watch<FluxNewsState>();
-    final formattedDate = context.read<FluxNewsState>().dateFormat.format(item.downloadedAt.toLocal());
+    final formattedDate = context
+        .read<FluxNewsState>()
+        .dateFormat
+        .format(item.downloadedAt.toLocal());
     return Dismissible(
       key: ValueKey(item.storageID),
       direction: DismissDirection.endToStart,
@@ -453,7 +535,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                         builder: (context, snapshot) {
                           final title = snapshot.data;
                           return Text(
-                            title != null && title.isNotEmpty ? title : item.fileName,
+                            title != null && title.isNotEmpty
+                                ? title
+                                : item.fileName,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall,
@@ -472,7 +556,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                         }
 
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(999),
@@ -506,7 +591,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   builder: (context, snapshot) {
                     final news = snapshot.data;
                     final feedTitle = news?.feedTitle;
-                    final meta = news != null && news.getFormattedPlaybackTime().isNotEmpty
+                    final meta = news != null &&
+                            news.getFormattedPlaybackTime().isNotEmpty
                         ? '${news.getFormattedPlaybackTime()} • $formattedDate'
                         : formattedDate;
                     return Column(
@@ -519,12 +605,15 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                             children: [
                               if (appState.showFeedIcons && news != null)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(0, 0, 6, 0),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 0, 6, 0),
                                   child: news.getFeedIcon(16.0, context),
                                 ),
                               Expanded(
                                 child: Text(
-                                  feedTitle != null && feedTitle.isNotEmpty ? feedTitle : meta,
+                                  feedTitle != null && feedTitle.isNotEmpty
+                                      ? feedTitle
+                                      : meta,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodyMedium,
@@ -540,6 +629,8 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                                   style: theme.textTheme.bodyMedium,
                                 )
                               : const SizedBox.shrink(),
+                          if (news != null)
+                            _buildPlaybackProgressIndicator(news),
                         ]);
                   },
                 ),
@@ -548,6 +639,35 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPlaybackProgressIndicator(News news) {
+    final theme = Theme.of(context);
+    return FutureBuilder<double?>(
+      future: _playbackProgressFutureForNews(news),
+      builder: (context, snapshot) {
+        final progress = snapshot.data;
+        if (progress == null || progress <= 0) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor:
+                  theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

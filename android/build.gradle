@@ -3,9 +3,19 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.configureEach {
+        resolutionStrategy.force "androidx.work:work-runtime:2.11.2"
+        resolutionStrategy.force "androidx.glance:glance:1.1.1"
+        resolutionStrategy.force "androidx.glance:glance-appwidget:1.1.1"
+        resolutionStrategy.force "androidx.glance:glance-appwidget-proto:1.1.1"
+        resolutionStrategy.force "androidx.glance:glance-appwidget-external-protobuf:1.1.1"
+    }
     gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:deprecation"
+        }
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions.jvmTarget = "17"
         }
     }   
 }
@@ -13,6 +23,18 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.afterEvaluate {
+        if (project.plugins.hasPlugin('com.android.application') ||
+                project.plugins.hasPlugin('com.android.library')) {
+            if (project.android.compileSdk == null || project.android.compileSdk < 36) {
+                project.android.compileSdk = 36
+            }
+            project.android.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(':app')

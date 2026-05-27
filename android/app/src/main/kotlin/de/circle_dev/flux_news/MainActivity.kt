@@ -10,12 +10,16 @@ import android.content.pm.PackageInfo
 import androidx.browser.customtabs.*
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.view.WindowCompat
 import com.ryanheise.audioservice.AudioServiceActivity
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
+import org.json.JSONObject
 
 // this are the constants used in the dart code
 private const val CHANNEL = "UrlLauncher"
+private const val WIDGET_CHANNEL = "dev.kevincfechtel.fluxnews/widgets"
 private const val KEY_OPTIONS_URL = "url"
 private const val KEY_OPTIONS_PREFERRED_PACKAGE_NAME = "preferredPackageName"
 private const val KEY_OPTIONS_TOOLBAR_COLOR = "toolbarColor"
@@ -24,6 +28,7 @@ private const val KEY_OPTIONS_ENABLE_URL_BAR_HIDING = "enableUrlBarHiding"
 private const val KEY_OPTIONS_DEFAULT_SHARE_MENU_ITEM = "enableDefaultShare"
 private const val KEY_OPTIONS_ENABLE_INSTANT_APPS = "enableInstantApps"
 class MainActivity: AudioServiceActivity() {
+    private var pendingWidgetAction: Map<String, String>? = null
 
     // This is needed to hide the status bar and navigation bar
     override fun onPostResume() {
@@ -34,6 +39,8 @@ class MainActivity: AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        pendingWidgetAction = parseWidgetAction(intent)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
             call, result ->
@@ -119,6 +126,62 @@ class MainActivity: AudioServiceActivity() {
                 result.notImplemented()
             }
         }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WIDGET_CHANNEL).setMethodCallHandler {
+            call, result ->
+            when (call.method) {
+                "saveSnapshot" -> {
+                    val snapshot = call.argument<String>("snapshot") ?: "{}"
+                    getSharedPreferences(FluxNewsWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
+                        .edit()
+                        .putString(FluxNewsWidgetProvider.KEY_SNAPSHOT, snapshot)
+                        .apply()
+                    result.success(null)
+                }
+                "reloadWidgets" -> {
+                    reloadFluxNewsWidgets()
+                    result.success(null)
+                }
+                "peekPendingAction" -> {
+                    result.success(pendingWidgetAction)
+                }
+                "takePendingAction" -> {
+                    val action = pendingWidgetAction
+                    pendingWidgetAction = null
+                    result.success(action)
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingWidgetAction = parseWidgetAction(intent)
+    }
+
+    private fun parseWidgetAction(intent: Intent?): Map<String, String>? {
+        val uri = intent?.data ?: return null
+        if (uri.scheme != "fluxnews" || uri.host != "widget") return null
+        return when (uri.path) {
+            "/sync" -> mapOf("action" to "sync")
+            "/openNews" -> {
+                val newsID = uri.getQueryParameter("newsID") ?: return null
+                mapOf("action" to "openNews", "newsID" to newsID)
+            }
+            else -> null
+        }
+    }
+
+    private fun reloadFluxNewsWidgets() {
+        val manager = AppWidgetManager.getInstance(this)
+        val ids = manager.getAppWidgetIds(ComponentName(this, FluxNewsWidgetProvider::class.java))
+        val updateIntent = Intent(this, FluxNewsWidgetProvider::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        }
+        sendBroadcast(updateIntent)
     }
     private fun isPackageInstalled(packageName: String): Boolean {
         // check if the preferred package is installed

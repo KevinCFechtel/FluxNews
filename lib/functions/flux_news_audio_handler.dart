@@ -10,7 +10,9 @@ import 'package:http/io_client.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'
+    as sec_store;
+import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/dynamic_island_service.dart';
@@ -34,7 +36,8 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
     builder: () => FluxNewsAudioHandler(),
     config: const AudioServiceConfig(
       androidNotificationChannelId: FluxNewsState.androidNotificationChannelId,
-      androidNotificationChannelName: FluxNewsState.androidNotificationChannelName,
+      androidNotificationChannelName:
+          FluxNewsState.androidNotificationChannelName,
       androidNotificationIcon: FluxNewsState.androidNotificationIcon,
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
@@ -43,8 +46,10 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
       androidBrowsableRootExtras: {
         'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 1,
         'android.media.browse.CONTENT_STYLE_PLAYABLE_HINT': 1,
-        'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_BROWSABLE_HINT': 1,
-        'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_PLAYABLE_HINT': 1,
+        'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_BROWSABLE_HINT':
+            1,
+        'androidx.media.MediaBrowserServiceCompat.BrowserRoot.CONTENT_STYLE_PLAYABLE_HINT':
+            1,
       },
       // iOS/CarPlay support
       preloadArtwork: true,
@@ -61,7 +66,8 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
 
 enum SleepTimerEvent { stateChanged, fired }
 
-class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
+class FluxNewsAudioHandler extends BaseAudioHandler
+    with QueueHandler, SeekHandler {
   FluxNewsAudioHandler() {
     _initFuture = _init();
     _loadDebugMode();
@@ -82,7 +88,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   static Future<void> _loadDebugMode() async {
     try {
-      final value = await _debugStorage.read(key: FluxNewsState.secureStorageDebugModeKey);
+      final value = await _debugStorage.read(
+          key: FluxNewsState.secureStorageDebugModeKey);
       _debugMode = value == FluxNewsState.secureStorageTrueString;
     } catch (_) {}
   }
@@ -102,10 +109,12 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   bool _sleepTimerEnabled = false;
   DateTime? _sleepTimerEndAt;
   int _sleepTimerMinutes = 30;
-  final StreamController<SleepTimerEvent> _sleepTimerController = StreamController<SleepTimerEvent>.broadcast();
+  final StreamController<SleepTimerEvent> _sleepTimerController =
+      StreamController<SleepTimerEvent>.broadcast();
 
   String _downloadsTitleLocalized() {
-    final languageCode = ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase();
+    final languageCode =
+        ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase();
     return languageCode == 'de' ? 'Folgen' : 'Episodes';
   }
 
@@ -145,6 +154,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   String? _currentUrl;
   ProcessingState _lastProcessingState = ProcessingState.idle;
   bool _isHandlingCompletion = false;
+  double? _volumeBeforeDucking;
 
   Future<int?> _resolveCurrentAttachmentId() async {
     final item = _currentMediaItem;
@@ -162,7 +172,9 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final filePath = uri.toFilePath();
     final downloads = await AudioDownloadService.getDownloadedAudios();
-    final matched = downloads.where((download) => download.filePath == filePath).fold<DownloadedAudioInfo?>(
+    final matched = downloads
+        .where((download) => download.filePath == filePath)
+        .fold<DownloadedAudioInfo?>(
           null,
           (previous, download) => previous ?? download,
         );
@@ -176,11 +188,13 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     String? deleteAfterPlaybackValue;
     try {
-      deleteAfterPlaybackValue = await _storage.read(key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey);
+      deleteAfterPlaybackValue = await _storage.read(
+          key: FluxNewsState.secureStorageDeleteAudioAfterPlaybackKey);
     } catch (_) {
       // Keychain inaccessible (screen locked, pre-migration WhenUnlocked item) — skip delete.
     }
-    final shouldDeleteAfterPlayback = deleteAfterPlaybackValue == FluxNewsState.secureStorageTrueString;
+    final shouldDeleteAfterPlayback =
+        deleteAfterPlaybackValue == FluxNewsState.secureStorageTrueString;
     if (!shouldDeleteAfterPlayback) {
       return;
     }
@@ -196,7 +210,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   Future<List<MediaItem>> _buildDownloadedMediaItems() async {
     final downloads = await AudioDownloadService.getDownloadedAudios();
     final defaultArtworkUri = await AudioDownloadService.getDefaultArtworkUri();
-    final defaultArtworkFilePath = await AudioDownloadService.getDefaultArtworkFilePath();
+    final defaultArtworkFilePath =
+        await AudioDownloadService.getDefaultArtworkFilePath();
     final items = <MediaItem>[];
     final nextCache = <String, MediaItem>{};
 
@@ -209,17 +224,23 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
       if (attachmentID >= 0) {
         title = AudioDownloadService.getDownloadTitle(attachmentID) ??
-            await queryNewsTitleByAttachmentId(_downloadQueryState, attachmentID);
+            await queryNewsTitleByAttachmentId(
+                _downloadQueryState, attachmentID);
         feedTitle = AudioDownloadService.getDownloadFeedTitle(attachmentID) ??
-            await queryFeedTitleByAttachmentId(_downloadQueryState, attachmentID);
-        newsID = await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
+            await queryFeedTitleByAttachmentId(
+                _downloadQueryState, attachmentID);
+        newsID =
+            await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
       }
 
       Uri? artUri;
       String? artCacheFile;
       if (attachmentID >= 0) {
-        artUri = await AudioDownloadService.getCachedArtworkUriForAttachment(attachmentID);
-        artCacheFile = await AudioDownloadService.getCachedArtworkFilePathForAttachment(attachmentID);
+        artUri = await AudioDownloadService.getCachedArtworkUriForAttachment(
+            attachmentID);
+        artCacheFile =
+            await AudioDownloadService.getCachedArtworkFilePathForAttachment(
+                attachmentID);
       }
       artUri ??= defaultArtworkUri;
       artCacheFile ??= defaultArtworkFilePath;
@@ -249,7 +270,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     return items;
   }
 
-  Future<Duration?> _resolveSavedPosition(MediaItem item, [Map<String, dynamic>? extras]) async {
+  Future<Duration?> _resolveSavedPosition(MediaItem item,
+      [Map<String, dynamic>? extras]) async {
     final mergedExtras = <String, dynamic>{
       if (item.extras != null) ...item.extras!,
       if (extras != null) ...extras,
@@ -261,7 +283,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     final newsID = mergedExtras['newsID'];
     if (newsID is int) {
       try {
-        final saved = await _storage.read(key: '${FluxNewsState.audioProgressKeyPrefix}$newsID');
+        final saved = await AudioProgressStore.read(
+            AudioProgressStore.keyForNews(newsID));
         localMs = saved != null ? int.tryParse(saved) ?? 0 : 0;
         // "0" written explicitly means the episode was completed or re-downloaded
         // and should start from the beginning. Distinguish from null (never played
@@ -283,15 +306,18 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     int serverMs = 0;
     final attachmentID = mergedExtras['attachmentID'];
     if (attachmentID is int && attachmentID >= 0) {
-      final cached = AudioDownloadService.getDownloadMediaProgression(attachmentID);
+      final cached =
+          AudioDownloadService.getDownloadMediaProgression(attachmentID);
       if (cached != null && cached > 0) {
         serverMs = cached * 1000;
       } else {
         // Cache miss (first access before template setup) — fall back to DB.
-        final news = await queryNewsByAttachmentId(_downloadQueryState, attachmentID);
+        final news =
+            await queryNewsByAttachmentId(_downloadQueryState, attachmentID);
         final attachment = news?.attachments
             ?.where((candidate) => candidate.attachmentID == attachmentID)
-            .fold<Attachment?>(null, (previous, candidate) => previous ?? candidate);
+            .fold<Attachment?>(
+                null, (previous, candidate) => previous ?? candidate);
         final mediaProgression = attachment?.mediaProgression ?? 0;
         if (mediaProgression > 0) {
           serverMs = mediaProgression * 1000;
@@ -304,10 +330,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       // Server is ahead — write to Keychain so it persists across restarts.
       if (newsID is int) {
         try {
-          await _storage.write(
-            key: '${FluxNewsState.audioProgressKeyPrefix}$newsID',
-            value: serverMs.toString(),
-          );
+          await AudioProgressStore.write(
+              AudioProgressStore.keyForNews(newsID), serverMs.toString());
         } catch (_) {}
       }
       return Duration(milliseconds: serverMs);
@@ -324,7 +348,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     return null;
   }
 
-  Future<void> _persistCurrentProgress({bool clear = false, bool syncToServer = false}) async {
+  Future<void> _persistCurrentProgress(
+      {bool clear = false, bool syncToServer = false}) async {
     final item = _currentMediaItem;
     if (item == null) {
       return;
@@ -332,21 +357,23 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final extras = item.extras ?? const <String, dynamic>{};
     int? newsID = extras['newsID'] is int ? extras['newsID'] as int : null;
-    final attachmentID = extras['attachmentID'] is int ? extras['attachmentID'] as int : null;
+    final attachmentID =
+        extras['attachmentID'] is int ? extras['attachmentID'] as int : null;
 
     if (newsID == null && attachmentID != null && attachmentID >= 0) {
-      newsID = await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
+      newsID =
+          await queryNewsIdByAttachmentId(_downloadQueryState, attachmentID);
     }
 
     if (newsID == null) {
       return;
     }
 
-    final progressKey = '${FluxNewsState.audioProgressKeyPrefix}$newsID';
+    final progressKey = AudioProgressStore.keyForNews(newsID);
     if (clear) {
       // Write "0" instead of deleting so _loadProgress can distinguish between
       // "never played locally" (null) and "completed/reset" (0).
-      await _storage.write(key: progressKey, value: '0');
+      await AudioProgressStore.write(progressKey, '0');
       if (syncToServer && attachmentID != null && attachmentID >= 0) {
         _syncProgressionToServer(attachmentID, 0).ignore();
       }
@@ -358,7 +385,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       return;
     }
 
-    await _storage.write(key: progressKey, value: positionMs.toString());
+    await AudioProgressStore.write(progressKey, positionMs.toString());
     _lastPeriodicPersistAt = DateTime.now();
 
     if (syncToServer && attachmentID != null && attachmentID >= 0) {
@@ -369,17 +396,24 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   /// Sends the current playback position to the Miniflux server via
   /// PUT /v1/enclosures/{id}. Requires Miniflux >= 2.2.0.
   /// Errors are swallowed so a network failure never disrupts playback.
-  Future<void> _syncProgressionToServer(int attachmentID, int positionSeconds) async {
+  Future<void> _syncProgressionToServer(
+      int attachmentID, int positionSeconds) async {
     try {
-      final url = await _storage.read(key: FluxNewsState.secureStorageMinifluxURLKey);
-      final apiKey = await _storage.read(key: FluxNewsState.secureStorageMinifluxAPIKey);
-      final version = await _storage.read(key: FluxNewsState.secureStorageMinifluxVersionKey);
-      if (url == null || url.isEmpty || apiKey == null || apiKey.isEmpty) return;
+      final url =
+          await _storage.read(key: FluxNewsState.secureStorageMinifluxURLKey);
+      final apiKey =
+          await _storage.read(key: FluxNewsState.secureStorageMinifluxAPIKey);
+      final version = await _storage.read(
+          key: FluxNewsState.secureStorageMinifluxVersionKey);
+      if (url == null || url.isEmpty || apiKey == null || apiKey.isEmpty) {
+        return;
+      }
       if (!_isAtLeastMiniflux220(version)) return;
 
       final Client client;
       if (Platform.isAndroid) {
-        final engine = CronetEngine.build(cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
+        final engine = CronetEngine.build(
+            cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
         client = CronetClient.fromCronetEngine(engine, closeEngine: true);
       } else {
         client = IOClient(HttpClient());
@@ -389,8 +423,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
           Uri.parse('${url}enclosures/$attachmentID'),
           headers: {
             FluxNewsState.httpMinifluxAuthHeaderString: apiKey,
-            FluxNewsState.httpMinifluxAcceptHeaderString: FluxNewsState.httpContentTypeString,
-            FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
+            FluxNewsState.httpMinifluxAcceptHeaderString:
+                FluxNewsState.httpContentTypeString,
+            FluxNewsState.httpMinifluxContentTypeHeaderString:
+                FluxNewsState.httpContentTypeString,
           },
           body: jsonEncode({'media_progression': positionSeconds}),
         );
@@ -402,7 +438,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
   bool _isAtLeastMiniflux220(String? v) {
     if (v == null || v.trim().isEmpty) return false;
-    final p = RegExp(r'\d+').allMatches(v).map((m) => int.parse(m.group(0)!)).toList();
+    final p = RegExp(r'\d+')
+        .allMatches(v)
+        .map((m) => int.parse(m.group(0)!))
+        .toList();
     if (p.isEmpty) return false;
     final major = p[0];
     final minor = p.length > 1 ? p[1] : 0;
@@ -415,7 +454,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     }
 
     final now = DateTime.now();
-    if (_lastPeriodicPersistAt != null && now.difference(_lastPeriodicPersistAt!) < const Duration(seconds: 30)) {
+    if (_lastPeriodicPersistAt != null &&
+        now.difference(_lastPeriodicPersistAt!) < const Duration(seconds: 30)) {
       return;
     }
 
@@ -480,23 +520,43 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await session.configure(const AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playback,
       avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.longFormAudio,
+      avAudioSessionRouteSharingPolicy:
+          AVAudioSessionRouteSharingPolicy.longFormAudio,
       androidAudioAttributes: AndroidAudioAttributes(
         contentType: AndroidAudioContentType.music,
         usage: AndroidAudioUsage.media,
       ),
       androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
     ));
-    // setActive may still fail with !int if a non-interruptible source is
-    // active at startup. just_audio activates the session internally via
-    // AVPlayer, so we ignore the error to keep _initFuture successful.
-    try {
-      await session.setActive(true);
-    } catch (_) {}
+    // Do not request Android audio focus during handler initialization. Android
+    // Auto can create/browse the service without immediate playback; claiming
+    // focus here can leave the car route in a stale state. Playback activates
+    // the session explicitly in play().
+    if (Platform.isIOS) {
+      // setActive may still fail with !int if a non-interruptible source is
+      // active at startup. just_audio activates the session internally via
+      // AVPlayer, so we ignore the error to keep _initFuture successful.
+      try {
+        await session.setActive(true);
+      } catch (e) {
+        _debugLog('AudioSession.setActive during init failed: $e');
+      }
+    }
+
+    session.interruptionEventStream.listen((event) {
+      _handleAudioInterruption(event).ignore();
+    });
+
+    session.becomingNoisyEventStream.listen((_) {
+      _handleBecomingNoisy().ignore();
+    });
 
     _player.playerStateStream.listen((state) {
+      _debugLog(
+          'PlayerState: playing=${state.playing} processing=${state.processingState}');
       final isCompleted = state.processingState == ProcessingState.completed;
-      final enteredCompletedState = isCompleted && _lastProcessingState != ProcessingState.completed;
+      final enteredCompletedState =
+          isCompleted && _lastProcessingState != ProcessingState.completed;
 
       if (enteredCompletedState && !_isHandlingCompletion) {
         _isHandlingCompletion = true;
@@ -538,6 +598,45 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     });
   }
 
+  Future<void> _handleAudioInterruption(AudioInterruptionEvent event) async {
+    _debugLog(
+        'Audio interruption: begin=${event.begin} type=${event.type} playing=${_player.playing}');
+    if (event.begin) {
+      switch (event.type) {
+        case AudioInterruptionType.duck:
+          if (_volumeBeforeDucking == null) {
+            _volumeBeforeDucking = _player.volume;
+            await _player.setVolume(0.25);
+          }
+          playbackState.add(_buildPlaybackState());
+          break;
+        case AudioInterruptionType.pause:
+        case AudioInterruptionType.unknown:
+          if (_player.playing) {
+            await pause();
+          }
+          break;
+      }
+      return;
+    }
+
+    if (event.type == AudioInterruptionType.duck) {
+      final volume = _volumeBeforeDucking;
+      _volumeBeforeDucking = null;
+      if (volume != null) {
+        await _player.setVolume(volume);
+        playbackState.add(_buildPlaybackState());
+      }
+    }
+  }
+
+  Future<void> _handleBecomingNoisy() async {
+    _debugLog('Audio becoming noisy event: playing=${_player.playing}');
+    if (_player.playing) {
+      await pause();
+    }
+  }
+
   Future<void> loadMediaItem({
     required String url,
     required MediaItem item,
@@ -545,6 +644,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }) async {
     await _initFuture; // ensure AVAudioSession is configured before activating
     final shouldReload = _currentUrl != url;
+    _debugLog(
+        'loadMediaItem start: title=${item.title} shouldReload=$shouldReload initialPosition=$initialPosition url=$url');
 
     if (shouldReload && _currentMediaItem != null) {
       await _persistCurrentProgress(syncToServer: true);
@@ -556,7 +657,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     // already set by _buildDownloadedMediaItems() — skip the expensive async
     // lookups in that case. Only fall back to the default when artUri is absent
     // (e.g. streaming items built without pre-resolved artwork).
-    final artCacheFileAlreadySet = item.extras?.containsKey('artCacheFile') == true;
+    final artCacheFileAlreadySet =
+        item.extras?.containsKey('artCacheFile') == true;
     final Uri? fallbackArtworkUri;
     if (item.artUri != null) {
       fallbackArtworkUri = item.artUri;
@@ -566,14 +668,17 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final String? defaultArtworkFilePath;
     if (artCacheFileAlreadySet) {
-      defaultArtworkFilePath = null; // already in item.extras, no extra lookup needed
+      defaultArtworkFilePath =
+          null; // already in item.extras, no extra lookup needed
     } else {
-      defaultArtworkFilePath = await AudioDownloadService.getDefaultArtworkFilePath();
+      defaultArtworkFilePath =
+          await AudioDownloadService.getDefaultArtworkFilePath();
     }
 
     final preparedExtras = <String, dynamic>{
       if (item.extras != null) ...item.extras!,
-      if (defaultArtworkFilePath != null) 'artCacheFile': defaultArtworkFilePath,
+      if (defaultArtworkFilePath != null)
+        'artCacheFile': defaultArtworkFilePath,
     };
 
     final preparedItem = item.copyWith(
@@ -588,8 +693,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     if (shouldReload) {
       final uri = Uri.parse(url);
       if (uri.scheme == 'file') {
+        _debugLog('loadMediaItem setAudioSource file');
         await _player.setAudioSource(AudioSource.file(uri.toFilePath()));
       } else {
+        _debugLog('loadMediaItem setAudioSource uri');
         await _player.setAudioSource(AudioSource.uri(uri));
       }
     } else if (_player.processingState == ProcessingState.completed) {
@@ -604,32 +711,84 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     final state = _buildPlaybackState();
     playbackState.add(state);
+    _debugLog(
+        'loadMediaItem done: processing=${_player.processingState} duration=${_player.duration}');
   }
 
   @override
   Future<void> play() async {
-    final session = await AudioSession.instance;
-    // Same rationale as in _init(): CarPlay grants audio focus at AVPlayer
-    // level; explicit setActive may fail with !int when another source is
-    // non-interruptible. just_audio handles the session internally.
-    try {
-      await session.setActive(true);
-    } catch (_) {}
+    await _initFuture;
+    _debugLog(
+        'play requested: item=${_currentMediaItem?.title} processing=${_player.processingState} playing=${_player.playing}');
+    await _activateAudioSessionForPlayback();
     // just_audio's play() completes when playback STOPS, not when it starts.
     // Awaiting it would block the entire call chain until the episode ends.
     _player.play().ignore();
+    if (Platform.isAndroid) {
+      await _verifyAndroidPlaybackStarted();
+    }
     final state = _buildPlaybackState();
     playbackState.add(state);
     _startDynamicIsland();
+    _debugLog(
+        'play dispatched: processing=${_player.processingState} playing=${_player.playing}');
+  }
+
+  Future<void> _activateAudioSessionForPlayback() async {
+    final session = await AudioSession.instance;
+    try {
+      await session.setActive(true);
+      return;
+    } catch (e) {
+      if (Platform.isAndroid) {
+        logThis(
+            'AudioHandler',
+            'AudioSession.setActive during play failed, retrying: $e',
+            LogLevel.WARNING);
+        await Future.delayed(const Duration(milliseconds: 250));
+        try {
+          await session.setActive(true);
+          return;
+        } catch (retryError) {
+          logThis(
+              'AudioHandler',
+              'AudioSession.setActive retry during play failed: $retryError',
+              LogLevel.WARNING);
+          return;
+        }
+      }
+      _debugLog('AudioSession.setActive during play failed: $e');
+    }
+  }
+
+  Future<void> _verifyAndroidPlaybackStarted() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (_player.playing && _player.processingState != ProcessingState.idle) {
+      return;
+    }
+
+    logThis(
+        'AudioHandler',
+        'Android playback did not start after play dispatch: '
+            'playing=${_player.playing} '
+            'processing=${_player.processingState} '
+            'item=${_currentMediaItem?.title}',
+        LogLevel.WARNING);
+    await _activateAudioSessionForPlayback();
+    _player.play().ignore();
   }
 
   @override
   Future<void> pause() async {
+    _debugLog(
+        'pause requested: item=${_currentMediaItem?.title} processing=${_player.processingState} playing=${_player.playing}');
     await _player.pause();
     await _persistCurrentProgress(syncToServer: true);
     final state = _buildPlaybackState();
     playbackState.add(state);
     _updateDynamicIsland();
+    _debugLog(
+        'pause done: processing=${_player.processingState} playing=${_player.playing}');
   }
 
   @override
@@ -646,7 +805,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   @override
-  Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async {
+  Future<List<MediaItem>> getChildren(String parentMediaId,
+      [Map<String, dynamic>? options]) async {
     if (parentMediaId == AudioService.recentRootId) {
       if (_currentMediaItem != null) {
         return [_forBrowseList(_currentMediaItem!)];
@@ -691,7 +851,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   @override
   Future<MediaItem?> getMediaItem(String mediaId) async {
     if (_isRootId(mediaId)) {
-      return const MediaItem(id: _rootMediaId, title: 'Flux News', playable: false);
+      return const MediaItem(
+          id: _rootMediaId, title: 'Flux News', playable: false);
     }
 
     if (mediaId == _downloadsMediaId) {
@@ -728,7 +889,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   @override
-  Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
+  Future<void> playFromMediaId(String mediaId,
+      [Map<String, dynamic>? extras]) async {
     _debugLog('playFromMediaId start — mediaId=$mediaId extras=$extras');
 
     if (_isRootId(mediaId)) {
@@ -741,22 +903,29 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
 
     MediaItem? target = mediaId == _currentMediaItem?.id
         ? _currentMediaItem
-        : queue.value.where((item) => item.id == mediaId).fold<MediaItem?>(null, (prev, e) => prev ?? e);
+        : queue.value
+            .where((item) => item.id == mediaId)
+            .fold<MediaItem?>(null, (prev, e) => prev ?? e);
 
     if (target != null) {
-      _debugLog('playFromMediaId — target found in current/queue: ${target.title}');
+      _debugLog(
+          'playFromMediaId — target found in current/queue: ${target.title}');
     } else {
       _debugLog('playFromMediaId — target not in cache, calling getMediaItem');
       target = await getMediaItem(mediaId);
-      _debugLog('playFromMediaId — getMediaItem returned: ${target?.title ?? "null"}');
+      _debugLog(
+          'playFromMediaId — getMediaItem returned: ${target?.title ?? "null"}');
     }
 
     // Check if it's a download (file:// URI)
     if (target == null) {
       final uri = Uri.tryParse(mediaId);
       if (uri != null && uri.scheme == 'file') {
-        final title = uri.pathSegments.isNotEmpty ? Uri.decodeComponent(uri.pathSegments.last) : mediaId;
-        _debugLog('playFromMediaId — building fallback MediaItem for file:// URI');
+        final title = uri.pathSegments.isNotEmpty
+            ? Uri.decodeComponent(uri.pathSegments.last)
+            : mediaId;
+        _debugLog(
+            'playFromMediaId — building fallback MediaItem for file:// URI');
         target = MediaItem(
           id: mediaId,
           title: title,
@@ -770,7 +939,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     if (target == null) {
       final uri = Uri.tryParse(mediaId);
       if (uri != null && uri.hasScheme) {
-        final fallbackTitle = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
+        final fallbackTitle =
+            uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
         _debugLog('playFromMediaId — building generic fallback MediaItem');
         target = MediaItem(
           id: mediaId,
@@ -786,9 +956,11 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       return;
     }
 
-    _debugLog('playFromMediaId — resolving saved position for: ${target.title}');
+    _debugLog(
+        'playFromMediaId — resolving saved position for: ${target.title}');
     final initialPosition = await _resolveSavedPosition(target, extras);
-    _debugLog('playFromMediaId — initialPosition=$initialPosition, calling loadMediaItem');
+    _debugLog(
+        'playFromMediaId — initialPosition=$initialPosition, calling loadMediaItem');
 
     await loadMediaItem(
       url: target.id,
@@ -801,7 +973,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   }
 
   @override
-  Future<void> prepareFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
+  Future<void> prepareFromMediaId(String mediaId,
+      [Map<String, dynamic>? extras]) async {
     if (_isRootId(mediaId)) {
       return;
     }
@@ -812,7 +985,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     if (target == null) {
       final uri = Uri.tryParse(mediaId);
       if (uri != null && uri.hasScheme) {
-        final fallbackTitle = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
+        final fallbackTitle =
+            uri.pathSegments.isNotEmpty ? uri.pathSegments.last : mediaId;
         target = MediaItem(
           id: mediaId,
           album: 'Flux News',
@@ -852,7 +1026,8 @@ class FluxNewsAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     await _persistCurrentProgress();
     await _player.stop();
     _currentUrl = null; // force setAudioSource on next play of the same track
-    playbackState.add(_buildPlaybackState().copyWith(processingState: AudioProcessingState.idle));
+    playbackState.add(_buildPlaybackState()
+        .copyWith(processingState: AudioProcessingState.idle));
     await _endDynamicIsland();
   }
 

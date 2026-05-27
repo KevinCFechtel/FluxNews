@@ -6,7 +6,5 @@
 	<array>
 		<string>group.dev.kevincfechtel.fluxNews</string>
 	</array>
-	<key>com.apple.developer.carplay-audio</key>
-	<true/>
 </dict>
 </plist>

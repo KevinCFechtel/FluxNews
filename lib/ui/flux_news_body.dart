@@ -7,17 +7,19 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
+import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/ui/news_list.dart';
 import 'package:flux_news/functions/sync_news.dart';
+import 'package:flux_news/functions/widget_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -39,24 +41,122 @@ class FluxNewsBody extends StatelessWidget {
       appState.isTablet = false;
     }
 
-    return FluxNewsBodyStatefulWrapper(
-      onInit: () {
-        appState.startUp = true;
-        appState.syncProcess = true;
-        initConfig(context, appState, false);
-        appState.categoryList = queryCategoriesFromDB(appState, context);
-        appState.newsList = Future<List<News>>.value([]);
-      },
-      onResume: () {
-        // Re-initialize config if a headless CarPlay launch left storageValues
-        // empty (readAll failed while screen was locked). Now that the app is
-        // in the foreground, the Keychain is accessible again.
-        if (appState.minifluxURL == null && !appState.syncProcess) {
-          logThis('FluxNewsBody', 'Resumed with null minifluxURL — re-running initConfig', LogLevel.INFO);
-          initConfig(context, appState, true);
+    return FluxNewsBodyStatefulWrapper(onInit: () {
+      appState.startUp = true;
+      appState.syncProcess = true;
+      initConfig(context, appState, false);
+      appState.categoryList = queryCategoriesFromDB(appState, context);
+      appState.newsList = Future<List<News>>.value([]);
+    }, onResume: (inactiveDuration) async {
+      logThis(
+          'FluxNewsBody',
+          'Foreground resume: '
+              'inactiveSeconds=${inactiveDuration?.inSeconds} '
+              'syncOnStart=${appState.syncOnStart} '
+              'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0} '
+              'syncProcess=${appState.syncProcess} '
+              'startupSyncHandled=${appState.startupSyncHandledForUiSession} '
+              'minifluxConfigured=${appState.minifluxURL != null && appState.minifluxAPIKey != null} '
+              'errorOnMinifluxAuth=${appState.errorOnMinifluxAuth}',
+          LogLevel.INFO);
+      // Re-initialize config if a headless CarPlay launch left storageValues
+      // empty (readAll failed while screen was locked). Now that the app is
+      // in the foreground, the Keychain is accessible again.
+      if (appState.minifluxURL == null && !appState.syncProcess) {
+        logThis(
+            'FluxNewsBody',
+            'Resumed with null minifluxURL — re-running initConfig',
+            LogLevel.INFO);
+        initConfig(context, appState, true);
+      }
+
+      final shouldTreatResumeAsStartup = inactiveDuration == null ||
+          inactiveDuration >= const Duration(minutes: 5);
+      final shouldRunStartupSync = appState.syncOnStart &&
+          appState.backgroundSyncIntervalMinutes > 0 &&
+          (!appState.startupSyncHandledForUiSession ||
+              shouldTreatResumeAsStartup) &&
+          !appState.syncProcess &&
+          appState.minifluxURL != null &&
+          appState.minifluxAPIKey != null &&
+          !appState.errorOnMinifluxAuth;
+
+      if (shouldRunStartupSync) {
+        final skipStartupSyncForWidgetAction = await FluxNewsWidgetService
+                .shouldSkipStartupSyncForPendingWidgetAction()
+            .onError((error, stackTrace) => false);
+        appState.startupSyncHandledForUiSession = true;
+        if (!skipStartupSyncForWidgetAction && context.mounted) {
+          logThis(
+              'FluxNewsBody',
+              'Running deferred sync on startup after foreground resume',
+              LogLevel.INFO);
+          await syncNews(appState, context);
+        } else {
+          logThis(
+              'FluxNewsBody',
+              'Deferred sync on startup skipped because a widget action is pending',
+              LogLevel.INFO);
         }
-      },
-      child: OrientationBuilder(
+      } else {
+        logThis(
+            'FluxNewsBody',
+            'Deferred sync on startup not run: '
+                'shouldTreatResumeAsStartup=$shouldTreatResumeAsStartup '
+                'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0}',
+            LogLevel.INFO);
+      }
+
+      if (!appState.syncProcess &&
+          appState.backgroundSyncIntervalMinutes > 0 &&
+          context.mounted) {
+        try {
+          final backgroundSyncFinishedAt =
+              await readFluxNewsBackgroundSyncFinishedAt();
+          final shouldReloadFromBackgroundSync =
+              backgroundSyncFinishedAt != null &&
+                  (appState.lastNewsListLoadedAt == null ||
+                      backgroundSyncFinishedAt
+                          .isAfter(appState.lastNewsListLoadedAt!));
+
+          if (shouldReloadFromBackgroundSync) {
+            logThis(
+                'FluxNewsBody',
+                'Reloading news list from DB after background sync: '
+                    'backgroundSyncFinishedAt=${backgroundSyncFinishedAt.toIso8601String()} '
+                    'lastNewsListLoadedAt=${appState.lastNewsListLoadedAt?.toIso8601String()}',
+                LogLevel.INFO);
+            appState.scrollPosition = 0;
+            appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+              appState.jumpToItem(0);
+            });
+            appState.lastNewsListLoadedAt = DateTime.now();
+            if (!context.mounted) return;
+            updateStarredCounter(appState, context);
+            await renewAllNewsCount(appState, context);
+            appState.refreshView();
+          } else {
+            logThis(
+                'FluxNewsBody',
+                'News list reload after resume skipped: '
+                    'backgroundSyncFinishedAt=${backgroundSyncFinishedAt?.toIso8601String()} '
+                    'lastNewsListLoadedAt=${appState.lastNewsListLoadedAt?.toIso8601String()}',
+                LogLevel.INFO);
+          }
+        } catch (e) {
+          logThis(
+              'FluxNewsBody',
+              'Could not reload news list after foreground resume: $e',
+              LogLevel.ERROR);
+        }
+      } else if (!appState.syncProcess) {
+        logThis(
+            'FluxNewsBody',
+            'News list reload after resume skipped: '
+                'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0}',
+            LogLevel.INFO);
+      }
+    }, child: OrientationBuilder(
       builder: (context, orientation) {
         appState.orientation = orientation;
 
@@ -70,7 +170,8 @@ class FluxNewsBody extends StatelessWidget {
   }
 
   // helper function for the initState() to use async function on init
-  Future<void> initConfig(BuildContext context, FluxNewsState appState, bool resume) async {
+  Future<void> initConfig(
+      BuildContext context, FluxNewsState appState, bool resume) async {
     // read persistent saved config
     bool completed = await appState.readConfigValues();
 
@@ -83,6 +184,7 @@ class FluxNewsBody extends StatelessWidget {
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
+    var skipSavedScrollRestore = false;
 
     if (completed) {
       if (context.mounted) {
@@ -92,13 +194,16 @@ class FluxNewsBody extends StatelessWidget {
         appState.readConfig(context);
         appState.readThemeConfigValues(context);
       }
+      unawaited(configureFluxNewsBackgroundSync(appState));
+      unawaited(runPendingForegroundAudioDownloads(appState));
 
       // set the startup categorie if configured
       if (appState.startupCategorie != 0) {
         if (appState.startupCategorie == 1) {
           // bookmarks selected as startup categorie
           appState.feedIDs = [-1];
-          appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
+          appState.selectedCategoryElementType =
+              FluxNewsState.bookmarkedNewsElementType;
           if (context.mounted) {
             appState.appBarText = AppLocalizations.of(context)!.bookmarked;
           }
@@ -112,12 +217,15 @@ class FluxNewsBody extends StatelessWidget {
             if (appState.startupCategorie == 2) {
               if (appState.startupCategorieSelectionKey != null) {
                 for (Category category in actualCategoryList.categories) {
-                  if (category.categoryID == appState.startupCategorieSelectionKey) {
+                  if (category.categoryID ==
+                      appState.startupCategorieSelectionKey) {
                     // add the according feeds of this category as a filter
                     appState.feedIDs = category.getFeedIDs();
-                    appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
+                    appState.selectedCategoryElementType =
+                        FluxNewsState.categoryElementType;
                     // reload the news list with the new filter
-                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                    appState.newsList =
+                        queryNewsFromDB(appState).whenComplete(() {
                       appState.jumpToItem(0);
                     });
                     // set the category title as app bar title
@@ -136,9 +244,11 @@ class FluxNewsBody extends StatelessWidget {
                   for (Feed feed in category.feeds) {
                     if (feed.feedID == appState.startupFeedSelectionKey) {
                       appState.feedIDs = [feed.feedID];
-                      appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+                      appState.selectedCategoryElementType =
+                          FluxNewsState.feedElementType;
                       // reload the news list with the new filter
-                      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.newsList =
+                          queryNewsFromDB(appState).whenComplete(() {
                         appState.jumpToItem(0);
                       });
                       // set the feed title as app bar title
@@ -160,26 +270,41 @@ class FluxNewsBody extends StatelessWidget {
 
       appState.startUp = false;
 
-      if (appState.syncOnStart || appState.syncNow) {
+      final skipStartupSyncForWidgetAction = await FluxNewsWidgetService
+              .shouldSkipStartupSyncForPendingWidgetAction()
+          .onError((error, stackTrace) => false);
+      skipSavedScrollRestore = skipStartupSyncForWidgetAction;
+
+      if ((appState.syncOnStart && !skipStartupSyncForWidgetAction) ||
+          appState.syncNow) {
+        appState.startupSyncHandledForUiSession = true;
         // sync on startup or now
         if (context.mounted) {
           await syncNews(appState, context);
         }
       } else {
+        if (appState.syncOnStart && skipStartupSyncForWidgetAction) {
+          appState.startupSyncHandledForUiSession = true;
+        }
         // normal startup, read existing news from database and generate list view
         try {
           appState.newsList = queryNewsFromDB(appState);
+          appState.lastNewsListLoadedAt = DateTime.now();
           if (context.mounted) {
             updateStarredCounter(appState, context);
             await renewAllNewsCount(appState, context);
           }
           appState.syncProcess = false;
+          unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
         } catch (e) {
-          logThis('initConfig', 'Caught an error in initConfig function!', LogLevel.ERROR);
+          logThis('initConfig', 'Caught an error in initConfig function!',
+              LogLevel.ERROR);
 
           if (context.mounted) {
-            if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-              appState.errorString = AppLocalizations.of(context)!.databaseError;
+            if (appState.errorString !=
+                AppLocalizations.of(context)!.databaseError) {
+              appState.errorString =
+                  AppLocalizations.of(context)!.databaseError;
               appState.newError = true;
               appState.refreshView();
             }
@@ -193,17 +318,31 @@ class FluxNewsBody extends StatelessWidget {
         appState.cleanLegacyCache();
       }
       // clear the network image cache of images that are older than the specified duration to prevent the cache from growing indefinitely
-      await clearDiskCachedImages(duration: Duration(days: appState.imageCacheDurationDays));
+      await clearDiskCachedImages(
+          duration: Duration(days: appState.imageCacheDurationDays));
+      if (context.mounted) {
+        await FluxNewsWidgetService.handlePendingWidgetAction(
+            context, appState);
+      }
+    } else {
+      appState.syncProcess = false;
+      appState.startUp = false;
+      appState.refreshView();
+      FlutterNativeSplash.remove();
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // set the scroll position to the persistent saved scroll position on normal startup
       // if sync on startup is enabled, the scroll position is set to the top of the list
-      if (!appState.syncOnStart && !appState.markAsReadOnScrollOver) {
+      if (!skipSavedScrollRestore &&
+          !appState.syncOnStart &&
+          !appState.markAsReadOnScrollOver) {
         appState.jumpToItem(appState.savedScrollPosition);
       }
 
-      if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth) {
+      if (appState.minifluxURL == null ||
+          appState.minifluxAPIKey == null ||
+          appState.errorOnMinifluxAuth) {
         // show the welcome screen once before the login screen on first app start
         if (!resume) {
           Navigator.pushNamed(context, FluxNewsState.welcomeRouteString);
@@ -219,7 +358,9 @@ class FluxNewsBody extends StatelessWidget {
   Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     bool useSliverAppBar = appState.useSliverAppBar;
-    if (appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) {
+    if (appState.minifluxURL == null ||
+        appState.minifluxAPIKey == null ||
+        appState.errorOnMinifluxAuth == true) {
       if (appState.startUp) {
         useSliverAppBar = true;
       } else {
@@ -238,16 +379,23 @@ class FluxNewsBody extends StatelessWidget {
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
-                if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                if (appState.floatingButtonAction ==
+                    FluxNewsState.floatingButtonMarkAsReadAction) {
                   // mark news as read
-                  markNewsAsReadInDB(appState);
-                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                    await queryNextCategoryFromDB(appState, context).then((value) {
+                  await markNewsAsReadInDB(appState);
+                  unawaited(
+                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
+                  if (!context.mounted) return;
+                  if (appState.selectedCategoryElementType ==
+                      FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context)
+                        .then((value) {
                       if (context.mounted) {
                         setNextCategory(value, appState, context);
                       }
                     });
-                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                  } else if (appState.selectedCategoryElementType ==
+                      FluxNewsState.feedElementType) {
                     await queryNextFeedFromDB(appState, context).then((value) {
                       if (context.mounted) {
                         setNextFeed(value, appState, context);
@@ -255,7 +403,8 @@ class FluxNewsBody extends StatelessWidget {
                     });
                   } else {
                     // refresh news list with the all news state
-                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                    appState.newsList =
+                        queryNewsFromDB(appState).whenComplete(() {
                       appState.jumpToItem(0);
                     });
 
@@ -267,18 +416,23 @@ class FluxNewsBody extends StatelessWidget {
                 }
               },
               child: FloatingActionButton(
-                  heroTag: appState.glassActionButton ? "glassActionButton" : "normalActionButton",
+                  heroTag: appState.glassActionButton
+                      ? "glassActionButton"
+                      : "normalActionButton",
                   elevation: 4,
-                  backgroundColor: appState.glassActionButton ? Colors.transparent : null,
+                  backgroundColor:
+                      appState.glassActionButton ? Colors.transparent : null,
                   onPressed: () async {
-                    if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                    if (appState.floatingButtonAction ==
+                        FluxNewsState.floatingButtonSyncAction) {
                       if (appState.syncProcess) {
                         appState.longSyncAborted = true;
                         appState.refreshView();
                       } else {
                         await syncNews(appState, context);
                       }
-                    } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                    } else if (appState.floatingButtonAction ==
+                        FluxNewsState.floatingButtonMarkAsReadAction) {
                       showDeleteAllDialog(context, appState, appCounterState);
                     }
                   },
@@ -289,31 +443,48 @@ class FluxNewsBody extends StatelessWidget {
                             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                             child: Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(Radius.circular(10)),
-                                border: Border.all(color: Theme.of(context).scaffoldBackgroundColor),
-                                color: Theme.of(context).scaffoldBackgroundColor.withAlpha(85),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)),
+                                border: Border.all(
+                                    color: Theme.of(context)
+                                        .scaffoldBackgroundColor),
+                                color: Theme.of(context)
+                                    .scaffoldBackgroundColor
+                                    .withAlpha(85),
                               ),
-                              child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                              child: appState.floatingButtonAction ==
+                                      FluxNewsState.floatingButtonSyncAction
                                   ? appState.syncProcess
                                       ? SizedBox(
                                           height: 60.0,
                                           width: 60.0,
-                                          child: CircularProgressIndicator.adaptive(
-                                              padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                                          child: CircularProgressIndicator
+                                              .adaptive(
+                                                  padding: Platform.isAndroid
+                                                      ? EdgeInsetsGeometry.all(
+                                                          20)
+                                                      : null),
                                         )
                                       : SizedBox(
                                           height: 60.0,
                                           width: 60.0,
                                           child: Icon(Icons.refresh,
-                                              color: Theme.of(context).appBarTheme.iconTheme!.color))
+                                              color: Theme.of(context)
+                                                  .appBarTheme
+                                                  .iconTheme!
+                                                  .color))
                                   : SizedBox(
                                       height: 60.0,
                                       width: 60.0,
                                       child: Icon(Icons.check_circle_outline,
-                                          color: Theme.of(context).appBarTheme.iconTheme!.color)),
+                                          color: Theme.of(context)
+                                              .appBarTheme
+                                              .iconTheme!
+                                              .color)),
                             ),
                           ))
-                      : appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                      : appState.floatingButtonAction ==
+                              FluxNewsState.floatingButtonSyncAction
                           ? appState.syncProcess
                               ? const SizedBox(
                                   height: 15.0,
@@ -340,7 +511,8 @@ class FluxNewsBody extends StatelessWidget {
                     onPressed: () {
                       Scaffold.of(context).openDrawer();
                     },
-                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                    tooltip:
+                        MaterialLocalizations.of(context).openAppDrawerTooltip,
                   );
                 },
               ),
@@ -361,16 +533,23 @@ class FluxNewsBody extends StatelessWidget {
       floatingActionButton: appState.floatingButtonVisible
           ? GestureDetector(
               onLongPress: () async {
-                if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                if (appState.floatingButtonAction ==
+                    FluxNewsState.floatingButtonMarkAsReadAction) {
                   // mark news as read
-                  markNewsAsReadInDB(appState);
-                  if (appState.selectedCategoryElementType == FluxNewsState.categoryElementType) {
-                    await queryNextCategoryFromDB(appState, context).then((value) {
+                  await markNewsAsReadInDB(appState);
+                  unawaited(
+                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
+                  if (!context.mounted) return;
+                  if (appState.selectedCategoryElementType ==
+                      FluxNewsState.categoryElementType) {
+                    await queryNextCategoryFromDB(appState, context)
+                        .then((value) {
                       if (context.mounted) {
                         setNextCategory(value, appState, context);
                       }
                     });
-                  } else if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+                  } else if (appState.selectedCategoryElementType ==
+                      FluxNewsState.feedElementType) {
                     await queryNextFeedFromDB(appState, context).then((value) {
                       if (context.mounted) {
                         setNextFeed(value, appState, context);
@@ -378,7 +557,8 @@ class FluxNewsBody extends StatelessWidget {
                     });
                   } else {
                     // refresh news list with the all news state
-                    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                    appState.newsList =
+                        queryNewsFromDB(appState).whenComplete(() {
                       appState.jumpToItem(0);
                     });
 
@@ -391,18 +571,21 @@ class FluxNewsBody extends StatelessWidget {
               },
               child: FloatingActionButton(
                 onPressed: () async {
-                  if (appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction) {
+                  if (appState.floatingButtonAction ==
+                      FluxNewsState.floatingButtonSyncAction) {
                     if (appState.syncProcess) {
                       appState.longSyncAborted = true;
                       appState.refreshView();
                     } else {
                       await syncNews(appState, context);
                     }
-                  } else if (appState.floatingButtonAction == FluxNewsState.floatingButtonMarkAsReadAction) {
+                  } else if (appState.floatingButtonAction ==
+                      FluxNewsState.floatingButtonMarkAsReadAction) {
                     showDeleteAllDialog(context, appState, appCounterState);
                   }
                 },
-                child: appState.floatingButtonAction == FluxNewsState.floatingButtonSyncAction
+                child: appState.floatingButtonAction ==
+                        FluxNewsState.floatingButtonSyncAction
                     ? appState.syncProcess
                         ? const SizedBox(
                             height: 15.0,
@@ -546,19 +729,22 @@ class FluxNewsBody extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 5),
                       child: Icon(
-                        appState.newsStatus == FluxNewsState.unreadNewsStatus ? Icons.checklist : Icons.fiber_new,
+                        appState.newsStatus == FluxNewsState.unreadNewsStatus
+                            ? Icons.checklist
+                            : Icons.fiber_new,
                       ),
                     ),
                     Expanded(
-                      child: appState.newsStatus == FluxNewsState.unreadNewsStatus
-                          ? Text(
-                              AppLocalizations.of(context)!.showRead,
-                              overflow: TextOverflow.visible,
-                            )
-                          : Text(
-                              AppLocalizations.of(context)!.showUnread,
-                              overflow: TextOverflow.visible,
-                            ),
+                      child:
+                          appState.newsStatus == FluxNewsState.unreadNewsStatus
+                              ? Text(
+                                  AppLocalizations.of(context)!.showRead,
+                                  overflow: TextOverflow.visible,
+                                )
+                              : Text(
+                                  AppLocalizations.of(context)!.showUnread,
+                                  overflow: TextOverflow.visible,
+                                ),
                     )
                   ],
                 ),
@@ -575,7 +761,8 @@ class FluxNewsBody extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                      child: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+                      child: appState.sortOrder ==
+                              FluxNewsState.sortOrderNewestFirstString
                           ? Text(
                               AppLocalizations.of(context)!.oldestFirst,
                               overflow: TextOverflow.visible,
@@ -599,23 +786,29 @@ class FluxNewsBody extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                      child: appState.selectedCategoryElementType == FluxNewsState.feedElementType
+                      child: appState.selectedCategoryElementType ==
+                              FluxNewsState.feedElementType
                           ? Text(
                               AppLocalizations.of(context)!.markFeedAsRead,
                               overflow: TextOverflow.visible,
                             )
-                          : appState.selectedCategoryElementType == FluxNewsState.categoryElementType
+                          : appState.selectedCategoryElementType ==
+                                  FluxNewsState.categoryElementType
                               ? Text(
-                                  AppLocalizations.of(context)!.markCategoryAsRead,
+                                  AppLocalizations.of(context)!
+                                      .markCategoryAsRead,
                                   overflow: TextOverflow.visible,
                                 )
-                              : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType
+                              : appState.selectedCategoryElementType ==
+                                      FluxNewsState.bookmarkedNewsElementType
                                   ? Text(
-                                      AppLocalizations.of(context)!.markBookmarkedAsRead,
+                                      AppLocalizations.of(context)!
+                                          .markBookmarkedAsRead,
                                       overflow: TextOverflow.visible,
                                     )
                                   : Text(
-                                      AppLocalizations.of(context)!.markAllAsRead,
+                                      AppLocalizations.of(context)!
+                                          .markAllAsRead,
                                       overflow: TextOverflow.visible,
                                     ),
                     )
@@ -675,8 +868,9 @@ class FluxNewsBody extends StatelessWidget {
                 appState.newsStatus = FluxNewsState.allNewsString;
 
                 // save the state persistent
-                appState.storage
-                    .write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.allNewsString);
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageNewsStatusKey,
+                    value: FluxNewsState.allNewsString);
 
                 // refresh news list with the all news state
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -693,8 +887,9 @@ class FluxNewsBody extends StatelessWidget {
                 appState.newsStatus = FluxNewsState.unreadNewsStatus;
 
                 // save the state persistent
-                appState.storage
-                    .write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.unreadNewsStatus);
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageNewsStatusKey,
+                    value: FluxNewsState.unreadNewsStatus);
 
                 // refresh news list with the only unread news state
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -709,13 +904,15 @@ class FluxNewsBody extends StatelessWidget {
             } else if (value == 2) {
               // switch between newest first and oldest first
               // if the current sort order is newest first change to oldest first
-              if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+              if (appState.sortOrder ==
+                  FluxNewsState.sortOrderNewestFirstString) {
                 // switch the state to all news
                 appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 
                 // save the state persistent
                 appState.storage.write(
-                    key: FluxNewsState.secureStorageSortOrderKey, value: FluxNewsState.sortOrderOldestFirstString);
+                    key: FluxNewsState.secureStorageSortOrderKey,
+                    value: FluxNewsState.sortOrderOldestFirstString);
 
                 // refresh news list with the all news state
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -733,7 +930,8 @@ class FluxNewsBody extends StatelessWidget {
 
                 // save the state persistent
                 appState.storage.write(
-                    key: FluxNewsState.secureStorageSortOrderKey, value: FluxNewsState.sortOrderNewestFirstString);
+                    key: FluxNewsState.secureStorageSortOrderKey,
+                    value: FluxNewsState.sortOrderNewestFirstString);
 
                 // refresh news list with the only unread news state
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -768,18 +966,14 @@ class PersistentAudioMiniPlayer extends StatefulWidget {
   final FluxNewsState appState;
 
   @override
-  State<PersistentAudioMiniPlayer> createState() => _PersistentAudioMiniPlayerState();
+  State<PersistentAudioMiniPlayer> createState() =>
+      _PersistentAudioMiniPlayerState();
 }
 
 class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
   FluxNewsAudioHandler? _audioHandler;
   StreamSubscription<PlaybackState>? _completionSubscription;
   StreamSubscription<SleepTimerEvent>? _sleepTimerSubscription;
-  final _storage = sec_store.FlutterSecureStorage(
-    iOptions: const sec_store.IOSOptions(
-      accessibility: sec_store.KeychainAccessibility.first_unlock,
-    ),
-  );
 
   @override
   void initState() {
@@ -812,12 +1006,15 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
       final newsID = extras?['newsID'];
       final position = handler.position;
       if (attachmentID is int && newsID is int && position > Duration.zero) {
-        syncMediaProgression(widget.appState, newsID, attachmentID, position.inSeconds).ignore();
+        syncMediaProgression(
+                widget.appState, newsID, attachmentID, position.inSeconds)
+            .ignore();
       }
     });
   }
 
-  Future<News?> _resolveCurrentPlaybackNews(FluxNewsAudioHandler handler) async {
+  Future<News?> _resolveCurrentPlaybackNews(
+      FluxNewsAudioHandler handler) async {
     final media = handler.mediaItem.value;
     if (media == null) return null;
 
@@ -831,8 +1028,11 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
 
     final attachmentIdFromExtras = extras?['attachmentID'];
     if (attachmentIdFromExtras is int) {
-      final newsID = await queryNewsIdByAttachmentId(widget.appState, attachmentIdFromExtras);
-      if (newsID != null) return await queryNewsByNewsId(widget.appState, newsID);
+      final newsID = await queryNewsIdByAttachmentId(
+          widget.appState, attachmentIdFromExtras);
+      if (newsID != null) {
+        return await queryNewsByNewsId(widget.appState, newsID);
+      }
     }
 
     final newsID = await queryNewsIdByAttachmentUrl(widget.appState, media.id);
@@ -862,16 +1062,17 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
       // than deleting lets _loadProgress / _resolveSavedPosition distinguish
       // "explicitly reset" from "never played" and ignore stale server values.
       await handler.stop();
-      await _storage.write(
-        key: '${FluxNewsState.audioProgressKeyPrefix}${activeNews.newsID}',
-        value: '0',
-      );
+      await AudioProgressStore.write(
+          AudioProgressStore.keyForNews(activeNews.newsID), '0');
 
       if (completedAttachment != null) {
-        syncMediaProgression(widget.appState, activeNews.newsID, completedAttachment.attachmentID, 0).ignore();
+        syncMediaProgression(widget.appState, activeNews.newsID,
+                completedAttachment.attachmentID, 0)
+            .ignore();
 
         if (widget.appState.deleteAudioAfterPlayback) {
-          await AudioDownloadService.deleteDownloadedAudio(completedAttachment.attachmentID);
+          await AudioDownloadService.deleteDownloadedAudio(
+              completedAttachment.attachmentID);
         }
       }
     } else {
@@ -890,8 +1091,12 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
 
     await handler.stop();
 
-    if (attachmentIdFromExtras is int && newsIdFromExtras is int && position > Duration.zero) {
-      syncMediaProgression(widget.appState, newsIdFromExtras, attachmentIdFromExtras, position.inSeconds).ignore();
+    if (attachmentIdFromExtras is int &&
+        newsIdFromExtras is int &&
+        position > Duration.zero) {
+      syncMediaProgression(widget.appState, newsIdFromExtras,
+              attachmentIdFromExtras, position.inSeconds)
+          .ignore();
     }
   }
 
@@ -936,7 +1141,8 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
             final miniPlayerBackground = colorScheme.primaryContainer;
             final miniPlayerForeground = colorScheme.onPrimaryContainer;
 
-            final isVisible = playback.playing || playback.processingState != AudioProcessingState.idle;
+            final isVisible = playback.playing ||
+                playback.processingState != AudioProcessingState.idle;
             if (!isVisible) {
               return const SizedBox.shrink();
             }
@@ -989,8 +1195,12 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                                 tooltip: playback.playing
                                     ? AppLocalizations.of(context)!.pause
                                     : AppLocalizations.of(context)!.play,
-                                onPressed: () => playback.playing ? _audioHandler!.pause() : _audioHandler!.play(),
-                                icon: Icon(playback.playing ? Icons.pause_circle : Icons.play_circle),
+                                onPressed: () => playback.playing
+                                    ? _audioHandler!.pause()
+                                    : _audioHandler!.play(),
+                                icon: Icon(playback.playing
+                                    ? Icons.pause_circle
+                                    : Icons.play_circle),
                               ),
                               IconButton(
                                 color: miniPlayerForeground,
@@ -1020,7 +1230,10 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                                   media.title,
                                   maxLines: isTablet ? 3 : 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
                                         fontSize: textFontSize,
                                         height: 1.15,
                                         fontWeight: FontWeight.w600,
@@ -1036,12 +1249,16 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                           value: (() {
                             final totalMs = media.duration?.inMilliseconds ?? 0;
                             if (totalMs <= 0) return null;
-                            final currentMs = playback.updatePosition.inMilliseconds.clamp(0, totalMs);
+                            final currentMs = playback
+                                .updatePosition.inMilliseconds
+                                .clamp(0, totalMs);
                             return currentMs / totalMs;
                           })(),
                           minHeight: isTablet ? 4 : 3,
-                          backgroundColor: miniPlayerForeground.withValues(alpha: 0.25),
-                          valueColor: AlwaysStoppedAnimation<Color>(miniPlayerForeground),
+                          backgroundColor:
+                              miniPlayerForeground.withValues(alpha: 0.25),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              miniPlayerForeground),
                         ),
                       ],
                     ),
@@ -1144,7 +1361,9 @@ class _DownloadRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = AudioDownloadService.getDownloadTitle(progress.attachmentID) ?? progress.fileName;
+    final title =
+        AudioDownloadService.getDownloadTitle(progress.attachmentID) ??
+            progress.fileName;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -1189,11 +1408,13 @@ class _DownloadRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.close, size: isTablet ? 20 : 18, color: foreground),
+            icon:
+                Icon(Icons.close, size: isTablet ? 20 : 18, color: foreground),
             tooltip: AppLocalizations.of(context)!.cancel,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             constraints: const BoxConstraints(),
-            onPressed: () => AudioDownloadService.cancelDownload(progress.attachmentID),
+            onPressed: () =>
+                AudioDownloadService.cancelDownload(progress.attachmentID),
           ),
         ],
       ),
@@ -1213,7 +1434,9 @@ class FluxNewsBodyList extends StatelessWidget {
     // if errors had occurred, the error widget is returned
     // if the miniflux settings are incorrect a corresponding message is shown
     // otherwise the normal list view is returned
-    if ((appState.minifluxURL == null || appState.minifluxAPIKey == null || appState.errorOnMinifluxAuth == true) &&
+    if ((appState.minifluxURL == null ||
+            appState.minifluxAPIKey == null ||
+            appState.errorOnMinifluxAuth == true) &&
         !appState.startUp) {
       return const NoSettings();
     } else if (appState.errorString != '' && appState.newError) {
@@ -1400,7 +1623,8 @@ class NoSettings extends StatelessWidget {
             padding: const EdgeInsets.only(left: 40, top: 20.0, right: 30),
             child: Text(
               AppLocalizations.of(context)!.provideMinifluxCredentials,
-              style: const TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           Padding(
@@ -1409,12 +1633,14 @@ class NoSettings extends StatelessWidget {
                 ? CupertinoButton.filled(
                     child: Text(AppLocalizations.of(context)!.login),
                     onPressed: () {
-                      Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                      Navigator.pushNamed(
+                          context, FluxNewsState.loginRouteString);
                     },
                   )
                 : ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                      Navigator.pushNamed(
+                          context, FluxNewsState.loginRouteString);
                     },
                     child: Text(AppLocalizations.of(context)!.login),
                   ),
@@ -1432,7 +1658,8 @@ class AppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FluxNewsCounterState appCounterState = context.watch<FluxNewsCounterState>();
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
     FluxNewsState appState = context.watch<FluxNewsState>();
 
     // set the app bar title depending on the chosen category to show in list view
@@ -1474,7 +1701,8 @@ class CategoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FluxNewsCounterState appCounterState = context.watch<FluxNewsCounterState>();
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
     FluxNewsState appState = context.watch<FluxNewsState>();
     var getData = FutureBuilder<Categories>(
         future: appState.categoryList,
@@ -1547,9 +1775,11 @@ class CategoryList extends StatelessWidget {
                             for (Category category in snapshot.data!.categories)
                               appState.showOnlyFeedCategoriesWithNewNews
                                   ? category.newsCount > 0
-                                      ? showCategory(category, snapshot.data!, context)
+                                      ? showCategory(
+                                          category, snapshot.data!, context)
                                       : const SizedBox.shrink()
-                                  : showCategory(category, snapshot.data!, context),
+                                  : showCategory(
+                                      category, snapshot.data!, context),
                           ])
                     : const SizedBox.shrink();
               }
@@ -1561,7 +1791,8 @@ class CategoryList extends StatelessWidget {
   // here we style the category ExpansionTile
   // we use a ExpansionTile because we want to show the according feeds
   // of this category in the expanded state.
-  Widget showCategory(Category category, Categories categories, BuildContext context) {
+  Widget showCategory(
+      Category category, Categories categories, BuildContext context) {
     FluxNewsState appState = context.read<FluxNewsState>();
     return ExpansionTile(
       // we want the expansion arrow at the beginning,
@@ -1589,14 +1820,17 @@ class CategoryList extends StatelessWidget {
         },
       ),
       // iterate over the according feeds of the category
-      children: [for (Feed feed in category.feeds) FeedTile(feed: feed, categories: categories)],
+      children: [
+        for (Feed feed in category.feeds)
+          FeedTile(feed: feed, categories: categories)
+      ],
     );
   }
 
   // if the title of the category is clicked,
   // we want all the news of this category in the news view.
-  Future<void> categoryOnClick(
-      Category category, FluxNewsState appState, Categories categories, BuildContext context) async {
+  Future<void> categoryOnClick(Category category, FluxNewsState appState,
+      Categories categories, BuildContext context) async {
     // add the according feeds of this category as a filter
     appState.feedIDs = category.getFeedIDs();
     appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
@@ -1621,7 +1855,8 @@ class CategoryList extends StatelessWidget {
 
   // if the "All News" ListTile is clicked,
   // we want all the news in the news view.
-  Future<void> allNewsOnClick(FluxNewsState appState, BuildContext context) async {
+  Future<void> allNewsOnClick(
+      FluxNewsState appState, BuildContext context) async {
     // empty the feedIds which are used as a filter if a specific category is selected
     appState.feedIDs = null;
     appState.selectedCategoryElementType = FluxNewsState.allNewsElementType;
@@ -1648,13 +1883,15 @@ class CategoryList extends StatelessWidget {
 
   // if the "Bookmarked" ListTile is clicked,
   // we want all the bookmarked news in the news view.
-  Future<void> bookmarkedOnClick(FluxNewsState appState, BuildContext context) async {
+  Future<void> bookmarkedOnClick(
+      FluxNewsState appState, BuildContext context) async {
     // set the feedIDs filter to -1 to only load bookmarked news
     // -1 is a impossible feed id of a regular miniflux feed,
     // so we use it to decide between all news (feedIds = null)
     // and bookmarked news (feedIds = -1).
     appState.feedIDs = [-1];
-    appState.selectedCategoryElementType = FluxNewsState.bookmarkedNewsElementType;
+    appState.selectedCategoryElementType =
+        FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
       appState.jumpToItem(0);
@@ -1699,7 +1936,9 @@ class FeedTile extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 8.0),
                   child: Row(children: [
                     // if the option is enabled, show the feed icon
-                    appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
+                    appState.showFeedIcons
+                        ? feed.getFeedIcon(16.0, context)
+                        : const SizedBox.shrink(),
                     Expanded(
                         child: Padding(
                       padding: const EdgeInsets.only(left: 10.0),
@@ -1720,9 +1959,11 @@ class FeedTile extends StatelessWidget {
                   // on tab we want to show only the news of this feed in the news list.
                   // set the feed id of the selected feed in the feedIDs filter
                   appState.feedIDs = [feed.feedID];
-                  appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+                  appState.selectedCategoryElementType =
+                      FluxNewsState.feedElementType;
                   // reload the news list with the new filter
-                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                  appState.newsList =
+                      queryNewsFromDB(appState).whenComplete(() {
                     appState.jumpToItem(0);
                   });
                   // set the feed title as app bar title
@@ -1746,7 +1987,9 @@ class FeedTile extends StatelessWidget {
               padding: const EdgeInsets.only(left: 8.0),
               child: Row(children: [
                 // if the option is enabled, show the feed icon
-                appState.showFeedIcons ? feed.getFeedIcon(16.0, context) : const SizedBox.shrink(),
+                appState.showFeedIcons
+                    ? feed.getFeedIcon(16.0, context)
+                    : const SizedBox.shrink(),
                 Expanded(
                     child: Padding(
                   padding: const EdgeInsets.only(left: 10.0),
@@ -1767,7 +2010,8 @@ class FeedTile extends StatelessWidget {
               // on tab we want to show only the news of this feed in the news list.
               // set the feed id of the selected feed in the feedIDs filter
               appState.feedIDs = [feed.feedID];
-              appState.selectedCategoryElementType = FluxNewsState.feedElementType;
+              appState.selectedCategoryElementType =
+                  FluxNewsState.feedElementType;
               // reload the news list with the new filter
               appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                 appState.jumpToItem(0);
@@ -1792,26 +2036,42 @@ class FeedTile extends StatelessWidget {
 
 class FluxNewsBodyStatefulWrapper extends StatefulWidget {
   final Function onInit;
-  final Function onResume;
+  final Future<void> Function(Duration? inactiveDuration) onResume;
   final Widget child;
-  const FluxNewsBodyStatefulWrapper({super.key, required this.onInit, required this.onResume, required this.child});
+  const FluxNewsBodyStatefulWrapper(
+      {super.key,
+      required this.onInit,
+      required this.onResume,
+      required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }
 
 // extend class to save actual scroll state of the list view
 class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
-    with AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper>, WidgetsBindingObserver {
+    with
+        AutomaticKeepAliveClientMixin<FluxNewsBodyStatefulWrapper>,
+        WidgetsBindingObserver {
+  Timer? _foregroundActiveTimer;
+  DateTime? _foregroundInactiveAt;
+
   // init the state of FluxNewsBody to load the config and the data on startup
   @override
   void initState() {
     widget.onInit();
     WidgetsBinding.instance.addObserver(this);
+    logThis(
+        'FluxNewsBody',
+        'Foreground heartbeat waits for lifecycle resume: '
+            'initialLifecycleState=${WidgetsBinding.instance.lifecycleState}',
+        LogLevel.INFO);
     super.initState();
   }
 
   @override
   void dispose() {
+    _foregroundActiveTimer?.cancel();
+    unawaited(markFluxNewsForegroundInactive());
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1819,8 +2079,45 @@ class FluxNewsBodyState extends State<FluxNewsBodyStatefulWrapper>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      widget.onResume();
+      _startForegroundActiveHeartbeat();
+      final inactiveDuration = _foregroundInactiveAt == null
+          ? null
+          : DateTime.now().difference(_foregroundInactiveAt!);
+      _foregroundInactiveAt = null;
+      unawaited(widget.onResume(inactiveDuration));
+      FluxNewsWidgetService.handlePendingWidgetAction(
+          context, context.read<FluxNewsState>());
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      _foregroundInactiveAt ??= DateTime.now();
+      _foregroundActiveTimer?.cancel();
+      _foregroundActiveTimer = null;
+      unawaited(markFluxNewsForegroundInactive());
     }
+  }
+
+  void _startForegroundActiveHeartbeat() {
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      logThis(
+          'FluxNewsBody',
+          'Foreground heartbeat not started: '
+              'lifecycleState=${WidgetsBinding.instance.lifecycleState}',
+          LogLevel.INFO);
+      return;
+    }
+    _foregroundActiveTimer?.cancel();
+    unawaited(markFluxNewsForegroundActive());
+    _foregroundActiveTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        unawaited(markFluxNewsForegroundActive());
+      } else {
+        _foregroundActiveTimer?.cancel();
+        _foregroundActiveTimer = null;
+        unawaited(markFluxNewsForegroundInactive());
+      }
+    });
   }
 
   @override

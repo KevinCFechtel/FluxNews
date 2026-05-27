@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart' as sec_store;
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
+import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -73,7 +73,10 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
         primary: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [newsHeader, widget.news.getFullRenderedWidget(appState, context)],
+          children: [
+            newsHeader,
+            widget.news.getFullRenderedWidget(appState, context)
+          ],
         ),
       ),
     );
@@ -101,7 +104,8 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
                   child: SingleChildScrollView(
                     controller: _playerContentController,
                     primary: false,
-                    child: NewsAudioPlayer(news: widget.news, appState: appState),
+                    child:
+                        NewsAudioPlayer(news: widget.news, appState: appState),
                   ),
                 ),
               ),
@@ -140,7 +144,8 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
 }
 
 class NewsAudioPlayer extends StatefulWidget {
-  const NewsAudioPlayer({super.key, required this.news, required this.appState});
+  const NewsAudioPlayer(
+      {super.key, required this.news, required this.appState});
 
   final News news;
   final FluxNewsState appState;
@@ -175,11 +180,6 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   FluxNewsAudioHandler? _audioHandler;
   late final List<Attachment> _audioAttachments;
-  final _storage = sec_store.FlutterSecureStorage(
-    iOptions: const sec_store.IOSOptions(
-      accessibility: sec_store.KeychainAccessibility.first_unlock,
-    ),
-  );
   Timer? _autoSaveTimer;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
@@ -189,7 +189,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   StreamSubscription<List<AudioDownloadProgress>>? _activeDownloadsSubscription;
   StreamSubscription<SleepTimerEvent>? _sleepTimerSubscription;
   final Map<int, String> _downloadedPaths = {};
-  final Map<int, AudioDownloadProgress> _activeDownloadsByStorageAttachmentID = {};
+  final Map<int, AudioDownloadProgress> _activeDownloadsByStorageAttachmentID =
+      {};
   final Map<int, List<AudioChapter>> _chaptersByAttachmentID = {};
   final Map<int, ScrollController> _chapterScrollControllers = {};
   final Map<int, int> _lastAutoScrolledChapterIndexByAttachmentID = {};
@@ -208,10 +209,11 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   bool _isLoading = false;
   bool _isDisposed = false;
 
-  String _progressKey() => '${FluxNewsState.audioProgressKeyPrefix}${widget.news.newsID}';
+  String _progressKey() => AudioProgressStore.keyForNews(widget.news.newsID);
 
   ScrollController _chapterControllerFor(int attachmentID) {
-    return _chapterScrollControllers.putIfAbsent(attachmentID, ScrollController.new);
+    return _chapterScrollControllers.putIfAbsent(
+        attachmentID, ScrollController.new);
   }
 
   int _storageAttachmentIDFor(Attachment attachment) {
@@ -231,14 +233,17 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     _activeDownloadsByStorageAttachmentID
       ..clear()
       ..addEntries(
-        AudioDownloadService.getActiveDownloadsSnapshot().map((progress) => MapEntry(progress.attachmentID, progress)),
+        AudioDownloadService.getActiveDownloadsSnapshot()
+            .map((progress) => MapEntry(progress.attachmentID, progress)),
       );
-    _activeDownloadsSubscription = AudioDownloadService.activeDownloadsStream.listen((downloads) {
+    _activeDownloadsSubscription =
+        AudioDownloadService.activeDownloadsStream.listen((downloads) {
       if (!mounted || _isDisposed) return;
       setState(() {
         _activeDownloadsByStorageAttachmentID
           ..clear()
-          ..addEntries(downloads.map((progress) => MapEntry(progress.attachmentID, progress)));
+          ..addEntries(downloads
+              .map((progress) => MapEntry(progress.attachmentID, progress)));
       });
     });
     _initializeDefaultArtwork();
@@ -255,8 +260,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   }
 
   Future<void> _initializeDownloadedAudioState() async {
-    final downloadedPaths = await AudioDownloadService.loadDownloadedPathsForAttachments(
-        _audioAttachments, widget.appState.audioDownloadRetentionDays);
+    final downloadedPaths =
+        await AudioDownloadService.loadDownloadedPathsForAttachments(
+            _audioAttachments, widget.appState.audioDownloadRetentionDays);
     _downloadedPaths
       ..clear()
       ..addAll(downloadedPaths);
@@ -278,14 +284,18 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     Attachment? matchedAttachment;
     for (final attachment in _audioAttachments) {
       final downloadedPath = _downloadedPaths[attachment.attachmentID];
-      final downloadedUrl = downloadedPath != null ? Uri.file(downloadedPath).toString() : null;
+      final downloadedUrl =
+          downloadedPath != null ? Uri.file(downloadedPath).toString() : null;
 
-      if (targetId != null && targetId.isNotEmpty && attachment.attachmentURL == targetId) {
+      if (targetId != null &&
+          targetId.isNotEmpty &&
+          attachment.attachmentURL == targetId) {
         matchedAttachment = attachment;
         break;
       }
       if (currentUrl != null && currentUrl.isNotEmpty) {
-        if (attachment.attachmentURL == currentUrl || downloadedUrl == currentUrl) {
+        if (attachment.attachmentURL == currentUrl ||
+            downloadedUrl == currentUrl) {
           matchedAttachment = attachment;
           break;
         }
@@ -303,7 +313,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     });
   }
 
-  Future<void> _loadChaptersForAttachment(Attachment attachment, {String? filePath}) async {
+  Future<void> _loadChaptersForAttachment(Attachment attachment,
+      {String? filePath}) async {
     if (mounted && !_isDisposed) {
       setState(() {
         _loadingChapterAttachmentIDs.add(attachment.attachmentID);
@@ -319,7 +330,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       }
     } else {
       if (mounted) {
-        chapters = await AudioDownloadService.readChaptersFromUrl(attachment.attachmentURL, context);
+        chapters = await AudioDownloadService.readChaptersFromUrl(
+            attachment.attachmentURL, context);
       }
     }
 
@@ -341,7 +353,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   String _htmlToPlainTextWithLineBreaks(String html) {
     final processed = html
         .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'</(p|div|li|h[1-6])>', caseSensitive: false), '\n');
+        .replaceAll(
+            RegExp(r'</(p|div|li|h[1-6])>', caseSensitive: false), '\n');
     return html_parser.parse(processed).body?.text ?? '';
   }
 
@@ -409,7 +422,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (_downloadingAttachmentIDs.contains(attachment.attachmentID)) return;
     setState(() => _downloadingAttachmentIDs.add(attachment.attachmentID));
     // Manual download — clear any previous user-skipped flag.
-    final storageId = AudioDownloadService.resolveStorageAttachmentId(attachment);
+    final storageId =
+        AudioDownloadService.resolveStorageAttachmentId(attachment);
     await AudioDownloadService.clearUserSkipped(storageId);
     try {
       final filePath = await AudioDownloadService.queueDownload(
@@ -422,8 +436,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         await _loadChaptersForAttachment(attachment, filePath: filePath);
         // Re-download: reset position so the episode starts from the beginning.
         // Write "0" so _loadProgress treats this as an explicit reset.
-        await _storage.write(key: _progressKey(), value: '0');
-        syncMediaProgression(widget.appState, widget.news.newsID, attachment.attachmentID, 0).ignore();
+        await AudioProgressStore.write(_progressKey(), '0');
+        syncMediaProgression(
+                widget.appState, widget.news.newsID, attachment.attachmentID, 0)
+            .ignore();
         if (mounted && !_isDisposed) {
           setState(() => _savedPosition = null);
         }
@@ -442,7 +458,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       AudioDownloadService.refreshMediaProgressionCacheFromSync([news]);
     } finally {
       if (mounted) {
-        setState(() => _downloadingAttachmentIDs.remove(attachment.attachmentID));
+        setState(
+            () => _downloadingAttachmentIDs.remove(attachment.attachmentID));
       }
     }
   }
@@ -472,11 +489,12 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
     _playerStateSubscription = audioHandler.playerStateStream.listen((state) {
       if (!mounted || _isDisposed) return;
-      final completed = state.processingState == ProcessingState.completed && _activeUrl != null;
+      final completed = state.processingState == ProcessingState.completed &&
+          _activeUrl != null;
       setState(() {
         _playerState = state;
-        _isLoading =
-            state.processingState == ProcessingState.loading || state.processingState == ProcessingState.buffering;
+        _isLoading = state.processingState == ProcessingState.loading ||
+            state.processingState == ProcessingState.buffering;
       });
       if (completed) {
         _handlePlaybackCompleted();
@@ -501,7 +519,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       if (event == SleepTimerEvent.fired) {
         _saveProgress();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.sleepTimerNotification)),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.sleepTimerNotification)),
         );
       }
     });
@@ -561,16 +581,19 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     // "never played" (null → server wins) and "explicitly reset" (0 → start
     // from beginning regardless of stale server/cache value).
     await _stop(saveProgress: false);
-    await _storage.write(key: _progressKey(), value: '0');
+    await AudioProgressStore.write(_progressKey(), '0');
     if (mounted && !_isDisposed) {
       setState(() => _savedPosition = null);
     }
 
     if (completedAttachment != null) {
-      syncMediaProgression(widget.appState, widget.news.newsID, completedAttachment.attachmentID, 0).ignore();
+      syncMediaProgression(widget.appState, widget.news.newsID,
+              completedAttachment.attachmentID, 0)
+          .ignore();
     }
 
-    if (widget.appState.deleteAudioAfterPlayback && completedAttachmentID != null) {
+    if (widget.appState.deleteAudioAfterPlayback &&
+        completedAttachmentID != null) {
       final downloadedPath = _downloadedPaths[completedAttachmentID];
       if (downloadedPath != null) {
         await AudioDownloadService.deleteDownloadedAudio(completedAttachmentID);
@@ -610,7 +633,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   }
 
   Future<void> _loadProgress() async {
-    final saved = await _storage.read(key: _progressKey());
+    final saved = await AudioProgressStore.read(_progressKey());
     if (!mounted || _isDisposed) return;
     final localMs = saved != null ? (int.tryParse(saved) ?? 0) : 0;
     // "0" written explicitly signals a completed or re-downloaded episode.
@@ -624,7 +647,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     int serverMs = 0;
     if (!wasReset && _audioAttachments.isNotEmpty) {
       final attachmentID = _audioAttachments.first.attachmentID;
-      final cached = AudioDownloadService.getDownloadMediaProgression(attachmentID);
+      final cached =
+          AudioDownloadService.getDownloadMediaProgression(attachmentID);
       if (cached != null && cached > 0) {
         serverMs = cached * 1000;
       } else if (_audioAttachments.first.mediaProgression > 0) {
@@ -636,10 +660,10 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       logThis(
         'AudioPlayer._loadProgress',
         'newsID=${widget.news.newsID} '
-        'localMs=$localMs '
-        'serverMs=$serverMs '
-        'attachmentProgression=${_audioAttachments.isNotEmpty ? _audioAttachments.first.mediaProgression : -1}s '
-        'cacheProgression=${_audioAttachments.isNotEmpty ? AudioDownloadService.getDownloadMediaProgression(_audioAttachments.first.attachmentID) : -1}s',
+            'localMs=$localMs '
+            'serverMs=$serverMs '
+            'attachmentProgression=${_audioAttachments.isNotEmpty ? _audioAttachments.first.mediaProgression : -1}s '
+            'cacheProgression=${_audioAttachments.isNotEmpty ? AudioDownloadService.getDownloadMediaProgression(_audioAttachments.first.attachmentID) : -1}s',
         LogLevel.INFO,
       );
     }
@@ -648,30 +672,31 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     // update the Keychain so the advanced position persists across app restarts.
     if (serverMs > localMs) {
       try {
-        await _storage.write(key: _progressKey(), value: serverMs.toString());
+        await AudioProgressStore.write(_progressKey(), serverMs.toString());
       } catch (_) {}
       if (widget.appState.debugMode) {
-        logThis('AudioPlayer._loadProgress', 'Server wins → ${serverMs ~/ 1000}s', LogLevel.INFO);
+        logThis('AudioPlayer._loadProgress',
+            'Server wins → ${serverMs ~/ 1000}s', LogLevel.INFO);
       }
       setState(() => _savedPosition = Duration(milliseconds: serverMs));
     } else if (localMs > 0) {
       if (widget.appState.debugMode) {
-        logThis('AudioPlayer._loadProgress', 'Local wins → ${localMs ~/ 1000}s', LogLevel.INFO);
+        logThis('AudioPlayer._loadProgress', 'Local wins → ${localMs ~/ 1000}s',
+            LogLevel.INFO);
       }
       setState(() => _savedPosition = Duration(milliseconds: localMs));
     } else {
       if (widget.appState.debugMode) {
-        logThis('AudioPlayer._loadProgress', 'No saved position → start from 0', LogLevel.INFO);
+        logThis('AudioPlayer._loadProgress', 'No saved position → start from 0',
+            LogLevel.INFO);
       }
     }
   }
 
   Future<void> _saveProgress() async {
     if (_activeUrl == null || _position == Duration.zero) return;
-    await _storage.write(
-      key: _progressKey(),
-      value: _position.inMilliseconds.toString(),
-    );
+    await AudioProgressStore.write(
+        _progressKey(), _position.inMilliseconds.toString());
     // Sync with Miniflux server
     final activeAttachment = _activeAttachmentID == null
         ? null
@@ -679,7 +704,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
             .where((a) => a.attachmentID == _activeAttachmentID)
             .fold<Attachment?>(null, (prev, e) => prev ?? e);
     if (activeAttachment != null) {
-      syncMediaProgression(widget.appState, widget.news.newsID, activeAttachment.attachmentID, _position.inSeconds)
+      syncMediaProgression(widget.appState, widget.news.newsID,
+              activeAttachment.attachmentID, _position.inSeconds)
           .ignore();
     }
   }
@@ -699,7 +725,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   Future<void> _play(Attachment attachment) async {
     if (_audioHandler == null) return;
     final downloadedPath = _downloadedPaths[attachment.attachmentID];
-    final url = downloadedPath != null ? Uri.file(downloadedPath).toString() : attachment.attachmentURL;
+    final url = downloadedPath != null
+        ? Uri.file(downloadedPath).toString()
+        : attachment.attachmentURL;
     if (url.isEmpty) return;
 
     // Use the handler's actual current URL as source of truth. _activeUrl can
@@ -711,14 +739,17 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     final isCurrentAttachment = url == handlerUrl ||
         url == _activeUrl ||
         attachment.attachmentURL == handlerUrl ||
-        (downloadedPath != null && Uri.file(downloadedPath).toString() == handlerUrl);
+        (downloadedPath != null &&
+            Uri.file(downloadedPath).toString() == handlerUrl);
 
     if (isCurrentAttachment && _playerState.playing) {
       await _audioHandler!.pause();
       await _saveProgress();
       return;
     }
-    if (isCurrentAttachment && !_playerState.playing && _playerState.processingState != ProcessingState.completed) {
+    if (isCurrentAttachment &&
+        !_playerState.playing &&
+        _playerState.processingState != ProcessingState.completed) {
       // Clear stale saved position so a subsequent URL mismatch (async
       // _downloadedPaths race) cannot trigger an unintended seek back to the
       // CarPlay pause position via the full-load path.
@@ -739,10 +770,14 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     await _audioHandler!.loadMediaItem(
       url: url,
       item: mediaItem,
-      initialPosition: seekTarget != null && seekTarget > Duration.zero ? seekTarget : null,
+      initialPosition:
+          seekTarget != null && seekTarget > Duration.zero ? seekTarget : null,
     );
     await _audioHandler!.play();
-    if (seekTarget != null && seekTarget > Duration.zero && mounted && !_isDisposed) {
+    if (seekTarget != null &&
+        seekTarget > Duration.zero &&
+        mounted &&
+        !_isDisposed) {
       setState(() => _savedPosition = null);
     }
   }
@@ -764,14 +799,16 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     if (_audioHandler == null) return;
     if (saveProgress) await _saveProgress();
     await _audioHandler!.stop();
-    await _storage.delete(key: _progressKey());
+    await AudioProgressStore.delete(_progressKey());
     final activeAttachment = _activeAttachmentID == null
         ? null
         : _audioAttachments
             .where((a) => a.attachmentID == _activeAttachmentID)
             .fold<Attachment?>(null, (prev, e) => prev ?? e);
     if (activeAttachment != null) {
-      syncMediaProgression(widget.appState, widget.news.newsID, activeAttachment.attachmentID, 0).ignore();
+      syncMediaProgression(widget.appState, widget.news.newsID,
+              activeAttachment.attachmentID, 0)
+          .ignore();
     }
     if (!mounted || _isDisposed) return;
     setState(() {
@@ -786,7 +823,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
 
   String _formatSleepTimerLabel() {
     final handler = _audioHandler;
-    if (handler == null || !handler.sleepTimerEnabled || handler.sleepTimerEndAt == null) {
+    if (handler == null ||
+        !handler.sleepTimerEnabled ||
+        handler.sleepTimerEndAt == null) {
       return AppLocalizations.of(context)!.sleepTimerOff;
     }
 
@@ -810,11 +849,14 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     await _audioHandler!.seek(clamped);
   }
 
-  Future<void> _seekToChapter(Attachment attachment, AudioChapter chapter) async {
+  Future<void> _seekToChapter(
+      Attachment attachment, AudioChapter chapter) async {
     if (_audioHandler == null) return;
 
     final downloadedPath = _downloadedPaths[attachment.attachmentID];
-    final url = downloadedPath != null ? Uri.file(downloadedPath).toString() : attachment.attachmentURL;
+    final url = downloadedPath != null
+        ? Uri.file(downloadedPath).toString()
+        : attachment.attachmentURL;
     if (url.isEmpty) return;
 
     if (_activeUrl == url) {
@@ -895,26 +937,36 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       return false;
     }
 
-    return uri.scheme == 'file' || uri.scheme == 'content' || uri.scheme == 'http' || uri.scheme == 'https';
+    return uri.scheme == 'file' ||
+        uri.scheme == 'content' ||
+        uri.scheme == 'http' ||
+        uri.scheme == 'https';
   }
 
   Future<Uri?> _resolveFallbackArtworkUri() async {
     _defaultArtworkUri ??= await AudioDownloadService.getDefaultArtworkUri();
-    return _isSupportedArtworkUri(_defaultArtworkUri) ? _defaultArtworkUri : null;
+    return _isSupportedArtworkUri(_defaultArtworkUri)
+        ? _defaultArtworkUri
+        : null;
   }
 
   Future<MediaItem> _buildMediaItem(Attachment attachment) async {
     final parsedUri = Uri.tryParse(attachment.attachmentURL);
-    final fallbackMediaName = parsedUri != null && parsedUri.pathSegments.isNotEmpty
-        ? parsedUri.pathSegments.last
-        : attachment.attachmentMimeType;
-    final title = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
+    final fallbackMediaName =
+        parsedUri != null && parsedUri.pathSegments.isNotEmpty
+            ? parsedUri.pathSegments.last
+            : attachment.attachmentMimeType;
+    final title =
+        _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
 
     Uri? artworkUri;
     String? artCacheFile;
     if (attachment.attachmentID >= 0) {
-      artworkUri = await AudioDownloadService.getCachedArtworkUriForAttachment(attachment.attachmentID);
-      artCacheFile = await AudioDownloadService.getCachedArtworkFilePathForAttachment(attachment.attachmentID);
+      artworkUri = await AudioDownloadService.getCachedArtworkUriForAttachment(
+          attachment.attachmentID);
+      artCacheFile =
+          await AudioDownloadService.getCachedArtworkFilePathForAttachment(
+              attachment.attachmentID);
     }
     artworkUri ??= await _resolveFallbackArtworkUri();
     artCacheFile ??= await AudioDownloadService.getDefaultArtworkFilePath();
@@ -969,7 +1021,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
               size: 18,
             ),
             label: Text(
-              _showPlayerDetails ? localizations.hidePlayerDetails : localizations.showPlayerDetails,
+              _showPlayerDetails
+                  ? localizations.hidePlayerDetails
+                  : localizations.showPlayerDetails,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -977,28 +1031,46 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
         ..._audioAttachments.map((attachment) {
           final isActive = _activeAttachmentID == attachment.attachmentID;
           final isPlaying = isActive && _playerState.playing;
-          final isPaused = isActive && !_playerState.playing && _playerState.processingState != ProcessingState.idle;
-          final isStopped = !isActive || _playerState.processingState == ProcessingState.idle;
-          final isDownloaded = _downloadedPaths.containsKey(attachment.attachmentID);
-          final isDownloading = _downloadingAttachmentIDs.contains(attachment.attachmentID);
+          final isPaused = isActive &&
+              !_playerState.playing &&
+              _playerState.processingState != ProcessingState.idle;
+          final isStopped =
+              !isActive || _playerState.processingState == ProcessingState.idle;
+          final isDownloaded =
+              _downloadedPaths.containsKey(attachment.attachmentID);
+          final isDownloading =
+              _downloadingAttachmentIDs.contains(attachment.attachmentID);
           final storageAttachmentID = _storageAttachmentIDFor(attachment);
-          final downloadProgress = _activeDownloadsByStorageAttachmentID[storageAttachmentID];
+          final downloadProgress =
+              _activeDownloadsByStorageAttachmentID[storageAttachmentID];
           final downloadProgressValue = downloadProgress?.progress;
-          final isLoadingChapters = _loadingChapterAttachmentIDs.contains(attachment.attachmentID);
-          final chapters = _chaptersByAttachmentID[attachment.attachmentID] ?? const <AudioChapter>[];
+          final isLoadingChapters =
+              _loadingChapterAttachmentIDs.contains(attachment.attachmentID);
+          final chapters = _chaptersByAttachmentID[attachment.attachmentID] ??
+              const <AudioChapter>[];
 
           final parsedUri = Uri.tryParse(attachment.attachmentURL);
-          final fallbackMediaName = parsedUri != null && parsedUri.pathSegments.isNotEmpty
-              ? parsedUri.pathSegments.last
-              : attachment.attachmentMimeType;
-          final mediaName = _audioAttachments.length == 1 ? widget.news.title : fallbackMediaName;
-          final chapterListHeight = chapters.length > 4 ? 224.0 : chapters.length * 56.0;
-          final chapterScrollController = _chapterControllerFor(attachment.attachmentID);
+          final fallbackMediaName =
+              parsedUri != null && parsedUri.pathSegments.isNotEmpty
+                  ? parsedUri.pathSegments.last
+                  : attachment.attachmentMimeType;
+          final mediaName = _audioAttachments.length == 1
+              ? widget.news.title
+              : fallbackMediaName;
+          final chapterListHeight =
+              chapters.length > 4 ? 224.0 : chapters.length * 56.0;
+          final chapterScrollController =
+              _chapterControllerFor(attachment.attachmentID);
 
-          final maxMs = _duration.inMilliseconds > 0 ? _duration.inMilliseconds.toDouble() : 1.0;
-          final currentMs = isActive ? _position.inMilliseconds.toDouble().clamp(0.0, maxMs) : 0.0;
+          final maxMs = _duration.inMilliseconds > 0
+              ? _duration.inMilliseconds.toDouble()
+              : 1.0;
+          final currentMs = isActive
+              ? _position.inMilliseconds.toDouble().clamp(0.0, maxMs)
+              : 0.0;
           // Show saved position in time label before playback starts
-          final displayPosition = isActive ? _position : (_savedPosition ?? Duration.zero);
+          final displayPosition =
+              isActive ? _position : (_savedPosition ?? Duration.zero);
 
           return Card(
             margin: const EdgeInsets.only(top: 12),
@@ -1010,7 +1082,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                   // Media name
                   Row(
                     children: [
-                      Icon(Icons.headphones, size: 18, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.headphones,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -1030,7 +1104,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         onPressed: isDownloaded
                             ? null
                             : isDownloading
-                                ? () => AudioDownloadService.cancelDownload(storageAttachmentID)
+                                ? () => AudioDownloadService.cancelDownload(
+                                    storageAttachmentID)
                                 : () => _downloadAudio(attachment, widget.news),
                         icon: isDownloading
                             ? SizedBox(
@@ -1042,14 +1117,23 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     CircularProgressIndicator(
                                       value: downloadProgressValue,
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primary),
                                     ),
-                                    Icon(Icons.close, size: 12, color: Theme.of(context).colorScheme.primary),
+                                    Icon(Icons.close,
+                                        size: 12,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                   ],
                                 ),
                               )
                             : Icon(
-                                isDownloaded ? Icons.download_done : Icons.download,
+                                isDownloaded
+                                    ? Icons.download_done
+                                    : Icons.download,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                         iconSize: 20,
@@ -1064,7 +1148,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                     max: maxMs,
                     onChanged: isActive
                         ? (value) async {
-                            await _audioHandler!.seek(Duration(milliseconds: value.toInt()));
+                            await _audioHandler!
+                                .seek(Duration(milliseconds: value.toInt()));
                           }
                         : null,
                   ),
@@ -1080,7 +1165,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         Text(
-                          isActive && _duration > Duration.zero ? _formatDuration(_duration) : '--:--',
+                          isActive && _duration > Duration.zero
+                              ? _formatDuration(_duration)
+                              : '--:--',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -1092,7 +1179,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                     ExpansionTile(
                       tilePadding: EdgeInsets.zero,
                       childrenPadding: EdgeInsets.zero,
-                      shape: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+                      shape: Border(
+                          bottom: BorderSide(
+                              color: Theme.of(context).dividerColor)),
                       collapsedShape: LinearBorder.none,
                       title: Text(
                         localizations.chapters,
@@ -1102,7 +1191,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                         if (!expanded) {
                           // Clear stored index so re-opening always scrolls to
                           // the current chapter, even if it hasn't changed.
-                          _lastAutoScrolledChapterIndexByAttachmentID.remove(attachment.attachmentID);
+                          _lastAutoScrolledChapterIndexByAttachmentID
+                              .remove(attachment.attachmentID);
                         }
                       },
                       children: [
@@ -1115,7 +1205,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                 const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 ),
                                 const SizedBox(width: 12),
                                 Text(localizations.loadingChapters),
@@ -1139,15 +1230,21 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                               controller: chapterScrollController,
                               child: Builder(
                                 builder: (context) {
-                                  final activeChapterIdx = isActive ? _activeChapterIndex(chapters, _position) : -1;
+                                  final activeChapterIdx = isActive
+                                      ? _activeChapterIndex(chapters, _position)
+                                      : -1;
 
                                   if (isActive && activeChapterIdx >= 0) {
                                     final previousAutoScrolledIdx =
-                                        _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID];
-                                    if (previousAutoScrolledIdx != activeChapterIdx) {
-                                      _lastAutoScrolledChapterIndexByAttachmentID[attachment.attachmentID] =
+                                        _lastAutoScrolledChapterIndexByAttachmentID[
+                                            attachment.attachmentID];
+                                    if (previousAutoScrolledIdx !=
+                                        activeChapterIdx) {
+                                      _lastAutoScrolledChapterIndexByAttachmentID[
+                                              attachment.attachmentID] =
                                           activeChapterIdx;
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
                                         _scrollToActiveChapter(
                                           chapterScrollController,
                                           activeChapterIdx,
@@ -1164,42 +1261,60 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     itemCount: chapters.length,
                                     itemBuilder: (context, index) {
                                       final chapter = chapters[index];
-                                      final isActiveChapter = index == activeChapterIdx;
+                                      final isActiveChapter =
+                                          index == activeChapterIdx;
                                       return ListTile(
                                         dense: true,
                                         contentPadding: EdgeInsets.zero,
                                         tileColor: isActiveChapter
-                                            ? Theme.of(context).colorScheme.primaryContainer.withAlpha(128)
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primaryContainer
+                                                .withAlpha(128)
                                             : null,
                                         title: Row(children: [
                                           isActiveChapter
                                               ? Icon(
                                                   Icons.play_arrow,
                                                   size: 16,
-                                                  color: Theme.of(context).colorScheme.primary,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                 )
                                               : const SizedBox(width: 16),
                                           Expanded(
                                               child: Padding(
-                                            padding: const EdgeInsets.only(left: 4.0),
+                                            padding: const EdgeInsets.only(
+                                                left: 4.0),
                                             child: Text(
                                               chapter.title,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: isActiveChapter
-                                                  ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                  ? Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onPrimaryContainer,
                                                       )
-                                                  : Theme.of(context).textTheme.bodyMedium,
+                                                  : Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium,
                                             ),
                                           )),
                                         ]),
                                         trailing: Text(
                                           _formatChapterStart(chapter.start),
-                                          style: Theme.of(context).textTheme.bodySmall,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
                                         ),
-                                        onTap: () => _seekToChapter(attachment, chapter),
+                                        onTap: () =>
+                                            _seekToChapter(attachment, chapter),
                                       );
                                     },
                                   );
@@ -1281,7 +1396,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                               items: _sleepTimerMinuteOptions
                                   .map((minutes) => DropdownMenuItem<int>(
                                         value: minutes,
-                                        child: Text('$minutes ${localizations.minutes}'),
+                                        child: Text(
+                                            '$minutes ${localizations.minutes}'),
                                       ))
                                   .toList(),
                             ),
@@ -1299,7 +1415,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       // Rewind 30s
                       IconButton(
                         tooltip: '-30s',
-                        onPressed: isActive ? () => _seek(const Duration(seconds: -30)) : null,
+                        onPressed: isActive
+                            ? () => _seek(const Duration(seconds: -30))
+                            : null,
                         icon: const Icon(Icons.replay_30),
                         iconSize: 32,
                       ),
@@ -1330,7 +1448,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                       : AppLocalizations.of(context)!.play,
                               onPressed: () => _play(attachment),
                               icon: Icon(
-                                isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                                isPlaying
+                                    ? Icons.pause_circle_filled
+                                    : Icons.play_circle_fill,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                               iconSize: 56,
@@ -1344,7 +1464,8 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       // Stop
                       IconButton(
                         tooltip: AppLocalizations.of(context)!.stop,
-                        onPressed: isActive && !isStopped ? () => _stop() : null,
+                        onPressed:
+                            isActive && !isStopped ? () => _stop() : null,
                         icon: const Icon(Icons.stop_circle_outlined),
                         iconSize: 32,
                       ),
@@ -1354,7 +1475,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                       // Forward 30s
                       IconButton(
                         tooltip: '+30s',
-                        onPressed: isActive ? () => _seek(const Duration(seconds: 30)) : null,
+                        onPressed: isActive
+                            ? () => _seek(const Duration(seconds: 30))
+                            : null,
                         icon: const Icon(Icons.forward_30),
                         iconSize: 32,
                       ),

@@ -18,5 +18,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     window?.backgroundColor = .systemBackground
     window?.rootViewController = controller
     window?.makeKeyAndVisible()
+
+    if let url = connectionOptions.urlContexts.first?.url,
+       let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+      pendingWidgetAction = appDelegate.parseWidgetAction(url)
+    }
+  }
+
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let url = URLContexts.first?.url,
+          let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+    pendingWidgetAction = appDelegate.parseWidgetAction(url)
   }
 }

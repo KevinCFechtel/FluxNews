@@ -894,6 +894,18 @@ abstract class AppLocalizations {
   /// **'Immediately sync read status to server'**
   String get syncReadStatusImmediately;
 
+  /// No description provided for @backgroundSyncInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Background sync for widgets'**
+  String get backgroundSyncInterval;
+
+  /// No description provided for @backgroundSyncOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get backgroundSyncOff;
+
   /// No description provided for @headerSettings.
   ///
   /// In en, this message translates to:
