@@ -405,7 +405,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search...'**
+  /// **'Search…'**
   String get searchHint;
 
   /// No description provided for @emptySearch.
@@ -777,7 +777,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncInProgress.
   ///
   /// In en, this message translates to:
-  /// **'Sync in progress...'**
+  /// **'Sync in progress…'**
   String get syncInProgress;
 
   /// No description provided for @startupCategorie.
@@ -900,11 +900,11 @@ abstract class AppLocalizations {
   /// **'Background sync for widgets'**
   String get backgroundSyncInterval;
 
-  /// No description provided for @backgroundSyncOff.
+  /// No description provided for @off.
   ///
   /// In en, this message translates to:
   /// **'Off'**
-  String get backgroundSyncOff;
+  String get off;
 
   /// No description provided for @headerSettings.
   ///
@@ -915,13 +915,13 @@ abstract class AppLocalizations {
   /// No description provided for @headerKey.
   ///
   /// In en, this message translates to:
-  /// **'Header Name: '**
+  /// **'Header Name:'**
   String get headerKey;
 
   /// No description provided for @headerValue.
   ///
   /// In en, this message translates to:
-  /// **'Header Value: '**
+  /// **'Header Value:'**
   String get headerValue;
 
   /// No description provided for @delete.
@@ -1143,7 +1143,7 @@ abstract class AppLocalizations {
   /// No description provided for @feedCreationDuration.
   ///
   /// In en, this message translates to:
-  /// **'Creating...'**
+  /// **'Creating…'**
   String get feedCreationDuration;
 
   /// No description provided for @feedCreationDescription.
@@ -1443,7 +1443,7 @@ abstract class AppLocalizations {
   /// No description provided for @loadingChapters.
   ///
   /// In en, this message translates to:
-  /// **'Loading chapters ...'**
+  /// **'Loading chapters…'**
   String get loadingChapters;
 
   /// No description provided for @noChaptersFound.
@@ -1485,7 +1485,7 @@ abstract class AppLocalizations {
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:
-  /// **'loading...'**
+  /// **'loading…'**
   String get loading;
 
   /// No description provided for @noEntries.
@@ -1511,6 +1511,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel all'**
   String get cancelAll;
+
+  /// No description provided for @items.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get items;
+
+  /// No description provided for @widgetSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget settings'**
+  String get widgetSettings;
 }
 
 class _AppLocalizationsDelegate

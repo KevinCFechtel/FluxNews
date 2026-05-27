@@ -93,7 +93,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get titleURL => 'URL';
 
   @override
-  String get enterURL => 'Gebe die URL ein:';
+  String get enterURL => 'Gebe die URL ein';
 
   @override
   String get enterValidURL =>
@@ -168,7 +168,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get search => 'Suchen';
 
   @override
-  String get searchHint => 'Suchen...';
+  String get searchHint => 'Suchen…';
 
   @override
   String get emptySearch => 'Keine Nachrichten gefunden';
@@ -328,7 +328,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get manualAdaptDarkModeToIcon =>
-      'Passe  ein durchsichtiges Feed Icon manuell an den Dark Mode an';
+      'Passe ein durchsichtiges Feed Icon manuell an den Dark Mode an';
 
   @override
   String get openMinifluxEntry =>
@@ -381,7 +381,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get none => 'Keine';
 
   @override
-  String get syncInProgress => 'Sync wird gerade ausgeführt...';
+  String get syncInProgress => 'Sync wird gerade ausgeführt…';
 
   @override
   String get startupCategorie => 'Wähle die Standardkategorie zum Start aus';
@@ -452,17 +452,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backgroundSyncInterval => 'Background-Sync für Widgets';
 
   @override
-  String get backgroundSyncOff => 'Aus';
+  String get off => 'Off';
 
   @override
   String get headerSettings =>
       'Setze zusätzliche Header für den Miniflux Zugriff';
 
   @override
-  String get headerKey => 'Header Name: ';
+  String get headerKey => 'Header Name:';
 
   @override
-  String get headerValue => 'Header Inhalt: ';
+  String get headerValue => 'Header Inhalt:';
 
   @override
   String get delete => 'Löschen';
@@ -557,7 +557,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupSuccessfullyRestored =>
-      'Backup erfolgreich wiederhergestellt.';
+      'Backup erfolgreich wiederhergestellt';
 
   @override
   String get restoreFailed => 'Restore fehlgeschlagen';
@@ -580,7 +580,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get feedSelection => 'Feeds auswählen';
 
   @override
-  String get feedCreationDuration => 'Wird erstellt...';
+  String get feedCreationDuration => 'Wird erstellt…';
 
   @override
   String get feedCreationDescription =>
@@ -651,16 +651,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sleep Timer: Wiedergabe wurde automatisch gestoppt.';
 
   @override
-  String get sleepTimerOff => 'Sleep Timer: Off';
+  String get sleepTimerOff => 'Sleep Timer: Aus';
 
   @override
-  String get sleepTimerEndingSoon => 'Sleep Timer: Ending soon';
+  String get sleepTimerEndingSoon => 'Sleep Timer: Endet bald';
 
   @override
-  String get sleepTimerActive => 'Sleep Timer: active';
+  String get sleepTimerActive => 'Sleep Timer: Aktiv';
 
   @override
-  String get sleepTimerRemaining => 'min remaining';
+  String get sleepTimerRemaining => 'min verbleibend';
 
   @override
   String get downloaded => 'Heruntergeladen';
@@ -740,7 +740,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get advancedSettings => 'Erweiterte Einstellungen';
 
   @override
-  String get loadingChapters => 'Kapitel werden geladen ...';
+  String get loadingChapters => 'Kapitel werden geladen…';
 
   @override
   String get noChaptersFound => 'Keine Kapitel gefunden.';
@@ -762,17 +762,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get clearList => 'Liste leeren';
 
   @override
-  String get loading => 'laden...';
+  String get loading => 'laden…';
 
   @override
   String get noEntries => 'Keine Einträge';
 
   @override
-  String get copyClipboard => 'Copy to clipboard';
+  String get copyClipboard => 'In Zwischenablage kopieren';
 
   @override
   String get last => 'letzte';
 
   @override
   String get cancelAll => 'Alle abbrechen';
+
+  @override
+  String get items => 'Einträge';
+
+  @override
+  String get widgetSettings => 'Widget Einstellungen';
 }

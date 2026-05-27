@@ -92,7 +92,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get titleURL => 'URL';
 
   @override
-  String get enterURL => 'Voer de URL in:';
+  String get enterURL => 'Voer de URL in';
 
   @override
   String get enterValidURL =>
@@ -167,7 +167,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get search => 'Zoeken';
 
   @override
-  String get searchHint => 'Zoeken...';
+  String get searchHint => 'Zoeken…';
 
   @override
   String get emptySearch => 'Geen nieuws gevonden';
@@ -373,7 +373,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get none => 'None';
 
   @override
-  String get syncInProgress => 'Sync in progress...';
+  String get syncInProgress => 'Sync in progress…';
 
   @override
   String get startupCategorie => 'Choose Categorie for startup';
@@ -445,17 +445,17 @@ class AppLocalizationsNl extends AppLocalizations {
   String get backgroundSyncInterval => 'Background sync for widgets';
 
   @override
-  String get backgroundSyncOff => 'Off';
+  String get off => 'Off';
 
   @override
   String get headerSettings =>
       'Set additional custom headers for accessing Miniflux';
 
   @override
-  String get headerKey => 'Header Name: ';
+  String get headerKey => 'Header Name:';
 
   @override
-  String get headerValue => 'Header Value: ';
+  String get headerValue => 'Header Value:';
 
   @override
   String get delete => 'Delete';
@@ -569,7 +569,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get feedSelection => 'Select feed';
 
   @override
-  String get feedCreationDuration => 'Creating...';
+  String get feedCreationDuration => 'Creating…';
 
   @override
   String get feedCreationDescription =>
@@ -727,7 +727,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get advancedSettings => 'Advanced Settings';
 
   @override
-  String get loadingChapters => 'Loading chapters ...';
+  String get loadingChapters => 'Loading chapters…';
 
   @override
   String get noChaptersFound => 'No chapters found.';
@@ -749,7 +749,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get clearList => 'Clear list';
 
   @override
-  String get loading => 'loading...';
+  String get loading => 'loading…';
 
   @override
   String get noEntries => 'No entries';
@@ -762,4 +762,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get cancelAll => 'Cancel all';
+
+  @override
+  String get items => 'Items';
+
+  @override
+  String get widgetSettings => 'Widget settings';
 }

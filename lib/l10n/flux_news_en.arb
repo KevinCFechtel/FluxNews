@@ -132,7 +132,7 @@
     "skipLongSync": "Skip long sync dialog",
     "syncReadStatusImmediately": "Immediately sync read status to server",
     "backgroundSyncInterval": "Background sync for widgets",
-    "backgroundSyncOff": "Off",
+    "off": "Off",
     "headerSettings": "Set additional custom headers for accessing Miniflux",
     "headerKey": "Header Name:",
     "headerValue": "Header Value:",
@@ -233,5 +233,7 @@
     "noEntries": "No entries",
     "copyClipboard": "Copy to clipboard",
     "last": "last",
-    "cancelAll": "Cancel all"
+    "cancelAll": "Cancel all",
+    "items": "Items",
+    "widgetSettings": "Widget settings"
 }

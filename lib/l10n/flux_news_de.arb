@@ -238,5 +238,7 @@
     "sleepTimerEndingSoon": "Sleep Timer: Endet bald",
     "sleepTimerActive": "Sleep Timer: Aktiv",
     "sleepTimerRemaining": "min verbleibend",
-    "copyClipboard": "In Zwischenablage kopieren"
+    "copyClipboard": "In Zwischenablage kopieren",
+    "items": "Einträge",
+    "widgetSettings": "Widget Einstellungen"
 }
