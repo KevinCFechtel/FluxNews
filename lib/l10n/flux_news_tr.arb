@@ -49,7 +49,7 @@
     "descriptionMinifluxApp": "Bu, miniflux ile çalışmak için basit bir Haber okuyucusudur.\nMiniflux hakkında daha fazla bilgi için proje sayfasını ziyaret edin:",
     "descriptionMoreInformation": "Bu uygulama hakkında daha fazla bilgi için proje sayfasını ziyaret edin:",
     "search": "Arama",
-    "searchHint": "Ara...",
+    "searchHint": "Ara…",
     "emptySearch": "Haber bulunamadı",
     "exportLogs": "Hata ayıklama günlüklerini dışa aktar",
     "debugModeTextSettings": "Hata ayıklama modunu etkinleştir",
