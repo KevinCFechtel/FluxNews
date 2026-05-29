@@ -1,0 +1,3 @@
+The following has been added:
+ •	Home Screen Widgets: Access your articles directly from your device's home screen with the new native widgets.
+ •	Background Sync: The app now can automatically synchronizes in the background, keeping your news updated with your Miniflux server.
