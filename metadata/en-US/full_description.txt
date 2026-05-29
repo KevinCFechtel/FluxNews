@@ -23,6 +23,8 @@ Tailored for Your Device
  •	OLED-Optimized Design: Choose between Light, Dark, and a specialized True Black mode designed specifically to save battery and look stunning on high-end displays.
  •	Precision Filtering & Search: Instantly sort through your content by status (Unread, Read, Starred), category, or individual feeds. Use the powerful search to query your entire Miniflux backend in seconds.
  •	Quick Access to Discussions: Open article comments directly within the app to stay on top of the conversation.
+ •	Home Screen Widgets: Access your articles directly from your device's home screen with the new native widgets.
+ •	Background Sync: The app now can automatically synchronizes in the background, keeping your news updated with your Miniflux server.
 
 Privacy by Design
 Your data belongs to you. Flux News acts as a transparent window to your own server.

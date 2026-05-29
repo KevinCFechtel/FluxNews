@@ -57,6 +57,8 @@ The unread articles should appear in the app.
 * **Precision Filtering & Search:** Instantly sort through your content by status, category, or individual feeds. 
 * **Native Experience:** Open articles in their respective installed apps or access comments directly.
 * **Article Management:** Support for truncating articles and sending them to third-party services.
+* **Home Screen Widgets:** Access your articles directly from your device's home screen with the new native widgets.
+* **Background Sync:** The app now can automatically synchronize in the background, keeping your news updated with your Miniflux server.
 
 ### 🎙 Podcast Excellence (New!)
 * **Integrated Player:** High-performance playback with variable speed control.
