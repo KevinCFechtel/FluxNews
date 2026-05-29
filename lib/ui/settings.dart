@@ -39,7 +39,8 @@ class Settings extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the settings page to the localized settings string
-          title: Text(AppLocalizations.of(context)!.settings, style: Theme.of(context).textTheme.titleLarge),
+          title: Text(AppLocalizations.of(context)!.settings,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // set the body of the settings page
         body: SingleChildScrollView(
@@ -118,7 +119,8 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.headerSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.headerSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -147,7 +149,10 @@ class Settings extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 10, bottom: 10),
                             child: Text(
                               AppLocalizations.of(context)!.authError,
-                              style: const TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold),
                             ),
                           )
                         : const SizedBox.shrink()
@@ -157,7 +162,10 @@ class Settings extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 10, bottom: 10),
                         child: Text(
                           AppLocalizations.of(context)!.insecureMinifluxURL,
-                          style: const TextStyle(color: Colors.red, fontSize: 15, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold),
                         ),
                       )
                     : const SizedBox.shrink(),
@@ -179,7 +187,8 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.generalSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.generalSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -204,7 +213,8 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.syncSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.syncSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -228,7 +238,8 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.newsItemSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.newsItemSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -253,7 +264,8 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.feedSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.feedSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -278,7 +290,8 @@ class Settings extends StatelessWidget {
                   ),
                   onTap: () {
                     // navigate to the search page
-                    Navigator.pushNamed(context, FluxNewsState.truncateSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.truncateSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -330,12 +343,13 @@ class Settings extends StatelessWidget {
                         ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
                         : const EdgeInsets.fromLTRB(0, 0, 0, 0),
                     child: Text(
-                      'Widget settings',
+                      AppLocalizations.of(context)!.widgetSettings,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
                   onTap: () {
-                    Navigator.pushNamed(context, FluxNewsState.widgetSettingsRouteString);
+                    Navigator.pushNamed(
+                        context, FluxNewsState.widgetSettingsRouteString);
                   },
                   trailing: const Icon(
                     Icons.arrow_right,
@@ -360,7 +374,8 @@ class Settings extends StatelessWidget {
                 Row(
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      padding: EdgeInsets.only(
+                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                       child: const Icon(
                         Icons.developer_mode,
                       ),
@@ -375,12 +390,15 @@ class Settings extends StatelessWidget {
                     Switch.adaptive(
                       value: appState.debugMode,
                       onChanged: (bool value) {
-                        String stringValue = FluxNewsState.secureStorageFalseString;
+                        String stringValue =
+                            FluxNewsState.secureStorageFalseString;
                         if (value == true) {
                           stringValue = FluxNewsState.secureStorageTrueString;
                         }
                         appState.debugMode = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageDebugModeKey, value: stringValue);
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageDebugModeKey,
+                            value: stringValue);
                         if (Platform.isIOS) {
                           FluxNewsCarPlayService.setDebugMode(value);
                         }
@@ -396,7 +414,8 @@ class Settings extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      padding: EdgeInsets.only(
+                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                       child: const Icon(Icons.delete_sweep),
                     ),
                     Expanded(
@@ -412,7 +431,9 @@ class Settings extends StatelessWidget {
                         appState.clearLogsOnStart = value;
                         appState.storage.write(
                           key: FluxNewsState.secureStorageClearLogsOnStartKey,
-                          value: value ? FluxNewsState.secureStorageTrueString : FluxNewsState.secureStorageFalseString,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
                         );
                         appState.refreshView();
                       },
@@ -502,7 +523,10 @@ class Settings extends StatelessWidget {
                         : const EdgeInsets.fromLTRB(0, 0, 0, 0),
                     child: Text(
                       AppLocalizations.of(context)!.deleteLocalCache,
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.red),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium!
+                          .copyWith(color: Colors.red),
                     ),
                   ),
                   onTap: () {
@@ -530,10 +554,16 @@ class Settings extends StatelessWidget {
                       text: TextSpan(
                         style: Theme.of(context).textTheme.bodyMedium,
                         children: <TextSpan>[
-                          TextSpan(text: AppLocalizations.of(context)!.descriptionMinifluxApp),
-                          const TextSpan(text: '${FluxNewsState.miniFluxProjectUrl}\n'),
-                          TextSpan(text: AppLocalizations.of(context)!.descriptionMoreInformation),
-                          const TextSpan(text: FluxNewsState.applicationProjectUrl),
+                          TextSpan(
+                              text: AppLocalizations.of(context)!
+                                  .descriptionMinifluxApp),
+                          const TextSpan(
+                              text: '${FluxNewsState.miniFluxProjectUrl}\n'),
+                          TextSpan(
+                              text: AppLocalizations.of(context)!
+                                  .descriptionMoreInformation),
+                          const TextSpan(
+                              text: FluxNewsState.applicationProjectUrl),
                         ],
                       ),
                     ),
@@ -567,11 +597,12 @@ class Settings extends StatelessWidget {
     if (actualCategoryList != null) {
       for (Category category in actualCategoryList.categories) {
         appState.recordTypesStartupCategories!.add(
-          KeyValueRecordType(key: category.categoryID.toString(), value: category.title),
+          KeyValueRecordType(
+              key: category.categoryID.toString(), value: category.title),
         );
         if (category.categoryID == appState.startupCategorieSelectionKey) {
-          appState.startupCategorieSelection =
-              KeyValueRecordType(key: category.categoryID.toString(), value: category.title);
+          appState.startupCategorieSelection = KeyValueRecordType(
+              key: category.categoryID.toString(), value: category.title);
         }
       }
 
@@ -581,7 +612,8 @@ class Settings extends StatelessWidget {
             KeyValueRecordType(key: feed.feedID.toString(), value: feed.title),
           );
           if (feed.feedID == appState.startupFeedSelectionKey) {
-            appState.startupFeedSelection = KeyValueRecordType(key: feed.feedID.toString(), value: feed.title);
+            appState.startupFeedSelection = KeyValueRecordType(
+                key: feed.feedID.toString(), value: feed.title);
           }
         }
       }
@@ -601,13 +633,15 @@ class Settings extends StatelessWidget {
       } else if (Platform.isAndroid) {
         final extDir = await getExternalStorageDirectory();
         if (extDir != null) {
-          logsDir = Directory('${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
+          logsDir = Directory(
+              '${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
           exportDirectory = extDir;
         }
       }
 
       if (logsDir == null || !logsDir.existsSync()) {
-        logThis('exportLogs', 'Log directory not found: ${logsDir?.path}', LogLevel.ERROR);
+        logThis('exportLogs', 'Log directory not found: ${logsDir?.path}',
+            LogLevel.ERROR);
         return;
       }
 
@@ -621,7 +655,8 @@ class Settings extends StatelessWidget {
         if (entity is! File) continue;
         final relativePath = entity.path.substring(logsDir.path.length + 1);
         // Skip the nested export subdirectory (native plugin artifacts) and any ZIPs
-        if (relativePath.startsWith('${FluxNewsState.logsWriteDirectoryName}/')) continue;
+        if (relativePath.startsWith('${FluxNewsState.logsWriteDirectoryName}/'))
+          continue;
         if (relativePath.endsWith('.zip')) continue;
         final bytes = await entity.readAsBytes();
         archive.addFile(ArchiveFile(relativePath, bytes.length, bytes));
@@ -651,7 +686,8 @@ class Settings extends StatelessWidget {
         }
       }
     } catch (e) {
-      logThis('exportLogs', 'Error exporting logs: ${e.toString()}', LogLevel.ERROR);
+      logThis('exportLogs', 'Error exporting logs: ${e.toString()}',
+          LogLevel.ERROR);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
@@ -660,7 +696,8 @@ class Settings extends StatelessWidget {
     }
   }
 
-  Future<void> exportSettingsBackup(BuildContext context, FluxNewsState appState) async {
+  Future<void> exportSettingsBackup(
+      BuildContext context, FluxNewsState appState) async {
     try {
       appState.db ??= await appState.initializeDB();
 
@@ -707,7 +744,10 @@ class Settings extends StatelessWidget {
       }
 
       if (exportDirectory == null) {
-        logThis('fetchNews', 'Error export directory for the backup could not be determined', LogLevel.ERROR);
+        logThis(
+            'fetchNews',
+            'Error export directory for the backup could not be determined',
+            LogLevel.ERROR);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
@@ -717,7 +757,8 @@ class Settings extends StatelessWidget {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final zipFilePath = '${exportDirectory.path}/flux_news_settings_backup_$timestamp.zip';
+      final zipFilePath =
+          '${exportDirectory.path}/flux_news_settings_backup_$timestamp.zip';
 
       final jsonBytes = utf8.encode(backupJson);
       final archive = Archive();
@@ -738,11 +779,13 @@ class Settings extends StatelessWidget {
                   ? box.localToGlobal(Offset.zero) & const Size(100, 100)
                   : null));
         } else {
-          await SharePlus.instance.share(ShareParams(files: [XFile(zipFilePath)]));
+          await SharePlus.instance
+              .share(ShareParams(files: [XFile(zipFilePath)]));
         }
       }
     } catch (e) {
-      logThis('fetchNews', 'Error shareing the backup: ${e.toString()}', LogLevel.ERROR);
+      logThis('fetchNews', 'Error shareing the backup: ${e.toString()}',
+          LogLevel.ERROR);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
@@ -792,9 +835,11 @@ class Settings extends StatelessWidget {
                           decoration: const InputDecoration(errorMaxLines: 2),
                           validator: (value) {
                             value ??= '';
-                            RegExp regex = RegExp(FluxNewsState.urlValidationRegex);
+                            RegExp regex =
+                                RegExp(FluxNewsState.urlValidationRegex);
                             if (!regex.hasMatch(value)) {
-                              return AppLocalizations.of(context)!.enterValidURL;
+                              return AppLocalizations.of(context)!
+                                  .enterValidURL;
                             } else {
                               return null;
                             }
@@ -804,7 +849,8 @@ class Settings extends StatelessWidget {
                     ]),
               actions: <Widget>[
                 TextButton(
-                  onPressed: () => Navigator.pop(context, FluxNewsState.cancelContextString),
+                  onPressed: () =>
+                      Navigator.pop(context, FluxNewsState.cancelContextString),
                   child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 TextButton(
@@ -823,21 +869,27 @@ class Settings extends StatelessWidget {
                             if (newText.endsWith('/')) {
                               newText = newText + FluxNewsState.apiVersionPath;
                             } else {
-                              newText = "$newText/${FluxNewsState.apiVersionPath}";
+                              newText =
+                                  "$newText/${FluxNewsState.apiVersionPath}";
                             }
                           } else {
                             newText = "$newText/";
                           }
                         }
-                        if (appState.minifluxAPIKey != null && appState.minifluxAPIKey != '') {
-                          bool authCheck = await checkMinifluxCredentials(newText, appState.minifluxAPIKey!, appState)
+                        if (appState.minifluxAPIKey != null &&
+                            appState.minifluxAPIKey != '') {
+                          bool authCheck = await checkMinifluxCredentials(
+                                  newText, appState.minifluxAPIKey!, appState)
                               .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
-                          appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
+                          appState.insecureMinifluxURL =
+                              !newText.toLowerCase().startsWith('https');
                           appState.refreshView();
                         }
-                        appState.storage.write(key: FluxNewsState.secureStorageMinifluxURLKey, value: newText);
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageMinifluxURLKey,
+                            value: newText);
                         appState.minifluxURL = newText;
                         if (context.mounted) {
                           Navigator.pop(context);
@@ -851,24 +903,32 @@ class Settings extends StatelessWidget {
                           if (!newText.endsWith('/v1/')) {
                             if (!newText.endsWith('/v1')) {
                               if (newText.endsWith('/')) {
-                                newText = newText + FluxNewsState.apiVersionPath;
+                                newText =
+                                    newText + FluxNewsState.apiVersionPath;
                               } else {
-                                newText = "$newText/${FluxNewsState.apiVersionPath}";
+                                newText =
+                                    "$newText/${FluxNewsState.apiVersionPath}";
                               }
                             } else {
                               newText = "$newText/";
                             }
                           }
                         }
-                        if (appState.minifluxAPIKey != null && appState.minifluxAPIKey != '' && newText != null) {
-                          bool authCheck = await checkMinifluxCredentials(newText, appState.minifluxAPIKey!, appState)
+                        if (appState.minifluxAPIKey != null &&
+                            appState.minifluxAPIKey != '' &&
+                            newText != null) {
+                          bool authCheck = await checkMinifluxCredentials(
+                                  newText, appState.minifluxAPIKey!, appState)
                               .onError((error, stackTrace) => false);
 
                           appState.errorOnMinifluxAuth = !authCheck;
-                          appState.insecureMinifluxURL = !newText.toLowerCase().startsWith('https');
+                          appState.insecureMinifluxURL =
+                              !newText.toLowerCase().startsWith('https');
                           appState.refreshView();
                         }
-                        appState.storage.write(key: FluxNewsState.secureStorageMinifluxURLKey, value: newText);
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageMinifluxURLKey,
+                            value: newText);
                         appState.minifluxURL = newText;
                         if (context.mounted) {
                           Navigator.pop(context);
@@ -903,7 +963,8 @@ class Settings extends StatelessWidget {
                     children: [
                       Padding(
                           padding: const EdgeInsets.only(top: 10, bottom: 5),
-                          child: Text(AppLocalizations.of(context)!.enterAPIKey)),
+                          child:
+                              Text(AppLocalizations.of(context)!.enterAPIKey)),
                       CupertinoTextField(
                         controller: controller,
                       ),
@@ -917,7 +978,8 @@ class Settings extends StatelessWidget {
                   ]),
             actions: <Widget>[
               TextButton(
-                onPressed: () => Navigator.pop(context, FluxNewsState.cancelContextString),
+                onPressed: () =>
+                    Navigator.pop(context, FluxNewsState.cancelContextString),
                 child: Text(AppLocalizations.of(context)!.cancel),
               ),
               TextButton(
@@ -926,15 +988,22 @@ class Settings extends StatelessWidget {
                   if (controller.text != '') {
                     newText = controller.text;
                   }
-                  if (appState.minifluxURL != null && appState.minifluxURL != '' && newText != null) {
-                    bool authCheck = await checkMinifluxCredentials(appState.minifluxURL!, newText, appState)
+                  if (appState.minifluxURL != null &&
+                      appState.minifluxURL != '' &&
+                      newText != null) {
+                    bool authCheck = await checkMinifluxCredentials(
+                            appState.minifluxURL!, newText, appState)
                         .onError((error, stackTrace) => false);
                     appState.errorOnMinifluxAuth = !authCheck;
-                    appState.insecureMinifluxURL = !appState.minifluxURL!.toLowerCase().startsWith('https');
+                    appState.insecureMinifluxURL = !appState.minifluxURL!
+                        .toLowerCase()
+                        .startsWith('https');
                     appState.refreshView();
                   }
 
-                  appState.storage.write(key: FluxNewsState.secureStorageMinifluxAPIKey, value: newText);
+                  appState.storage.write(
+                      key: FluxNewsState.secureStorageMinifluxAPIKey,
+                      value: newText);
                   appState.minifluxAPIKey = newText;
                   if (context.mounted) {
                     Navigator.pop(context);
@@ -951,7 +1020,8 @@ class Settings extends StatelessWidget {
   // this method shows a dialog to enter the miniflux api key
   // the api key is saved in the secure storage
   // if the url is set, the connection is tested
-  Future _showDeleteLocalCacheDialog(BuildContext context, FluxNewsState appState) {
+  Future _showDeleteLocalCacheDialog(
+      BuildContext context, FluxNewsState appState) {
     TextEditingController controller = TextEditingController();
     if (appState.minifluxAPIKey != null) {
       controller.text = appState.minifluxAPIKey!;
@@ -960,7 +1030,8 @@ class Settings extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog.adaptive(
-            title: Text(AppLocalizations.of(context)!.deleteLocalCacheDialogTitle),
+            title:
+                Text(AppLocalizations.of(context)!.deleteLocalCacheDialogTitle),
             content: Wrap(children: [
               Text(AppLocalizations.of(context)!.deleteLocalCacheDialogContent),
             ]),
@@ -981,9 +1052,11 @@ class Settings extends StatelessWidget {
                       onPressed: () {
                         deleteLocalNewsCache(appState, context);
                         appState.newsList = Future<List<News>>.value([]);
-                        appState.categoryList = Future<Categories>.value(Categories(categories: []));
+                        appState.categoryList = Future<Categories>.value(
+                            Categories(categories: []));
                         context.read<FluxNewsCounterState>().allNewsCount = 0;
-                        context.read<FluxNewsCounterState>().appBarNewsCount = 0;
+                        context.read<FluxNewsCounterState>().appBarNewsCount =
+                            0;
                         context.read<FluxNewsCounterState>().starredCount = 0;
                         context.read<FluxNewsCounterState>().refreshView();
                         appState.refreshView();
@@ -994,16 +1067,19 @@ class Settings extends StatelessWidget {
                   ]
                 : <Widget>[
                     TextButton(
-                      onPressed: () => Navigator.pop(context, FluxNewsState.cancelContextString),
+                      onPressed: () => Navigator.pop(
+                          context, FluxNewsState.cancelContextString),
                       child: Text(AppLocalizations.of(context)!.cancel),
                     ),
                     TextButton(
                       onPressed: () async {
                         deleteLocalNewsCache(appState, context);
                         appState.newsList = Future<List<News>>.value([]);
-                        appState.categoryList = Future<Categories>.value(Categories(categories: []));
+                        appState.categoryList = Future<Categories>.value(
+                            Categories(categories: []));
                         context.read<FluxNewsCounterState>().allNewsCount = 0;
-                        context.read<FluxNewsCounterState>().appBarNewsCount = 0;
+                        context.read<FluxNewsCounterState>().appBarNewsCount =
+                            0;
                         context.read<FluxNewsCounterState>().starredCount = 0;
                         context.read<FluxNewsCounterState>().refreshView();
                         appState.refreshView();
@@ -1023,7 +1099,8 @@ class Settings extends StatelessWidget {
 class FluxNewsSettingsStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsSettingsStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsSettingsStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }

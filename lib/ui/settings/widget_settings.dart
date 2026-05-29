@@ -4,35 +4,41 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/widget_service.dart';
 import 'package:provider/provider.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 
 import '../../state_management/flux_news_state.dart';
 
 class WidgetSettings extends StatelessWidget {
   const WidgetSettings({super.key});
 
-  static const List<KeyValueRecordType> _statusOptions = <KeyValueRecordType>[
-    KeyValueRecordType(
-        key: FluxNewsState.widgetStatusUnreadString, value: 'Unread'),
-    KeyValueRecordType(key: FluxNewsState.widgetStatusAllString, value: 'All'),
-    KeyValueRecordType(
-        key: FluxNewsState.widgetStatusBookmarkedString, value: 'Bookmarked'),
-  ];
-  static const List<KeyValueRecordType> _sortOptions = <KeyValueRecordType>[
-    KeyValueRecordType(
-        key: FluxNewsState.sortOrderNewestFirstString, value: 'Newest first'),
-    KeyValueRecordType(
-        key: FluxNewsState.sortOrderOldestFirstString, value: 'Oldest first'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<FluxNewsState>();
+    final List<KeyValueRecordType> statusOptions = <KeyValueRecordType>[
+      KeyValueRecordType(
+          key: FluxNewsState.widgetStatusUnreadString,
+          value: AppLocalizations.of(context)!.unreadShort),
+      KeyValueRecordType(
+          key: FluxNewsState.widgetStatusAllString,
+          value: AppLocalizations.of(context)!.all),
+      KeyValueRecordType(
+          key: FluxNewsState.widgetStatusBookmarkedString,
+          value: AppLocalizations.of(context)!.bookmarkShort),
+    ];
+    final List<KeyValueRecordType> sortOptions = <KeyValueRecordType>[
+      KeyValueRecordType(
+          key: FluxNewsState.sortOrderNewestFirstString,
+          value: AppLocalizations.of(context)!.newestFirst),
+      KeyValueRecordType(
+          key: FluxNewsState.sortOrderOldestFirstString,
+          value: AppLocalizations.of(context)!.oldestFirst),
+    ];
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text('Widget settings'),
+        title: Text(AppLocalizations.of(context)!.widgetSettings),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -44,12 +50,12 @@ class WidgetSettings extends StatelessWidget {
               const Divider(),
               _DropdownRow<KeyValueRecordType>(
                 icon: Icons.article_outlined,
-                label: 'Items',
-                value: _statusOptions.firstWhere(
+                label: AppLocalizations.of(context)!.items,
+                value: statusOptions.firstWhere(
                   (item) => item.key == appState.widgetNewsStatus,
-                  orElse: () => _statusOptions.first,
+                  orElse: () => statusOptions.first,
                 ),
-                items: _statusOptions
+                items: statusOptions
                     .map((option) => DropdownMenuItem<KeyValueRecordType>(
                           value: option,
                           child: Text(option.value),
@@ -67,12 +73,12 @@ class WidgetSettings extends StatelessWidget {
               const Divider(),
               _DropdownRow<KeyValueRecordType>(
                 icon: Icons.sort,
-                label: 'Sort order',
-                value: _sortOptions.firstWhere(
+                label: AppLocalizations.of(context)!.sortOrderOfNews,
+                value: sortOptions.firstWhere(
                   (item) => item.key == appState.widgetSortOrder,
-                  orElse: () => _sortOptions.first,
+                  orElse: () => sortOptions.first,
                 ),
-                items: _sortOptions
+                items: sortOptions
                     .map((option) => DropdownMenuItem<KeyValueRecordType>(
                           value: option,
                           child: Text(option.value),
@@ -97,7 +103,7 @@ class WidgetSettings extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'Open Miniflux entry',
+                      AppLocalizations.of(context)!.openMinifluxEntry,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
