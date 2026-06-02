@@ -81,6 +81,16 @@ The unread articles should appear in the app.
 * **Foreground Service:** Essential for stable audio playback and reliable Android Auto / CarPlay integration.
 <br/><br/>
 
+## 🌐 Localization & Translations
+
+Flux News aims to be accessible to everyone. If you would like to help translate the app into your language, or improve existing translations, you can easily do so via the Hosted Weblate instance.
+
+No coding required! You can contribute directly in your browser:
+
+[<img alt="Translation status" width="400" height="200" src="https://hosted.weblate.org/widget/flux-news/open-graph.png">](https://hosted.weblate.org/engage/flux-news/)
+
+We deeply appreciate every contribution that helps bring Flux News to a wider audience. If your language is not yet listed on Weblate and you would like to start a new translation, please open an issue or let us know!
+
 ## Disclaimer
 
 This program is free software: you can redistribute it and/or modify it under the terms of the Modified BSD License.
