@@ -83,7 +83,7 @@ The unread articles should appear in the app.
 
 ## 🌐 Localization & Translations
 
-Flux News aims to be accessible to everyone. If you would like to help translate the app into your language, or improve existing translations, you can easily do so via our Hosted Weblate instance.
+Flux News aims to be accessible to everyone. If you would like to help translate the app into your language, or improve existing translations, you can easily do so via the Hosted Weblate instance.
 
 No coding required! You can contribute directly in your browser:
 
