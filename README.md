@@ -81,6 +81,10 @@ The unread articles should appear in the app.
 * **Foreground Service:** Essential for stable audio playback and reliable Android Auto / CarPlay integration.
 <br/><br/>
 
+## Get involved
+
+[<img alt="Get it on Apple App Store" width="300" height="200" src="https://hosted.weblate.org/widget/flux-news/open-graph.png">](https://hosted.weblate.org/engage/flux-news/)
+
 ## Disclaimer
 
 This program is free software: you can redistribute it and/or modify it under the terms of the Modified BSD License.
