@@ -83,7 +83,7 @@ The unread articles should appear in the app.
 
 ## Get involved
 
-[<img alt="Get it on Apple App Store" width="300" height="200" src="https://hosted.weblate.org/widget/flux-news/open-graph.png">](https://hosted.weblate.org/engage/flux-news/)
+[<img alt="Get it on Apple App Store" width="400" height="200" src="https://hosted.weblate.org/widget/flux-news/open-graph.png">](https://hosted.weblate.org/engage/flux-news/)
 
 ## Disclaimer
 
