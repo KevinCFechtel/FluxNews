@@ -53,10 +53,10 @@ dependencies:
   flutter_svg: ^2.0.5
   dynamic_color: ^1.6.3
   flutter_logs: ^2.2.1
-  share_plus: ^12.0.0
+  share_plus: ^13.1.0
   shared_preferences: ^2.5.3
   path_provider: ^2.0.15
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-beta.5
   cronet_http: ^1.8.0
   scrollview_observer: ^1.21.0
   super_sliver_list: ^0.4.1
