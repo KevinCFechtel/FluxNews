@@ -41,7 +41,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String applicationVersion = '2.1.1';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
-      ' https://github.com/KevinCFechtel/FluxNews';
+      'https://github.com/KevinCFechtel/FluxNews';
   static const String miniFluxProjectUrl = ' https://miniflux.app';
   static const String databasePathString = 'news_database.db';
   static const String androidDatabaseDirectory = 'databases';
