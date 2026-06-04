@@ -598,7 +598,7 @@ class Settings extends StatelessWidget {
                               text: AppLocalizations.of(context)!
                                   .descriptionMoreInformation),
                           const TextSpan(
-                              text: FluxNewsState.applicationProjectUrl),
+                              text: ' ${FluxNewsState.applicationProjectUrl}'),
                         ],
                       ),
                     ),
