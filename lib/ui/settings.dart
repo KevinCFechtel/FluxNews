@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/android_url_launcher.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/ui/log_viewer.dart';
@@ -546,11 +547,24 @@ class Settings extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                  onTap: () {
-                    launchUrl(
-                      Uri.parse(FluxNewsState.applicationProjectUrl),
-                      mode: LaunchMode.externalApplication,
-                    );
+                  onTap: () async {
+                    if (Platform.isAndroid) {
+                      AndroidUrlLauncher.launchUrl(
+                          context, FluxNewsState.applicationProjectUrl);
+                    } else {
+                      // catch exception if no app is installed to handle the url
+                      final bool nativeAppLaunchSucceeded = await launchUrl(
+                        Uri.parse(FluxNewsState.applicationProjectUrl),
+                        mode: LaunchMode.externalNonBrowserApplication,
+                      );
+                      //if exception is caught, open the app in web-view
+                      if (!nativeAppLaunchSucceeded) {
+                        await launchUrl(
+                          Uri.parse(FluxNewsState.applicationProjectUrl),
+                          mode: LaunchMode.inAppWebView,
+                        );
+                      }
+                    }
                   },
                   trailing: const Icon(Icons.open_in_new),
                 ),
