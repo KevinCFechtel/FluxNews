@@ -1523,6 +1523,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Widget settings'**
   String get widgetSettings;
+
+  /// No description provided for @openSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source'**
+  String get openSource;
 }
 
 class _AppLocalizationsDelegate

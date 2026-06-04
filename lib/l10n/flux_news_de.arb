@@ -240,5 +240,6 @@
     "sleepTimerRemaining": "min verbleibend",
     "copyClipboard": "In Zwischenablage kopieren",
     "items": "Einträge",
-    "widgetSettings": "Widget Einstellungen"
+    "widgetSettings": "Widget Einstellungen",
+    "openSource": "Open Source"
 }

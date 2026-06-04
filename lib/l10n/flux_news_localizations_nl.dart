@@ -768,4 +768,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get widgetSettings => 'Widget settings';
+
+  @override
+  String get openSource => 'Open source';
 }

@@ -781,4 +781,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get widgetSettings => 'Widget Einstellungen';
+
+  @override
+  String get openSource => 'Open Source';
 }

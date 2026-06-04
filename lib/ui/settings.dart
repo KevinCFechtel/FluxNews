@@ -18,6 +18,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flux_news/ui/settings/download_storage_settings.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../state_management/flux_news_state.dart';
 import '../miniflux/miniflux_backend.dart';
@@ -534,6 +535,26 @@ class Settings extends StatelessWidget {
                   },
                 ),
                 const Divider(),
+                ListTile(
+                  leading: const FaIcon(FontAwesomeIcons.github),
+                  title: Padding(
+                    padding: Platform.isAndroid
+                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      AppLocalizations.of(context)!.openSource,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  onTap: () {
+                    launchUrl(
+                      Uri.parse(FluxNewsState.applicationProjectUrl),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  trailing: const Icon(Icons.open_in_new),
+                ),
+                const Divider(),
                 // this list tile contains the about dialog
                 AboutListTile(
                   icon: Padding(
@@ -655,8 +676,10 @@ class Settings extends StatelessWidget {
         if (entity is! File) continue;
         final relativePath = entity.path.substring(logsDir.path.length + 1);
         // Skip the nested export subdirectory (native plugin artifacts) and any ZIPs
-        if (relativePath.startsWith('${FluxNewsState.logsWriteDirectoryName}/'))
+        if (relativePath
+            .startsWith('${FluxNewsState.logsWriteDirectoryName}/')) {
           continue;
+        }
         if (relativePath.endsWith('.zip')) continue;
         final bytes = await entity.readAsBytes();
         archive.addFile(ArchiveFile(relativePath, bytes.length, bytes));
