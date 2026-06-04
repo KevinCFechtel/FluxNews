@@ -33,19 +33,13 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                    '${AppLocalizations.of(context)!.file}: ${preview.fileName}'),
+                Text('${AppLocalizations.of(context)!.file}: ${preview.fileName}'),
                 const SizedBox(height: 8),
-                Text(
-                    '${AppLocalizations.of(context)!.backupType}: ${preview.backupType}'),
-                Text(
-                    '${AppLocalizations.of(context)!.createdAt}: ${preview.createdAt ?? '-'}'),
-                Text(
-                    '${AppLocalizations.of(context)!.appVersion}: ${preview.appVersion ?? '-'}'),
-                Text(
-                    '${AppLocalizations.of(context)!.settings}: ${preview.settingsCount}'),
-                Text(
-                    '${AppLocalizations.of(context)!.feedSettings}: ${preview.feedSettingsCount}'),
+                Text('${AppLocalizations.of(context)!.backupType}: ${preview.backupType}'),
+                Text('${AppLocalizations.of(context)!.createdAt}: ${preview.createdAt ?? '-'}'),
+                Text('${AppLocalizations.of(context)!.appVersion}: ${preview.appVersion ?? '-'}'),
+                Text('${AppLocalizations.of(context)!.settings}: ${preview.settingsCount}'),
+                Text('${AppLocalizations.of(context)!.feedSettings}: ${preview.feedSettingsCount}'),
                 const SizedBox(height: 12),
                 Text(
                   AppLocalizations.of(context)!.confirmRestoreOverride,
@@ -86,8 +80,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
     }
 
     if (jsonArchiveFile == null) {
-      logThis(
-          'RestoreSettings', 'Found no JSON file in the ZIP.', LogLevel.ERROR);
+      logThis('RestoreSettings', 'Found no JSON file in the ZIP.', LogLevel.ERROR);
       throw Exception('Found no JSON file in the ZIP.');
     }
 
@@ -100,24 +93,19 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
 
     final backupType = data['backupType']?.toString() ?? '';
     if (backupType != 'flux_news_settings') {
-      logThis('RestoreSettings', 'This ZIP is not a Flux News Settings Backup.',
-          LogLevel.ERROR);
+      logThis('RestoreSettings', 'This ZIP is not a Flux News Settings Backup.', LogLevel.ERROR);
       throw Exception('This ZIP is not a Flux News Settings Backup.');
     }
 
     final settings = data['settings'];
     if (settings is! Map) {
-      logThis('RestoreSettings',
-          'Settings in the backup are missing or invalid.', LogLevel.ERROR);
+      logThis('RestoreSettings', 'Settings in the backup are missing or invalid.', LogLevel.ERROR);
       throw Exception('Settings in the backup are missing or invalid.');
     }
 
     final feedSettings = data['feedSettings'];
     if (feedSettings is! List) {
-      logThis(
-          'RestoreSettings',
-          'Feed settings in the backup are missing or invalid.',
-          LogLevel.ERROR);
+      logThis('RestoreSettings', 'Feed settings in the backup are missing or invalid.', LogLevel.ERROR);
       throw Exception('Feed settings in the backup are missing or invalid.');
     }
 
@@ -152,11 +140,9 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       await _restoreBackup(backupFile, parsedBackup: preview);
     } catch (e) {
       if (mounted) {
-        logThis('RestoreSettings', 'Backup check failed: ${e.toString()}',
-            LogLevel.ERROR);
+        logThis('RestoreSettings', 'Backup check failed: ${e.toString()}', LogLevel.ERROR);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.backupCheckFailed)),
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupCheckFailed)),
         );
       }
     }
@@ -168,20 +154,18 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
     }
 
     try {
-      final result = await FilePicker.pickFiles(
+      final result = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['zip'],
-        allowMultiple: false,
       );
-      if (result == null || result.files.isEmpty) {
+      if (result == null) {
         return;
       }
 
-      final selectedPath = result.files.single.path;
+      final selectedPath = result.path;
       if (selectedPath == null || selectedPath.isEmpty) {
         if (mounted) {
-          logThis('RestoreSettings', 'The selected file is invalid.',
-              LogLevel.ERROR);
+          logThis('RestoreSettings', 'The selected file is invalid.', LogLevel.ERROR);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.invalidFile)),
           );
@@ -193,11 +177,9 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       await _previewAndRestore(selectedFile);
     } catch (e) {
       if (mounted) {
-        logThis('RestoreSettings', 'The file selection failed: ${e.toString()}',
-            LogLevel.ERROR);
+        logThis('RestoreSettings', 'The file selection failed: ${e.toString()}', LogLevel.ERROR);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.fileSelectionFailed)),
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileSelectionFailed)),
         );
       }
     }
@@ -226,8 +208,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
     return value.toString();
   }
 
-  Future<void> _restoreBackup(File backupFile,
-      {_ParsedBackupData? parsedBackup}) async {
+  Future<void> _restoreBackup(File backupFile, {_ParsedBackupData? parsedBackup}) async {
     if (_restoring) {
       return;
     }
@@ -242,8 +223,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
 
       final storageEntries = parsed.settings;
       for (final entry in storageEntries.entries) {
-        await appState.storage
-            .write(key: entry.key, value: entry.value?.toString());
+        await appState.storage.write(key: entry.key, value: entry.value?.toString());
       }
 
       appState.db ??= await appState.initializeDB();
@@ -262,10 +242,8 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
             'manualTruncate': _toInt(feedMap['manualTruncate']),
             'preferParagraph': _toInt(feedMap['preferParagraph']),
             'preferAttachmentImage': _toInt(feedMap['preferAttachmentImage']),
-            'manualAdaptLightModeToIcon':
-                _toInt(feedMap['manualAdaptLightModeToIcon']),
-            'manualAdaptDarkModeToIcon':
-                _toInt(feedMap['manualAdaptDarkModeToIcon']),
+            'manualAdaptLightModeToIcon': _toInt(feedMap['manualAdaptLightModeToIcon']),
+            'manualAdaptDarkModeToIcon': _toInt(feedMap['manualAdaptDarkModeToIcon']),
             'openMinifluxEntry': _toInt(feedMap['openMinifluxEntry']),
             'expandedWithFulltext': _toInt(feedMap['expandedWithFulltext']),
             'expandedFulltextLimit': _toInt(feedMap['expandedFulltextLimit']),
@@ -283,20 +261,15 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
       appState.refreshView();
 
       if (mounted) {
-        logThis(
-            'RestoreSettings', 'Backup successfully restored.', LogLevel.INFO);
+        logThis('RestoreSettings', 'Backup successfully restored.', LogLevel.INFO);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  AppLocalizations.of(context)!.backupSuccessfullyRestored)),
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupSuccessfullyRestored)),
         );
-        Navigator.pushNamedAndRemoveUntil(
-            context, FluxNewsState.rootRouteString, (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.rootRouteString, (route) => false);
       }
     } catch (e) {
       if (mounted) {
-        logThis('RestoreSettings', 'Restore failed: ${e.toString()}',
-            LogLevel.ERROR);
+        logThis('RestoreSettings', 'Restore failed: ${e.toString()}', LogLevel.ERROR);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.restoreFailed)),
         );
@@ -340,14 +313,12 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
                 child: Platform.isIOS
                     ? CupertinoButton.filled(
                         onPressed: _restoring ? null : _pickAndRestoreBackup,
-                        child: Text(AppLocalizations.of(context)!
-                            .selectZipBackupFileButton),
+                        child: Text(AppLocalizations.of(context)!.selectZipBackupFileButton),
                       )
                     : ElevatedButton.icon(
                         onPressed: _restoring ? null : _pickAndRestoreBackup,
                         icon: const Icon(Icons.folder_open),
-                        label: Text(AppLocalizations.of(context)!
-                            .selectZipBackupFileButton),
+                        label: Text(AppLocalizations.of(context)!.selectZipBackupFileButton),
                       ),
               ),
             ),
