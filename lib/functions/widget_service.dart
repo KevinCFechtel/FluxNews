@@ -20,6 +20,7 @@ class FluxNewsWidgetService {
       MethodChannel('dev.kevincfechtel.fluxnews/widgets');
   static const String _widgetGroup = 'group.dev.kevincfechtel.fluxNews';
   static const String _snapshotKey = 'snapshot';
+  static const String _iosLargePageKey = 'largePage';
   static const String _androidWidgetProvider =
       'de.circle_dev.flux_news.FluxNewsWidgetProvider';
   static const String _iosWidgetKind = 'FluxNewsHeadlinesWidget';
@@ -29,8 +30,7 @@ class FluxNewsWidgetService {
   static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
-    final news =
-        await queryWidgetNewsFromDB(appState, limit: Platform.isIOS ? 7 : null);
+    final news = await queryWidgetNewsFromDB(appState);
     final unreadCount = await queryUnreadNewsCountFromDB(appState);
     final lastUpdated = DateTime.now().toIso8601String();
     final payload = <String, Object?>{
@@ -52,6 +52,7 @@ class FluxNewsWidgetService {
     try {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(_widgetGroup);
+        await HomeWidget.saveWidgetData<int>(_iosLargePageKey, 0);
       }
       final saveResult =
           await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);

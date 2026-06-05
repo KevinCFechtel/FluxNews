@@ -905,16 +905,30 @@ Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState,
       appState.widgetSortOrder == FluxNewsState.sortOrderOldestFirstString
           ? FluxNewsState.databaseAscString
           : FluxNewsState.databaseDescString;
-  String whereClause = 'news.status = ?';
-  List<Object?> args = [FluxNewsState.unreadNewsStatus];
-  if (appState.widgetNewsStatus == FluxNewsState.widgetStatusAllString) {
-    whereClause = '1 = 1';
-    args = [];
-  } else if (appState.widgetNewsStatus ==
-      FluxNewsState.widgetStatusBookmarkedString) {
-    whereClause = 'news.starred = ?';
-    args = [1];
+  final whereParts = <String>[];
+  final args = <Object?>[];
+
+  if (appState.widgetUnreadOnly) {
+    whereParts.add('news.status = ?');
+    args.add(FluxNewsState.unreadNewsStatus);
   }
+
+  if (appState.widgetFilterType == FluxNewsState.widgetFilterBookmarkedString) {
+    whereParts.add('news.starred = ?');
+    args.add(1);
+  } else if (appState.widgetFilterType ==
+          FluxNewsState.widgetFilterCategoryString &&
+      appState.widgetFilterId != null) {
+    whereParts.add('feeds.categoryID = ?');
+    args.add(appState.widgetFilterId);
+  } else if (appState.widgetFilterType ==
+          FluxNewsState.widgetFilterFeedString &&
+      appState.widgetFilterId != null) {
+    whereParts.add('news.feedID = ?');
+    args.add(appState.widgetFilterId);
+  }
+
+  final whereClause = whereParts.isEmpty ? '1 = 1' : whereParts.join(' AND ');
 
   final limitClause = limit == null ? '' : 'LIMIT ?';
   final queryArgs = [...args, if (limit != null) limit];

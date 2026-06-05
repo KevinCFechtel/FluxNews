@@ -1,8 +1,49 @@
+import AppIntents
 import SwiftUI
 import UIKit
 import WidgetKit
 
 private let widgetGroup = "group.dev.kevincfechtel.fluxNews"
+private let largePageKey = "largePage"
+private let snapshotKey = "snapshot"
+private let widgetKind = "FluxNewsHeadlinesWidget"
+private let largePageSize = 7
+
+private func updateLargePage(by delta: Int) {
+  guard let defaults = UserDefaults(suiteName: widgetGroup) else { return }
+  let currentPage = max(0, defaults.integer(forKey: largePageKey))
+  let pageCount = max(1, Int(ceil(Double(currentSnapshotItemCount(defaults)) / Double(largePageSize))))
+  let clampedCurrentPage = min(currentPage, pageCount - 1)
+  defaults.set(min(max(0, clampedCurrentPage + delta), pageCount - 1), forKey: largePageKey)
+  WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+}
+
+private func currentSnapshotItemCount(_ defaults: UserDefaults) -> Int {
+  guard let json = defaults.string(forKey: snapshotKey),
+        let data = json.data(using: .utf8),
+        let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
+    return 0
+  }
+  return snapshot.items.count
+}
+
+struct FluxNewsPreviousPageIntent: AppIntent {
+  static var title: LocalizedStringResource = "Previous headlines"
+
+  func perform() async throws -> some IntentResult {
+    updateLargePage(by: -1)
+    return .result()
+  }
+}
+
+struct FluxNewsNextPageIntent: AppIntent {
+  static var title: LocalizedStringResource = "Next headlines"
+
+  func perform() async throws -> some IntentResult {
+    updateLargePage(by: 1)
+    return .result()
+  }
+}
 
 struct FluxNewsWidgetItem: Decodable, Identifiable {
   let id: Int
@@ -53,7 +94,7 @@ struct FluxNewsProvider: TimelineProvider {
 
   private func loadSnapshot() -> FluxNewsWidgetSnapshot {
     guard let defaults = UserDefaults(suiteName: widgetGroup),
-          let json = defaults.string(forKey: "snapshot"),
+          let json = defaults.string(forKey: snapshotKey),
           let data = json.data(using: .utf8),
           let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
       return FluxNewsWidgetSnapshot(unreadCount: 0, lastUpdated: "", items: [])
@@ -97,12 +138,42 @@ struct FluxNewsHeadlinesWidgetView: View {
         }
       }
 
-      Text(lastUpdatedText)
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
+      HStack(alignment: .center, spacing: 6) {
+        Text(lastUpdatedText)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
 
-      ForEach(Array(entry.snapshot.items.prefix(maxItems))) { item in
+        Spacer(minLength: 4)
+
+        if family == .systemLarge {
+          Button(intent: FluxNewsPreviousPageIntent()) {
+            Image(systemName: "chevron.up")
+              .font(.caption2)
+              .frame(width: 22, height: 20)
+          }
+          .buttonStyle(.plain)
+          .disabled(!hasPreviousPage)
+          .opacity(hasPreviousPage ? 1 : 0.35)
+
+          Text("\(effectiveLargePage + 1)")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .frame(minWidth: 12)
+
+          Button(intent: FluxNewsNextPageIntent()) {
+            Image(systemName: "chevron.down")
+              .font(.caption2)
+              .frame(width: 22, height: 20)
+          }
+          .buttonStyle(.plain)
+          .disabled(!hasNextPage)
+          .opacity(hasNextPage ? 1 : 0.35)
+        }
+      }
+
+      ForEach(visibleItems) { item in
         Link(destination: URL(string: "fluxnews://widget/openNews?newsID=\(item.id)")!) {
           HStack(alignment: .center, spacing: 7) {
             FeedIconView(item: item)
@@ -150,7 +221,37 @@ struct FluxNewsHeadlinesWidgetView: View {
   }
 
   private var maxItems: Int {
-    family == .systemLarge ? 7 : 3
+    family == .systemLarge ? largePageSize : 3
+  }
+
+  private var visibleItems: [FluxNewsWidgetItem] {
+    let items = entry.snapshot.items
+    if family != .systemLarge {
+      return Array(items.prefix(maxItems))
+    }
+
+    let start = effectiveLargePage * maxItems
+    guard start < items.count else { return [] }
+    let end = min(start + maxItems, items.count)
+    return Array(items[start..<end])
+  }
+
+  private var requestedLargePage: Int {
+    guard let defaults = UserDefaults(suiteName: widgetGroup) else { return 0 }
+    return max(0, defaults.integer(forKey: largePageKey))
+  }
+
+  private var effectiveLargePage: Int {
+    let pageCount = max(1, Int(ceil(Double(entry.snapshot.items.count) / Double(maxItems))))
+    return min(requestedLargePage, pageCount - 1)
+  }
+
+  private var hasPreviousPage: Bool {
+    effectiveLargePage > 0
+  }
+
+  private var hasNextPage: Bool {
+    (effectiveLargePage + 1) * maxItems < entry.snapshot.items.count
   }
 
   private var lastUpdatedText: String {
@@ -231,7 +332,7 @@ struct FeedIconView: View {
 }
 
 struct FluxNewsHeadlinesWidget: Widget {
-  let kind = "FluxNewsHeadlinesWidget"
+  let kind = widgetKind
 
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: FluxNewsProvider()) { entry in
