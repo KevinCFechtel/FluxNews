@@ -59,7 +59,12 @@ struct FluxNewsWidgetItem: Decodable, Identifiable {
 }
 
 struct FluxNewsWidgetSnapshot: Decodable {
+  let displayTitle: String?
   let unreadCount: Int
+  let countLabel: String?
+  let lastSyncLabel: String?
+  let neverLabel: String?
+  let syncLabel: String?
   let lastUpdated: String
   let items: [FluxNewsWidgetItem]
 }
@@ -72,7 +77,12 @@ struct FluxNewsEntry: TimelineEntry {
 struct FluxNewsProvider: TimelineProvider {
   func placeholder(in context: Context) -> FluxNewsEntry {
     FluxNewsEntry(date: Date(), snapshot: FluxNewsWidgetSnapshot(
+      displayTitle: nil,
       unreadCount: 0,
+      countLabel: nil,
+      lastSyncLabel: nil,
+      neverLabel: nil,
+      syncLabel: nil,
       lastUpdated: "",
       items: []
     ))
@@ -97,7 +107,16 @@ struct FluxNewsProvider: TimelineProvider {
           let json = defaults.string(forKey: snapshotKey),
           let data = json.data(using: .utf8),
           let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
-      return FluxNewsWidgetSnapshot(unreadCount: 0, lastUpdated: "", items: [])
+      return FluxNewsWidgetSnapshot(
+        displayTitle: nil,
+        unreadCount: 0,
+        countLabel: nil,
+        lastSyncLabel: nil,
+        neverLabel: nil,
+        syncLabel: nil,
+        lastUpdated: "",
+        items: []
+      )
     }
     return snapshot
   }
@@ -138,7 +157,12 @@ struct FluxNewsHeadlinesWidgetView: View {
 
   private var headerRow: some View {
     HStack(alignment: .center, spacing: 6) {
-      Text("Flux News")
+      Image("FluxNewsWidgetLogo")
+        .resizable()
+        .frame(width: 18, height: 18)
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+      Text(entry.snapshot.displayTitle ?? "All News")
         .font(.subheadline)
         .fontWeight(.semibold)
         .lineLimit(1)
@@ -152,7 +176,7 @@ struct FluxNewsHeadlinesWidgetView: View {
         .lineLimit(1)
         .minimumScaleFactor(0.75)
 
-      Text("unread")
+      Text(entry.snapshot.countLabel ?? "unread")
         .font(.caption2)
         .foregroundStyle(.secondary)
         .lineLimit(1)
@@ -165,6 +189,7 @@ struct FluxNewsHeadlinesWidgetView: View {
           .background(.blue, in: Circle())
           .foregroundStyle(.white)
       }
+      .accessibilityLabel(entry.snapshot.syncLabel ?? "Sync")
     }
   }
 
@@ -284,11 +309,14 @@ struct FluxNewsHeadlinesWidgetView: View {
   }
 
   private var lastUpdatedText: String {
-    guard !entry.snapshot.lastUpdated.isEmpty else { return "Last sync: never" }
-    guard let date = Self.date(from: entry.snapshot.lastUpdated) else {
-      return "Last sync: \(entry.snapshot.lastUpdated)"
+    let label = entry.snapshot.lastSyncLabel ?? "Last sync"
+    guard !entry.snapshot.lastUpdated.isEmpty else {
+      return "\(label): \(entry.snapshot.neverLabel ?? "never")"
     }
-    return "Last sync: \(Self.localizedDateTimeFormatter.string(from: date))"
+    guard let date = Self.date(from: entry.snapshot.lastUpdated) else {
+      return "\(label): \(entry.snapshot.lastUpdated)"
+    }
+    return "\(label): \(Self.localizedDateTimeFormatter.string(from: date))"
   }
 
   private static func date(from value: String) -> Date? {

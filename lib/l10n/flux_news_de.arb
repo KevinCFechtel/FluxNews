@@ -241,5 +241,8 @@
     "copyClipboard": "In Zwischenablage kopieren",
     "items": "Einträge",
     "widgetSettings": "Widget Einstellungen",
-    "openSource": "Open Source"
+    "openSource": "Open Source",
+    "widgetLastSync": "Letzter Sync",
+    "widgetNever": "nie",
+    "widgetSync": "Sync"
 }

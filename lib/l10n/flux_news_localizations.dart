@@ -1531,6 +1531,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open source'**
   String get openSource;
+
+  /// No description provided for @widgetLastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync'**
+  String get widgetLastSync;
+
+  /// No description provided for @widgetNever.
+  ///
+  /// In en, this message translates to:
+  /// **'never'**
+  String get widgetNever;
+
+  /// No description provided for @widgetSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get widgetSync;
 }
 
 class _AppLocalizationsDelegate

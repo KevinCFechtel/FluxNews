@@ -65,5 +65,8 @@
     "markCategoryAsRead": "Categorie als gelezen markeren",
     "markFeedAsRead": "Feed als gelezen markeren",
     "amountOfSyncedNews": "Aantal nieuws dat is gesynchroniseerd",
-    "amountOfSearchedNews": "Aantal nieuws dat wordt doorzocht"
+    "amountOfSearchedNews": "Aantal nieuws dat wordt doorzocht",
+    "widgetLastSync": "Laatste sync",
+    "widgetNever": "nooit",
+    "widgetSync": "Sync"
 }

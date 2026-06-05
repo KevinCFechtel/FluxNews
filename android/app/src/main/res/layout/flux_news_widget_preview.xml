@@ -12,13 +12,21 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@null"
+            android:scaleType="centerInside"
+            android:src="@drawable/flux_news_widget_logo" />
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="Flux News"
+            android:text="All News"
             android:textColor="@color/flux_news_widget_primary_text"
             android:textSize="16sp"
             android:textStyle="bold" />

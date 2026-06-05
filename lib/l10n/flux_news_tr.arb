@@ -76,5 +76,8 @@
     "truncateModeManual": "Manuel olarak seçilen beslemelerden tüm haberleri kısalt (belirli bir beslemede uzun basarak)",
     "charactersToTruncate": "Metnin kısaltılacağı karakter sayısı",
     "charactersToTruncateLimit": "Metnin kısaltılacağı karakter sınırı",
-    "manualTruncate": "Haberleri kısalt"
+    "manualTruncate": "Haberleri kısalt",
+    "widgetLastSync": "Son senkronizasyon",
+    "widgetNever": "asla",
+    "widgetSync": "Senkronize et"
 }

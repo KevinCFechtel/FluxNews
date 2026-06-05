@@ -10,6 +10,7 @@
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		AA0000010000000000000001 /* FluxNewsWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000030000000000000001 /* FluxNewsWidgets.swift */; };
 		AA0000020000000000000001 /* FluxNewsWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA0000060000000000000001 /* FluxNewsWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AAF100010000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAF100020000000000000001 /* Assets.xcassets */; };
 		394B7780EE924207CA9B9B4C /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5E50CCBB0150A36EE7098F6 /* Pods_Runner.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
@@ -63,6 +64,7 @@
 		AA0000040000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000050000000000000001 /* FluxNewsWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FluxNewsWidgets.entitlements; sourceTree = "<group>"; };
 		AA0000060000000000000001 /* FluxNewsWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FluxNewsWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAF100020000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000030000000000000001 /* FluxNewsWidgets.swift */,
+				AAF100020000000000000001 /* Assets.xcassets */,
 				AA0000040000000000000001 /* Info.plist */,
 				AA0000050000000000000001 /* FluxNewsWidgets.entitlements */,
 			);
@@ -289,6 +292,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AAF100010000000000000001 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

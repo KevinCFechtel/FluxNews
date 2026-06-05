@@ -978,6 +978,39 @@ Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState,
   return news;
 }
 
+Future<int> queryWidgetStatusCountFromDB(
+    FluxNewsState appState, String status) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return 0;
+
+  final whereParts = <String>['news.status = ?'];
+  final args = <Object?>[status];
+
+  if (appState.widgetFilterType == FluxNewsState.widgetFilterBookmarkedString) {
+    whereParts.add('news.starred = ?');
+    args.add(1);
+  } else if (appState.widgetFilterType ==
+          FluxNewsState.widgetFilterCategoryString &&
+      appState.widgetFilterId != null) {
+    whereParts.add('feeds.categoryID = ?');
+    args.add(appState.widgetFilterId);
+  } else if (appState.widgetFilterType ==
+          FluxNewsState.widgetFilterFeedString &&
+      appState.widgetFilterId != null) {
+    whereParts.add('news.feedID = ?');
+    args.add(appState.widgetFilterId);
+  }
+
+  final result = await appState.db!.rawQuery('''
+        SELECT COUNT(*) AS count
+        FROM news
+        LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
+        WHERE ${whereParts.join(' AND ')}
+      ''', args);
+  if (result.isEmpty) return 0;
+  return result.first['count'] as int? ?? 0;
+}
+
 Future<int> queryUnreadNewsCountFromDB(FluxNewsState appState) async {
   appState.db ??= await appState.initializeDB();
   if (appState.db == null) return 0;
