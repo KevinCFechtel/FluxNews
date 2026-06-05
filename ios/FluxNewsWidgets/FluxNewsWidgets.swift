@@ -109,97 +109,122 @@ struct FluxNewsHeadlinesWidgetView: View {
   let entry: FluxNewsEntry
 
   var body: some View {
-    VStack(alignment: .leading, spacing: rowSpacing) {
-      HStack(alignment: .center, spacing: 6) {
-        Text("Flux News")
-          .font(.subheadline)
-          .fontWeight(.semibold)
-          .lineLimit(1)
-          .minimumScaleFactor(0.85)
+    VStack(alignment: .leading, spacing: headerSpacing) {
+      headerRow
+        .layoutPriority(3)
 
-        Spacer(minLength: 4)
+      syncStatusRow
+        .layoutPriority(2)
 
-        Text("\(entry.snapshot.unreadCount)")
-          .font(.callout)
-          .fontWeight(.bold)
-          .lineLimit(1)
-
-        Text("unread")
-          .font(.caption2)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-
-        Link(destination: URL(string: "fluxnews://widget/sync")!) {
-          Image(systemName: "arrow.clockwise")
-            .font(.caption)
-            .frame(width: 24, height: 24)
-            .background(.blue, in: Circle())
-            .foregroundStyle(.white)
-        }
-      }
-
-      HStack(alignment: .center, spacing: 6) {
-        Text(lastUpdatedText)
-          .font(.caption2)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-
-        Spacer(minLength: 4)
-
-        if family == .systemLarge {
-          Button(intent: FluxNewsPreviousPageIntent()) {
-            Image(systemName: "chevron.up")
-              .font(.caption2)
-              .frame(width: 22, height: 20)
-          }
-          .buttonStyle(.plain)
-          .disabled(!hasPreviousPage)
-          .opacity(hasPreviousPage ? 1 : 0.35)
-
-          Text("\(effectiveLargePage + 1)")
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-            .frame(minWidth: 12)
-
-          Button(intent: FluxNewsNextPageIntent()) {
-            Image(systemName: "chevron.down")
-              .font(.caption2)
-              .frame(width: 22, height: 20)
-          }
-          .buttonStyle(.plain)
-          .disabled(!hasNextPage)
-          .opacity(hasNextPage ? 1 : 0.35)
-        }
-      }
-
-      ForEach(visibleItems) { item in
-        Link(destination: URL(string: "fluxnews://widget/openNews?newsID=\(item.id)")!) {
-          HStack(alignment: .center, spacing: 7) {
-            FeedIconView(item: item)
-
-            VStack(alignment: .leading, spacing: 2) {
-              Text(item.title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-              Text(item.feedTitle)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-            }
+      GeometryReader { geometry in
+        VStack(alignment: .leading, spacing: rowSpacing) {
+          ForEach(visibleItems) { item in
+            itemRow(item)
           }
         }
+        .frame(width: geometry.size.width, alignment: .topLeading)
+        .clipped()
       }
-
-      Spacer(minLength: 0)
+      .layoutPriority(0)
+      .clipped()
     }
     .padding(.horizontal, 12)
     .padding(.top, topPadding)
     .padding(.bottom, 8)
     .containerBackground(widgetBackground, for: .widget)
     .foregroundStyle(widgetForeground)
+    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+  }
+
+  private var headerRow: some View {
+    HStack(alignment: .center, spacing: 6) {
+      Text("Flux News")
+        .font(.subheadline)
+        .fontWeight(.semibold)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+
+      Spacer(minLength: 4)
+
+      Text("\(entry.snapshot.unreadCount)")
+        .font(.callout)
+        .fontWeight(.bold)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+
+      Text("unread")
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+
+      Link(destination: URL(string: "fluxnews://widget/sync")!) {
+        Image(systemName: "arrow.clockwise")
+          .font(.caption)
+          .frame(width: 24, height: 24)
+          .background(.blue, in: Circle())
+          .foregroundStyle(.white)
+      }
+    }
+  }
+
+  private var syncStatusRow: some View {
+    HStack(alignment: .center, spacing: 6) {
+      Text(lastUpdatedText)
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+
+      Spacer(minLength: 4)
+
+      if family == .systemLarge {
+        Button(intent: FluxNewsPreviousPageIntent()) {
+          Image(systemName: "chevron.up")
+            .font(.caption2)
+            .frame(width: 22, height: 20)
+        }
+        .buttonStyle(.plain)
+        .disabled(!hasPreviousPage)
+        .opacity(hasPreviousPage ? 1 : 0.35)
+
+        Text("\(effectiveLargePage + 1)")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .monospacedDigit()
+          .lineLimit(1)
+          .frame(minWidth: 12)
+
+        Button(intent: FluxNewsNextPageIntent()) {
+          Image(systemName: "chevron.down")
+            .font(.caption2)
+            .frame(width: 22, height: 20)
+        }
+        .buttonStyle(.plain)
+        .disabled(!hasNextPage)
+        .opacity(hasNextPage ? 1 : 0.35)
+      }
+    }
+  }
+
+  private func itemRow(_ item: FluxNewsWidgetItem) -> some View {
+    Link(destination: URL(string: "fluxnews://widget/openNews?newsID=\(item.id)")!) {
+      HStack(alignment: .center, spacing: 7) {
+        FeedIconView(item: item)
+
+        VStack(alignment: .leading, spacing: 2) {
+          Text(item.title)
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+          Text(item.feedTitle)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+      }
+    }
   }
 
   private var widgetBackground: Color {
@@ -216,12 +241,16 @@ struct FluxNewsHeadlinesWidgetView: View {
     family == .systemLarge ? 7 : 5
   }
 
+  private var headerSpacing: CGFloat {
+    family == .systemLarge ? 6 : 5
+  }
+
   private var topPadding: CGFloat {
     family == .systemLarge ? 10 : 14
   }
 
   private var maxItems: Int {
-    family == .systemLarge ? largePageSize : 3
+    family == .systemLarge ? largePageSize : 2
   }
 
   private var visibleItems: [FluxNewsWidgetItem] {

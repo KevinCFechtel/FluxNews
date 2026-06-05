@@ -39,16 +39,16 @@
             android:textColor="@color/flux_news_widget_secondary_text"
             android:textSize="12sp" />
 
-        <TextView
-            android:layout_width="48dp"
+        <ImageView
+            android:layout_width="34dp"
             android:layout_height="34dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/flux_news_widget_sync_background"
             android:gravity="center"
-            android:text="Sync"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:contentDescription="Sync"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/flux_news_widget_sync_icon" />
     </LinearLayout>
 
     <TextView

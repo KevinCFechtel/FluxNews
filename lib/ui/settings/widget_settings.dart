@@ -354,15 +354,49 @@ class _DropdownRow<T> extends StatelessWidget {
             overflow: TextOverflow.visible,
           ),
         ),
-        DropdownButton<T>(
-          value: value,
-          elevation: 16,
-          underline: Container(height: 2),
-          alignment: AlignmentDirectional.centerEnd,
-          onChanged: onChanged,
-          items: items,
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.42,
+          ),
+          child: DropdownButton<T>(
+            value: value,
+            elevation: 16,
+            underline: Container(height: 2),
+            alignment: AlignmentDirectional.centerEnd,
+            isExpanded: true,
+            selectedItemBuilder: (context) =>
+                items.map((item) => _DropdownText(item.child)).toList(),
+            onChanged: onChanged,
+            items: items
+                .map(
+                  (item) => DropdownMenuItem<T>(
+                    value: item.value,
+                    enabled: item.enabled,
+                    child: _DropdownText(item.child),
+                  ),
+                )
+                .toList(),
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _DropdownText extends StatelessWidget {
+  const _DropdownText(this.child);
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: DefaultTextStyle.merge(
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        child: child,
+      ),
     );
   }
 }
