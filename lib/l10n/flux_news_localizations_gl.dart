@@ -781,7 +781,7 @@ class AppLocalizationsGl extends AppLocalizations {
   String get widgetSettings => 'Axustes do widget';
 
   @override
-  String get openSource => 'Open source';
+  String get openSource => 'Código aberto';
 
   @override
   String get widgetLastSync => 'Última sincronización';
