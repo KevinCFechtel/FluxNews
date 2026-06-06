@@ -245,5 +245,6 @@
     "widgetLastSync": "Letzter Sync",
     "widgetNever": "nie",
     "widgetSync": "Sync",
-    "widgetBlurredBackground": "Transparenter Widget-Hintergrund"
+    "widgetBlurredBackground": "Transparenter Widget-Hintergrund",
+    "off": "Aus"
 }
