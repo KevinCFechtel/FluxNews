@@ -239,5 +239,6 @@
     "widgetLastSync": "Última sincronización",
     "widgetNever": "nunca",
     "widgetSync": "Sincronizar",
-    "widgetBlurredBackground": "Fondo translúcido do widget"
+    "widgetBlurredBackground": "Fondo translúcido do widget",
+    "openSource": "Código aberto"
 }
