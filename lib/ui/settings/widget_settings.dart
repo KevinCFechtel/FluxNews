@@ -310,36 +310,38 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                 ],
               ),
               const Divider(),
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                    child: const Icon(Icons.blur_on),
-                  ),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.widgetBlurredBackground,
-                      style: Theme.of(context).textTheme.titleMedium,
+              if (!Platform.isIOS) ...[
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(Icons.blur_on),
                     ),
-                  ),
-                  Switch.adaptive(
-                    value: appState.widgetTranslucentBackground,
-                    onChanged: (value) {
-                      appState.widgetTranslucentBackground = value;
-                      appState.storage.write(
-                        key: FluxNewsState
-                            .secureStorageWidgetTranslucentBackgroundKey,
-                        value: value
-                            ? FluxNewsState.secureStorageTrueString
-                            : FluxNewsState.secureStorageFalseString,
-                      );
-                      _refreshWidgets(appState);
-                    },
-                  ),
-                ],
-              ),
-              const Divider(),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.widgetBlurredBackground,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.widgetTranslucentBackground,
+                      onChanged: (value) {
+                        appState.widgetTranslucentBackground = value;
+                        appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageWidgetTranslucentBackgroundKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        _refreshWidgets(appState);
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+              ],
             ],
           ),
         ),

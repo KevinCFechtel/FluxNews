@@ -154,7 +154,7 @@ struct FluxNewsHeadlinesWidgetView: View {
     .padding(.top, topPadding)
     .padding(.bottom, 8)
     .containerBackground(for: .widget) {
-      widgetContainerBackground
+      widgetBaseBackground
     }
     .foregroundStyle(widgetForeground)
     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -254,18 +254,6 @@ struct FluxNewsHeadlinesWidgetView: View {
             .lineLimit(1)
         }
       }
-    }
-  }
-
-  @ViewBuilder
-  private var widgetContainerBackground: some View {
-    if entry.snapshot.translucentBackground == true {
-      ZStack {
-        Rectangle().fill(.ultraThinMaterial)
-        widgetBaseBackground.opacity(0.64)
-      }
-    } else {
-      widgetBaseBackground
     }
   }
 
