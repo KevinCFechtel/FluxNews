@@ -68,5 +68,6 @@
     "amountOfSearchedNews": "Aantal nieuws dat wordt doorzocht",
     "widgetLastSync": "Laatste sync",
     "widgetNever": "nooit",
-    "widgetSync": "Sync"
+    "widgetSync": "Sync",
+    "widgetBlurredBackground": "Transparante widgetachtergrond"
 }

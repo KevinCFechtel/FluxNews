@@ -79,5 +79,6 @@
     "manualTruncate": "Haberleri kısalt",
     "widgetLastSync": "Son senkronizasyon",
     "widgetNever": "asla",
-    "widgetSync": "Senkronize et"
+    "widgetSync": "Senkronize et",
+    "widgetBlurredBackground": "Yarı saydam widget arka planı"
 }

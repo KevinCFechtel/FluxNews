@@ -778,4 +778,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get widgetSync => 'Senkronize et';
+
+  @override
+  String get widgetBlurredBackground => 'Yarı saydam widget arka planı';
 }

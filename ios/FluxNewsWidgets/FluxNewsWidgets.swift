@@ -65,6 +65,7 @@ struct FluxNewsWidgetSnapshot: Decodable {
   let lastSyncLabel: String?
   let neverLabel: String?
   let syncLabel: String?
+  let translucentBackground: Bool?
   let lastUpdated: String
   let items: [FluxNewsWidgetItem]
 }
@@ -83,6 +84,7 @@ struct FluxNewsProvider: TimelineProvider {
       lastSyncLabel: nil,
       neverLabel: nil,
       syncLabel: nil,
+      translucentBackground: nil,
       lastUpdated: "",
       items: []
     ))
@@ -114,6 +116,7 @@ struct FluxNewsProvider: TimelineProvider {
         lastSyncLabel: nil,
         neverLabel: nil,
         syncLabel: nil,
+        translucentBackground: nil,
         lastUpdated: "",
         items: []
       )
@@ -150,7 +153,9 @@ struct FluxNewsHeadlinesWidgetView: View {
     .padding(.horizontal, 12)
     .padding(.top, topPadding)
     .padding(.bottom, 8)
-    .containerBackground(widgetBackground, for: .widget)
+    .containerBackground(for: .widget) {
+      widgetContainerBackground
+    }
     .foregroundStyle(widgetForeground)
     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
   }
@@ -252,7 +257,19 @@ struct FluxNewsHeadlinesWidgetView: View {
     }
   }
 
-  private var widgetBackground: Color {
+  @ViewBuilder
+  private var widgetContainerBackground: some View {
+    if entry.snapshot.translucentBackground == true {
+      ZStack {
+        Rectangle().fill(.ultraThinMaterial)
+        widgetBaseBackground.opacity(0.64)
+      }
+    } else {
+      widgetBaseBackground
+    }
+  }
+
+  private var widgetBaseBackground: Color {
     colorScheme == .dark
       ? Color(red: 0.09, green: 0.15, blue: 0.18)
       : Color(red: 0.95, green: 0.97, blue: 0.98)

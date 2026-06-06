@@ -162,6 +162,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageWidgetSortOrderKey = 'widgetSortOrder';
   static const String secureStorageWidgetItemLimitKey = 'widgetItemLimit';
   static const String secureStorageWidgetOpenMinifluxKey = 'widgetOpenMiniflux';
+  static const String secureStorageWidgetTranslucentBackgroundKey =
+      'widgetTranslucentBackground';
   static const String secureStorageBackgroundSyncIntervalMinutesKey =
       'backgroundSyncIntervalMinutes';
   static const int enabledBackgroundSyncIntervalMinutes = 30;
@@ -389,6 +391,7 @@ class FluxNewsState extends ChangeNotifier {
   String widgetSortOrder = FluxNewsState.sortOrderNewestFirstString;
   int widgetItemLimit = FluxNewsState.defaultWidgetItemLimit;
   bool widgetOpenMiniflux = false;
+  bool widgetTranslucentBackground = false;
   int backgroundSyncIntervalMinutes = 0;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
@@ -1681,6 +1684,9 @@ class FluxNewsState extends ChangeNotifier {
         intFor(FluxNewsState.secureStorageWidgetItemLimitKey, widgetItemLimit);
     widgetOpenMiniflux = boolFor(
         FluxNewsState.secureStorageWidgetOpenMinifluxKey, widgetOpenMiniflux);
+    widgetTranslucentBackground = boolFor(
+        FluxNewsState.secureStorageWidgetTranslucentBackgroundKey,
+        widgetTranslucentBackground);
     backgroundSyncIntervalMinutes = intFor(
         FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey,
         backgroundSyncIntervalMinutes);
@@ -2182,6 +2188,13 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageWidgetOpenMinifluxKey) {
         if (value != '') {
           widgetOpenMiniflux = value == FluxNewsState.secureStorageTrueString;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetTranslucentBackgroundKey) {
+        if (value != '') {
+          widgetTranslucentBackground =
+              value == FluxNewsState.secureStorageTrueString;
         }
       }
 

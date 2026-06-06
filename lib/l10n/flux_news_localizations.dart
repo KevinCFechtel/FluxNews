@@ -1549,6 +1549,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync'**
   String get widgetSync;
+
+  /// No description provided for @widgetBlurredBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Translucent widget background'**
+  String get widgetBlurredBackground;
 }
 
 class _AppLocalizationsDelegate

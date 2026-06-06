@@ -239,5 +239,6 @@
     "openSource": "Open source",
     "widgetLastSync": "Last sync",
     "widgetNever": "never",
-    "widgetSync": "Sync"
+    "widgetSync": "Sync",
+    "widgetBlurredBackground": "Translucent widget background"
 }

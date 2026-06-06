@@ -41,7 +41,13 @@ class FluxNewsWidgetProvider : AppWidgetProvider() {
     val lastSyncLabel = snapshot.optString("lastSyncLabel", "Last sync")
     val neverLabel = snapshot.optString("neverLabel", "never")
     val syncLabel = snapshot.optString("syncLabel", "Sync")
+    val translucentBackground = snapshot.optBoolean("translucentBackground", false)
 
+    views.setInt(
+      R.id.widget_root,
+      "setBackgroundResource",
+      if (translucentBackground) R.drawable.flux_news_widget_background_translucent else R.drawable.flux_news_widget_background,
+    )
     views.setTextViewText(R.id.widget_title, displayTitle)
     views.setTextViewText(R.id.widget_count, count.toString())
     views.setTextViewText(R.id.widget_count_label, countLabel)

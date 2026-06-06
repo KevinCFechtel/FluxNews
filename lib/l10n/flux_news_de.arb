@@ -244,5 +244,6 @@
     "openSource": "Open Source",
     "widgetLastSync": "Letzter Sync",
     "widgetNever": "nie",
-    "widgetSync": "Sync"
+    "widgetSync": "Sync",
+    "widgetBlurredBackground": "Transparenter Widget-Hintergrund"
 }

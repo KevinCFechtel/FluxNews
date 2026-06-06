@@ -50,6 +50,7 @@ class FluxNewsWidgetService {
       'lastSyncLabel': localizations.widgetLastSync,
       'neverLabel': localizations.widgetNever,
       'syncLabel': localizations.widgetSync,
+      'translucentBackground': appState.widgetTranslucentBackground,
       'lastUpdated': lastUpdated,
       'items': news.map(_widgetItemFromNews).toList(),
     };

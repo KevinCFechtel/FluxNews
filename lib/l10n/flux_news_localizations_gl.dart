@@ -791,4 +791,7 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get widgetSync => 'Sincronizar';
+
+  @override
+  String get widgetBlurredBackground => 'Fondo translúcido do widget';
 }

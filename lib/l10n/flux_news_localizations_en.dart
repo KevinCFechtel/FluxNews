@@ -778,4 +778,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetSync => 'Sync';
+
+  @override
+  String get widgetBlurredBackground => 'Translucent widget background';
 }
