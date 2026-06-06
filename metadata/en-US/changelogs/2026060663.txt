@@ -1,0 +1,5 @@
+The following has been added:
+ •	Added open source link to Repository
+ •	Added new language Galicisch
+ •	Added more options for widget content
+ •	Fix iOS playback interruption
