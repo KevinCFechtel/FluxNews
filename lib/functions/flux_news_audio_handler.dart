@@ -528,20 +528,10 @@ class FluxNewsAudioHandler extends BaseAudioHandler
       ),
       androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
     ));
-    // Do not request Android audio focus during handler initialization. Android
-    // Auto can create/browse the service without immediate playback; claiming
-    // focus here can leave the car route in a stale state. Playback activates
-    // the session explicitly in play().
-    if (Platform.isIOS) {
-      // setActive may still fail with !int if a non-interruptible source is
-      // active at startup. just_audio activates the session internally via
-      // AVPlayer, so we ignore the error to keep _initFuture successful.
-      try {
-        await session.setActive(true);
-      } catch (e) {
-        _debugLog('AudioSession.setActive during init failed: $e');
-      }
-    }
+    // Do not activate the audio session during handler initialization. The app
+    // may initialize audio for CarPlay/Android Auto browsing or mini-player
+    // state while the user is listening to another app. Playback activates the
+    // session explicitly in play().
 
     session.interruptionEventStream.listen((event) {
       _handleAudioInterruption(event).ignore();
