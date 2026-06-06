@@ -236,5 +236,9 @@
     "cancelAll": "Cancelar todo",
     "items": "Elementos",
     "widgetSettings": "Axustes do widget",
+    "widgetLastSync": "Última sincronización",
+    "widgetNever": "nunca",
+    "widgetSync": "Sincronizar",
+    "widgetBlurredBackground": "Fondo translúcido do widget",
     "openSource": "Código aberto"
 }

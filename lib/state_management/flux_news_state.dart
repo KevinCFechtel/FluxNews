@@ -156,9 +156,14 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageImageCacheDurationDaysKey =
       'imageCacheDurationDays';
   static const String secureStorageWidgetNewsStatusKey = 'widgetNewsStatus';
+  static const String secureStorageWidgetUnreadOnlyKey = 'widgetUnreadOnly';
+  static const String secureStorageWidgetFilterTypeKey = 'widgetFilterType';
+  static const String secureStorageWidgetFilterIdKey = 'widgetFilterId';
   static const String secureStorageWidgetSortOrderKey = 'widgetSortOrder';
   static const String secureStorageWidgetItemLimitKey = 'widgetItemLimit';
   static const String secureStorageWidgetOpenMinifluxKey = 'widgetOpenMiniflux';
+  static const String secureStorageWidgetTranslucentBackgroundKey =
+      'widgetTranslucentBackground';
   static const String secureStorageBackgroundSyncIntervalMinutesKey =
       'backgroundSyncIntervalMinutes';
   static const int enabledBackgroundSyncIntervalMinutes = 30;
@@ -248,6 +253,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String widgetStatusUnreadString = 'unread';
   static const String widgetStatusAllString = 'all';
   static const String widgetStatusBookmarkedString = 'bookmarked';
+  static const String widgetFilterAllString = allNewsElementType;
+  static const String widgetFilterBookmarkedString = bookmarkedNewsElementType;
+  static const String widgetFilterCategoryString = categoryElementType;
+  static const String widgetFilterFeedString = feedElementType;
   static const int defaultWidgetItemLimit = 5;
 
   // vars for lists of main view
@@ -376,9 +385,13 @@ class FluxNewsState extends ChangeNotifier {
   bool syncReadStatusImmediately = false;
   bool scrolloverSyncFailed = false;
   String widgetNewsStatus = FluxNewsState.widgetStatusUnreadString;
+  bool widgetUnreadOnly = true;
+  String widgetFilterType = FluxNewsState.widgetFilterAllString;
+  int? widgetFilterId;
   String widgetSortOrder = FluxNewsState.sortOrderNewestFirstString;
   int widgetItemLimit = FluxNewsState.defaultWidgetItemLimit;
   bool widgetOpenMiniflux = false;
+  bool widgetTranslucentBackground = false;
   int backgroundSyncIntervalMinutes = 0;
   Map<String, String> customHeaders = {};
   bool scrolloverAppBar = false;
@@ -1514,6 +1527,22 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   // read the persistent saved configuration
+  void _applyLegacyWidgetNewsStatusIfNeeded() {
+    if (widgetNewsStatus == FluxNewsState.widgetStatusBookmarkedString) {
+      widgetFilterType = FluxNewsState.widgetFilterBookmarkedString;
+      widgetFilterId = null;
+      widgetUnreadOnly = false;
+    } else if (widgetNewsStatus == FluxNewsState.widgetStatusAllString) {
+      widgetFilterType = FluxNewsState.widgetFilterAllString;
+      widgetFilterId = null;
+      widgetUnreadOnly = false;
+    } else if (widgetNewsStatus == FluxNewsState.widgetStatusUnreadString) {
+      widgetFilterType = FluxNewsState.widgetFilterAllString;
+      widgetFilterId = null;
+      widgetUnreadOnly = true;
+    }
+  }
+
   Future<bool> readConfigValues() async {
     logThis('readConfigValues', 'Starting read config values', LogLevel.INFO);
 
@@ -1634,12 +1663,30 @@ class FluxNewsState extends ChangeNotifier {
     widgetNewsStatus =
         valueFor(FluxNewsState.secureStorageWidgetNewsStatusKey) ??
             widgetNewsStatus;
+    widgetUnreadOnly = boolFor(
+        FluxNewsState.secureStorageWidgetUnreadOnlyKey, widgetUnreadOnly);
+    widgetFilterType =
+        valueFor(FluxNewsState.secureStorageWidgetFilterTypeKey) ??
+            widgetFilterType;
+    widgetFilterId = int.tryParse(
+        valueFor(FluxNewsState.secureStorageWidgetFilterIdKey) ?? '');
+    if (!storageValues
+            .containsKey(FluxNewsState.secureStorageWidgetUnreadOnlyKey) &&
+        !storageValues
+            .containsKey(FluxNewsState.secureStorageWidgetFilterTypeKey) &&
+        !storageValues
+            .containsKey(FluxNewsState.secureStorageWidgetFilterIdKey)) {
+      _applyLegacyWidgetNewsStatusIfNeeded();
+    }
     widgetSortOrder = valueFor(FluxNewsState.secureStorageWidgetSortOrderKey) ??
         widgetSortOrder;
     widgetItemLimit =
         intFor(FluxNewsState.secureStorageWidgetItemLimitKey, widgetItemLimit);
     widgetOpenMiniflux = boolFor(
         FluxNewsState.secureStorageWidgetOpenMinifluxKey, widgetOpenMiniflux);
+    widgetTranslucentBackground = boolFor(
+        FluxNewsState.secureStorageWidgetTranslucentBackgroundKey,
+        widgetTranslucentBackground);
     backgroundSyncIntervalMinutes = intFor(
         FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey,
         backgroundSyncIntervalMinutes);
@@ -2107,6 +2154,24 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
+      if (key == FluxNewsState.secureStorageWidgetUnreadOnlyKey) {
+        if (value != '') {
+          widgetUnreadOnly = value == FluxNewsState.secureStorageTrueString;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetFilterTypeKey) {
+        if (value != '') {
+          widgetFilterType = value;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetFilterIdKey) {
+        if (value != '') {
+          widgetFilterId = int.tryParse(value);
+        }
+      }
+
       if (key == FluxNewsState.secureStorageWidgetSortOrderKey) {
         if (value != '') {
           widgetSortOrder = value;
@@ -2123,6 +2188,13 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageWidgetOpenMinifluxKey) {
         if (value != '') {
           widgetOpenMiniflux = value == FluxNewsState.secureStorageTrueString;
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageWidgetTranslucentBackgroundKey) {
+        if (value != '') {
+          widgetTranslucentBackground =
+              value == FluxNewsState.secureStorageTrueString;
         }
       }
 

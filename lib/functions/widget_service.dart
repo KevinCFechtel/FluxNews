@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/sync_news.dart';
+import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -20,6 +22,7 @@ class FluxNewsWidgetService {
       MethodChannel('dev.kevincfechtel.fluxnews/widgets');
   static const String _widgetGroup = 'group.dev.kevincfechtel.fluxNews';
   static const String _snapshotKey = 'snapshot';
+  static const String _iosLargePageKey = 'largePage';
   static const String _androidWidgetProvider =
       'de.circle_dev.flux_news.FluxNewsWidgetProvider';
   static const String _iosWidgetKind = 'FluxNewsHeadlinesWidget';
@@ -29,12 +32,25 @@ class FluxNewsWidgetService {
   static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
-    final news =
-        await queryWidgetNewsFromDB(appState, limit: Platform.isIOS ? 7 : null);
-    final unreadCount = await queryUnreadNewsCountFromDB(appState);
+    final news = await queryWidgetNewsFromDB(appState);
+    final countStatus = appState.widgetUnreadOnly
+        ? FluxNewsState.unreadNewsStatus
+        : FluxNewsState.readNewsStatus;
+    final count = await queryWidgetStatusCountFromDB(appState, countStatus);
+    final localizations = _widgetLocalizations();
+    final countLabel = appState.widgetUnreadOnly
+        ? localizations.unreadShort
+        : localizations.readShort;
+    final displayTitle = await _widgetDisplayTitle(appState, localizations);
     final lastUpdated = DateTime.now().toIso8601String();
     final payload = <String, Object?>{
-      'unreadCount': unreadCount,
+      'displayTitle': displayTitle,
+      'unreadCount': count,
+      'countLabel': countLabel,
+      'lastSyncLabel': localizations.widgetLastSync,
+      'neverLabel': localizations.widgetNever,
+      'syncLabel': localizations.widgetSync,
+      'translucentBackground': appState.widgetTranslucentBackground,
       'lastUpdated': lastUpdated,
       'items': news.map(_widgetItemFromNews).toList(),
     };
@@ -42,19 +58,70 @@ class FluxNewsWidgetService {
     logThis(
         'WidgetService',
         'Updating widget snapshot: platform=${Platform.operatingSystem} '
-            'items=${news.length} unreadCount=$unreadCount '
-            'lastUpdated=$lastUpdated',
+            'displayTitle=$displayTitle '
+            'items=${news.length} count=$count '
+            'countLabel=$countLabel '
+            'lastUpdated=$lastUpdated '
+            'unreadOnly=${appState.widgetUnreadOnly} '
+            'filterType=${appState.widgetFilterType} '
+            'filterId=${appState.widgetFilterId}',
         LogLevel.INFO);
     await _saveSnapshotAndReload(jsonEncode(payload));
+  }
+
+  static AppLocalizations _widgetLocalizations() {
+    final locale = ui.PlatformDispatcher.instance.locale;
+    try {
+      return lookupAppLocalizations(locale);
+    } catch (_) {
+      return lookupAppLocalizations(const Locale('en'));
+    }
+  }
+
+  static Future<String> _widgetDisplayTitle(
+      FluxNewsState appState, AppLocalizations localizations) async {
+    if (appState.widgetFilterType ==
+        FluxNewsState.widgetFilterBookmarkedString) {
+      return localizations.bookmarkShort;
+    }
+    if (appState.widgetFilterType == FluxNewsState.widgetFilterCategoryString &&
+        appState.widgetFilterId != null) {
+      final title = await _titleForWidgetFilter(
+          appState, 'categories', 'categoryID', appState.widgetFilterId!);
+      return title ?? localizations.startupCategorieCategorie;
+    }
+    if (appState.widgetFilterType == FluxNewsState.widgetFilterFeedString &&
+        appState.widgetFilterId != null) {
+      final title = await _titleForWidgetFilter(
+          appState, 'feeds', 'feedID', appState.widgetFilterId!);
+      return title ?? localizations.startupCategorieFeed;
+    }
+    return localizations.allNews;
+  }
+
+  static Future<String?> _titleForWidgetFilter(
+      FluxNewsState appState, String table, String idColumn, int id) async {
+    appState.db ??= await appState.initializeDB();
+    final rows = await appState.db?.rawQuery(
+      'SELECT substr(title, 1, 1000000) AS title FROM $table WHERE $idColumn = ? LIMIT 1',
+      [id],
+    );
+    if (rows == null || rows.isEmpty) return null;
+    final title = rows.first['title']?.toString().trim();
+    return title == null || title.isEmpty ? null : title;
   }
 
   static Future<void> _saveSnapshotAndReload(String snapshot) async {
     try {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(_widgetGroup);
+        await HomeWidget.saveWidgetData<int>(_iosLargePageKey, 0);
       }
       final saveResult =
           await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);
+      if (Platform.isIOS) {
+        await _channel.invokeMethod('saveSnapshot', {'snapshot': snapshot});
+      }
       String? savedSnapshot;
       if (Platform.isIOS) {
         savedSnapshot = await HomeWidget.getWidgetData<String>(_snapshotKey);

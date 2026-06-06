@@ -784,4 +784,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get openSource => 'Open Source';
+
+  @override
+  String get widgetLastSync => 'Letzter Sync';
+
+  @override
+  String get widgetNever => 'nie';
+
+  @override
+  String get widgetSync => 'Sync';
+
+  @override
+  String get widgetBlurredBackground => 'Transparenter Widget-Hintergrund';
 }

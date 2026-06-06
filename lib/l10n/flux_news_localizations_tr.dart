@@ -769,4 +769,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get openSource => 'Open source';
+
+  @override
+  String get widgetLastSync => 'Son senkronizasyon';
+
+  @override
+  String get widgetNever => 'asla';
+
+  @override
+  String get widgetSync => 'Senkronize et';
+
+  @override
+  String get widgetBlurredBackground => 'Yarı saydam widget arka planı';
 }

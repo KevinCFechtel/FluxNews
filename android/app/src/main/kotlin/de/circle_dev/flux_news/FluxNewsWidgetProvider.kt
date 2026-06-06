@@ -35,12 +35,27 @@ class FluxNewsWidgetProvider : AppWidgetProvider() {
     val views = RemoteViews(context.packageName, R.layout.flux_news_widget)
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val snapshot = JSONObject(prefs.getString(KEY_SNAPSHOT, "{}") ?: "{}")
-    val unreadCount = snapshot.optInt("unreadCount", 0)
+    val count = snapshot.optInt("unreadCount", 0)
+    val countLabel = snapshot.optString("countLabel", "Unread")
+    val displayTitle = snapshot.optString("displayTitle", "All News")
+    val lastSyncLabel = snapshot.optString("lastSyncLabel", "Last sync")
+    val neverLabel = snapshot.optString("neverLabel", "never")
+    val syncLabel = snapshot.optString("syncLabel", "Sync")
+    val translucentBackground = snapshot.optBoolean("translucentBackground", false)
 
-    views.setTextViewText(R.id.widget_title, "Flux News")
-    views.setTextViewText(R.id.widget_count, unreadCount.toString())
-    views.setTextViewText(R.id.widget_count_label, if (unreadCount == 1) "unread" else "unread")
-    views.setTextViewText(R.id.widget_last_sync, formatLastUpdated(snapshot.optString("lastUpdated", "")))
+    views.setInt(
+      R.id.widget_root,
+      "setBackgroundResource",
+      if (translucentBackground) R.drawable.flux_news_widget_background_translucent else R.drawable.flux_news_widget_background,
+    )
+    views.setTextViewText(R.id.widget_title, displayTitle)
+    views.setTextViewText(R.id.widget_count, count.toString())
+    views.setTextViewText(R.id.widget_count_label, countLabel)
+    views.setTextViewText(
+      R.id.widget_last_sync,
+      formatLastUpdated(snapshot.optString("lastUpdated", ""), lastSyncLabel, neverLabel),
+    )
+    views.setContentDescription(R.id.widget_sync_button, syncLabel)
     views.setOnClickPendingIntent(R.id.widget_sync_button, pendingIntent(context, "fluxnews://widget/sync", 9000))
 
     val listIntent = Intent(context, FluxNewsWidgetService::class.java).apply {
@@ -84,15 +99,15 @@ class FluxNewsWidgetProvider : AppWidgetProvider() {
     )
   }
 
-  private fun formatLastUpdated(value: String): String {
-    if (value.isBlank()) return "Last sync: never"
+  private fun formatLastUpdated(value: String, lastSyncLabel: String, neverLabel: String): String {
+    if (value.isBlank()) return "$lastSyncLabel: $neverLabel"
     val parsed = try {
       SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).parse(value)
     } catch (_: Exception) {
       null
-    } ?: return "Last sync: $value"
+    } ?: return "$lastSyncLabel: $value"
     val formatter = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, Locale.getDefault())
-    return "Last sync: ${formatter.format(parsed)}"
+    return "$lastSyncLabel: ${formatter.format(parsed)}"
   }
 }
 

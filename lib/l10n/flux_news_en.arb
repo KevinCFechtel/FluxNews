@@ -236,5 +236,9 @@
     "cancelAll": "Cancel all",
     "items": "Items",
     "widgetSettings": "Widget settings",
-    "openSource": "Open source"
+    "openSource": "Open source",
+    "widgetLastSync": "Last sync",
+    "widgetNever": "never",
+    "widgetSync": "Sync",
+    "widgetBlurredBackground": "Translucent widget background"
 }

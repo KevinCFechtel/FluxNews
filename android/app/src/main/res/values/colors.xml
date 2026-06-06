@@ -2,6 +2,7 @@
 <resources>
     <color name="ic_launcher_background">#60DDFF</color>
     <color name="flux_news_widget_background">#F2F5F7</color>
+    <color name="flux_news_widget_background_translucent">#D8F2F5F7</color>
     <color name="flux_news_widget_primary_text">#141C21</color>
     <color name="flux_news_widget_secondary_text">#99141C21</color>
     <color name="flux_news_widget_icon_adapt_background">#172329</color>

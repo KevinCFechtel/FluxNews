@@ -12,13 +12,21 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@null"
+            android:scaleType="centerInside"
+            android:src="@drawable/flux_news_widget_logo" />
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="Flux News"
+            android:text="All News"
             android:textColor="@color/flux_news_widget_primary_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -39,16 +47,16 @@
             android:textColor="@color/flux_news_widget_secondary_text"
             android:textSize="12sp" />
 
-        <TextView
-            android:layout_width="48dp"
+        <ImageView
+            android:layout_width="34dp"
             android:layout_height="34dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/flux_news_widget_sync_background"
             android:gravity="center"
-            android:text="Sync"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:contentDescription="Sync"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/flux_news_widget_sync_icon" />
     </LinearLayout>
 
     <TextView

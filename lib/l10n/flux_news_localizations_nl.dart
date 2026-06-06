@@ -771,4 +771,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get openSource => 'Open source';
+
+  @override
+  String get widgetLastSync => 'Laatste sync';
+
+  @override
+  String get widgetNever => 'nooit';
+
+  @override
+  String get widgetSync => 'Sync';
+
+  @override
+  String get widgetBlurredBackground => 'Transparante widgetachtergrond';
 }
