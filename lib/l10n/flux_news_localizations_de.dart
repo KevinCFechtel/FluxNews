@@ -452,7 +452,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backgroundSyncInterval => 'Background-Sync für Widgets';
 
   @override
-  String get off => 'Off';
+  String get off => 'Aus';
 
   @override
   String get headerSettings =>
