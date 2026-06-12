@@ -26,9 +26,11 @@ class FluxNewsWidgetService {
   static const String _iosExtraLargePageKey = 'extraLargePage';
   static const String _androidWidgetProvider =
       'de.circle_dev.flux_news.FluxNewsWidgetProvider';
-  static const String _iosWidgetKind = 'FluxNewsHeadlinesWidget';
+  static const String _iosHeadlinesWidgetKind = 'FluxNewsHeadlinesWidget';
+  static const String _iosStatusWidgetKind = 'FluxNewsStatusWidget';
   static Map<String, dynamic>? _pendingWidgetAction;
   static bool _handlingWidgetAction = false;
+  static DateTime? _lastSnapshotUpdatedAt;
 
   static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -68,6 +70,49 @@ class FluxNewsWidgetService {
             'filterId=${appState.widgetFilterId}',
         LogLevel.INFO);
     await _saveSnapshotAndReload(jsonEncode(payload));
+    _lastSnapshotUpdatedAt = DateTime.now();
+  }
+
+  static Future<void> refreshSnapshotForForegroundOpen(
+    FluxNewsState appState, {
+    required String reason,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    if (appState.syncProcess) {
+      logThis(
+          'WidgetService',
+          'Foreground widget snapshot refresh skipped because sync is active: '
+              'reason=$reason',
+          LogLevel.INFO);
+      return;
+    }
+    if (appState.minifluxURL == null ||
+        appState.minifluxAPIKey == null ||
+        appState.errorOnMinifluxAuth) {
+      logThis(
+          'WidgetService',
+          'Foreground widget snapshot refresh skipped because app is not configured: '
+              'reason=$reason',
+          LogLevel.INFO);
+      return;
+    }
+
+    final lastUpdatedAt = _lastSnapshotUpdatedAt;
+    if (lastUpdatedAt != null &&
+        DateTime.now().difference(lastUpdatedAt) < const Duration(seconds: 10)) {
+      logThis(
+          'WidgetService',
+          'Foreground widget snapshot refresh skipped because snapshot was recently updated: '
+              'reason=$reason lastUpdatedAt=${lastUpdatedAt.toIso8601String()}',
+          LogLevel.INFO);
+      return;
+    }
+
+    logThis(
+        'WidgetService',
+        'Refreshing widget snapshot after foreground open: reason=$reason',
+        LogLevel.INFO);
+    await updateWidgetSnapshot(appState);
   }
 
   static AppLocalizations _widgetLocalizations() {
@@ -129,11 +174,18 @@ class FluxNewsWidgetService {
         savedSnapshot = await HomeWidget.getWidgetData<String>(_snapshotKey);
       }
       final updateResult = await HomeWidget.updateWidget(
-        name: _iosWidgetKind,
-        iOSName: _iosWidgetKind,
+        name: _iosHeadlinesWidgetKind,
+        iOSName: _iosHeadlinesWidgetKind,
         androidName: 'FluxNewsWidgetProvider',
         qualifiedAndroidName: _androidWidgetProvider,
       );
+      Object? statusUpdateResult;
+      if (Platform.isIOS) {
+        statusUpdateResult = await HomeWidget.updateWidget(
+          name: _iosStatusWidgetKind,
+          iOSName: _iosStatusWidgetKind,
+        );
+      }
       bool nativeReloadRequested = false;
       try {
         await _channel.invokeMethod('reloadWidgets');
@@ -148,6 +200,7 @@ class FluxNewsWidgetService {
           'WidgetService',
           'Widget snapshot saved and reload requested: '
               'saveResult=$saveResult updateResult=$updateResult '
+              'statusUpdateResult=$statusUpdateResult '
               'nativeReloadRequested=$nativeReloadRequested '
               'snapshotBytes=${snapshot.length} '
               'iosReadbackBytes=${savedSnapshot?.length}',

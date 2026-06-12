@@ -156,6 +156,18 @@ class FluxNewsBody extends StatelessWidget {
                 'backgroundSyncEnabled=${appState.backgroundSyncIntervalMinutes > 0}',
             LogLevel.INFO);
       }
+
+      if (context.mounted) {
+        await FluxNewsWidgetService.refreshSnapshotForForegroundOpen(
+          appState,
+          reason: 'resume',
+        ).onError((error, stackTrace) {
+          logThis(
+              'FluxNewsBody',
+              'Could not refresh widget snapshot after foreground resume: $error',
+              LogLevel.ERROR);
+        });
+      }
     }, child: OrientationBuilder(
       builder: (context, orientation) {
         appState.orientation = orientation;
@@ -295,7 +307,15 @@ class FluxNewsBody extends StatelessWidget {
             await renewAllNewsCount(appState, context);
           }
           appState.syncProcess = false;
-          unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+          await FluxNewsWidgetService.refreshSnapshotForForegroundOpen(
+            appState,
+            reason: 'startup',
+          ).onError((error, stackTrace) {
+            logThis(
+                'initConfig',
+                'Could not refresh widget snapshot after startup: $error',
+                LogLevel.ERROR);
+          });
         } catch (e) {
           logThis('initConfig', 'Caught an error in initConfig function!',
               LogLevel.ERROR);

@@ -31,6 +31,7 @@ private func setupFluxNewsWidgetChannel(binaryMessenger: FlutterBinaryMessenger)
     case "reloadWidgets":
       if #available(iOS 14.0, *) {
         WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsStatusWidget")
         WidgetCenter.shared.reloadAllTimelines()
       }
       result(nil)
