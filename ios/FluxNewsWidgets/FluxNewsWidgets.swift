@@ -7,8 +7,9 @@ private let widgetGroup = "group.dev.kevincfechtel.fluxNews"
 private let largePageKey = "largePage"
 private let extraLargePageKey = "extraLargePage"
 private let snapshotKey = "snapshot"
+private let statusSnapshotKey = "statusSnapshot"
 private let headlinesWidgetKind = "FluxNewsHeadlinesWidget"
-private let statusWidgetKind = "FluxNewsStatusWidget"
+private let statusWidgetKind = "FluxNewsCompactStatusWidget"
 private let iPhoneLargePageSize = 7
 private let iPadLargePageSize = 6
 private let extraLargePageSize = 12
@@ -110,9 +111,64 @@ struct FluxNewsWidgetSnapshot: Decodable {
   }
 }
 
+struct FluxNewsStatusSnapshot: Decodable {
+  let displayTitle: String?
+  let unreadCount: Int
+  let countLabel: String?
+  let lastSyncLabel: String?
+  let neverLabel: String?
+  let syncLabel: String?
+  let lastUpdated: String
+
+  static var fallback: FluxNewsStatusSnapshot {
+    FluxNewsStatusSnapshot(
+      displayTitle: "All News",
+      unreadCount: 0,
+      countLabel: "unread",
+      lastSyncLabel: "Last sync",
+      neverLabel: "never",
+      syncLabel: "Sync",
+      lastUpdated: ""
+    )
+  }
+}
+
 struct FluxNewsEntry: TimelineEntry {
   let date: Date
   let snapshot: FluxNewsWidgetSnapshot
+}
+
+struct FluxNewsStatusEntry: TimelineEntry {
+  let date: Date
+  let snapshot: FluxNewsStatusSnapshot
+}
+
+private func loadFluxNewsSnapshot() -> FluxNewsWidgetSnapshot {
+  guard let defaults = UserDefaults(suiteName: widgetGroup),
+        let json = defaults.string(forKey: snapshotKey),
+        let data = json.data(using: .utf8),
+        let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
+    return .fallback
+  }
+  return snapshot
+}
+
+private func loadFluxNewsStatusSnapshot() -> FluxNewsStatusSnapshot {
+  guard let defaults = UserDefaults(suiteName: widgetGroup),
+        let json = defaults.string(forKey: statusSnapshotKey),
+        let data = json.data(using: .utf8),
+        let snapshot = try? JSONDecoder().decode(FluxNewsStatusSnapshot.self, from: data) else {
+    return .fallback
+  }
+  return snapshot
+}
+
+private func nextWidgetRefreshDate() -> Date {
+  Calendar.current.date(
+    byAdding: .minute,
+    value: 15,
+    to: Date()
+  ) ?? Date().addingTimeInterval(15 * 60)
 }
 
 struct FluxNewsProvider: TimelineProvider {
@@ -121,27 +177,27 @@ struct FluxNewsProvider: TimelineProvider {
   }
 
   func getSnapshot(in context: Context, completion: @escaping (FluxNewsEntry) -> Void) {
-    completion(FluxNewsEntry(date: Date(), snapshot: loadSnapshot()))
+    completion(FluxNewsEntry(date: Date(), snapshot: loadFluxNewsSnapshot()))
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<FluxNewsEntry>) -> Void) {
-    let entry = FluxNewsEntry(date: Date(), snapshot: loadSnapshot())
-    let nextRefresh = Calendar.current.date(
-      byAdding: .minute,
-      value: 15,
-      to: Date()
-    ) ?? Date().addingTimeInterval(15 * 60)
-    completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+    let entry = FluxNewsEntry(date: Date(), snapshot: loadFluxNewsSnapshot())
+    completion(Timeline(entries: [entry], policy: .after(nextWidgetRefreshDate())))
+  }
+}
+
+struct FluxNewsStatusProvider: TimelineProvider {
+  func placeholder(in context: Context) -> FluxNewsStatusEntry {
+    FluxNewsStatusEntry(date: Date(), snapshot: .fallback)
   }
 
-  private func loadSnapshot() -> FluxNewsWidgetSnapshot {
-    guard let defaults = UserDefaults(suiteName: widgetGroup),
-          let json = defaults.string(forKey: snapshotKey),
-          let data = json.data(using: .utf8),
-          let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
-      return .fallback
-    }
-    return snapshot
+  func getSnapshot(in context: Context, completion: @escaping (FluxNewsStatusEntry) -> Void) {
+    completion(FluxNewsStatusEntry(date: Date(), snapshot: loadFluxNewsStatusSnapshot()))
+  }
+
+  func getTimeline(in context: Context, completion: @escaping (Timeline<FluxNewsStatusEntry>) -> Void) {
+    let entry = FluxNewsStatusEntry(date: Date(), snapshot: loadFluxNewsStatusSnapshot())
+    completion(Timeline(entries: [entry], policy: .after(nextWidgetRefreshDate())))
   }
 }
 
@@ -489,7 +545,7 @@ struct FeedIconView: View {
 
 struct FluxNewsStatusWidgetView: View {
   @Environment(\.colorScheme) private var colorScheme
-  let entry: FluxNewsEntry
+  let entry: FluxNewsStatusEntry
 
   var body: some View {
     ZStack(alignment: .topLeading) {
@@ -500,25 +556,27 @@ struct FluxNewsStatusWidgetView: View {
             .frame(width: 16, height: 16)
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
-          Text(entry.snapshot.displayTitle ?? "All News")
-            .font(.caption2)
-            .fontWeight(.semibold)
-            .lineLimit(1)
-            .minimumScaleFactor(0.65)
-
           Spacer(minLength: 0)
         }
+
+        Text(entry.snapshot.displayTitle ?? "All News")
+          .font(.subheadline)
+          .fontWeight(.semibold)
+          .foregroundColor(widgetForeground)
+          .lineLimit(2)
+          .minimumScaleFactor(0.62)
 
         VStack(alignment: .leading, spacing: 1) {
           Text("\(entry.snapshot.unreadCount)")
             .font(.system(size: 32, weight: .bold, design: .rounded))
+            .foregroundColor(widgetForeground)
             .monospacedDigit()
             .lineLimit(1)
             .minimumScaleFactor(0.7)
 
           Text(entry.snapshot.countLabel ?? "unread")
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundColor(widgetSecondaryForeground)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
         }
@@ -527,16 +585,17 @@ struct FluxNewsStatusWidgetView: View {
 
         Text(lastUpdatedText)
           .font(.caption2)
-          .foregroundStyle(.secondary)
+          .foregroundColor(widgetSecondaryForeground)
           .lineLimit(2)
           .minimumScaleFactor(0.65)
       }
 
       Image(systemName: "arrow.clockwise")
         .font(.caption2)
+        .symbolRenderingMode(.monochrome)
         .frame(width: 20, height: 20)
         .background(.blue, in: Circle())
-        .foregroundStyle(.white)
+        .foregroundColor(.white)
         .frame(maxWidth: .infinity, alignment: .topTrailing)
         .accessibilityLabel(entry.snapshot.syncLabel ?? "Sync")
     }
@@ -547,8 +606,8 @@ struct FluxNewsStatusWidgetView: View {
     .containerBackground(for: .widget) {
       widgetBaseBackground
     }
-    .foregroundStyle(widgetForeground)
     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    .unredacted()
     .widgetURL(URL(string: "fluxnews://widget/sync"))
   }
 
@@ -560,6 +619,12 @@ struct FluxNewsStatusWidgetView: View {
 
   private var widgetForeground: Color {
     colorScheme == .dark ? .white : Color(red: 0.08, green: 0.11, blue: 0.13)
+  }
+
+  private var widgetSecondaryForeground: Color {
+    colorScheme == .dark
+      ? Color(red: 0.78, green: 0.84, blue: 0.86)
+      : Color(red: 0.33, green: 0.42, blue: 0.46)
   }
 
   private var lastUpdatedText: String {
@@ -579,7 +644,7 @@ struct FluxNewsHeadlinesWidget: Widget {
 
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: FluxNewsProvider()) { entry in
-      FluxNewsStatusWidgetView(entry: entry)
+      FluxNewsHeadlinesWidgetView(entry: entry)
     }
     .configurationDisplayName("Flux News")
     .description("Unread count and latest headlines.")
@@ -592,10 +657,10 @@ struct FluxNewsStatusWidget: Widget {
   let kind = statusWidgetKind
 
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: FluxNewsProvider()) { entry in
-      FluxNewsHeadlinesWidgetView(entry: entry)
+    StaticConfiguration(kind: kind, provider: FluxNewsStatusProvider()) { entry in
+      FluxNewsStatusWidgetView(entry: entry)
     }
-    .configurationDisplayName("Flux News")
+    .configurationDisplayName("Flux News Status")
     .description("Unread count and latest sync status.")
     .supportedFamilies([.systemSmall])
     .contentMarginsDisabled()

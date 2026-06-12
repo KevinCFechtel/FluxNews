@@ -258,12 +258,17 @@ Future<void> runFluxNewsBackgroundSync() async {
         LogLevel.INFO);
     await markNotFetchedNewsAsRead(newNews, appState);
 
-    final categories =
-        await fetchCategoryInformation(appState).onError((error, stackTrace) {
-      logThis('backgroundSync', 'Fetching categories failed: $error',
+    Categories categories;
+    try {
+      categories = await fetchCategoryInformation(appState);
+    } catch (error, stackTrace) {
+      logThis(
+          'backgroundSync',
+          'Fetching categories failed; aborting background sync before local feed/category cleanup: '
+              '$error\n$stackTrace',
           LogLevel.ERROR);
-      return Categories(categories: []);
-    });
+      return;
+    }
     logThis(
         'backgroundSync',
         'Fetched categories: count=${categories.categories.length}',

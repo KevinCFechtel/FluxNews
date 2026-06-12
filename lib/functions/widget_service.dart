@@ -22,12 +22,13 @@ class FluxNewsWidgetService {
       MethodChannel('dev.kevincfechtel.fluxnews/widgets');
   static const String _widgetGroup = 'group.dev.kevincfechtel.fluxNews';
   static const String _snapshotKey = 'snapshot';
+  static const String _statusSnapshotKey = 'statusSnapshot';
   static const String _iosLargePageKey = 'largePage';
   static const String _iosExtraLargePageKey = 'extraLargePage';
   static const String _androidWidgetProvider =
       'de.circle_dev.flux_news.FluxNewsWidgetProvider';
   static const String _iosHeadlinesWidgetKind = 'FluxNewsHeadlinesWidget';
-  static const String _iosStatusWidgetKind = 'FluxNewsStatusWidget';
+  static const String _iosStatusWidgetKind = 'FluxNewsCompactStatusWidget';
   static Map<String, dynamic>? _pendingWidgetAction;
   static bool _handlingWidgetAction = false;
   static DateTime? _lastSnapshotUpdatedAt;
@@ -57,6 +58,15 @@ class FluxNewsWidgetService {
       'lastUpdated': lastUpdated,
       'items': news.map(_widgetItemFromNews).toList(),
     };
+    final statusPayload = <String, Object?>{
+      'displayTitle': displayTitle,
+      'unreadCount': count,
+      'countLabel': countLabel,
+      'lastSyncLabel': localizations.widgetLastSync,
+      'neverLabel': localizations.widgetNever,
+      'syncLabel': localizations.widgetSync,
+      'lastUpdated': lastUpdated,
+    };
 
     logThis(
         'WidgetService',
@@ -69,7 +79,10 @@ class FluxNewsWidgetService {
             'filterType=${appState.widgetFilterType} '
             'filterId=${appState.widgetFilterId}',
         LogLevel.INFO);
-    await _saveSnapshotAndReload(jsonEncode(payload));
+    await _saveSnapshotAndReload(
+      snapshot: jsonEncode(payload),
+      statusSnapshot: jsonEncode(statusPayload),
+    );
     _lastSnapshotUpdatedAt = DateTime.now();
   }
 
@@ -157,7 +170,10 @@ class FluxNewsWidgetService {
     return title == null || title.isEmpty ? null : title;
   }
 
-  static Future<void> _saveSnapshotAndReload(String snapshot) async {
+  static Future<void> _saveSnapshotAndReload({
+    required String snapshot,
+    required String statusSnapshot,
+  }) async {
     try {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(_widgetGroup);
@@ -166,8 +182,17 @@ class FluxNewsWidgetService {
       }
       final saveResult =
           await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);
+      final statusSaveResult = Platform.isIOS
+          ? await HomeWidget.saveWidgetData<String>(
+              _statusSnapshotKey,
+              statusSnapshot,
+            )
+          : null;
       if (Platform.isIOS) {
-        await _channel.invokeMethod('saveSnapshot', {'snapshot': snapshot});
+        await _channel.invokeMethod('saveSnapshot', {
+          'snapshot': snapshot,
+          'statusSnapshot': statusSnapshot,
+        });
       }
       String? savedSnapshot;
       if (Platform.isIOS) {
@@ -200,9 +225,11 @@ class FluxNewsWidgetService {
           'WidgetService',
           'Widget snapshot saved and reload requested: '
               'saveResult=$saveResult updateResult=$updateResult '
+              'statusSaveResult=$statusSaveResult '
               'statusUpdateResult=$statusUpdateResult '
               'nativeReloadRequested=$nativeReloadRequested '
               'snapshotBytes=${snapshot.length} '
+              'statusSnapshotBytes=${statusSnapshot.length} '
               'iosReadbackBytes=${savedSnapshot?.length}',
           LogLevel.INFO);
     } on MissingPluginException {

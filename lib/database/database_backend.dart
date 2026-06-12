@@ -1646,6 +1646,17 @@ Future<int> insertCategoriesInDB(
       existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
     }
 
+    final fetchedFeedCount = categoryList.categories
+        .fold<int>(0, (sum, category) => sum + category.feeds.length);
+    if (existingFeeds.isNotEmpty && fetchedFeedCount == 0) {
+      logThis(
+          'insertCategoriesInDB',
+          'Skipped local category/feed cleanup because fetched feed list is empty while local feeds exist. '
+              'localFeeds=${existingFeeds.length} fetchedCategories=${categoryList.categories.length}',
+          LogLevel.WARNING);
+      return result;
+    }
+
     final protectedNewsIDs = await _getProtectedNewsIdsFromDownloads(appState);
     if (appState.debugMode) {
       logThis(
