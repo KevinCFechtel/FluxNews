@@ -23,6 +23,7 @@ class FluxNewsWidgetService {
   static const String _widgetGroup = 'group.dev.kevincfechtel.fluxNews';
   static const String _snapshotKey = 'snapshot';
   static const String _iosLargePageKey = 'largePage';
+  static const String _iosExtraLargePageKey = 'extraLargePage';
   static const String _androidWidgetProvider =
       'de.circle_dev.flux_news.FluxNewsWidgetProvider';
   static const String _iosWidgetKind = 'FluxNewsHeadlinesWidget';
@@ -116,6 +117,7 @@ class FluxNewsWidgetService {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(_widgetGroup);
         await HomeWidget.saveWidgetData<int>(_iosLargePageKey, 0);
+        await HomeWidget.saveWidgetData<int>(_iosExtraLargePageKey, 0);
       }
       final saveResult =
           await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);

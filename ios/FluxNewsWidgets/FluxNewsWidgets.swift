@@ -5,16 +5,18 @@ import WidgetKit
 
 private let widgetGroup = "group.dev.kevincfechtel.fluxNews"
 private let largePageKey = "largePage"
+private let extraLargePageKey = "extraLargePage"
 private let snapshotKey = "snapshot"
 private let widgetKind = "FluxNewsHeadlinesWidget"
 private let largePageSize = 7
+private let extraLargePageSize = 10
 
-private func updateLargePage(by delta: Int) {
+private func updatePage(key: String, pageSize: Int, by delta: Int) {
   guard let defaults = UserDefaults(suiteName: widgetGroup) else { return }
-  let currentPage = max(0, defaults.integer(forKey: largePageKey))
-  let pageCount = max(1, Int(ceil(Double(currentSnapshotItemCount(defaults)) / Double(largePageSize))))
+  let currentPage = max(0, defaults.integer(forKey: key))
+  let pageCount = max(1, Int(ceil(Double(currentSnapshotItemCount(defaults)) / Double(pageSize))))
   let clampedCurrentPage = min(currentPage, pageCount - 1)
-  defaults.set(min(max(0, clampedCurrentPage + delta), pageCount - 1), forKey: largePageKey)
+  defaults.set(min(max(0, clampedCurrentPage + delta), pageCount - 1), forKey: key)
   WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
 }
 
@@ -31,7 +33,7 @@ struct FluxNewsPreviousPageIntent: AppIntent {
   static var title: LocalizedStringResource = "Previous headlines"
 
   func perform() async throws -> some IntentResult {
-    updateLargePage(by: -1)
+    updatePage(key: largePageKey, pageSize: largePageSize, by: -1)
     return .result()
   }
 }
@@ -40,7 +42,25 @@ struct FluxNewsNextPageIntent: AppIntent {
   static var title: LocalizedStringResource = "Next headlines"
 
   func perform() async throws -> some IntentResult {
-    updateLargePage(by: 1)
+    updatePage(key: largePageKey, pageSize: largePageSize, by: 1)
+    return .result()
+  }
+}
+
+struct FluxNewsPreviousExtraLargePageIntent: AppIntent {
+  static var title: LocalizedStringResource = "Previous headlines"
+
+  func perform() async throws -> some IntentResult {
+    updatePage(key: extraLargePageKey, pageSize: extraLargePageSize, by: -1)
+    return .result()
+  }
+}
+
+struct FluxNewsNextExtraLargePageIntent: AppIntent {
+  static var title: LocalizedStringResource = "Next headlines"
+
+  func perform() async throws -> some IntentResult {
+    updatePage(key: extraLargePageKey, pageSize: extraLargePageSize, by: 1)
     return .result()
   }
 }
@@ -131,33 +151,96 @@ struct FluxNewsHeadlinesWidgetView: View {
   let entry: FluxNewsEntry
 
   var body: some View {
-    VStack(alignment: .leading, spacing: headerSpacing) {
-      headerRow
-        .layoutPriority(3)
+    Group {
+      if family == .systemSmall {
+        smallWidgetBody
+      } else {
+        VStack(alignment: .leading, spacing: headerSpacing) {
+          headerRow
+            .layoutPriority(3)
 
-      syncStatusRow
-        .layoutPriority(2)
+          syncStatusRow
+            .layoutPriority(2)
 
-      GeometryReader { geometry in
-        VStack(alignment: .leading, spacing: rowSpacing) {
-          ForEach(visibleItems) { item in
-            itemRow(item)
+          GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: rowSpacing) {
+              ForEach(visibleItems) { item in
+                itemRow(item)
+              }
+            }
+            .frame(width: geometry.size.width, alignment: .topLeading)
+            .clipped()
           }
+          .layoutPriority(0)
+          .clipped()
         }
-        .frame(width: geometry.size.width, alignment: .topLeading)
-        .clipped()
+        .padding(.horizontal, 12)
+        .padding(.top, topPadding)
+        .padding(.bottom, 8)
       }
-      .layoutPriority(0)
-      .clipped()
     }
-    .padding(.horizontal, 12)
-    .padding(.top, topPadding)
-    .padding(.bottom, 8)
     .containerBackground(for: .widget) {
       widgetBaseBackground
     }
     .foregroundStyle(widgetForeground)
     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+  }
+
+  private var smallWidgetBody: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(alignment: .center, spacing: 6) {
+        Image("FluxNewsWidgetLogo")
+          .resizable()
+          .frame(width: 18, height: 18)
+          .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+        Text(entry.snapshot.displayTitle ?? "All News")
+          .font(.caption)
+          .fontWeight(.semibold)
+          .lineLimit(2)
+          .minimumScaleFactor(0.72)
+
+        Spacer(minLength: 4)
+
+        Link(destination: URL(string: "fluxnews://widget/sync")!) {
+          Image(systemName: "arrow.clockwise")
+            .font(.caption2)
+            .frame(width: 22, height: 22)
+            .background(.blue, in: Circle())
+            .foregroundStyle(.white)
+        }
+        .accessibilityLabel(entry.snapshot.syncLabel ?? "Sync")
+      }
+      .layoutPriority(2)
+
+      Spacer(minLength: 0)
+
+      VStack(alignment: .leading, spacing: 0) {
+        Text("\(entry.snapshot.unreadCount)")
+          .font(.system(size: 34, weight: .bold, design: .rounded))
+          .monospacedDigit()
+          .lineLimit(1)
+          .minimumScaleFactor(0.75)
+
+        Text(entry.snapshot.countLabel ?? "unread")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.75)
+      }
+      .layoutPriority(1)
+
+      Spacer(minLength: 0)
+
+      Text(lastUpdatedText)
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .lineLimit(2)
+        .minimumScaleFactor(0.7)
+    }
+    .padding(.horizontal, 12)
+    .padding(.top, 12)
+    .padding(.bottom, 10)
   }
 
   private var headerRow: some View {
@@ -208,15 +291,8 @@ struct FluxNewsHeadlinesWidgetView: View {
 
       Spacer(minLength: 4)
 
-      if family == .systemLarge {
-        Button(intent: FluxNewsPreviousPageIntent()) {
-          Image(systemName: "chevron.up")
-            .font(.caption2)
-            .frame(width: 22, height: 20)
-        }
-        .buttonStyle(.plain)
-        .disabled(!hasPreviousPage)
-        .opacity(hasPreviousPage ? 1 : 0.35)
+      if isPagedFamily {
+        previousPageButton
 
         Text("\(effectiveLargePage + 1)")
           .font(.caption2)
@@ -225,16 +301,53 @@ struct FluxNewsHeadlinesWidgetView: View {
           .lineLimit(1)
           .frame(minWidth: 12)
 
-        Button(intent: FluxNewsNextPageIntent()) {
-          Image(systemName: "chevron.down")
-            .font(.caption2)
-            .frame(width: 22, height: 20)
-        }
-        .buttonStyle(.plain)
-        .disabled(!hasNextPage)
-        .opacity(hasNextPage ? 1 : 0.35)
+        nextPageButton
       }
     }
+  }
+
+  @ViewBuilder
+  private var previousPageButton: some View {
+    if family == .systemExtraLarge {
+      Button(intent: FluxNewsPreviousExtraLargePageIntent()) {
+        pageIcon("chevron.up")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasPreviousPage)
+      .opacity(hasPreviousPage ? 1 : 0.35)
+    } else {
+      Button(intent: FluxNewsPreviousPageIntent()) {
+        pageIcon("chevron.up")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasPreviousPage)
+      .opacity(hasPreviousPage ? 1 : 0.35)
+    }
+  }
+
+  @ViewBuilder
+  private var nextPageButton: some View {
+    if family == .systemExtraLarge {
+      Button(intent: FluxNewsNextExtraLargePageIntent()) {
+        pageIcon("chevron.down")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasNextPage)
+      .opacity(hasNextPage ? 1 : 0.35)
+    } else {
+      Button(intent: FluxNewsNextPageIntent()) {
+        pageIcon("chevron.down")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasNextPage)
+      .opacity(hasNextPage ? 1 : 0.35)
+    }
+  }
+
+  private func pageIcon(_ systemName: String) -> some View {
+    Image(systemName: systemName)
+      .font(.caption2)
+      .frame(width: 22, height: 20)
   }
 
   private func itemRow(_ item: FluxNewsWidgetItem) -> some View {
@@ -268,24 +381,27 @@ struct FluxNewsHeadlinesWidgetView: View {
   }
 
   private var rowSpacing: CGFloat {
-    family == .systemLarge ? 7 : 5
+    isPagedFamily ? 7 : 5
   }
 
   private var headerSpacing: CGFloat {
-    family == .systemLarge ? 6 : 5
+    isPagedFamily ? 6 : 5
   }
 
   private var topPadding: CGFloat {
-    family == .systemLarge ? 10 : 14
+    isPagedFamily ? 10 : 14
   }
 
   private var maxItems: Int {
-    family == .systemLarge ? largePageSize : 2
+    if family == .systemExtraLarge {
+      return extraLargePageSize
+    }
+    return family == .systemLarge ? largePageSize : 2
   }
 
   private var visibleItems: [FluxNewsWidgetItem] {
     let items = entry.snapshot.items
-    if family != .systemLarge {
+    if !isPagedFamily {
       return Array(items.prefix(maxItems))
     }
 
@@ -297,7 +413,7 @@ struct FluxNewsHeadlinesWidgetView: View {
 
   private var requestedLargePage: Int {
     guard let defaults = UserDefaults(suiteName: widgetGroup) else { return 0 }
-    return max(0, defaults.integer(forKey: largePageKey))
+    return max(0, defaults.integer(forKey: pageKey))
   }
 
   private var effectiveLargePage: Int {
@@ -311,6 +427,14 @@ struct FluxNewsHeadlinesWidgetView: View {
 
   private var hasNextPage: Bool {
     (effectiveLargePage + 1) * maxItems < entry.snapshot.items.count
+  }
+
+  private var isPagedFamily: Bool {
+    family == .systemLarge || family == .systemExtraLarge
+  }
+
+  private var pageKey: String {
+    family == .systemExtraLarge ? extraLargePageKey : largePageKey
   }
 
   private var lastUpdatedText: String {
@@ -402,7 +526,7 @@ struct FluxNewsHeadlinesWidget: Widget {
     }
     .configurationDisplayName("Flux News")
     .description("Unread count and latest headlines.")
-    .supportedFamilies([.systemMedium, .systemLarge])
+    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
     .contentMarginsDisabled()
   }
 }
