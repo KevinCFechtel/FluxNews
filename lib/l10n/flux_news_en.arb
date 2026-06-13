@@ -240,5 +240,9 @@
     "widgetLastSync": "Last sync",
     "widgetNever": "never",
     "widgetSync": "Sync",
+    "widgetFilterCategory": "Show a category in widgets",
+    "widgetFilterFeed": "Show a feed in widgets",
+    "widgetFilterCategorySelection": "Select category for widgets",
+    "widgetFilterFeedSelection": "Select feed for widgets",
     "widgetBlurredBackground": "Translucent widget background"
 }

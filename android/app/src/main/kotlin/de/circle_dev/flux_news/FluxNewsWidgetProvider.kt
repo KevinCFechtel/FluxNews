@@ -8,6 +8,8 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
+import android.util.SizeF
 import android.util.Base64
 import android.view.View
 import android.widget.RemoteViews
@@ -26,13 +28,85 @@ class FluxNewsWidgetProvider : AppWidgetProvider() {
 
   override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
     for (appWidgetId in appWidgetIds) {
-      appWidgetManager.updateAppWidget(appWidgetId, buildViews(context, appWidgetId))
+      updateWidget(context, appWidgetManager, appWidgetId)
+    }
+  }
+
+  override fun onAppWidgetOptionsChanged(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int,
+    newOptions: android.os.Bundle,
+  ) {
+    updateWidget(context, appWidgetManager, appWidgetId, newOptions)
+  }
+
+  private fun updateWidget(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int,
+    optionsOverride: android.os.Bundle? = null,
+  ) {
+    val layoutType = widgetLayoutType(appWidgetManager, appWidgetId, optionsOverride)
+    val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      buildResponsiveViews(context, appWidgetId)
+    } else {
+      buildViews(context, appWidgetManager, appWidgetId, optionsOverride)
+    }
+    appWidgetManager.updateAppWidget(appWidgetId, views)
+    if (layoutType == WidgetLayoutType.LIST || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_list)
     }
   }
 
-  private fun buildViews(context: Context, appWidgetId: Int): RemoteViews {
-    val views = RemoteViews(context.packageName, R.layout.flux_news_widget)
+  private fun buildResponsiveViews(context: Context, appWidgetId: Int): RemoteViews {
+    val viewsBySize = mapOf(
+      SizeF(110f, 40f) to buildViewsForLayout(context, appWidgetId, WidgetLayoutType.ULTRA_COMPACT),
+      SizeF(180f, 40f) to buildViewsForLayout(context, appWidgetId, WidgetLayoutType.SHORT_MEDIUM),
+      SizeF(320f, 40f) to buildViewsForLayout(context, appWidgetId, WidgetLayoutType.SHORT_WIDE),
+      SizeF(110f, 110f) to buildViewsForLayout(context, appWidgetId, WidgetLayoutType.COMPACT),
+      SizeF(250f, 110f) to buildViewsForLayout(context, appWidgetId, WidgetLayoutType.LIST),
+    )
+    return RemoteViews(viewsBySize)
+  }
+
+  private fun buildViews(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int,
+    optionsOverride: android.os.Bundle? = null,
+  ): RemoteViews {
+    val layoutType = widgetLayoutType(appWidgetManager, appWidgetId, optionsOverride)
+    return buildViewsForLayout(context, appWidgetId, layoutType)
+  }
+
+  private fun buildViewsForLayout(context: Context, appWidgetId: Int, layoutType: WidgetLayoutType): RemoteViews {
+    val layout = when (layoutType) {
+      WidgetLayoutType.ULTRA_COMPACT -> R.layout.flux_news_widget_tiny
+      WidgetLayoutType.SHORT_MEDIUM -> R.layout.flux_news_widget_short_medium
+      WidgetLayoutType.SHORT_WIDE -> R.layout.flux_news_widget_short_wide
+      WidgetLayoutType.COMPACT -> R.layout.flux_news_widget_small
+      WidgetLayoutType.LIST -> R.layout.flux_news_widget
+    }
+    val views = RemoteViews(context.packageName, layout)
+    bindHeaderViews(context, views)
+    if (layoutType != WidgetLayoutType.LIST) return views
+
+    val listIntent = Intent(context, FluxNewsWidgetService::class.java).apply {
+      putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+      data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
+    }
+    views.setRemoteAdapter(R.id.widget_list, listIntent)
+    views.setEmptyView(R.id.widget_list, R.id.widget_empty)
+    views.setPendingIntentTemplate(
+      R.id.widget_list,
+      pendingIntentTemplate(context),
+    )
+
+    return views
+  }
+
+  private fun bindHeaderViews(context: Context, views: RemoteViews) {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val snapshot = JSONObject(prefs.getString(KEY_SNAPSHOT, "{}") ?: "{}")
     val count = snapshot.optInt("unreadCount", 0)
@@ -57,19 +131,32 @@ class FluxNewsWidgetProvider : AppWidgetProvider() {
     )
     views.setContentDescription(R.id.widget_sync_button, syncLabel)
     views.setOnClickPendingIntent(R.id.widget_sync_button, pendingIntent(context, "fluxnews://widget/sync", 9000))
+  }
 
-    val listIntent = Intent(context, FluxNewsWidgetService::class.java).apply {
-      putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-      data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
+  private fun widgetLayoutType(
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int,
+    optionsOverride: android.os.Bundle? = null,
+  ): WidgetLayoutType {
+    val options = optionsOverride ?: appWidgetManager.getAppWidgetOptions(appWidgetId)
+    val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+    val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+    val shortRowHeight = minHeight in 1 until 150
+    return when {
+      shortRowHeight && minWidth >= 320 -> WidgetLayoutType.SHORT_WIDE
+      shortRowHeight && minWidth >= 180 -> WidgetLayoutType.SHORT_MEDIUM
+      minHeight in 1 until 90 -> WidgetLayoutType.ULTRA_COMPACT
+      minWidth in 1 until 220 -> WidgetLayoutType.COMPACT
+      else -> WidgetLayoutType.LIST
     }
-    views.setRemoteAdapter(R.id.widget_list, listIntent)
-    views.setEmptyView(R.id.widget_list, R.id.widget_empty)
-    views.setPendingIntentTemplate(
-      R.id.widget_list,
-      pendingIntentTemplate(context),
-    )
+  }
 
-    return views
+  private enum class WidgetLayoutType {
+    ULTRA_COMPACT,
+    SHORT_MEDIUM,
+    SHORT_WIDE,
+    COMPACT,
+    LIST,
   }
 
   private fun pendingIntent(context: Context, uri: String, requestCode: Int): PendingIntent {

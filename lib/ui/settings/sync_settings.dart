@@ -314,7 +314,8 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                           key: FluxNewsState
                               .secureStorageBackgroundSyncIntervalMinutesKey,
                           value: interval.toString());
-                      await configureFluxNewsBackgroundSync(appState);
+                      await configureFluxNewsBackgroundSync(appState,
+                          reason: 'settings_changed');
                       appState.refreshView();
                     },
                   ),

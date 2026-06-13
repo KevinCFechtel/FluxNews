@@ -68,13 +68,21 @@ Future<void> initializeFluxNewsBackgroundSync() async {
   await Workmanager().initialize(fluxNewsBackgroundCallbackDispatcher);
 }
 
-Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
+Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState,
+    {String reason = 'unspecified'}) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
+  logThis(
+      'backgroundSync',
+      'Configuring background sync: reason=$reason '
+          'storedInterval=${appState.backgroundSyncIntervalMinutes}m '
+          'platform=${Platform.operatingSystem}',
+      LogLevel.INFO);
   var storedInterval = appState.backgroundSyncIntervalMinutes;
   if (storedInterval == 0) {
     logThis(
         'backgroundSync',
-        'Cancelling background sync because interval is disabled',
+        'Cancelling background sync because interval is disabled: '
+            'reason=$reason',
         LogLevel.INFO);
     await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
     if (Platform.isIOS) {
@@ -110,6 +118,7 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
       'backgroundSync',
       'Registering periodic background sync: interval=${interval}m '
           'storedInterval=${storedInterval}m '
+          'reason=$reason '
           'platform=${Platform.operatingSystem}',
       LogLevel.INFO);
   await Workmanager().registerPeriodicTask(
@@ -258,12 +267,17 @@ Future<void> runFluxNewsBackgroundSync() async {
         LogLevel.INFO);
     await markNotFetchedNewsAsRead(newNews, appState);
 
-    final categories =
-        await fetchCategoryInformation(appState).onError((error, stackTrace) {
-      logThis('backgroundSync', 'Fetching categories failed: $error',
+    Categories categories;
+    try {
+      categories = await fetchCategoryInformation(appState);
+    } catch (error, stackTrace) {
+      logThis(
+          'backgroundSync',
+          'Fetching categories failed; aborting background sync before local feed/category cleanup: '
+              '$error\n$stackTrace',
           LogLevel.ERROR);
-      return Categories(categories: []);
-    });
+      return;
+    }
     logThis(
         'backgroundSync',
         'Fetched categories: count=${categories.categories.length}',

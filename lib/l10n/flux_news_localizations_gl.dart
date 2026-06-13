@@ -793,5 +793,17 @@ class AppLocalizationsGl extends AppLocalizations {
   String get widgetSync => 'Sincronizar';
 
   @override
+  String get widgetFilterCategory => 'Show a category in widgets';
+
+  @override
+  String get widgetFilterFeed => 'Show a feed in widgets';
+
+  @override
+  String get widgetFilterCategorySelection => 'Select category for widgets';
+
+  @override
+  String get widgetFilterFeedSelection => 'Select feed for widgets';
+
+  @override
   String get widgetBlurredBackground => 'Fondo translúcido do widget';
 }

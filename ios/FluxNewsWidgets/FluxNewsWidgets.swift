@@ -5,17 +5,26 @@ import WidgetKit
 
 private let widgetGroup = "group.dev.kevincfechtel.fluxNews"
 private let largePageKey = "largePage"
+private let extraLargePageKey = "extraLargePage"
 private let snapshotKey = "snapshot"
-private let widgetKind = "FluxNewsHeadlinesWidget"
-private let largePageSize = 7
+private let statusSnapshotKey = "statusSnapshot"
+private let headlinesWidgetKind = "FluxNewsHeadlinesWidget"
+private let statusWidgetKind = "FluxNewsCompactStatusWidget"
+private let iPhoneLargePageSize = 7
+private let iPadLargePageSize = 6
+private let extraLargePageSize = 12
 
-private func updateLargePage(by delta: Int) {
+private func largePageSizeForCurrentDevice() -> Int {
+  UIDevice.current.userInterfaceIdiom == .pad ? iPadLargePageSize : iPhoneLargePageSize
+}
+
+private func updatePage(key: String, pageSize: Int, by delta: Int) {
   guard let defaults = UserDefaults(suiteName: widgetGroup) else { return }
-  let currentPage = max(0, defaults.integer(forKey: largePageKey))
-  let pageCount = max(1, Int(ceil(Double(currentSnapshotItemCount(defaults)) / Double(largePageSize))))
+  let currentPage = max(0, defaults.integer(forKey: key))
+  let pageCount = max(1, Int(ceil(Double(currentSnapshotItemCount(defaults)) / Double(pageSize))))
   let clampedCurrentPage = min(currentPage, pageCount - 1)
-  defaults.set(min(max(0, clampedCurrentPage + delta), pageCount - 1), forKey: largePageKey)
-  WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+  defaults.set(min(max(0, clampedCurrentPage + delta), pageCount - 1), forKey: key)
+  WidgetCenter.shared.reloadTimelines(ofKind: headlinesWidgetKind)
 }
 
 private func currentSnapshotItemCount(_ defaults: UserDefaults) -> Int {
@@ -31,7 +40,7 @@ struct FluxNewsPreviousPageIntent: AppIntent {
   static var title: LocalizedStringResource = "Previous headlines"
 
   func perform() async throws -> some IntentResult {
-    updateLargePage(by: -1)
+    updatePage(key: largePageKey, pageSize: largePageSizeForCurrentDevice(), by: -1)
     return .result()
   }
 }
@@ -40,7 +49,25 @@ struct FluxNewsNextPageIntent: AppIntent {
   static var title: LocalizedStringResource = "Next headlines"
 
   func perform() async throws -> some IntentResult {
-    updateLargePage(by: 1)
+    updatePage(key: largePageKey, pageSize: largePageSizeForCurrentDevice(), by: 1)
+    return .result()
+  }
+}
+
+struct FluxNewsPreviousExtraLargePageIntent: AppIntent {
+  static var title: LocalizedStringResource = "Previous headlines"
+
+  func perform() async throws -> some IntentResult {
+    updatePage(key: extraLargePageKey, pageSize: extraLargePageSize, by: -1)
+    return .result()
+  }
+}
+
+struct FluxNewsNextExtraLargePageIntent: AppIntent {
+  static var title: LocalizedStringResource = "Next headlines"
+
+  func perform() async throws -> some IntentResult {
+    updatePage(key: extraLargePageKey, pageSize: extraLargePageSize, by: 1)
     return .result()
   }
 }
@@ -68,6 +95,42 @@ struct FluxNewsWidgetSnapshot: Decodable {
   let translucentBackground: Bool?
   let lastUpdated: String
   let items: [FluxNewsWidgetItem]
+
+  static var fallback: FluxNewsWidgetSnapshot {
+    FluxNewsWidgetSnapshot(
+      displayTitle: "All News",
+      unreadCount: 0,
+      countLabel: "unread",
+      lastSyncLabel: "Last sync",
+      neverLabel: "never",
+      syncLabel: "Sync",
+      translucentBackground: nil,
+      lastUpdated: "",
+      items: []
+    )
+  }
+}
+
+struct FluxNewsStatusSnapshot: Decodable {
+  let displayTitle: String?
+  let unreadCount: Int
+  let countLabel: String?
+  let lastSyncLabel: String?
+  let neverLabel: String?
+  let syncLabel: String?
+  let lastUpdated: String
+
+  static var fallback: FluxNewsStatusSnapshot {
+    FluxNewsStatusSnapshot(
+      displayTitle: "All News",
+      unreadCount: 0,
+      countLabel: "unread",
+      lastSyncLabel: "Last sync",
+      neverLabel: "never",
+      syncLabel: "Sync",
+      lastUpdated: ""
+    )
+  }
 }
 
 struct FluxNewsEntry: TimelineEntry {
@@ -75,53 +138,66 @@ struct FluxNewsEntry: TimelineEntry {
   let snapshot: FluxNewsWidgetSnapshot
 }
 
+struct FluxNewsStatusEntry: TimelineEntry {
+  let date: Date
+  let snapshot: FluxNewsStatusSnapshot
+}
+
+private func loadFluxNewsSnapshot() -> FluxNewsWidgetSnapshot {
+  guard let defaults = UserDefaults(suiteName: widgetGroup),
+        let json = defaults.string(forKey: snapshotKey),
+        let data = json.data(using: .utf8),
+        let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
+    return .fallback
+  }
+  return snapshot
+}
+
+private func loadFluxNewsStatusSnapshot() -> FluxNewsStatusSnapshot {
+  guard let defaults = UserDefaults(suiteName: widgetGroup),
+        let json = defaults.string(forKey: statusSnapshotKey),
+        let data = json.data(using: .utf8),
+        let snapshot = try? JSONDecoder().decode(FluxNewsStatusSnapshot.self, from: data) else {
+    return .fallback
+  }
+  return snapshot
+}
+
+private func nextWidgetRefreshDate() -> Date {
+  Calendar.current.date(
+    byAdding: .minute,
+    value: 15,
+    to: Date()
+  ) ?? Date().addingTimeInterval(15 * 60)
+}
+
 struct FluxNewsProvider: TimelineProvider {
   func placeholder(in context: Context) -> FluxNewsEntry {
-    FluxNewsEntry(date: Date(), snapshot: FluxNewsWidgetSnapshot(
-      displayTitle: nil,
-      unreadCount: 0,
-      countLabel: nil,
-      lastSyncLabel: nil,
-      neverLabel: nil,
-      syncLabel: nil,
-      translucentBackground: nil,
-      lastUpdated: "",
-      items: []
-    ))
+    FluxNewsEntry(date: Date(), snapshot: .fallback)
   }
 
   func getSnapshot(in context: Context, completion: @escaping (FluxNewsEntry) -> Void) {
-    completion(FluxNewsEntry(date: Date(), snapshot: loadSnapshot()))
+    completion(FluxNewsEntry(date: Date(), snapshot: loadFluxNewsSnapshot()))
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<FluxNewsEntry>) -> Void) {
-    let entry = FluxNewsEntry(date: Date(), snapshot: loadSnapshot())
-    let nextRefresh = Calendar.current.date(
-      byAdding: .minute,
-      value: 15,
-      to: Date()
-    ) ?? Date().addingTimeInterval(15 * 60)
-    completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+    let entry = FluxNewsEntry(date: Date(), snapshot: loadFluxNewsSnapshot())
+    completion(Timeline(entries: [entry], policy: .after(nextWidgetRefreshDate())))
+  }
+}
+
+struct FluxNewsStatusProvider: TimelineProvider {
+  func placeholder(in context: Context) -> FluxNewsStatusEntry {
+    FluxNewsStatusEntry(date: Date(), snapshot: .fallback)
   }
 
-  private func loadSnapshot() -> FluxNewsWidgetSnapshot {
-    guard let defaults = UserDefaults(suiteName: widgetGroup),
-          let json = defaults.string(forKey: snapshotKey),
-          let data = json.data(using: .utf8),
-          let snapshot = try? JSONDecoder().decode(FluxNewsWidgetSnapshot.self, from: data) else {
-      return FluxNewsWidgetSnapshot(
-        displayTitle: nil,
-        unreadCount: 0,
-        countLabel: nil,
-        lastSyncLabel: nil,
-        neverLabel: nil,
-        syncLabel: nil,
-        translucentBackground: nil,
-        lastUpdated: "",
-        items: []
-      )
-    }
-    return snapshot
+  func getSnapshot(in context: Context, completion: @escaping (FluxNewsStatusEntry) -> Void) {
+    completion(FluxNewsStatusEntry(date: Date(), snapshot: loadFluxNewsStatusSnapshot()))
+  }
+
+  func getTimeline(in context: Context, completion: @escaping (Timeline<FluxNewsStatusEntry>) -> Void) {
+    let entry = FluxNewsStatusEntry(date: Date(), snapshot: loadFluxNewsStatusSnapshot())
+    completion(Timeline(entries: [entry], policy: .after(nextWidgetRefreshDate())))
   }
 }
 
@@ -131,28 +207,25 @@ struct FluxNewsHeadlinesWidgetView: View {
   let entry: FluxNewsEntry
 
   var body: some View {
-    VStack(alignment: .leading, spacing: headerSpacing) {
-      headerRow
-        .layoutPriority(3)
+    Group {
+      VStack(alignment: .leading, spacing: headerSpacing) {
+        headerRow
+          .layoutPriority(3)
 
-      syncStatusRow
-        .layoutPriority(2)
+        syncStatusRow
+          .layoutPriority(2)
 
-      GeometryReader { geometry in
-        VStack(alignment: .leading, spacing: rowSpacing) {
-          ForEach(visibleItems) { item in
-            itemRow(item)
-          }
+        GeometryReader { geometry in
+          itemListView(width: geometry.size.width)
+          .clipped()
         }
-        .frame(width: geometry.size.width, alignment: .topLeading)
+        .layoutPriority(0)
         .clipped()
       }
-      .layoutPriority(0)
-      .clipped()
+      .padding(.horizontal, 12)
+      .padding(.top, topPadding)
+      .padding(.bottom, 8)
     }
-    .padding(.horizontal, 12)
-    .padding(.top, topPadding)
-    .padding(.bottom, 8)
     .containerBackground(for: .widget) {
       widgetBaseBackground
     }
@@ -208,15 +281,8 @@ struct FluxNewsHeadlinesWidgetView: View {
 
       Spacer(minLength: 4)
 
-      if family == .systemLarge {
-        Button(intent: FluxNewsPreviousPageIntent()) {
-          Image(systemName: "chevron.up")
-            .font(.caption2)
-            .frame(width: 22, height: 20)
-        }
-        .buttonStyle(.plain)
-        .disabled(!hasPreviousPage)
-        .opacity(hasPreviousPage ? 1 : 0.35)
+      if isPagedFamily {
+        previousPageButton
 
         Text("\(effectiveLargePage + 1)")
           .font(.caption2)
@@ -225,16 +291,53 @@ struct FluxNewsHeadlinesWidgetView: View {
           .lineLimit(1)
           .frame(minWidth: 12)
 
-        Button(intent: FluxNewsNextPageIntent()) {
-          Image(systemName: "chevron.down")
-            .font(.caption2)
-            .frame(width: 22, height: 20)
-        }
-        .buttonStyle(.plain)
-        .disabled(!hasNextPage)
-        .opacity(hasNextPage ? 1 : 0.35)
+        nextPageButton
       }
     }
+  }
+
+  @ViewBuilder
+  private var previousPageButton: some View {
+    if family == .systemExtraLarge {
+      Button(intent: FluxNewsPreviousExtraLargePageIntent()) {
+        pageIcon("chevron.up")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasPreviousPage)
+      .opacity(hasPreviousPage ? 1 : 0.35)
+    } else {
+      Button(intent: FluxNewsPreviousPageIntent()) {
+        pageIcon("chevron.up")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasPreviousPage)
+      .opacity(hasPreviousPage ? 1 : 0.35)
+    }
+  }
+
+  @ViewBuilder
+  private var nextPageButton: some View {
+    if family == .systemExtraLarge {
+      Button(intent: FluxNewsNextExtraLargePageIntent()) {
+        pageIcon("chevron.down")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasNextPage)
+      .opacity(hasNextPage ? 1 : 0.35)
+    } else {
+      Button(intent: FluxNewsNextPageIntent()) {
+        pageIcon("chevron.down")
+      }
+      .buttonStyle(.plain)
+      .disabled(!hasNextPage)
+      .opacity(hasNextPage ? 1 : 0.35)
+    }
+  }
+
+  private func pageIcon(_ systemName: String) -> some View {
+    Image(systemName: systemName)
+      .font(.caption2)
+      .frame(width: 22, height: 20)
   }
 
   private func itemRow(_ item: FluxNewsWidgetItem) -> some View {
@@ -257,6 +360,31 @@ struct FluxNewsHeadlinesWidgetView: View {
     }
   }
 
+  @ViewBuilder
+  private func itemListView(width: CGFloat) -> some View {
+    if family == .systemExtraLarge {
+      HStack(alignment: .top, spacing: 12) {
+        itemColumn(Array(visibleItems(for: maxItems()).prefix(extraLargeColumnSize)))
+          .frame(width: max(0, (width - 12) / 2), alignment: .topLeading)
+
+        itemColumn(Array(visibleItems(for: maxItems()).dropFirst(extraLargeColumnSize)))
+          .frame(width: max(0, (width - 12) / 2), alignment: .topLeading)
+      }
+      .frame(width: width, alignment: .topLeading)
+    } else {
+      itemColumn(visibleItems(for: maxItems()))
+        .frame(width: width, alignment: .topLeading)
+    }
+  }
+
+  private func itemColumn(_ items: [FluxNewsWidgetItem]) -> some View {
+    VStack(alignment: .leading, spacing: rowSpacing) {
+      ForEach(items) { item in
+        itemRow(item)
+      }
+    }
+  }
+
   private var widgetBaseBackground: Color {
     colorScheme == .dark
       ? Color(red: 0.09, green: 0.15, blue: 0.18)
@@ -268,40 +396,54 @@ struct FluxNewsHeadlinesWidgetView: View {
   }
 
   private var rowSpacing: CGFloat {
-    family == .systemLarge ? 7 : 5
+    isPagedFamily ? 7 : 5
   }
 
   private var headerSpacing: CGFloat {
-    family == .systemLarge ? 6 : 5
+    isPagedFamily ? 6 : 5
   }
 
   private var topPadding: CGFloat {
-    family == .systemLarge ? 10 : 14
+    isPagedFamily ? 10 : 14
   }
 
-  private var maxItems: Int {
-    family == .systemLarge ? largePageSize : 2
+  private func maxItems() -> Int {
+    if family == .systemExtraLarge {
+      return extraLargePageSize
+    }
+    if family == .systemLarge {
+      return largePageSizeForCurrentDevice()
+    }
+    return 2
   }
 
-  private var visibleItems: [FluxNewsWidgetItem] {
+  private var extraLargeColumnSize: Int {
+    extraLargePageSize / 2
+  }
+
+  private func visibleItems(for pageSize: Int) -> [FluxNewsWidgetItem] {
     let items = entry.snapshot.items
-    if family != .systemLarge {
-      return Array(items.prefix(maxItems))
+    if !isPagedFamily {
+      return Array(items.prefix(pageSize))
     }
 
-    let start = effectiveLargePage * maxItems
+    let start = effectiveLargePage(for: pageSize) * pageSize
     guard start < items.count else { return [] }
-    let end = min(start + maxItems, items.count)
+    let end = min(start + pageSize, items.count)
     return Array(items[start..<end])
   }
 
   private var requestedLargePage: Int {
     guard let defaults = UserDefaults(suiteName: widgetGroup) else { return 0 }
-    return max(0, defaults.integer(forKey: largePageKey))
+    return max(0, defaults.integer(forKey: pageKey))
   }
 
   private var effectiveLargePage: Int {
-    let pageCount = max(1, Int(ceil(Double(entry.snapshot.items.count) / Double(maxItems))))
+    effectiveLargePage(for: maxItems())
+  }
+
+  private func effectiveLargePage(for pageSize: Int) -> Int {
+    let pageCount = max(1, Int(ceil(Double(entry.snapshot.items.count) / Double(pageSize))))
     return min(requestedLargePage, pageCount - 1)
   }
 
@@ -310,7 +452,15 @@ struct FluxNewsHeadlinesWidgetView: View {
   }
 
   private var hasNextPage: Bool {
-    (effectiveLargePage + 1) * maxItems < entry.snapshot.items.count
+    (effectiveLargePage + 1) * maxItems() < entry.snapshot.items.count
+  }
+
+  private var isPagedFamily: Bool {
+    family == .systemLarge || family == .systemExtraLarge
+  }
+
+  private var pageKey: String {
+    family == .systemExtraLarge ? extraLargePageKey : largePageKey
   }
 
   private var lastUpdatedText: String {
@@ -324,7 +474,7 @@ struct FluxNewsHeadlinesWidgetView: View {
     return "\(label): \(Self.localizedDateTimeFormatter.string(from: date))"
   }
 
-  private static func date(from value: String) -> Date? {
+  static func date(from value: String) -> Date? {
     for formatter in isoFormatters {
       if let date = formatter.date(from: value) {
         return date
@@ -342,7 +492,7 @@ struct FluxNewsHeadlinesWidgetView: View {
     }
   }()
 
-  private static let localizedDateTimeFormatter: DateFormatter = {
+  static let localizedDateTimeFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.locale = Locale.current
     formatter.dateStyle = .medium
@@ -393,8 +543,104 @@ struct FeedIconView: View {
   }
 }
 
+struct FluxNewsStatusWidgetView: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let entry: FluxNewsStatusEntry
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      VStack(alignment: .leading, spacing: 7) {
+        HStack(alignment: .center, spacing: 6) {
+          Image("FluxNewsWidgetLogo")
+            .resizable()
+            .frame(width: 16, height: 16)
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+          Spacer(minLength: 0)
+        }
+
+        Text(entry.snapshot.displayTitle ?? "All News")
+          .font(.subheadline)
+          .fontWeight(.semibold)
+          .foregroundColor(widgetForeground)
+          .lineLimit(2)
+          .minimumScaleFactor(0.62)
+
+        VStack(alignment: .leading, spacing: 1) {
+          Text("\(entry.snapshot.unreadCount)")
+            .font(.system(size: 32, weight: .bold, design: .rounded))
+            .foregroundColor(widgetForeground)
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+
+          Text(entry.snapshot.countLabel ?? "unread")
+            .font(.caption)
+            .foregroundColor(widgetSecondaryForeground)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        }
+
+        Spacer(minLength: 0)
+
+        Text(lastUpdatedText)
+          .font(.caption2)
+          .foregroundColor(widgetSecondaryForeground)
+          .lineLimit(2)
+          .minimumScaleFactor(0.65)
+      }
+
+      Image(systemName: "arrow.clockwise")
+        .font(.caption2)
+        .symbolRenderingMode(.monochrome)
+        .frame(width: 20, height: 20)
+        .background(.blue, in: Circle())
+        .foregroundColor(.white)
+        .frame(maxWidth: .infinity, alignment: .topTrailing)
+        .accessibilityLabel(entry.snapshot.syncLabel ?? "Sync")
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .padding(.horizontal, 10)
+    .padding(.top, 10)
+    .padding(.bottom, 8)
+    .containerBackground(for: .widget) {
+      widgetBaseBackground
+    }
+    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    .unredacted()
+    .widgetURL(URL(string: "fluxnews://widget/sync"))
+  }
+
+  private var widgetBaseBackground: Color {
+    colorScheme == .dark
+      ? Color(red: 0.09, green: 0.15, blue: 0.18)
+      : Color(red: 0.95, green: 0.97, blue: 0.98)
+  }
+
+  private var widgetForeground: Color {
+    colorScheme == .dark ? .white : Color(red: 0.08, green: 0.11, blue: 0.13)
+  }
+
+  private var widgetSecondaryForeground: Color {
+    colorScheme == .dark
+      ? Color(red: 0.78, green: 0.84, blue: 0.86)
+      : Color(red: 0.33, green: 0.42, blue: 0.46)
+  }
+
+  private var lastUpdatedText: String {
+    let label = entry.snapshot.lastSyncLabel ?? "Last sync"
+    guard !entry.snapshot.lastUpdated.isEmpty else {
+      return "\(label): \(entry.snapshot.neverLabel ?? "never")"
+    }
+    guard let date = FluxNewsHeadlinesWidgetView.date(from: entry.snapshot.lastUpdated) else {
+      return "\(label): \(entry.snapshot.lastUpdated)"
+    }
+    return "\(label): \(FluxNewsHeadlinesWidgetView.localizedDateTimeFormatter.string(from: date))"
+  }
+}
+
 struct FluxNewsHeadlinesWidget: Widget {
-  let kind = widgetKind
+  let kind = headlinesWidgetKind
 
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: FluxNewsProvider()) { entry in
@@ -402,7 +648,21 @@ struct FluxNewsHeadlinesWidget: Widget {
     }
     .configurationDisplayName("Flux News")
     .description("Unread count and latest headlines.")
-    .supportedFamilies([.systemMedium, .systemLarge])
+    .supportedFamilies([.systemMedium, .systemLarge, .systemExtraLarge])
+    .contentMarginsDisabled()
+  }
+}
+
+struct FluxNewsStatusWidget: Widget {
+  let kind = statusWidgetKind
+
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: kind, provider: FluxNewsStatusProvider()) { entry in
+      FluxNewsStatusWidgetView(entry: entry)
+    }
+    .configurationDisplayName("Flux News Status")
+    .description("Unread count and latest sync status.")
+    .supportedFamilies([.systemSmall])
     .contentMarginsDisabled()
   }
 }
@@ -410,6 +670,7 @@ struct FluxNewsHeadlinesWidget: Widget {
 @main
 struct FluxNewsWidgetsBundle: WidgetBundle {
   var body: some Widget {
+    FluxNewsStatusWidget()
     FluxNewsHeadlinesWidget()
   }
 }

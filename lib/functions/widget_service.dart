@@ -22,12 +22,16 @@ class FluxNewsWidgetService {
       MethodChannel('dev.kevincfechtel.fluxnews/widgets');
   static const String _widgetGroup = 'group.dev.kevincfechtel.fluxNews';
   static const String _snapshotKey = 'snapshot';
+  static const String _statusSnapshotKey = 'statusSnapshot';
   static const String _iosLargePageKey = 'largePage';
+  static const String _iosExtraLargePageKey = 'extraLargePage';
   static const String _androidWidgetProvider =
       'de.circle_dev.flux_news.FluxNewsWidgetProvider';
-  static const String _iosWidgetKind = 'FluxNewsHeadlinesWidget';
+  static const String _iosHeadlinesWidgetKind = 'FluxNewsHeadlinesWidget';
+  static const String _iosStatusWidgetKind = 'FluxNewsCompactStatusWidget';
   static Map<String, dynamic>? _pendingWidgetAction;
   static bool _handlingWidgetAction = false;
+  static DateTime? _lastSnapshotUpdatedAt;
 
   static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -54,6 +58,15 @@ class FluxNewsWidgetService {
       'lastUpdated': lastUpdated,
       'items': news.map(_widgetItemFromNews).toList(),
     };
+    final statusPayload = <String, Object?>{
+      'displayTitle': displayTitle,
+      'unreadCount': count,
+      'countLabel': countLabel,
+      'lastSyncLabel': localizations.widgetLastSync,
+      'neverLabel': localizations.widgetNever,
+      'syncLabel': localizations.widgetSync,
+      'lastUpdated': lastUpdated,
+    };
 
     logThis(
         'WidgetService',
@@ -66,7 +79,53 @@ class FluxNewsWidgetService {
             'filterType=${appState.widgetFilterType} '
             'filterId=${appState.widgetFilterId}',
         LogLevel.INFO);
-    await _saveSnapshotAndReload(jsonEncode(payload));
+    await _saveSnapshotAndReload(
+      snapshot: jsonEncode(payload),
+      statusSnapshot: jsonEncode(statusPayload),
+    );
+    _lastSnapshotUpdatedAt = DateTime.now();
+  }
+
+  static Future<void> refreshSnapshotForForegroundOpen(
+    FluxNewsState appState, {
+    required String reason,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    if (appState.syncProcess) {
+      logThis(
+          'WidgetService',
+          'Foreground widget snapshot refresh skipped because sync is active: '
+              'reason=$reason',
+          LogLevel.INFO);
+      return;
+    }
+    if (appState.minifluxURL == null ||
+        appState.minifluxAPIKey == null ||
+        appState.errorOnMinifluxAuth) {
+      logThis(
+          'WidgetService',
+          'Foreground widget snapshot refresh skipped because app is not configured: '
+              'reason=$reason',
+          LogLevel.INFO);
+      return;
+    }
+
+    final lastUpdatedAt = _lastSnapshotUpdatedAt;
+    if (lastUpdatedAt != null &&
+        DateTime.now().difference(lastUpdatedAt) < const Duration(seconds: 10)) {
+      logThis(
+          'WidgetService',
+          'Foreground widget snapshot refresh skipped because snapshot was recently updated: '
+              'reason=$reason lastUpdatedAt=${lastUpdatedAt.toIso8601String()}',
+          LogLevel.INFO);
+      return;
+    }
+
+    logThis(
+        'WidgetService',
+        'Refreshing widget snapshot after foreground open: reason=$reason',
+        LogLevel.INFO);
+    await updateWidgetSnapshot(appState);
   }
 
   static AppLocalizations _widgetLocalizations() {
@@ -88,13 +147,13 @@ class FluxNewsWidgetService {
         appState.widgetFilterId != null) {
       final title = await _titleForWidgetFilter(
           appState, 'categories', 'categoryID', appState.widgetFilterId!);
-      return title ?? localizations.startupCategorieCategorie;
+      return title ?? localizations.widgetFilterCategory;
     }
     if (appState.widgetFilterType == FluxNewsState.widgetFilterFeedString &&
         appState.widgetFilterId != null) {
       final title = await _titleForWidgetFilter(
           appState, 'feeds', 'feedID', appState.widgetFilterId!);
-      return title ?? localizations.startupCategorieFeed;
+      return title ?? localizations.widgetFilterFeed;
     }
     return localizations.allNews;
   }
@@ -111,27 +170,47 @@ class FluxNewsWidgetService {
     return title == null || title.isEmpty ? null : title;
   }
 
-  static Future<void> _saveSnapshotAndReload(String snapshot) async {
+  static Future<void> _saveSnapshotAndReload({
+    required String snapshot,
+    required String statusSnapshot,
+  }) async {
     try {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(_widgetGroup);
         await HomeWidget.saveWidgetData<int>(_iosLargePageKey, 0);
+        await HomeWidget.saveWidgetData<int>(_iosExtraLargePageKey, 0);
       }
       final saveResult =
           await HomeWidget.saveWidgetData<String>(_snapshotKey, snapshot);
+      final statusSaveResult = Platform.isIOS
+          ? await HomeWidget.saveWidgetData<String>(
+              _statusSnapshotKey,
+              statusSnapshot,
+            )
+          : null;
       if (Platform.isIOS) {
-        await _channel.invokeMethod('saveSnapshot', {'snapshot': snapshot});
+        await _channel.invokeMethod('saveSnapshot', {
+          'snapshot': snapshot,
+          'statusSnapshot': statusSnapshot,
+        });
       }
       String? savedSnapshot;
       if (Platform.isIOS) {
         savedSnapshot = await HomeWidget.getWidgetData<String>(_snapshotKey);
       }
       final updateResult = await HomeWidget.updateWidget(
-        name: _iosWidgetKind,
-        iOSName: _iosWidgetKind,
+        name: _iosHeadlinesWidgetKind,
+        iOSName: _iosHeadlinesWidgetKind,
         androidName: 'FluxNewsWidgetProvider',
         qualifiedAndroidName: _androidWidgetProvider,
       );
+      Object? statusUpdateResult;
+      if (Platform.isIOS) {
+        statusUpdateResult = await HomeWidget.updateWidget(
+          name: _iosStatusWidgetKind,
+          iOSName: _iosStatusWidgetKind,
+        );
+      }
       bool nativeReloadRequested = false;
       try {
         await _channel.invokeMethod('reloadWidgets');
@@ -146,8 +225,11 @@ class FluxNewsWidgetService {
           'WidgetService',
           'Widget snapshot saved and reload requested: '
               'saveResult=$saveResult updateResult=$updateResult '
+              'statusSaveResult=$statusSaveResult '
+              'statusUpdateResult=$statusUpdateResult '
               'nativeReloadRequested=$nativeReloadRequested '
               'snapshotBytes=${snapshot.length} '
+              'statusSnapshotBytes=${statusSnapshot.length} '
               'iosReadbackBytes=${savedSnapshot?.length}',
           LogLevel.INFO);
     } on MissingPluginException {

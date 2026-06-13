@@ -26,11 +26,15 @@ private func setupFluxNewsWidgetChannel(binaryMessenger: FlutterBinaryMessenger)
         return
       }
       defaults.set(snapshot, forKey: "snapshot")
+      if let statusSnapshot = args["statusSnapshot"] as? String {
+        defaults.set(statusSnapshot, forKey: "statusSnapshot")
+      }
       defaults.synchronize()
       result(nil)
     case "reloadWidgets":
       if #available(iOS 14.0, *) {
         WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsCompactStatusWidget")
         WidgetCenter.shared.reloadAllTimelines()
       }
       result(nil)
