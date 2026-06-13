@@ -201,14 +201,13 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                     ),
                     RadioListTile<String>(
                       title: Text(
-                          AppLocalizations.of(context)!
-                              .startupCategorieCategorie,
+                          AppLocalizations.of(context)!.widgetFilterCategory,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: FluxNewsState.widgetFilterCategoryString,
                     ),
                     RadioListTile<String>(
                       title: Text(
-                          AppLocalizations.of(context)!.startupCategorieFeed,
+                          AppLocalizations.of(context)!.widgetFilterFeed,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: FluxNewsState.widgetFilterFeedString,
                     ),
@@ -221,8 +220,8 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                 const Divider(),
                 _DropdownRow<KeyValueRecordType>(
                   icon: Icons.feed,
-                  label: AppLocalizations.of(context)!
-                      .startupCategorieCategorieSelection,
+                  label:
+                      AppLocalizations.of(context)!.widgetFilterCategorySelection,
                   value: _selectedCategoryOption(appState)!,
                   items: _categoryOptions
                       .map((option) => DropdownMenuItem<KeyValueRecordType>(
@@ -242,8 +241,8 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                 const Divider(),
                 _DropdownRow<KeyValueRecordType>(
                   icon: Icons.feed,
-                  label: AppLocalizations.of(context)!
-                      .startupCategorieFeedSelection,
+                  label:
+                      AppLocalizations.of(context)!.widgetFilterFeedSelection,
                   value: _selectedFeedOption(appState)!,
                   items: _feedOptions
                       .map((option) => DropdownMenuItem<KeyValueRecordType>(

@@ -147,13 +147,13 @@ class FluxNewsWidgetService {
         appState.widgetFilterId != null) {
       final title = await _titleForWidgetFilter(
           appState, 'categories', 'categoryID', appState.widgetFilterId!);
-      return title ?? localizations.startupCategorieCategorie;
+      return title ?? localizations.widgetFilterCategory;
     }
     if (appState.widgetFilterType == FluxNewsState.widgetFilterFeedString &&
         appState.widgetFilterId != null) {
       final title = await _titleForWidgetFilter(
           appState, 'feeds', 'feedID', appState.widgetFilterId!);
-      return title ?? localizations.startupCategorieFeed;
+      return title ?? localizations.widgetFilterFeed;
     }
     return localizations.allNews;
   }

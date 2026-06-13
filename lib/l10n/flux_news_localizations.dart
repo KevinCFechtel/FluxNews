@@ -1550,6 +1550,30 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get widgetSync;
 
+  /// No description provided for @widgetFilterCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a category in widgets'**
+  String get widgetFilterCategory;
+
+  /// No description provided for @widgetFilterFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a feed in widgets'**
+  String get widgetFilterFeed;
+
+  /// No description provided for @widgetFilterCategorySelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select category for widgets'**
+  String get widgetFilterCategorySelection;
+
+  /// No description provided for @widgetFilterFeedSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select feed for widgets'**
+  String get widgetFilterFeedSelection;
+
   /// No description provided for @widgetBlurredBackground.
   ///
   /// In en, this message translates to:

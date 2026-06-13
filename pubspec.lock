@@ -378,10 +378,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_carplay
-      sha256: "20a5404e8135dcc458e09ee232ada9caf1e602b6e9790fc855e4922dd74cbce1"
+      sha256: fc8f2489afa4252e1cfa5199fa892c51aa3a9d9eb188a6cbed07d126eeb1fdfa
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.0"
+    version: "1.5.1"
   flutter_highlight:
     dependency: transitive
     description:
