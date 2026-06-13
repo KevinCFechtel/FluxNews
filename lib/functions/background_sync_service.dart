@@ -68,13 +68,21 @@ Future<void> initializeFluxNewsBackgroundSync() async {
   await Workmanager().initialize(fluxNewsBackgroundCallbackDispatcher);
 }
 
-Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
+Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState,
+    {String reason = 'unspecified'}) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
+  logThis(
+      'backgroundSync',
+      'Configuring background sync: reason=$reason '
+          'storedInterval=${appState.backgroundSyncIntervalMinutes}m '
+          'platform=${Platform.operatingSystem}',
+      LogLevel.INFO);
   var storedInterval = appState.backgroundSyncIntervalMinutes;
   if (storedInterval == 0) {
     logThis(
         'backgroundSync',
-        'Cancelling background sync because interval is disabled',
+        'Cancelling background sync because interval is disabled: '
+            'reason=$reason',
         LogLevel.INFO);
     await Workmanager().cancelByUniqueName(fluxNewsBackgroundSyncUniqueName);
     if (Platform.isIOS) {
@@ -110,6 +118,7 @@ Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState) async {
       'backgroundSync',
       'Registering periodic background sync: interval=${interval}m '
           'storedInterval=${storedInterval}m '
+          'reason=$reason '
           'platform=${Platform.operatingSystem}',
       LogLevel.INFO);
   await Workmanager().registerPeriodicTask(

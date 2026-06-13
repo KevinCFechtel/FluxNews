@@ -206,7 +206,12 @@ class FluxNewsBody extends StatelessWidget {
         appState.readConfig(context);
         appState.readThemeConfigValues(context);
       }
-      unawaited(configureFluxNewsBackgroundSync(appState));
+      logThis(
+          'FluxNewsBody',
+          'Re-registering background sync after app config load',
+          LogLevel.INFO);
+      unawaited(
+          configureFluxNewsBackgroundSync(appState, reason: 'app_config_load'));
       unawaited(runPendingForegroundAudioDownloads(appState));
 
       // set the startup categorie if configured
