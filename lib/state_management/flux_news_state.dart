@@ -38,7 +38,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '2.1.2';
+  static const String applicationVersion = '2.2.0';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       'https://github.com/KevinCFechtel/FluxNews';
@@ -112,6 +112,8 @@ class FluxNewsState extends ChangeNotifier {
       'audioDownloadRetentionDays';
   static const String secureStorageOpenAudioItemsInPlayerKey =
       'openAudioItemsInPlayer';
+  static const String secureStorageFeedSettingsOverridesKey =
+      'feedSettingsOverrides';
   static const String secureStorageSyncReadNewsAfterDaysKey =
       'syncReadNewsAfterDays';
   static const String secureStorageDebugModeKey = 'debugMode';

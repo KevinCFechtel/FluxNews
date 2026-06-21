@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,174 @@ import '../miniflux/miniflux_backend.dart';
 import '../models/news_model.dart';
 
 const int _sqliteInChunkSize = 500;
+
+const List<String> _feedSettingsOverrideFields = [
+  'manualTruncate',
+  'preferParagraph',
+  'preferAttachmentImage',
+  'manualAdaptLightModeToIcon',
+  'manualAdaptDarkModeToIcon',
+  'openMinifluxEntry',
+  'expandedWithFulltext',
+  'expandedFulltextLimit',
+];
+
+Map<String, dynamic> _decodeFeedSettingsOverrides(String? rawValue) {
+  if (rawValue == null || rawValue.isEmpty) {
+    return <String, dynamic>{};
+  }
+  try {
+    final decoded = jsonDecode(rawValue);
+    if (decoded is Map) {
+      return Map<String, dynamic>.from(decoded);
+    }
+  } catch (_) {
+    // Invalid legacy/corrupt values are treated as absent overrides.
+  }
+  return <String, dynamic>{};
+}
+
+int _overrideIntValue(Object? value, int fallback) {
+  if (value is int) return value;
+  if (value is bool) return value ? 1 : 0;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+Map<String, Object?> feedSettingsOverrideFromMap(Map<String, Object?> row) {
+  return {
+    for (final field in _feedSettingsOverrideFields)
+      field: _overrideIntValue(row[field], 0),
+  };
+}
+
+Future<Map<String, dynamic>> readFeedSettingsOverrides(
+    FluxNewsState appState) async {
+  final rawValue = await appState.storage
+      .read(key: FluxNewsState.secureStorageFeedSettingsOverridesKey);
+  return _decodeFeedSettingsOverrides(rawValue);
+}
+
+Future<void> writeFeedSettingsOverrides(
+    FluxNewsState appState, Map<String, dynamic> overrides) async {
+  await appState.storage.write(
+    key: FluxNewsState.secureStorageFeedSettingsOverridesKey,
+    value: jsonEncode(overrides),
+  );
+}
+
+Future<void> saveFeedSettingsOverride(
+    FluxNewsState appState, int feedID, Map<String, Object?> settings) async {
+  final overrides = await readFeedSettingsOverrides(appState);
+  overrides[feedID.toString()] = feedSettingsOverrideFromMap(settings);
+  await writeFeedSettingsOverrides(appState, overrides);
+}
+
+Future<void> saveCurrentFeedSettingsOverride(
+    FluxNewsState appState, int feedID) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return;
+
+  final rows = await appState.db!.rawQuery('''SELECT manualTruncate,
+                                                     preferParagraph,
+                                                     preferAttachmentImage,
+                                                     manualAdaptLightModeToIcon,
+                                                     manualAdaptDarkModeToIcon,
+                                                     openMinifluxEntry,
+                                                     expandedWithFulltext,
+                                                     expandedFulltextLimit
+                                                FROM feeds
+                                               WHERE feedID = ?''', [feedID]);
+  if (rows.isEmpty) return;
+  await saveFeedSettingsOverride(appState, feedID, rows.first);
+}
+
+Future<void> syncCurrentFeedSettingsOverridesFromDB(
+    FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return;
+
+  final rows = await appState.db!.rawQuery('''SELECT feedID,
+                                                     manualTruncate,
+                                                     preferParagraph,
+                                                     preferAttachmentImage,
+                                                     manualAdaptLightModeToIcon,
+                                                     manualAdaptDarkModeToIcon,
+                                                     openMinifluxEntry,
+                                                     expandedWithFulltext,
+                                                     expandedFulltextLimit
+                                                FROM feeds
+                                               ORDER BY feedID ASC''');
+  if (rows.isEmpty) return;
+
+  final overrides = await readFeedSettingsOverrides(appState);
+  for (final row in rows) {
+    final feedID = row['feedID'];
+    if (feedID is! int) continue;
+    overrides[feedID.toString()] = feedSettingsOverrideFromMap(row);
+  }
+  await writeFeedSettingsOverrides(appState, overrides);
+}
+
+Future<void> applyFeedSettingsOverridesToDB(FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return;
+
+  final overrides = await readFeedSettingsOverrides(appState);
+  if (overrides.isEmpty) return;
+
+  final existingRows =
+      await appState.db!.rawQuery('SELECT feedID FROM feeds ORDER BY feedID');
+  final existingFeedIDs = existingRows
+      .map((row) => row['feedID'])
+      .whereType<int>()
+      .map((id) => id.toString())
+      .toSet();
+  if (existingFeedIDs.isEmpty) return;
+
+  final batch = appState.db!.batch();
+  var updateCount = 0;
+  var changedOverrides = false;
+  final normalizedOverrides = Map<String, dynamic>.from(overrides);
+
+  for (final entry in overrides.entries) {
+    if (!existingFeedIDs.contains(entry.key)) {
+      normalizedOverrides.remove(entry.key);
+      changedOverrides = true;
+      continue;
+    }
+    if (entry.value is! Map) continue;
+    final settings = Map<String, dynamic>.from(entry.value as Map);
+    batch.rawUpdate('''UPDATE feeds SET manualTruncate = ?,
+                                        preferParagraph = ?,
+                                        preferAttachmentImage = ?,
+                                        manualAdaptLightModeToIcon = ?,
+                                        manualAdaptDarkModeToIcon = ?,
+                                        openMinifluxEntry = ?,
+                                        expandedWithFulltext = ?,
+                                        expandedFulltextLimit = ?
+                                  WHERE feedID = ?''', [
+      _overrideIntValue(settings['manualTruncate'], 0),
+      _overrideIntValue(settings['preferParagraph'], 0),
+      _overrideIntValue(settings['preferAttachmentImage'], 0),
+      _overrideIntValue(settings['manualAdaptLightModeToIcon'], 0),
+      _overrideIntValue(settings['manualAdaptDarkModeToIcon'], 0),
+      _overrideIntValue(settings['openMinifluxEntry'], 0),
+      _overrideIntValue(settings['expandedWithFulltext'], 0),
+      _overrideIntValue(settings['expandedFulltextLimit'], 0),
+      int.parse(entry.key),
+    ]);
+    updateCount++;
+  }
+
+  if (updateCount > 0) {
+    await batch.commit(noResult: true, continueOnError: true);
+  }
+  if (changedOverrides) {
+    await writeFeedSettingsOverrides(appState, normalizedOverrides);
+  }
+}
 
 String _buildChunkedNotInClause(
     String columnName, List<int> ids, List<Object?> parameters) {
@@ -1053,6 +1222,7 @@ Future<void> updateManualTruncateStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET manualTruncate = ? WHERE feedID = ?',
         [manualTruncate ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis(
@@ -1074,6 +1244,7 @@ Future<void> updatePreferParagraphStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET preferParagraph = ? WHERE feedID = ?',
         [preferParagraph ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis('updatePreferParagraphStatusOfFeedInDB',
@@ -1095,6 +1266,7 @@ Future<void> updatePreferAttachmentImageStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET preferAttachmentImage = ? WHERE feedID = ?',
         [preferAttachmentImage ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis(
@@ -1118,6 +1290,7 @@ Future<void> updateManualAdaptLightModeToIconStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET manualAdaptLightModeToIcon = ? WHERE feedID = ?',
         [manualAdaptLightModeToIcon ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis(
@@ -1141,6 +1314,7 @@ Future<void> updateManualAdaptDarkModeToIconStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET manualAdaptDarkModeToIcon = ? WHERE feedID = ?',
         [manualAdaptDarkModeToIcon ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis(
@@ -1164,6 +1338,7 @@ Future<void> updateOpenMinifluxEntryStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET openMinifluxEntry = ? WHERE feedID = ?',
         [openMinifluxEntry ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis(
@@ -1187,6 +1362,7 @@ Future<void> updateExpandedWithFulltextStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET expandedWithFulltext = ? WHERE feedID = ?',
         [expandedWithFulltext ? 1 : 0, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis(
@@ -1208,6 +1384,7 @@ Future<void> updateExpandedFulltextLimitOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET expandedFulltextLimit = ? WHERE feedID = ?',
         [expandedFulltextLimit, feedID]);
+    await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
     logThis('updateExpandedFulltextLimitOfFeedInDB',
@@ -1654,6 +1831,7 @@ Future<int> insertCategoriesInDB(
           'Skipped local category/feed cleanup because fetched feed list is empty while local feeds exist. '
               'localFeeds=${existingFeeds.length} fetchedCategories=${categoryList.categories.length}',
           LogLevel.WARNING);
+      await applyFeedSettingsOverridesToDB(appState);
       return result;
     }
 
@@ -1714,6 +1892,7 @@ Future<int> insertCategoriesInDB(
         }
       }
     }
+    await applyFeedSettingsOverridesToDB(appState);
   }
   if (appState.debugMode) {
     logThis('insertCategoriesInDB', 'Finished inserting categories in DB',

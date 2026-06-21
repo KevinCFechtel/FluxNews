@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +8,7 @@ import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/functions/settings_backup_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
@@ -512,6 +512,92 @@ class Settings extends StatelessWidget {
                     exportSettingsBackup(context, appState);
                   },
                 ),
+                if (Platform.isAndroid) const Divider(),
+                if (Platform.isAndroid)
+                  FutureBuilder<bool>(
+                    future: SettingsBackupService.readAndroidAutoBackupEnabled(
+                        appState),
+                    builder: (context, snapshot) {
+                      final enabled = snapshot.data ?? false;
+                      return Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.cloud_upload_outlined),
+                            title: Padding(
+                              padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                              child: Text(
+                                AppLocalizations.of(context)!
+                                    .includeSettingsInAndroidBackup,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                              child: Text(
+                                AppLocalizations.of(context)!
+                                    .includeSettingsInAndroidBackupDescription,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                            trailing: Switch.adaptive(
+                              value: enabled,
+                              onChanged: snapshot.connectionState ==
+                                      ConnectionState.waiting
+                                  ? null
+                                  : (value) => _setAndroidAutoBackupEnabled(
+                                        context,
+                                        appState,
+                                        value,
+                                      ),
+                            ),
+                          ),
+                          if (enabled)
+                            FutureBuilder<AndroidAutoBackupFileStatus>(
+                              future: SettingsBackupService
+                                  .readAndroidAutoBackupFileStatus(),
+                              builder: (context, statusSnapshot) {
+                                final status = statusSnapshot.data;
+                                final hasFile = status?.exists == true;
+                                final subtitle = hasFile &&
+                                        status?.modified != null
+                                    ? '${AppLocalizations.of(context)!.lastChange}: '
+                                        '${appState.dateFormat.format(status!.modified!.toLocal())}'
+                                    : AppLocalizations.of(context)!
+                                        .androidAutoBackupFileMissing;
+                                return ListTile(
+                                  leading:
+                                      const Icon(Icons.check_circle_outline),
+                                  title: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                    child: Text(
+                                      hasFile
+                                          ? AppLocalizations.of(context)!
+                                              .androidAutoBackupSuccessful
+                                          : AppLocalizations.of(context)!
+                                              .androidAutoBackupNotCreated,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                    child: Text(
+                                      subtitle,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                  ),
                 const Divider(),
                 // this list tile delete the local news database
                 ListTile(
@@ -733,46 +819,67 @@ class Settings extends StatelessWidget {
     }
   }
 
+  Future<void> _setAndroidAutoBackupEnabled(
+    BuildContext context,
+    FluxNewsState appState,
+    bool enabled,
+  ) async {
+    try {
+      if (!enabled) {
+        await SettingsBackupService.writeAndroidAutoBackupEnabled(
+            appState, false);
+        await SettingsBackupService.deleteStoredBackupPassword(appState);
+        await SettingsBackupService.deleteAndroidAutoBackupFileIfExists();
+        appState.refreshView();
+        return;
+      }
+
+      final password = await SettingsBackupService.promptForBackupPassword(
+        context,
+        title: AppLocalizations.of(context)!.backupPassword,
+        allowUnencryptedBackup: true,
+      );
+      if (password == null) {
+        appState.refreshView();
+        return;
+      }
+
+      if (password.unencrypted) {
+        await SettingsBackupService.deleteStoredBackupPassword(appState);
+      } else {
+        await SettingsBackupService.writeStoredBackupPassword(
+            appState, password.password);
+      }
+      await SettingsBackupService.writeAndroidAutoBackupEnabled(appState, true);
+      await SettingsBackupService.writeBackupFile(
+        appState,
+        await SettingsBackupService.androidAutoBackupFile(),
+        password: password.password,
+      );
+      appState.refreshView();
+    } catch (e) {
+      logThis(
+          'androidAutoBackupSettings',
+          'Error updating Android auto backup setting: ${e.toString()}',
+          LogLevel.ERROR);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupError)),
+        );
+      }
+      appState.refreshView();
+    }
+  }
+
   Future<void> exportSettingsBackup(
       BuildContext context, FluxNewsState appState) async {
     try {
-      appState.db ??= await appState.initializeDB();
-
-      final storageSettings = await appState.storage.readAll();
-      final feedSettings = <Map<String, Object?>>[];
-      if (appState.db != null) {
-        final feeds = await appState.db!.rawQuery('''SELECT feedID,
-                                                            title,
-                                                            site_url,
-                                                            iconMimeType,
-                                                            iconID,
-                                                            newsCount,
-                                                            crawler,
-                                                            manualTruncate,
-                                                            preferParagraph,
-                                                            preferAttachmentImage,
-                                                            manualAdaptLightModeToIcon,
-                                                            manualAdaptDarkModeToIcon,
-                                                            openMinifluxEntry,
-                                                            expandedWithFulltext,
-                                                            expandedFulltextLimit,
-                                                            categoryID
-                                                       FROM feeds
-                                                   ORDER BY UPPER(title) ASC''');
-        for (final feed in feeds) {
-          feedSettings.add(Map<String, Object?>.from(feed));
-        }
-      }
-
-      final backupData = {
-        'backupType': 'flux_news_settings',
-        'createdAt': DateTime.now().toUtc().toIso8601String(),
-        'appVersion': FluxNewsState.applicationVersion,
-        'settings': storageSettings,
-        'feedSettings': feedSettings,
-      };
-
-      final backupJson = const JsonEncoder.withIndent('  ').convert(backupData);
+      final password = await SettingsBackupService.promptForBackupPassword(
+        context,
+        title: AppLocalizations.of(context)!.backupPassword,
+        allowUnencryptedBackup: true,
+      );
+      if (password == null) return;
       Directory? exportDirectory;
       if (Platform.isIOS) {
         exportDirectory = await getApplicationDocumentsDirectory();
@@ -793,31 +900,20 @@ class Settings extends StatelessWidget {
         return;
       }
 
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final zipFilePath =
-          '${exportDirectory.path}/flux_news_settings_backup_$timestamp.zip';
-
-      final jsonBytes = utf8.encode(backupJson);
-      final archive = Archive();
-      archive.addFile(ArchiveFile(
-        'flux_news_settings_backup_$timestamp.json',
-        jsonBytes.length,
-        jsonBytes,
-      ));
-      final zipBytes = ZipEncoder().encode(archive);
-      await File(zipFilePath).writeAsBytes(zipBytes, flush: true);
+      final backupFile = await SettingsBackupService.writeManualBackupFile(
+          appState, exportDirectory, password.password);
 
       if (context.mounted) {
         if (Platform.isIOS) {
           final box = context.findRenderObject() as RenderBox?;
           await SharePlus.instance.share(ShareParams(
-              files: [XFile(zipFilePath)],
+              files: [XFile(backupFile.path)],
               sharePositionOrigin: box != null
                   ? box.localToGlobal(Offset.zero) & const Size(100, 100)
                   : null));
         } else {
           await SharePlus.instance
-              .share(ShareParams(files: [XFile(zipFilePath)]));
+              .share(ShareParams(files: [XFile(backupFile.path)]));
         }
       }
     } catch (e) {

@@ -1124,6 +1124,108 @@ abstract class AppLocalizations {
   /// **'Select ZIP file and restore'**
   String get selectZipBackupFileButton;
 
+  /// No description provided for @backupPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup password'**
+  String get backupPassword;
+
+  /// No description provided for @createUnencryptedBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup without encryption'**
+  String get createUnencryptedBackup;
+
+  /// No description provided for @createUnencryptedBackupWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This is more convenient, but the API key is stored in the backup file without password protection.'**
+  String get createUnencryptedBackupWarning;
+
+  /// No description provided for @backupPasswordRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat backup password'**
+  String get backupPasswordRepeat;
+
+  /// No description provided for @backupPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a backup password.'**
+  String get backupPasswordRequired;
+
+  /// No description provided for @backupPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup passwords do not match.'**
+  String get backupPasswordMismatch;
+
+  /// No description provided for @backupPasswordInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup password is invalid.'**
+  String get backupPasswordInvalid;
+
+  /// No description provided for @includeSettingsInAndroidBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Include app settings in Android backup'**
+  String get includeSettingsInAndroidBackup;
+
+  /// No description provided for @includeSettingsInAndroidBackupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled by default. If enabled, Android may back up the generated settings backup file according to the system backup schedule.'**
+  String get includeSettingsInAndroidBackupDescription;
+
+  /// No description provided for @androidAutoBackupSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup file created successfully'**
+  String get androidAutoBackupSuccessful;
+
+  /// No description provided for @androidAutoBackupNotCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup file not created'**
+  String get androidAutoBackupNotCreated;
+
+  /// No description provided for @androidAutoBackupFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No local Android backup file is available yet.'**
+  String get androidAutoBackupFileMissing;
+
+  /// No description provided for @lastChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Last change'**
+  String get lastChange;
+
+  /// No description provided for @androidAutoBackupFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup found'**
+  String get androidAutoBackupFoundTitle;
+
+  /// No description provided for @androidAutoBackupFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.'**
+  String get androidAutoBackupFoundMessage;
+
+  /// No description provided for @checkAndroidAutoBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Android backup'**
+  String get checkAndroidAutoBackup;
+
+  /// No description provided for @noAndroidAutoBackupFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Android backup was found.'**
+  String get noAndroidAutoBackupFound;
+
   /// No description provided for @minimumFeedSelection.
   ///
   /// In en, this message translates to:

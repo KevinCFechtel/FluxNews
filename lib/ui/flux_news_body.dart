@@ -11,6 +11,7 @@ import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/background_sync_service.dart';
+import 'package:flux_news/functions/settings_backup_service.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -196,6 +197,7 @@ class FluxNewsBody extends StatelessWidget {
 
     // init the sqlite database in startup
     appState.db = await appState.initializeDB();
+    await syncCurrentFeedSettingsOverridesFromDB(appState);
     var skipSavedScrollRestore = false;
 
     if (completed) {
@@ -212,6 +214,8 @@ class FluxNewsBody extends StatelessWidget {
           LogLevel.INFO);
       unawaited(
           configureFluxNewsBackgroundSync(appState, reason: 'app_config_load'));
+      unawaited(
+          SettingsBackupService.refreshAndroidAutoBackupIfPossible(appState));
       unawaited(runPendingForegroundAudioDownloads(appState));
 
       // set the startup categorie if configured

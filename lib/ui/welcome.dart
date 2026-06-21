@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/functions/settings_backup_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +11,8 @@ class Welcome extends StatelessWidget {
   const Welcome({super.key});
 
   Widget _buildLogo(BuildContext context) {
-    final bool isLightMode = MediaQuery.of(context).platformBrightness == Brightness.light;
+    final bool isLightMode =
+        MediaQuery.of(context).platformBrightness == Brightness.light;
 
     return isLightMode
         ? Image.asset(
@@ -23,6 +25,34 @@ class Welcome extends StatelessWidget {
             width: 180,
             height: 180,
           );
+  }
+
+  Widget _buildAndroidAutoBackupRestoreButton(BuildContext context) {
+    if (!Platform.isAndroid) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () async {
+              debugPrint(
+                  'SettingsBackupService: Android auto backup restore button tapped.');
+              await SettingsBackupService
+                  .maybePromptForAndroidAutoBackupRestore(
+                context,
+                context.read<FluxNewsState>(),
+                ignoreHandledFingerprint: true,
+                showNoBackupMessage: true,
+              );
+            },
+            child: Text(AppLocalizations.of(context)!.checkAndroidAutoBackup),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildPhoneLayout(BuildContext context) {
@@ -54,18 +84,21 @@ class Welcome extends StatelessWidget {
                 ? CupertinoButton.filled(
                     child: Text(AppLocalizations.of(context)!.login),
                     onPressed: () {
-                      Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                      Navigator.pushNamed(
+                          context, FluxNewsState.loginRouteString);
                     },
                   )
                 : ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                      Navigator.pushNamed(
+                          context, FluxNewsState.loginRouteString);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: Text(AppLocalizations.of(context)!.login,
-                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary)),
                   ),
           ),
           const SizedBox(height: 12),
@@ -75,16 +108,19 @@ class Welcome extends StatelessWidget {
                 ? CupertinoButton(
                     child: Text(AppLocalizations.of(context)!.restoreSettings),
                     onPressed: () {
-                      Navigator.pushNamed(context, FluxNewsState.restoreSettingsRouteString);
+                      Navigator.pushNamed(
+                          context, FluxNewsState.restoreSettingsRouteString);
                     },
                   )
                 : OutlinedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, FluxNewsState.restoreSettingsRouteString);
+                      Navigator.pushNamed(
+                          context, FluxNewsState.restoreSettingsRouteString);
                     },
                     child: Text(AppLocalizations.of(context)!.restoreSettings),
                   ),
           ),
+          _buildAndroidAutoBackupRestoreButton(context),
         ],
       ),
     );
@@ -112,11 +148,13 @@ class Welcome extends StatelessWidget {
                       const SizedBox(height: 32),
                       Text(
                         FluxNewsState.applicationName,
-                        style: theme.textTheme.headlineMedium?.copyWith(fontSize: 36),
+                        style: theme.textTheme.headlineMedium
+                            ?.copyWith(fontSize: 36),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        AppLocalizations.of(context)!.provideMinifluxCredentials,
+                        AppLocalizations.of(context)!
+                            .provideMinifluxCredentials,
                         style: theme.textTheme.titleMedium,
                       ),
                     ],
@@ -140,35 +178,47 @@ class Welcome extends StatelessWidget {
                         const SizedBox(height: 24),
                         Platform.isIOS
                             ? CupertinoButton.filled(
-                                child: Text(AppLocalizations.of(context)!.login),
+                                child:
+                                    Text(AppLocalizations.of(context)!.login),
                                 onPressed: () {
-                                  Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                                  Navigator.pushNamed(
+                                      context, FluxNewsState.loginRouteString);
                                 },
                               )
                             : ElevatedButton(
                                 onPressed: () {
-                                  Navigator.pushNamed(context, FluxNewsState.loginRouteString);
+                                  Navigator.pushNamed(
+                                      context, FluxNewsState.loginRouteString);
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
                                 ),
                                 child: Text(AppLocalizations.of(context)!.login,
-                                    style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
                               ),
                         const SizedBox(height: 12),
                         Platform.isIOS
                             ? CupertinoButton(
-                                child: Text(AppLocalizations.of(context)!.restoreSettings),
+                                child: Text(AppLocalizations.of(context)!
+                                    .restoreSettings),
                                 onPressed: () {
-                                  Navigator.pushNamed(context, FluxNewsState.restoreSettingsRouteString);
+                                  Navigator.pushNamed(context,
+                                      FluxNewsState.restoreSettingsRouteString);
                                 },
                               )
                             : OutlinedButton(
                                 onPressed: () {
-                                  Navigator.pushNamed(context, FluxNewsState.restoreSettingsRouteString);
+                                  Navigator.pushNamed(context,
+                                      FluxNewsState.restoreSettingsRouteString);
                                 },
-                                child: Text(AppLocalizations.of(context)!.restoreSettings),
+                                child: Text(AppLocalizations.of(context)!
+                                    .restoreSettings),
                               ),
+                        _buildAndroidAutoBackupRestoreButton(context),
                       ],
                     ),
                   ),
@@ -187,7 +237,9 @@ class Welcome extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: appState.isTablet ? _buildTabletLayout(context) : _buildPhoneLayout(context),
+        child: appState.isTablet
+            ? _buildTabletLayout(context)
+            : _buildPhoneLayout(context),
       ),
     );
   }
