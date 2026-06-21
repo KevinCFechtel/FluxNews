@@ -240,5 +240,9 @@
     "widgetNever": "nunca",
     "widgetSync": "Sincronizar",
     "widgetBlurredBackground": "Fondo translúcido do widget",
-    "openSource": "Código aberto"
+    "openSource": "Código aberto",
+    "widgetFilterCategory": "Mostrar unha categoría nos widgets",
+    "widgetFilterFeed": "Mostrar unha canle nos widgets",
+    "widgetFilterCategorySelection": "Selecciona a categoría para os widgets",
+    "widgetFilterFeedSelection": "Selecciona a canles para os widgets"
 }
