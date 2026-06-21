@@ -571,6 +571,65 @@ class AppLocalizationsDe extends AppLocalizations {
       'ZIP-Datei wählen und wiederherstellen';
 
   @override
+  String get backupPassword => 'Backup-Passwort';
+
+  @override
+  String get createUnencryptedBackup =>
+      'Backup ohne Verschluesselung erstellen';
+
+  @override
+  String get createUnencryptedBackupWarning =>
+      'Das ist komfortabler, aber der API-Key wird ohne Passwortschutz in der Backup-Datei gespeichert.';
+
+  @override
+  String get backupPasswordRepeat => 'Backup-Passwort wiederholen';
+
+  @override
+  String get backupPasswordRequired => 'Bitte gib ein Backup-Passwort ein.';
+
+  @override
+  String get backupPasswordMismatch =>
+      'Die Backup-Passwörter stimmen nicht überein.';
+
+  @override
+  String get backupPasswordInvalid => 'Das Backup-Passwort ist ungültig.';
+
+  @override
+  String get includeSettingsInAndroidBackup =>
+      'App-Einstellungen in Android-Backup aufnehmen';
+
+  @override
+  String get includeSettingsInAndroidBackupDescription =>
+      'Standardmaessig deaktiviert. Wenn aktiviert, kann Android die erzeugte Einstellungs-Backup-Datei nach dem System-Zeitplan sichern.';
+
+  @override
+  String get androidAutoBackupSuccessful => 'Backup-Datei erfolgreich erstellt';
+
+  @override
+  String get androidAutoBackupNotCreated => 'Backup-Datei nicht erstellt';
+
+  @override
+  String get androidAutoBackupFileMissing =>
+      'Es ist noch keine lokale Android-Backup-Datei vorhanden.';
+
+  @override
+  String get lastChange => 'Letzte Aenderung';
+
+  @override
+  String get androidAutoBackupFoundTitle => 'Backup gefunden';
+
+  @override
+  String get androidAutoBackupFoundMessage =>
+      'Für Flux News wurde ein Android-Backup wiederhergestellt. Falls das Backup verschluesselt ist, wirst du vor der Wiederherstellung nach dem Passwort gefragt.';
+
+  @override
+  String get checkAndroidAutoBackup => 'Android-Backup pruefen';
+
+  @override
+  String get noAndroidAutoBackupFound =>
+      'Es wurde kein Android-Backup gefunden.';
+
+  @override
   String get minimumFeedSelection => 'Bitte mindestens einen Feed auswählen.';
 
   @override

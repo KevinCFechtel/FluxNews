@@ -14,6 +14,7 @@ import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
@@ -41,9 +42,11 @@ import 'ui/restore_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final enableFlutterLogs = await _shouldEnableFlutterLogsForStartup();
+  setFlutterLogsEnabled(enableFlutterLogs);
   await initializeFluxNewsBackgroundSync();
 
-  if (Platform.isAndroid || Platform.isIOS) {
+  if ((Platform.isAndroid || Platform.isIOS) && enableFlutterLogs) {
     // init the log system
     await FlutterLogs.initLogs(
         logLevelsEnabled: [
@@ -80,9 +83,10 @@ Future<void> main() async {
   await AudioDownloadService.warmupAppSupportDirectory();
 
   // Clear all logs on start if the setting is enabled (default: true).
-  // Scheduled as a post-frame callback so runApp() is never blocked —
-  // calling FlutterLogs.clearLogs() before runApp() can deadlock on Android
-  // because PLog holds an open write handle to the log file created by initLogs().
+  // Scheduled as a post-frame callback so runApp() is never blocked.
+  // On Android we avoid FlutterLogs.clearLogs(): after Backup/Restore or a
+  // fresh install PLog can crash in its native AsyncTask while rebuilding its
+  // log file state. The Dart-side cleanup is less aggressive, but stable.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     try {
       final storage = sec_store.FlutterSecureStorage(
@@ -101,48 +105,77 @@ Future<void> main() async {
       final shouldClear = clearValue == null ||
           clearValue == FluxNewsState.secureStorageTrueString;
       if (shouldClear) {
-        await FlutterLogs.clearLogs();
+        if (Platform.isAndroid) {
+          await _cleanupAndroidLogs(logRetentionDays: 1, zipRetentionDays: 0);
+        } else {
+          await FlutterLogs.clearLogs();
+        }
       }
     } catch (_) {
       // Non-critical — swallow silently.
     }
   });
 
-  if (Platform.isAndroid || Platform.isIOS) {
-    FlutterLogs.logInfo(FluxNewsState.logTag, 'main',
-        'App starting - platform: ${Platform.operatingSystem}');
-  }
+  _startupLogInfo(
+      'main', 'App starting - platform: ${Platform.operatingSystem}');
 
   // Start audio handler init without blocking — on iOS, AudioService.init()
   // may hang in headless CarPlay launch (no UIWindowScene). The handler is
   // cached; any code that needs it calls initFluxNewsAudioHandler() and awaits.
-  if (Platform.isAndroid || Platform.isIOS) {
-    FlutterLogs.logInfo(FluxNewsState.logTag, 'main',
-        'Starting AudioService.init() asynchronously');
-  }
+  _startupLogInfo('main', 'Starting AudioService.init() asynchronously');
   final audioHandlerFuture = initFluxNewsAudioHandler();
   audioHandlerFuture.then((_) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logInfo(
-          FluxNewsState.logTag, 'main', 'AudioService.init() completed');
-    }
+    _startupLogInfo('main', 'AudioService.init() completed');
   }).onError((e, _) {
-    if (Platform.isAndroid || Platform.isIOS) {
-      FlutterLogs.logError(
-          FluxNewsState.logTag, 'main', 'AudioService.init() failed: $e');
-    }
+    _startupLogError('main', 'AudioService.init() failed: $e');
   });
 
   if (Platform.isIOS) {
-    FlutterLogs.logInfo(
-        FluxNewsState.logTag, 'main', 'Initializing CarPlay service');
+    _startupLogInfo('main', 'Initializing CarPlay service');
     initFluxNewsCarPlayService(audioHandlerFuture);
   }
 
-  if (Platform.isAndroid || Platform.isIOS) {
-    FlutterLogs.logInfo(FluxNewsState.logTag, 'main', 'Calling runApp()');
-  }
+  _startupLogInfo('main', 'Calling runApp()');
   runApp(const SDTFScope(child: FluxNews()));
+}
+
+Future<bool> _shouldEnableFlutterLogsForStartup() async {
+  if (!Platform.isAndroid) return true;
+  try {
+    final appSupport = await getApplicationSupportDirectory();
+    final marker =
+        File('${appSupport.path}/.flux_news_flutter_logs_initialized');
+    if (!await marker.exists()) {
+      await marker.parent.create(recursive: true);
+      await marker.writeAsString(DateTime.now().toIso8601String(), flush: true);
+      debugPrint(
+          '${FluxNewsState.logTag}: main: Skipping flutter_logs initialization on first Android process.');
+      return false;
+    }
+  } catch (e) {
+    debugPrint(
+        '${FluxNewsState.logTag}: main: Could not read flutter_logs startup marker: $e');
+    return false;
+  }
+  return true;
+}
+
+void _startupLogInfo(String subTag, String message) {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  if (Platform.isAndroid) {
+    debugPrint('${FluxNewsState.logTag}: $subTag: $message');
+    return;
+  }
+  FlutterLogs.logInfo(FluxNewsState.logTag, subTag, message);
+}
+
+void _startupLogError(String subTag, String message) {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  if (Platform.isAndroid) {
+    debugPrint('${FluxNewsState.logTag}: $subTag: $message');
+    return;
+  }
+  FlutterLogs.logError(FluxNewsState.logTag, subTag, message);
 }
 
 /// Deletes monthly iOS log files (Log-YYYY-MM.txt) whose entire month ended
@@ -195,8 +228,8 @@ Future<void> _cleanupAndroidLogs({
   try {
     final extDir = await getExternalStorageDirectory();
     if (extDir == null) {
-      FlutterLogs.logError(FluxNewsState.logTag, '_cleanupAndroidLogs',
-          'extDir is null — skipping cleanup');
+      _startupLogError(
+          '_cleanupAndroidLogs', 'extDir is null — skipping cleanup');
       return;
     }
 
@@ -206,7 +239,7 @@ Future<void> _cleanupAndroidLogs({
 
     final logsDir =
         Directory('${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
-    FlutterLogs.logInfo(FluxNewsState.logTag, '_cleanupAndroidLogs',
+    _startupLogInfo('_cleanupAndroidLogs',
         'logsDir: ${logsDir.path} | exists: ${logsDir.existsSync()} | cutoff: $logCutoff');
 
     if (logsDir.existsSync()) {
@@ -225,8 +258,7 @@ Future<void> _cleanupAndroidLogs({
       }
     }
   } catch (e) {
-    FlutterLogs.logError(
-        FluxNewsState.logTag, '_cleanupAndroidLogs', 'Error: $e');
+    _startupLogError('_cleanupAndroidLogs', 'Error: $e');
   }
 }
 
@@ -272,12 +304,11 @@ Future<void> _deleteOldLogDirs(Directory dir, DateTime cutoff) async {
     final dirDate = _parsePLogDirDate(name);
     if (dirDate != null) {
       final shouldDelete = dirDate.isBefore(cutoff);
-      FlutterLogs.logInfo(FluxNewsState.logTag, '_cleanupAndroidLogs',
+      _startupLogInfo('_cleanupAndroidLogs',
           'Dir "$name" → $dirDate | delete: $shouldDelete');
       if (shouldDelete) await entity.delete(recursive: true);
     } else {
-      FlutterLogs.logInfo(FluxNewsState.logTag, '_cleanupAndroidLogs',
-          'Dir "$name" — descending');
+      _startupLogInfo('_cleanupAndroidLogs', 'Dir "$name" — descending');
       await _deleteOldLogDirs(entity, cutoff);
     }
   }

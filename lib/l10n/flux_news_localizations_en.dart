@@ -558,6 +558,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectZipBackupFileButton => 'Select ZIP file and restore';
 
   @override
+  String get backupPassword => 'Backup password';
+
+  @override
+  String get createUnencryptedBackup => 'Create backup without encryption';
+
+  @override
+  String get createUnencryptedBackupWarning =>
+      'This is more convenient, but the API key is stored in the backup file without password protection.';
+
+  @override
+  String get backupPasswordRepeat => 'Repeat backup password';
+
+  @override
+  String get backupPasswordRequired => 'Please enter a backup password.';
+
+  @override
+  String get backupPasswordMismatch => 'The backup passwords do not match.';
+
+  @override
+  String get backupPasswordInvalid => 'The backup password is invalid.';
+
+  @override
+  String get includeSettingsInAndroidBackup =>
+      'Include app settings in Android backup';
+
+  @override
+  String get includeSettingsInAndroidBackupDescription =>
+      'Disabled by default. If enabled, Android may back up the generated settings backup file according to the system backup schedule.';
+
+  @override
+  String get androidAutoBackupSuccessful => 'Backup file created successfully';
+
+  @override
+  String get androidAutoBackupNotCreated => 'Backup file not created';
+
+  @override
+  String get androidAutoBackupFileMissing =>
+      'No local Android backup file is available yet.';
+
+  @override
+  String get lastChange => 'Last change';
+
+  @override
+  String get androidAutoBackupFoundTitle => 'Backup found';
+
+  @override
+  String get androidAutoBackupFoundMessage =>
+      'An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.';
+
+  @override
+  String get checkAndroidAutoBackup => 'Check Android backup';
+
+  @override
+  String get noAndroidAutoBackupFound => 'No Android backup was found.';
+
+  @override
   String get minimumFeedSelection => 'Please select at least one feed.';
 
   @override

@@ -69,5 +69,22 @@
     "widgetLastSync": "Laatste sync",
     "widgetNever": "nooit",
     "widgetSync": "Sync",
-    "widgetBlurredBackground": "Transparante widgetachtergrond"
+    "widgetBlurredBackground": "Transparante widgetachtergrond",
+    "backupPassword": "Backup password",
+    "createUnencryptedBackup": "Create backup without encryption",
+    "createUnencryptedBackupWarning": "This is more convenient, but the API key is stored in the backup file without password protection.",
+    "backupPasswordRepeat": "Repeat backup password",
+    "backupPasswordRequired": "Please enter a backup password.",
+    "backupPasswordMismatch": "The backup passwords do not match.",
+    "backupPasswordInvalid": "The backup password is invalid.",
+    "includeSettingsInAndroidBackup": "Include app settings in Android backup",
+    "includeSettingsInAndroidBackupDescription": "Disabled by default. If enabled, Android may back up the generated settings backup file according to the system backup schedule.",
+    "androidAutoBackupSuccessful": "Backup file created successfully",
+    "androidAutoBackupNotCreated": "Backup file not created",
+    "androidAutoBackupFileMissing": "No local Android backup file is available yet.",
+    "lastChange": "Last change",
+    "androidAutoBackupFoundTitle": "Backup found",
+    "androidAutoBackupFoundMessage": "An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.",
+    "checkAndroidAutoBackup": "Check Android backup",
+    "noAndroidAutoBackupFound": "No Android backup was found."
 }
