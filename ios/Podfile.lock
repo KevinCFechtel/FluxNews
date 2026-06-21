@@ -1,7 +1,5 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_carplay (1.1.0):
-    - Flutter
   - flutter_logs (0.0.1):
     - Flutter
     - ZIPFoundation
@@ -11,7 +9,6 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_carplay (from `.symlinks/plugins/flutter_carplay/ios`)
   - flutter_logs (from `.symlinks/plugins/flutter_logs/ios`)
   - workmanager_apple (from `.symlinks/plugins/workmanager_apple/ios`)
 
@@ -22,8 +19,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_carplay:
-    :path: ".symlinks/plugins/flutter_carplay/ios"
   flutter_logs:
     :path: ".symlinks/plugins/flutter_logs/ios"
   workmanager_apple:
@@ -31,7 +26,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_carplay: 0e3f943484e00399dac7f599715ae6761288f0db
   flutter_logs: 30a36079651dcdfb260dbff875bf882bbbcaa22e
   workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
   ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
