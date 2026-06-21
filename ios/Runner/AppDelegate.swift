@@ -10,6 +10,26 @@ private let fluxNewsBackgroundSyncIdentifier = "dev.kevincfechtel.fluxNews.backg
 private let fluxNewsBackgroundProcessingSyncIdentifier = "dev.kevincfechtel.fluxNews.backgroundProcessingSync"
 var pendingWidgetAction: [String: String]?
 
+private func reloadFluxNewsWidgets() {
+  if #available(iOS 14.0, *) {
+    WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+    WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsCompactStatusWidget")
+    WidgetCenter.shared.reloadAllTimelines()
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+      WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+      WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsCompactStatusWidget")
+      WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+      WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
+      WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsCompactStatusWidget")
+      WidgetCenter.shared.reloadAllTimelines()
+    }
+  }
+}
+
 private func setupFluxNewsWidgetChannel(binaryMessenger: FlutterBinaryMessenger) {
   let methodChannel = FlutterMethodChannel(
     name: "dev.kevincfechtel.fluxnews/widgets",
@@ -32,11 +52,7 @@ private func setupFluxNewsWidgetChannel(binaryMessenger: FlutterBinaryMessenger)
       defaults.synchronize()
       result(nil)
     case "reloadWidgets":
-      if #available(iOS 14.0, *) {
-        WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsHeadlinesWidget")
-        WidgetCenter.shared.reloadTimelines(ofKind: "FluxNewsCompactStatusWidget")
-        WidgetCenter.shared.reloadAllTimelines()
-      }
+      reloadFluxNewsWidgets()
       result(nil)
     case "peekPendingAction":
       result(pendingWidgetAction)

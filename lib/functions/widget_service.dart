@@ -89,9 +89,10 @@ class FluxNewsWidgetService {
   static Future<void> refreshSnapshotForForegroundOpen(
     FluxNewsState appState, {
     required String reason,
+    bool force = false,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    if (appState.syncProcess) {
+    if (appState.syncProcess && !force) {
       logThis(
           'WidgetService',
           'Foreground widget snapshot refresh skipped because sync is active: '
@@ -111,8 +112,10 @@ class FluxNewsWidgetService {
     }
 
     final lastUpdatedAt = _lastSnapshotUpdatedAt;
-    if (lastUpdatedAt != null &&
-        DateTime.now().difference(lastUpdatedAt) < const Duration(seconds: 10)) {
+    if (!force &&
+        lastUpdatedAt != null &&
+        DateTime.now().difference(lastUpdatedAt) <
+            const Duration(seconds: 10)) {
       logThis(
           'WidgetService',
           'Foreground widget snapshot refresh skipped because snapshot was recently updated: '
@@ -123,9 +126,26 @@ class FluxNewsWidgetService {
 
     logThis(
         'WidgetService',
-        'Refreshing widget snapshot after foreground open: reason=$reason',
+        'Refreshing widget snapshot after foreground open: reason=$reason force=$force',
         LogLevel.INFO);
     await updateWidgetSnapshot(appState);
+  }
+
+  static Future<void> forceReloadWidgets({required String reason}) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    try {
+      logThis('WidgetService', 'Forcing widget timeline reload: reason=$reason',
+          LogLevel.INFO);
+      await _reloadWidgets();
+    } on MissingPluginException {
+      logThis(
+          'WidgetService',
+          'Native widget reload channel is unavailable during force reload: reason=$reason',
+          LogLevel.WARNING);
+    } catch (e, stackTrace) {
+      logThis('WidgetService', 'Could not force widget reload: $e\n$stackTrace',
+          LogLevel.ERROR);
+    }
   }
 
   static AppLocalizations _widgetLocalizations() {
@@ -213,7 +233,7 @@ class FluxNewsWidgetService {
       }
       bool nativeReloadRequested = false;
       try {
-        await _channel.invokeMethod('reloadWidgets');
+        await _reloadWidgets();
         nativeReloadRequested = true;
       } on MissingPluginException {
         logThis(
@@ -245,6 +265,10 @@ class FluxNewsWidgetService {
           LogLevel.ERROR);
       rethrow;
     }
+  }
+
+  static Future<void> _reloadWidgets() async {
+    await _channel.invokeMethod('reloadWidgets');
   }
 
   static Future<void> handlePendingWidgetAction(

@@ -162,6 +162,7 @@ class FluxNewsBody extends StatelessWidget {
         await FluxNewsWidgetService.refreshSnapshotForForegroundOpen(
           appState,
           reason: 'resume',
+          force: Platform.isIOS,
         ).onError((error, stackTrace) {
           logThis(
               'FluxNewsBody',
@@ -216,6 +217,11 @@ class FluxNewsBody extends StatelessWidget {
           configureFluxNewsBackgroundSync(appState, reason: 'app_config_load'));
       unawaited(
           SettingsBackupService.refreshAndroidAutoBackupIfPossible(appState));
+      unawaited(FluxNewsWidgetService.refreshSnapshotForForegroundOpen(
+        appState,
+        reason: 'app_start',
+        force: Platform.isIOS,
+      ));
       unawaited(runPendingForegroundAudioDownloads(appState));
 
       // set the startup categorie if configured
