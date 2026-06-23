@@ -244,5 +244,22 @@
     "widgetFilterCategory": "Mostrar unha categoría nos widgets",
     "widgetFilterFeed": "Mostrar unha canle nos widgets",
     "widgetFilterCategorySelection": "Selecciona a categoría para os widgets",
-    "widgetFilterFeedSelection": "Selecciona a canles para os widgets"
+    "widgetFilterFeedSelection": "Selecciona a canles para os widgets",
+    "backupPassword": "Contrasinal da copia",
+    "createUnencryptedBackup": "Crear copia sen cifrar",
+    "createUnencryptedBackupWarning": "Isto é máis cómodo, pero a clave da API gárdase no ficheiro de copia de apoio sen a protección dun contrasinal.",
+    "backupPasswordRepeat": "Repetir o contrasinal da copia",
+    "backupPasswordRequired": "Escribe un contrasinal para a copia.",
+    "backupPasswordMismatch": "Os contrasinais non coinciden.",
+    "backupPasswordInvalid": "O contrasinal da copia non é válido.",
+    "includeSettingsInAndroidBackup": "Incluír os axustes da app na copia de apoio Android",
+    "includeSettingsInAndroidBackupDescription": "Desactivado de xeito predeterminado. Ao activalo, Android garda o ficheiro cos axustes seguindo a programación de copias de apoio do sistema.",
+    "androidAutoBackupSuccessful": "Ficheiro de copia de apoio creado correctamente",
+    "androidAutoBackupNotCreated": "Non se creou o ficheiro de copia de apoio",
+    "androidAutoBackupFileMissing": "Aínda non hai ningún ficheiro local de copia de apoio.",
+    "lastChange": "Último cambio",
+    "androidAutoBackupFoundTitle": "Atopouse unha copia",
+    "androidAutoBackupFoundMessage": "Recuperouse a copia de apoio de Android para Flux News. Se o ficheiro está cifrado pediráseche o contrasinal antes de restablecelo.",
+    "checkAndroidAutoBackup": "Comprobar copia de Android",
+    "noAndroidAutoBackupFound": "Non se atopou copia de apoio de Android."
 }
