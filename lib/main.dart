@@ -40,11 +40,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initFluxNewsLogging();
   await initializeFluxNewsBackgroundSync();
-  if (Platform.isIOS) {
-    await _cleanupIosLogs(retentionDays: 7);
-  }
-  if (Platform.isAndroid) {
-    await _cleanupAndroidLogs(logRetentionDays: 7, zipRetentionDays: 1);
+  if (Platform.isAndroid || Platform.isIOS) {
+    await _cleanupLogs(logRetentionDays: 7, zipRetentionDays: 1);
   }
 
   // Pre-warm the app-support directory cache so all subsequent artwork and
@@ -111,66 +108,25 @@ void _startupLogError(String subTag, String message) {
   logThis(subTag, message, LogLevel.ERROR);
 }
 
-/// Deletes monthly iOS log files (Log-YYYY-MM.txt) whose entire month ended
-/// more than [retentionDays] ago.
-Future<void> _cleanupIosLogs({required int retentionDays}) async {
-  try {
-    final appSupport = await getApplicationSupportDirectory();
-    final logsDir = Directory('${appSupport.path}/Logs');
-    if (!logsDir.existsSync()) return;
-
-    final cutoff = DateTime.now().subtract(Duration(days: retentionDays));
-
-    await for (final entity in logsDir.list(followLinks: false)) {
-      if (entity is! File) continue;
-      final name = entity.path.split('/').last;
-
-      // Match Log-YYYY-MM.txt or Log-YYYY-MM.log
-      final match = RegExp(r'^Log-(\d{4})-(\d{2})\.\w+$').firstMatch(name);
-      if (match == null) continue;
-
-      final year = int.parse(match.group(1)!);
-      final month = int.parse(match.group(2)!);
-
-      // Last day of that month: first day of next month minus one day.
-      final lastDayOfMonth = (month < 12)
-          ? DateTime(year, month + 1, 1).subtract(const Duration(days: 1))
-          : DateTime(year + 1, 1, 1).subtract(const Duration(days: 1));
-
-      if (lastDayOfMonth.isBefore(cutoff)) {
-        await entity.delete();
-      }
-    }
-  } catch (_) {
-    // Non-critical — skip silently if the directory is inaccessible.
-  }
-}
-
-/// Deletes Android log directories older than [logRetentionDays] and
-/// exported ZIP files older than [zipRetentionDays].
-/// Legacy Android log retention was unreliable, so this Dart-side cleanup runs
-/// at every startup instead.
+/// Deletes log directories older than [logRetentionDays] and exported ZIP files
+/// older than [zipRetentionDays].
+/// This Dart-side cleanup runs at every startup.
 ///
-/// PLog names date directories with the format ddMMyyyy (e.g. "03052026").
-Future<void> _cleanupAndroidLogs({
+/// Date directories use the format ddMMyyyy (e.g. "03052026").
+Future<void> _cleanupLogs({
   required int logRetentionDays,
   required int zipRetentionDays,
 }) async {
   try {
-    final extDir = await getExternalStorageDirectory();
-    if (extDir == null) {
-      _startupLogError(
-          '_cleanupAndroidLogs', 'extDir is null — skipping cleanup');
-      return;
-    }
+    final baseDir = await _resolveLogBaseDirectory();
 
     final now = DateTime.now();
     final logCutoff = now.subtract(Duration(days: logRetentionDays));
     final zipCutoff = now.subtract(Duration(days: zipRetentionDays));
 
     final logsDir =
-        Directory('${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
-    _startupLogInfo('_cleanupAndroidLogs',
+        Directory('${baseDir.path}/${FluxNewsState.logsWriteDirectoryName}');
+    _startupLogInfo('_cleanupLogs',
         'logsDir: ${logsDir.path} | exists: ${logsDir.existsSync()} | cutoff: $logCutoff');
 
     if (logsDir.existsSync()) {
@@ -179,7 +135,7 @@ Future<void> _cleanupAndroidLogs({
 
     // Delete Dart-exported ZIP files (flux_news_logs_*.zip) at the extDir root
     // that are older than the ZIP retention window.
-    for (final entity in extDir.listSync(followLinks: false)) {
+    for (final entity in baseDir.listSync(followLinks: false)) {
       if (entity is File &&
           entity.path.split('/').last.startsWith('flux_news_logs_') &&
           entity.path.endsWith('.zip')) {
@@ -189,8 +145,16 @@ Future<void> _cleanupAndroidLogs({
       }
     }
   } catch (e) {
-    _startupLogError('_cleanupAndroidLogs', 'Error: $e');
+    _startupLogError('_cleanupLogs', 'Error: $e');
   }
+}
+
+Future<Directory> _resolveLogBaseDirectory() async {
+  if (Platform.isAndroid) {
+    return await getExternalStorageDirectory() ??
+        await getApplicationSupportDirectory();
+  }
+  return getApplicationSupportDirectory();
 }
 
 /// Tries to parse a PLog date-directory name into a [DateTime].
@@ -224,7 +188,7 @@ DateTime? _parsePLogDirDate(String name) {
 
 /// Scans [dir] for date-named subdirectories and deletes those older than
 /// [cutoff]. If a subdirectory has no date name (e.g. "Logs") it descends
-/// one level deeper, which handles PLog's FluxNewsLogs/Logs/ddMMyyyy/ layout.
+/// one level deeper, which handles FluxNewsLogs/Logs/ddMMyyyy/ layout.
 /// The nested export directory (same name as [FluxNewsState.logsWriteDirectoryName])
 /// is always skipped.
 Future<void> _deleteOldLogDirs(Directory dir, DateTime cutoff) async {
@@ -235,11 +199,11 @@ Future<void> _deleteOldLogDirs(Directory dir, DateTime cutoff) async {
     final dirDate = _parsePLogDirDate(name);
     if (dirDate != null) {
       final shouldDelete = dirDate.isBefore(cutoff);
-      _startupLogInfo('_cleanupAndroidLogs',
-          'Dir "$name" → $dirDate | delete: $shouldDelete');
+      _startupLogInfo(
+          '_cleanupLogs', 'Dir "$name" → $dirDate | delete: $shouldDelete');
       if (shouldDelete) await entity.delete(recursive: true);
     } else {
-      _startupLogInfo('_cleanupAndroidLogs', 'Dir "$name" — descending');
+      _startupLogInfo('_cleanupLogs', 'Dir "$name" — descending');
       await _deleteOldLogDirs(entity, cutoff);
     }
   }

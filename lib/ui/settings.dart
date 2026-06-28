@@ -748,7 +748,8 @@ class Settings extends StatelessWidget {
 
       if (Platform.isIOS) {
         final appSupport = await getApplicationSupportDirectory();
-        logsDir = Directory('${appSupport.path}/Logs');
+        logsDir = Directory(
+            '${appSupport.path}/${FluxNewsState.logsWriteDirectoryName}');
         exportDirectory = await getApplicationDocumentsDirectory();
       } else if (Platform.isAndroid) {
         final extDir = await getExternalStorageDirectory();

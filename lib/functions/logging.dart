@@ -20,9 +20,8 @@ final logger.Logger _consoleLogger = logger.Logger(
   printer: logger.SimplePrinter(colors: false, printTime: false),
 );
 
-final DateFormat _androidDirFormat = DateFormat('ddMMyyyy');
-final DateFormat _androidFileHourFormat = DateFormat('ddMMyyyyHH');
-final DateFormat _iosMonthFormat = DateFormat('yyyy-MM');
+final DateFormat _logDirFormat = DateFormat('ddMMyyyy');
+final DateFormat _logFileHourFormat = DateFormat('ddMMyyyyHH');
 final DateFormat _timestampFormat = DateFormat('dd MMM yyyy hh:mm:ss a');
 
 Future<File>? _currentLogFileFuture;
@@ -120,30 +119,32 @@ Future<void> _writeLogLine(String line) async {
 
 Future<File> _resolveCurrentLogFile() async {
   final now = DateTime.now();
+  final Directory baseDir;
   if (Platform.isAndroid) {
     final extDir = await getExternalStorageDirectory();
-    final baseDir = extDir ?? await getApplicationSupportDirectory();
-    final datePart = _androidDirFormat.format(now);
-    final hourPart = _androidFileHourFormat.format(now);
-    return File(
-      '${baseDir.path}/${FluxNewsState.logsWriteDirectoryName}/Logs/'
-      '$datePart/$hourPart.log',
-    );
+    baseDir = extDir ?? await getApplicationSupportDirectory();
+  } else {
+    baseDir = await getApplicationSupportDirectory();
   }
 
-  final appSupport = await getApplicationSupportDirectory();
-  return File('${appSupport.path}/Logs/Log-${_iosMonthFormat.format(now)}.log');
+  final datePart = _logDirFormat.format(now);
+  final hourPart = _logFileHourFormat.format(now);
+  return File(
+    '${baseDir.path}/${FluxNewsState.logsWriteDirectoryName}/Logs/'
+    '$datePart/$hourPart.log',
+  );
 }
 
 Future<Directory> _resolveLogRootDirectory() async {
+  final Directory baseDir;
   if (Platform.isAndroid) {
     final extDir = await getExternalStorageDirectory();
-    final baseDir = extDir ?? await getApplicationSupportDirectory();
-    return Directory('${baseDir.path}/${FluxNewsState.logsWriteDirectoryName}');
+    baseDir = extDir ?? await getApplicationSupportDirectory();
+  } else {
+    baseDir = await getApplicationSupportDirectory();
   }
 
-  final appSupport = await getApplicationSupportDirectory();
-  return Directory('${appSupport.path}/Logs');
+  return Directory('${baseDir.path}/${FluxNewsState.logsWriteDirectoryName}');
 }
 
 bool _isLogFile(File file) {
