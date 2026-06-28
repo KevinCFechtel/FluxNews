@@ -10,7 +10,6 @@ import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/settings_backup_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -749,7 +748,8 @@ class Settings extends StatelessWidget {
 
       if (Platform.isIOS) {
         final appSupport = await getApplicationSupportDirectory();
-        logsDir = Directory('${appSupport.path}/Logs');
+        logsDir = Directory(
+            '${appSupport.path}/${FluxNewsState.logsWriteDirectoryName}');
         exportDirectory = await getApplicationDocumentsDirectory();
       } else if (Platform.isAndroid) {
         final extDir = await getExternalStorageDirectory();

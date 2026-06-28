@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -450,22 +449,7 @@ Future<void> _logScheduledBackgroundTasks() async {
 Future<void> _initializeBackgroundLogging() async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
   try {
-    await FlutterLogs.initLogs(
-        logLevelsEnabled: [
-          LogLevel.INFO,
-          LogLevel.WARNING,
-          LogLevel.ERROR,
-          LogLevel.SEVERE
-        ],
-        timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
-        directoryStructure: DirectoryStructure.FOR_DATE,
-        logFileExtension: LogFileExtension.LOG,
-        logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
-        logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
-        debugFileOperations: false,
-        logsRetentionPeriodInDays: 14,
-        zipsRetentionPeriodInDays: 3,
-        isDebuggable: false);
+    await initFluxNewsLogging();
   } catch (_) {
     // Logging must never prevent a background sync.
   }

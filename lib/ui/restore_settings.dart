@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/settings_backup_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';

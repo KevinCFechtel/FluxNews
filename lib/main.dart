@@ -5,17 +5,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;
 
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/functions/logging.dart';
-import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/feed_settings.dart';
@@ -28,7 +25,6 @@ import 'package:flux_news/ui/settings/widget_settings.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
 
 import 'ui/flux_news_body.dart';
@@ -42,40 +38,10 @@ import 'ui/restore_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final enableFlutterLogs = await _shouldEnableFlutterLogsForStartup();
-  setFlutterLogsEnabled(enableFlutterLogs);
+  await initFluxNewsLogging();
   await initializeFluxNewsBackgroundSync();
-
-  if ((Platform.isAndroid || Platform.isIOS) && enableFlutterLogs) {
-    // init the log system
-    await FlutterLogs.initLogs(
-        logLevelsEnabled: [
-          LogLevel.INFO,
-          LogLevel.WARNING,
-          LogLevel.ERROR,
-          LogLevel.SEVERE
-        ],
-        timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
-        directoryStructure: DirectoryStructure.FOR_DATE,
-        logFileExtension: LogFileExtension.LOG,
-        logsWriteDirectoryName: FluxNewsState.logsWriteDirectoryName,
-        logsExportDirectoryName: FluxNewsState.logsExportDirectoryName,
-        debugFileOperations: false,
-        logsRetentionPeriodInDays: 14,
-        zipsRetentionPeriodInDays: 3,
-        isDebuggable: kDebugMode ? true : false);
-
-    // On iOS the flutter_logs plugin ignores all initLogs parameters (initLogs
-    // is a no-op in the Swift plugin), including logsRetentionPeriodInDays.
-    // iOS also writes one file per month to Application Support/Logs/ using
-    // the hardcoded directory name "Logs" — independent of logsWriteDirectoryName.
-    // We therefore run our own cleanup on iOS at startup.
-    if (Platform.isIOS) {
-      await _cleanupIosLogs(retentionDays: 7);
-    }
-    if (Platform.isAndroid) {
-      await _cleanupAndroidLogs(logRetentionDays: 7, zipRetentionDays: 1);
-    }
+  if (Platform.isAndroid || Platform.isIOS) {
+    await _cleanupLogs(logRetentionDays: 7, zipRetentionDays: 1);
   }
 
   // Pre-warm the app-support directory cache so all subsequent artwork and
@@ -84,9 +50,6 @@ Future<void> main() async {
 
   // Clear all logs on start if the setting is enabled (default: true).
   // Scheduled as a post-frame callback so runApp() is never blocked.
-  // On Android we avoid FlutterLogs.clearLogs(): after Backup/Restore or a
-  // fresh install PLog can crash in its native AsyncTask while rebuilding its
-  // log file state. The Dart-side cleanup is less aggressive, but stable.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     try {
       final storage = sec_store.FlutterSecureStorage(
@@ -105,11 +68,7 @@ Future<void> main() async {
       final shouldClear = clearValue == null ||
           clearValue == FluxNewsState.secureStorageTrueString;
       if (shouldClear) {
-        if (Platform.isAndroid) {
-          await _cleanupAndroidLogs(logRetentionDays: 1, zipRetentionDays: 0);
-        } else {
-          await FlutterLogs.clearLogs();
-        }
+        await clearFluxNewsLogs();
       }
     } catch (_) {
       // Non-critical — swallow silently.
@@ -139,107 +98,35 @@ Future<void> main() async {
   runApp(const SDTFScope(child: FluxNews()));
 }
 
-Future<bool> _shouldEnableFlutterLogsForStartup() async {
-  if (!Platform.isAndroid) return true;
-  try {
-    final appSupport = await getApplicationSupportDirectory();
-    final marker =
-        File('${appSupport.path}/.flux_news_flutter_logs_initialized');
-    if (!await marker.exists()) {
-      await marker.parent.create(recursive: true);
-      await marker.writeAsString(DateTime.now().toIso8601String(), flush: true);
-      debugPrint(
-          '${FluxNewsState.logTag}: main: Skipping flutter_logs initialization on first Android process.');
-      return false;
-    }
-  } catch (e) {
-    debugPrint(
-        '${FluxNewsState.logTag}: main: Could not read flutter_logs startup marker: $e');
-    return false;
-  }
-  return true;
-}
-
 void _startupLogInfo(String subTag, String message) {
   if (!Platform.isAndroid && !Platform.isIOS) return;
-  if (Platform.isAndroid) {
-    debugPrint('${FluxNewsState.logTag}: $subTag: $message');
-    return;
-  }
-  FlutterLogs.logInfo(FluxNewsState.logTag, subTag, message);
+  logThis(subTag, message, LogLevel.INFO);
 }
 
 void _startupLogError(String subTag, String message) {
   if (!Platform.isAndroid && !Platform.isIOS) return;
-  if (Platform.isAndroid) {
-    debugPrint('${FluxNewsState.logTag}: $subTag: $message');
-    return;
-  }
-  FlutterLogs.logError(FluxNewsState.logTag, subTag, message);
+  logThis(subTag, message, LogLevel.ERROR);
 }
 
-/// Deletes monthly iOS log files (Log-YYYY-MM.txt) whose entire month ended
-/// more than [retentionDays] ago.  The iOS flutter_logs plugin writes one file
-/// per calendar month into Application Support/Logs/ and ignores the
-/// logsRetentionPeriodInDays parameter, so we handle cleanup ourselves.
-Future<void> _cleanupIosLogs({required int retentionDays}) async {
-  try {
-    final appSupport = await getApplicationSupportDirectory();
-    final logsDir = Directory('${appSupport.path}/Logs');
-    if (!logsDir.existsSync()) return;
-
-    final cutoff = DateTime.now().subtract(Duration(days: retentionDays));
-
-    await for (final entity in logsDir.list(followLinks: false)) {
-      if (entity is! File) continue;
-      final name = entity.path.split('/').last;
-
-      // Match Log-YYYY-MM.txt or Log-YYYY-MM.log
-      final match = RegExp(r'^Log-(\d{4})-(\d{2})\.\w+$').firstMatch(name);
-      if (match == null) continue;
-
-      final year = int.parse(match.group(1)!);
-      final month = int.parse(match.group(2)!);
-
-      // Last day of that month: first day of next month minus one day.
-      final lastDayOfMonth = (month < 12)
-          ? DateTime(year, month + 1, 1).subtract(const Duration(days: 1))
-          : DateTime(year + 1, 1, 1).subtract(const Duration(days: 1));
-
-      if (lastDayOfMonth.isBefore(cutoff)) {
-        await entity.delete();
-      }
-    }
-  } catch (_) {
-    // Non-critical — skip silently if the directory is inaccessible.
-  }
-}
-
-/// Deletes Android log directories older than [logRetentionDays] and
-/// exported ZIP files older than [zipRetentionDays].
-/// flutter_logs' native retention logic is unreliable on Android — this
-/// Dart-side cleanup runs at every startup instead.
+/// Deletes log directories older than [logRetentionDays] and exported ZIP files
+/// older than [zipRetentionDays].
+/// This Dart-side cleanup runs at every startup.
 ///
-/// PLog names date directories with the format ddMMyyyy (e.g. "03052026").
-Future<void> _cleanupAndroidLogs({
+/// Date directories use the format ddMMyyyy (e.g. "03052026").
+Future<void> _cleanupLogs({
   required int logRetentionDays,
   required int zipRetentionDays,
 }) async {
   try {
-    final extDir = await getExternalStorageDirectory();
-    if (extDir == null) {
-      _startupLogError(
-          '_cleanupAndroidLogs', 'extDir is null — skipping cleanup');
-      return;
-    }
+    final baseDir = await _resolveLogBaseDirectory();
 
     final now = DateTime.now();
     final logCutoff = now.subtract(Duration(days: logRetentionDays));
     final zipCutoff = now.subtract(Duration(days: zipRetentionDays));
 
     final logsDir =
-        Directory('${extDir.path}/${FluxNewsState.logsWriteDirectoryName}');
-    _startupLogInfo('_cleanupAndroidLogs',
+        Directory('${baseDir.path}/${FluxNewsState.logsWriteDirectoryName}');
+    _startupLogInfo('_cleanupLogs',
         'logsDir: ${logsDir.path} | exists: ${logsDir.existsSync()} | cutoff: $logCutoff');
 
     if (logsDir.existsSync()) {
@@ -248,7 +135,7 @@ Future<void> _cleanupAndroidLogs({
 
     // Delete Dart-exported ZIP files (flux_news_logs_*.zip) at the extDir root
     // that are older than the ZIP retention window.
-    for (final entity in extDir.listSync(followLinks: false)) {
+    for (final entity in baseDir.listSync(followLinks: false)) {
       if (entity is File &&
           entity.path.split('/').last.startsWith('flux_news_logs_') &&
           entity.path.endsWith('.zip')) {
@@ -258,8 +145,16 @@ Future<void> _cleanupAndroidLogs({
       }
     }
   } catch (e) {
-    _startupLogError('_cleanupAndroidLogs', 'Error: $e');
+    _startupLogError('_cleanupLogs', 'Error: $e');
   }
+}
+
+Future<Directory> _resolveLogBaseDirectory() async {
+  if (Platform.isAndroid) {
+    return await getExternalStorageDirectory() ??
+        await getApplicationSupportDirectory();
+  }
+  return getApplicationSupportDirectory();
 }
 
 /// Tries to parse a PLog date-directory name into a [DateTime].
@@ -293,7 +188,7 @@ DateTime? _parsePLogDirDate(String name) {
 
 /// Scans [dir] for date-named subdirectories and deletes those older than
 /// [cutoff]. If a subdirectory has no date name (e.g. "Logs") it descends
-/// one level deeper, which handles PLog's FluxNewsLogs/Logs/ddMMyyyy/ layout.
+/// one level deeper, which handles FluxNewsLogs/Logs/ddMMyyyy/ layout.
 /// The nested export directory (same name as [FluxNewsState.logsWriteDirectoryName])
 /// is always skipped.
 Future<void> _deleteOldLogDirs(Directory dir, DateTime cutoff) async {
@@ -304,11 +199,11 @@ Future<void> _deleteOldLogDirs(Directory dir, DateTime cutoff) async {
     final dirDate = _parsePLogDirDate(name);
     if (dirDate != null) {
       final shouldDelete = dirDate.isBefore(cutoff);
-      _startupLogInfo('_cleanupAndroidLogs',
-          'Dir "$name" → $dirDate | delete: $shouldDelete');
+      _startupLogInfo(
+          '_cleanupLogs', 'Dir "$name" → $dirDate | delete: $shouldDelete');
       if (shouldDelete) await entity.delete(recursive: true);
     } else {
-      _startupLogInfo('_cleanupAndroidLogs', 'Dir "$name" — descending');
+      _startupLogInfo('_cleanupLogs', 'Dir "$name" — descending');
       await _deleteOldLogDirs(entity, cutoff);
     }
   }
@@ -319,44 +214,6 @@ class FluxNews extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // init the log export channel to receive the exported log file name and share the file
-    FlutterLogs.channel.setMethodCallHandler((call) async {
-      if (call.method == 'logsPrinted') {
-        LogPrintedService.instance.addChunk(call.arguments.toString());
-      } else if (call.method == 'logsExported') {
-        String zipName = call.arguments.toString();
-        Directory? externalDirectory;
-
-        if (Platform.isIOS) {
-          externalDirectory = await getApplicationDocumentsDirectory();
-        } else {
-          externalDirectory = await getExternalStorageDirectory();
-        }
-
-        File file = File("${externalDirectory!.path}/$zipName");
-        if (file.existsSync()) {
-          if (Platform.isAndroid) {
-            //Share.shareXFiles([XFile("${externalDirectory.path}/$zipName")]);
-            SharePlus.instance.share(ShareParams(
-                files: [XFile("${externalDirectory.path}/$zipName")]));
-          } else {
-            if (context.mounted) {
-              final box = context.findRenderObject() as RenderBox?;
-              SharePlus.instance.share(ShareParams(
-                  files: [XFile("${externalDirectory.path}/$zipName")],
-                  sharePositionOrigin: box != null
-                      ? box.localToGlobal(Offset.zero) & const Size(100, 100)
-                      : null));
-            }
-          }
-        } else {
-          if (Platform.isAndroid || Platform.isIOS) {
-            FlutterLogs.logError(FluxNewsState.logTag, "existsSync",
-                "File not found in storage.");
-          }
-        }
-      }
-    });
     return ChangeNotifierProvider(
       create: (context) => FluxNewsState(),
       builder: (context, child) {

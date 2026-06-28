@@ -1,34 +1,21 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_logs (0.0.1):
-    - Flutter
-    - ZIPFoundation
   - workmanager_apple (0.0.1):
     - Flutter
-  - ZIPFoundation (0.9.16)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_logs (from `.symlinks/plugins/flutter_logs/ios`)
   - workmanager_apple (from `.symlinks/plugins/workmanager_apple/ios`)
-
-SPEC REPOS:
-  trunk:
-    - ZIPFoundation
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_logs:
-    :path: ".symlinks/plugins/flutter_logs/ios"
   workmanager_apple:
     :path: ".symlinks/plugins/workmanager_apple/ios"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_logs: 30a36079651dcdfb260dbff875bf882bbbcaa22e
   workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
-  ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
 
 PODFILE CHECKSUM: 02cdb2936503e481f7f97c8030010c32462c6689
 

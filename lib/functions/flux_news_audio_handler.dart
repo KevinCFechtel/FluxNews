@@ -9,7 +9,6 @@ import 'package:http/io_client.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;
 import 'package:flux_news/functions/audio_progress_store.dart';
