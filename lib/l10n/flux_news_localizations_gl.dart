@@ -567,60 +567,63 @@ class AppLocalizationsGl extends AppLocalizations {
       'Selecciona un ficheiro ZIP e restablece';
 
   @override
-  String get backupPassword => 'Backup password';
+  String get backupPassword => 'Contrasinal da copia';
 
   @override
-  String get createUnencryptedBackup => 'Create backup without encryption';
+  String get createUnencryptedBackup => 'Crear copia sen cifrar';
 
   @override
   String get createUnencryptedBackupWarning =>
-      'This is more convenient, but the API key is stored in the backup file without password protection.';
+      'Isto é máis cómodo, pero a clave da API gárdase no ficheiro de copia de apoio sen a protección dun contrasinal.';
 
   @override
-  String get backupPasswordRepeat => 'Repeat backup password';
+  String get backupPasswordRepeat => 'Repetir o contrasinal da copia';
 
   @override
-  String get backupPasswordRequired => 'Please enter a backup password.';
+  String get backupPasswordRequired => 'Escribe un contrasinal para a copia.';
 
   @override
-  String get backupPasswordMismatch => 'The backup passwords do not match.';
+  String get backupPasswordMismatch => 'Os contrasinais non coinciden.';
 
   @override
-  String get backupPasswordInvalid => 'The backup password is invalid.';
+  String get backupPasswordInvalid => 'O contrasinal da copia non é válido.';
 
   @override
   String get includeSettingsInAndroidBackup =>
-      'Include app settings in Android backup';
+      'Incluír os axustes da app na copia de apoio Android';
 
   @override
   String get includeSettingsInAndroidBackupDescription =>
-      'Disabled by default. If enabled, Android may back up the generated settings backup file according to the system backup schedule.';
+      'Desactivado de xeito predeterminado. Ao activalo, Android garda o ficheiro cos axustes seguindo a programación de copias de apoio do sistema.';
 
   @override
-  String get androidAutoBackupSuccessful => 'Backup file created successfully';
+  String get androidAutoBackupSuccessful =>
+      'Ficheiro de copia de apoio creado correctamente';
 
   @override
-  String get androidAutoBackupNotCreated => 'Backup file not created';
+  String get androidAutoBackupNotCreated =>
+      'Non se creou o ficheiro de copia de apoio';
 
   @override
   String get androidAutoBackupFileMissing =>
-      'No local Android backup file is available yet.';
+      'Aínda non hai ningún ficheiro local de copia de apoio.';
 
   @override
-  String get lastChange => 'Last change';
+  String get lastChange => 'Último cambio';
 
   @override
-  String get androidAutoBackupFoundTitle => 'Backup found';
+  String get androidAutoBackupFoundTitle => 'Atopouse unha copia';
 
   @override
   String get androidAutoBackupFoundMessage =>
-      'An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.';
+      'Recuperouse a copia de apoio de Android para Flux News. Se o ficheiro está cifrado pediráseche o contrasinal antes de restablecelo.';
 
   @override
-  String get checkAndroidAutoBackup => 'Check Android backup';
+  String get checkAndroidAutoBackup => 'Comprobar copia de Android';
 
   @override
-  String get noAndroidAutoBackupFound => 'No Android backup was found.';
+  String get noAndroidAutoBackupFound =>
+      'Non se atopou copia de apoio de Android.';
 
   @override
   String get minimumFeedSelection =>

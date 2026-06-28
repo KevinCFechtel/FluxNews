@@ -197,10 +197,10 @@ packages:
     dependency: "direct main"
     description:
       name: connectivity_plus
-      sha256: "62ffa266d9a23b79fb3fcbc206afc00bb979417ba57b1324c546b5aab95ba057"
+      sha256: cad0e811a289ea2a941119dc483c204ec1684cbb9a8fc7351fe4a230b8313160
       url: "https://pub.dev"
     source: hosted
-    version: "7.1.1"
+    version: "7.2.0"
   connectivity_plus_platform_interface:
     dependency: transitive
     description:
@@ -221,10 +221,10 @@ packages:
     dependency: "direct main"
     description:
       name: cronet_http
-      sha256: "8e77bc6f203e0bc9126e6a9092508a3435dbcb04da3b53ed1a358909385c5e0e"
+      sha256: "9da9860b409d71e4b8259e3dee631176d499dee23e7cd45a3024ebd5181997d8"
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.0"
+    version: "1.9.0"
   cross_file:
     dependency: transitive
     description:
@@ -386,10 +386,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_carplay
-      sha256: ac652b0a2783f5475b4eaa020e7e062157b85b859a72148b417384e9468bc5a4
+      sha256: "1c930e9e333a96c049c49a3a93f5c18bbf25c27251ddc44627f086ccb1ba503e"
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.2"
+    version: "1.6.3"
   flutter_highlight:
     dependency: transitive
     description:
@@ -657,10 +657,18 @@ packages:
     dependency: transitive
     description:
       name: jni
-      sha256: "8706a77e94c76fe9ec9315e18949cc9479cc03af97085ca9c1077b61323ea12d"
+      sha256: c2230682d5bc2362c1c9e8d3c7f406d9cbba23ab3f2e203a025dd47e0fb2e68f
       url: "https://pub.dev"
     source: hosted
-    version: "0.15.2"
+    version: "1.0.0"
+  jni_flutter:
+    dependency: transitive
+    description:
+      name: jni_flutter
+      sha256: "8b59e590786050b1cd866677dddaf76b1ade5e7bc751abe04b86e84d379d3ba6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   js:
     dependency: transitive
     description:
@@ -865,10 +873,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "149441ca6e4f38193b2e004c0ca6376a3d11f51fa5a77552d8bd4d2b0c0912ba"
+      sha256: "69cbd515a62b94d32a7944f086b2f82b4ac40a1d45bebfc00813a430ab2dabcd"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.23"
+    version: "2.3.1"
   path_provider_foundation:
     dependency: "direct main"
     description:
@@ -881,10 +889,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_linux
-      sha256: f7a1fe3a634fe7734c8d3f2766ad746ae2a2884abe22e241a8b301bf5cac3279
+      sha256: "58c2005f147315b11e9b4a7bc889cd5203e250cba8e3f012dae259b4972b5c16"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.1"
+    version: "2.2.2"
   path_provider_platform_interface:
     dependency: transitive
     description:
@@ -1001,10 +1009,10 @@ packages:
     dependency: "direct main"
     description:
       name: share_plus
-      sha256: a857d8b1479250aff6b57a51b2c02d31ca05848d441817c43f1640c885c286c0
+      sha256: "9eee8283462d91a7a1c8bdb67d08874abd75a2f8fae3bc0ca033035e375fb3d8"
       url: "https://pub.dev"
     source: hosted
-    version: "13.1.0"
+    version: "13.2.0"
   share_plus_platform_interface:
     dependency: transitive
     description:
@@ -1142,10 +1150,10 @@ packages:
     dependency: transitive
     description:
       name: sqflite_darwin
-      sha256: "164a5d73ab87a134566057219988bafde837029a64264e61f1f04376ef3cfcd2"
+      sha256: c86ca18b8f666bbf903924687fe21cc16fc385d086005067e26619ca530bef9f
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.3"
+    version: "2.4.3+1"
   sqflite_platform_interface:
     dependency: transitive
     description:
