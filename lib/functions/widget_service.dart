@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flux_news/database/database_backend.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/sync_news.dart';

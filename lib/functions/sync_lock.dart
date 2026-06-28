@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:path_provider/path_provider.dart';
 

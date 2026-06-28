@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_carplay/flutter_carplay.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;
 import 'package:flux_news/functions/audio_download_service.dart';

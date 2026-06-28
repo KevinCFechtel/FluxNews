@@ -52,7 +52,7 @@ dependencies:
   flutter_oss_licenses: ^3.0.2
   flutter_svg: ^2.0.5
   dynamic_color: ^1.6.3
-  flutter_logs: ^2.2.1
+  logger: ^2.6.2
   share_plus: ^13.1.0
   shared_preferences: ^2.5.3
   path_provider: ^2.0.15

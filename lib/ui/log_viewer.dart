@@ -1,8 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_logs/flutter_logs.dart';
+import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 
 // ── Data ────────────────────────────────────────────────────────────────────
@@ -20,7 +18,7 @@ class LogEntry {
   final String module;
   final String message;
 
-  /// Parses a single log line produced by flutter_logs.
+  /// Parses a single Flux News log line.
   ///
   /// iOS:     "TIMESTAMP: {tag} {module} {message} {LEVEL}"
   /// Android: "{tag}  {module}  {message}  {TIMESTAMP}  {LEVEL}"
@@ -84,20 +82,6 @@ class LogEntry {
   }
 }
 
-// ── Service (singleton fed from main.dart) ──────────────────────────────────
-
-class LogPrintedService {
-  LogPrintedService._();
-  static final LogPrintedService instance = LogPrintedService._();
-
-  final StreamController<String> _controller = StreamController<String>.broadcast();
-  Stream<String> get stream => _controller.stream;
-
-  void addChunk(String text) {
-    if (!_controller.isClosed) _controller.add(text);
-  }
-}
-
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 class LogViewerScreen extends StatefulWidget {
@@ -111,8 +95,6 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   static const int _maxEntries = 5000;
 
   final List<LogEntry> _entries = [];
-  StreamSubscription<String>? _sub;
-  Timer? _loadingDebounce;
   bool _loading = false;
   bool _capped = false; // true when older entries were dropped due to cap
   String _search = '';
@@ -150,7 +132,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       if (_levelFilter != 'ALL' && e.level != _levelFilter) return false;
       if (_search.isNotEmpty) {
         final q = _search.toLowerCase();
-        return e.message.toLowerCase().contains(q) || e.module.toLowerCase().contains(q);
+        return e.message.toLowerCase().contains(q) ||
+            e.module.toLowerCase().contains(q);
       }
       return true;
     }).toList(growable: false);
@@ -169,35 +152,24 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     _filteredCache = null; // invalidate cache
   }
 
-  void _resetLoadingDebounce() {
-    _loadingDebounce?.cancel();
-    _loadingDebounce = Timer(const Duration(milliseconds: 800), () {
-      if (mounted) setState(() => _loading = false);
-    });
-  }
-
   Future<void> _load() async {
-    _loadingDebounce?.cancel();
     setState(() {
       _entries.clear();
       _filteredCache = null;
       _capped = false;
       _loading = true;
     });
-    _sub?.cancel();
-    _sub = LogPrintedService.instance.stream.listen((chunk) {
-      final newEntries = chunk.split('\n').map(LogEntry.parse).whereType<LogEntry>().toList(growable: false);
-      if (newEntries.isNotEmpty && mounted) {
-        setState(() => _addEntries(newEntries));
-      }
-      // Reset debounce on every chunk — loading ends 800 ms after last chunk.
-      _resetLoadingDebounce();
+    final logText = await readFluxNewsLogs();
+    final newEntries = logText
+        .split('\n')
+        .map(LogEntry.parse)
+        .whereType<LogEntry>()
+        .toList(growable: false);
+    if (!mounted) return;
+    setState(() {
+      _addEntries(newEntries);
+      _loading = false;
     });
-    // Android's printLogs never calls result() so await would hang forever.
-    // Fire-and-forget; the debounce timer above handles _loading = false.
-    // The fallback timer covers the case where no chunks arrive (empty log).
-    FlutterLogs.printLogs(exportType: ExportType.ALL).ignore();
-    _resetLoadingDebounce(); // fallback: stop loading after 800 ms even if no data
   }
 
   @override
@@ -208,8 +180,6 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
   @override
   void dispose() {
-    _loadingDebounce?.cancel();
-    _sub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -297,7 +267,9 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                       label: Text(
                         lvl,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: selected && lvl != 'ALL' ? _levelColor(lvl, context) : null,
+                          color: selected && lvl != 'ALL'
+                              ? _levelColor(lvl, context)
+                              : null,
                           fontWeight: selected ? FontWeight.bold : null,
                         ),
                       ),
@@ -318,7 +290,9 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
             child: filtered.isEmpty
                 ? Center(
                     child: Text(
-                      _loading ? AppLocalizations.of(context)!.loading : AppLocalizations.of(context)!.noEntries,
+                      _loading
+                          ? AppLocalizations.of(context)!.loading
+                          : AppLocalizations.of(context)!.noEntries,
                       style: theme.textTheme.bodyMedium,
                     ),
                   )
@@ -331,17 +305,20 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                       return InkWell(
                         onLongPress: () {
                           Clipboard.setData(ClipboardData(
-                            text: '${entry.timestamp}: [${entry.level}] ${entry.module}: ${entry.message}',
+                            text:
+                                '${entry.timestamp}: [${entry.level}] ${entry.module}: ${entry.message}',
                           ));
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(AppLocalizations.of(context)!.copyClipboard),
+                              content: Text(
+                                  AppLocalizations.of(context)!.copyClipboard),
                               duration: const Duration(seconds: 1),
                             ),
                           );
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 5),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -349,21 +326,24 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: levelColor.withAlpha(30),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
                                       entry.level,
-                                      style: theme.textTheme.labelSmall?.copyWith(color: levelColor),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(color: levelColor),
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text(
                                       entry.module,
-                                      style: theme.textTheme.labelSmall?.copyWith(
+                                      style:
+                                          theme.textTheme.labelSmall?.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
                                       softWrap: true,
@@ -373,7 +353,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                                   Text(
                                     entry.timestamp,
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant.withAlpha(150),
+                                      color: theme.colorScheme.onSurfaceVariant
+                                          .withAlpha(150),
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),

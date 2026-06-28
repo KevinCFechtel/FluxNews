@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
-import 'package:flutter_logs/flutter_logs.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -70,11 +69,13 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context)!.searchHint,
             hintStyle: Theme.of(context).textTheme.bodyLarge,
-            border: UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
+            border:
+                UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
             suffixIcon: IconButton(
               onPressed: () {
                 appState.searchController.clear();
-                appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
+                appState.feedSettingsList =
+                    queryFeedsFromDB(appState, context, '');
                 appState.refreshView();
               },
               icon: const Icon(Icons.clear),
@@ -86,12 +87,18 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
             if (value != '') {
               // fetch the news list from the backend with the search text
               Future<List<Feed>> searchFeedListResult =
-                  queryFeedsFromDB(appState, context, value).onError((error, stackTrace) {
-                logThis('fetchSearchedNews', 'Caught an error in fetchSearchedNews function! : ${error.toString()}',
+                  queryFeedsFromDB(appState, context, value)
+                      .onError((error, stackTrace) {
+                logThis(
+                    'fetchSearchedNews',
+                    'Caught an error in fetchSearchedNews function! : ${error.toString()}',
                     LogLevel.ERROR);
                 if (context.mounted) {
-                  if (appState.errorString != AppLocalizations.of(context)!.communicateionMinifluxError) {
-                    appState.errorString = AppLocalizations.of(context)!.communicateionMinifluxError;
+                  if (appState.errorString !=
+                      AppLocalizations.of(context)!
+                          .communicateionMinifluxError) {
+                    appState.errorString = AppLocalizations.of(context)!
+                        .communicateionMinifluxError;
                     appState.newError = true;
                     appState.refreshView();
                   }
@@ -103,7 +110,8 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
               appState.refreshView();
             } else {
               // if search text is empty, set the state with an empty list
-              appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
+              appState.feedSettingsList =
+                  queryFeedsFromDB(appState, context, '');
               appState.refreshView();
             }
           },
@@ -117,7 +125,8 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
 class FluxNewsFeedSettingsStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsFeedSettingsStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsFeedSettingsStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }
