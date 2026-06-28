@@ -1,0 +1,22 @@
+[
+  {
+    "label": "FluxNews: Run iOS Simulator",
+    "command": "/bin/zsh",
+    "args": [".zed/start_ios_simulator.sh", "--run"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "FluxNews: Run Android Emulator",
+    "command": "/bin/zsh",
+    "args": [".zed/start_android_emulator.sh", "--run"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "save": "all"
+  }
+]

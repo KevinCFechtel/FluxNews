@@ -1,0 +1,30 @@
+[
+  {
+    "label": "FluxNews: Debug iOS Simulator",
+    "adapter": "Dart",
+    "type": "flutter",
+    "request": "launch",
+    "program": "lib/main.dart",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "device_id": "C3BC45FD-B303-4602-89CD-319DB0793B74",
+    "build": {
+      "command": "/bin/zsh",
+      "args": [".zed/start_ios_simulator.sh"],
+      "cwd": "$ZED_WORKTREE_ROOT"
+    }
+  },
+  {
+    "label": "FluxNews: Debug Android Emulator",
+    "adapter": "Dart",
+    "type": "flutter",
+    "request": "launch",
+    "program": "lib/main.dart",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "device_id": "emulator-5554",
+    "build": {
+      "command": "/bin/zsh",
+      "args": [".zed/start_android_emulator.sh"],
+      "cwd": "$ZED_WORKTREE_ROOT"
+    }
+  }
+]
