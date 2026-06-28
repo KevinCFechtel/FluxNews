@@ -22,7 +22,7 @@ final logger.Logger _consoleLogger = logger.Logger(
 
 final DateFormat _logDirFormat = DateFormat('ddMMyyyy');
 final DateFormat _logFileHourFormat = DateFormat('ddMMyyyyHH');
-final DateFormat _timestampFormat = DateFormat('dd MMM yyyy hh:mm:ss a');
+final DateFormat _timestampFormat = DateFormat('dd MMM yyyy HH:mm:ss');
 
 Future<File>? _currentLogFileFuture;
 Future<void> _writeQueue = Future<void>.value();
