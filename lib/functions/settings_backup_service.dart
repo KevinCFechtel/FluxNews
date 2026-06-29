@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:archive/archive.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -590,24 +591,128 @@ class SettingsBackupService {
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog.adaptive(
+          void setUnencrypted(bool value) {
+            setState(() {
+              unencryptedBackup = value;
+              if (unencryptedBackup) errorText = null;
+            });
+          }
+
+          void submit() {
+            final password = passwordController.text;
+            if (!unencryptedBackup && password.isEmpty) {
+              setState(() => errorText = localizations.backupPasswordRequired);
+              return;
+            }
+            if (!unencryptedBackup &&
+                confirmPassword &&
+                password != confirmController.text) {
+              setState(() => errorText = localizations.backupPasswordMismatch);
+              return;
+            }
+            Navigator.pop(
+              dialogContext,
+              BackupPasswordResult(
+                password: unencryptedBackup ? '' : password,
+                unencrypted: unencryptedBackup,
+              ),
+            );
+          }
+
+          if (Platform.isIOS) {
+            return CupertinoAlertDialog(
+              title: Text(title),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (allowUnencryptedBackup) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(localizations.createUnencryptedBackup),
+                                const SizedBox(height: 3),
+                                Text(
+                                  localizations.createUnencryptedBackupWarning,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: CupertinoColors.secondaryLabel,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          CupertinoSwitch(
+                            value: unencryptedBackup,
+                            onChanged: setUnencrypted,
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    CupertinoTextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      enabled: !unencryptedBackup,
+                      placeholder: localizations.backupPassword,
+                      padding: const EdgeInsets.all(10),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          errorText!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: CupertinoColors.systemRed,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (confirmPassword) ...[
+                      const SizedBox(height: 8),
+                      CupertinoTextField(
+                        controller: confirmController,
+                        obscureText: true,
+                        enabled: !unencryptedBackup,
+                        placeholder: localizations.backupPasswordRepeat,
+                        padding: const EdgeInsets.all(10),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(localizations.cancel),
+                ),
+                CupertinoDialogAction(
+                  onPressed: submit,
+                  child: Text(localizations.ok),
+                ),
+              ],
+            );
+          }
+
+          return AlertDialog(
             title: Text(title),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (allowUnencryptedBackup)
-                    SwitchListTile.adaptive(
+                    SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: unencryptedBackup,
-                      onChanged: (value) {
-                        setState(() {
-                          unencryptedBackup = value;
-                          if (unencryptedBackup) {
-                            errorText = null;
-                          }
-                        });
-                      },
+                      onChanged: setUnencrypted,
                       title: Text(localizations.createUnencryptedBackup),
                       subtitle:
                           Text(localizations.createUnencryptedBackupWarning),
@@ -639,28 +744,7 @@ class SettingsBackupService {
                 child: Text(localizations.cancel),
               ),
               TextButton(
-                onPressed: () {
-                  final password = passwordController.text;
-                  if (!unencryptedBackup && password.isEmpty) {
-                    setState(
-                        () => errorText = localizations.backupPasswordRequired);
-                    return;
-                  }
-                  if (!unencryptedBackup &&
-                      confirmPassword &&
-                      password != confirmController.text) {
-                    setState(
-                        () => errorText = localizations.backupPasswordMismatch);
-                    return;
-                  }
-                  Navigator.pop(
-                    dialogContext,
-                    BackupPasswordResult(
-                      password: unencryptedBackup ? '' : password,
-                      unencrypted: unencryptedBackup,
-                    ),
-                  );
-                },
+                onPressed: submit,
                 child: Text(localizations.ok),
               ),
             ],
