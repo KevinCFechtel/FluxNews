@@ -91,7 +91,8 @@ android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
         def abiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
         if (abiVersionCode != null) {
-            output.versionCodeOverride = variant.versionCode * 10 + abiVersionCode
+            // Reserve the next three version codes for ABI-specific F-Droid APKs.
+            output.versionCodeOverride = variant.versionCode + abiVersionCode
         }
     }
 }

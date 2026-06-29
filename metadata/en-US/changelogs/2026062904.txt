@@ -1,0 +1,3 @@
+The following has been added:
+ •	Replace logging plugin
+
