@@ -23,25 +23,16 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
       
-        #3 Get Flutter version from submodule 
-      - name: Get Flutter version from submodule
-        run: |
-          flutter_hash=$(git rev-parse @:./vendor/flutter)
-          flutter_version=$(./getFlutterVersion.sh $flutter_hash)
-          echo "FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
-
-        #4 Setup Flutter
-      - name: Set Up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-
-        #5 Install Dependencies
+        #3 Install Dependencies with the same Flutter checkout used by F-Droid
       - name: Install Dependencies
-        run: flutter pub get
+        env:
+          PUB_CACHE: ${{ github.workspace }}/.pub-cache
+        run: |
+          vendor/flutter/bin/flutter config --no-analytics
+          vendor/flutter/bin/flutter pub get
+          sed -i -e '/play-services-cronet/d' "$PUB_CACHE"/hosted/pub.dev/cronet_http-*/android/build.gradle
           
-        #6 Setup Keystore
+        #4 Setup Keystore
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
@@ -53,17 +44,23 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=keystore.jks" >> android/key.properties
         
-        #7 Building APK
+        #5 Build each ABI exactly like F-Droid, then build the universal APK
       - name: Build APK
-        run: flutter build apk --release --split-per-abi --dart-define=cronetHttpNoPlay=true && flutter build apk --release --dart-define=cronetHttpNoPlay=true
+        env:
+          PUB_CACHE: ${{ github.workspace }}/.pub-cache
+        run: |
+          vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform=android-x64 --dart-define=cronetHttpNoPlay=true
+          vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform=android-arm --dart-define=cronetHttpNoPlay=true
+          vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform=android-arm64 --dart-define=cronetHttpNoPlay=true
+          vendor/flutter/bin/flutter build apk --release --dart-define=cronetHttpNoPlay=true
 
-        #8 Upload Artifacts
+        #6 Upload Artifacts
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           path: build/app/outputs/flutter-apk/*
 
-        #9 Extract Version
+        #7 Extract Version
       - name: Extract version and release from pubspec.yaml
         id: extract_version
         run: |
@@ -74,7 +71,7 @@ jobs:
           changelog_versioncode=$((versioncode + 1))
           echo "CHANGELOG_VERSIONCODE=$changelog_versioncode" >> $GITHUB_ENV
         
-        #10 Create Release
+        #8 Create Release
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
