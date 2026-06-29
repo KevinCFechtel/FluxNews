@@ -71,6 +71,8 @@ jobs:
           echo "VERSION=$version" >> $GITHUB_ENV
           versioncode=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r' | cut -d+ -f 2)
           echo "VERSIONCODE=$versioncode" >> $GITHUB_ENV
+          changelog_versioncode=$((versioncode + 1))
+          echo "CHANGELOG_VERSIONCODE=$changelog_versioncode" >> $GITHUB_ENV
         
         #10 Create Release
       - name: Create Release
@@ -79,5 +81,5 @@ jobs:
           artifacts: "build/app/outputs/flutter-apk/*"
           tag: v${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          bodyFile: metadata/en-US/changelogs/${{ env.VERSIONCODE }}1.txt
+          bodyFile: metadata/en-US/changelogs/${{ env.CHANGELOG_VERSIONCODE }}.txt
           token: ${{ secrets.TOKEN }}
