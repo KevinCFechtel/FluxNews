@@ -41,7 +41,8 @@ class GeneralSettings extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.generalSettings),
+          title: Text(AppLocalizations.of(context)!.generalSettings,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // show the news list
         body: const FluxNewsGeneralSettingsBody());

@@ -108,12 +108,14 @@ class _LoginState extends State<Login> {
 
     appState.customHeaders = parsedHeaders;
     final authCheck =
-        await checkMinifluxCredentials(normalizedUrl, apiKey, appState).onError((error, stackTrace) => false);
+        await checkMinifluxCredentials(normalizedUrl, apiKey, appState)
+            .onError((error, stackTrace) => false);
 
     if (!authCheck) {
       appState.customHeaders = previousHeaders;
       appState.errorOnMinifluxAuth = true;
-      appState.insecureMinifluxURL = !normalizedUrl.toLowerCase().startsWith('https');
+      appState.insecureMinifluxURL =
+          !normalizedUrl.toLowerCase().startsWith('https');
       appState.refreshView();
       if (mounted) {
         setState(() {
@@ -124,18 +126,22 @@ class _LoginState extends State<Login> {
       return;
     }
 
-    appState.storage.write(key: FluxNewsState.secureStorageMinifluxURLKey, value: normalizedUrl);
-    appState.storage.write(key: FluxNewsState.secureStorageMinifluxAPIKey, value: apiKey);
+    appState.storage.write(
+        key: FluxNewsState.secureStorageMinifluxURLKey, value: normalizedUrl);
+    appState.storage
+        .write(key: FluxNewsState.secureStorageMinifluxAPIKey, value: apiKey);
     appState.minifluxURL = normalizedUrl;
     appState.minifluxAPIKey = apiKey;
     appState.customHeaders = parsedHeaders;
     appState.saveCustomHeadersToStorage();
     appState.errorOnMinifluxAuth = false;
-    appState.insecureMinifluxURL = !normalizedUrl.toLowerCase().startsWith('https');
+    appState.insecureMinifluxURL =
+        !normalizedUrl.toLowerCase().startsWith('https');
     bool emptyFeeds = await checkEmptyFeeds(appState);
     if (emptyFeeds) {
       if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.feedOnboardingRouteString, (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, FluxNewsState.feedOnboardingRouteString, (route) => false);
       }
       setState(() {
         _isLoading = false;
@@ -149,12 +155,14 @@ class _LoginState extends State<Login> {
       setState(() {
         _isLoading = false;
       });
-      Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.rootRouteString, (route) => false);
+      Navigator.pushNamedAndRemoveUntil(
+          context, FluxNewsState.rootRouteString, (route) => false);
     }
   }
 
   Widget _buildLogo(BuildContext context) {
-    final bool isLightMode = MediaQuery.of(context).platformBrightness == Brightness.light;
+    final bool isLightMode =
+        MediaQuery.of(context).platformBrightness == Brightness.light;
 
     return isLightMode
         ? Image.asset(
@@ -169,7 +177,8 @@ class _LoginState extends State<Login> {
           );
   }
 
-  Widget _buildFormContent(BuildContext context, AppLocalizations localization) {
+  Widget _buildFormContent(
+      BuildContext context, AppLocalizations localization) {
     return Form(
       key: _formKey,
       child: Column(
@@ -289,7 +298,8 @@ class _LoginState extends State<Login> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(
+                              strokeWidth: 2),
                         )
                       : Text(localization.save),
                 )
@@ -302,23 +312,28 @@ class _LoginState extends State<Login> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(
+                              strokeWidth: 2),
                         )
-                      : Text(localization.save, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                      : Text(localization.save,
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary)),
                 ),
         ],
       ),
     );
   }
 
-  Widget _buildPhoneLayout(BuildContext context, AppLocalizations localization) {
+  Widget _buildPhoneLayout(
+      BuildContext context, AppLocalizations localization) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: _buildFormContent(context, localization),
     );
   }
 
-  Widget _buildTabletLayout(BuildContext context, AppLocalizations localization) {
+  Widget _buildTabletLayout(
+      BuildContext context, AppLocalizations localization) {
     final theme = Theme.of(context);
 
     return Center(
@@ -340,7 +355,8 @@ class _LoginState extends State<Login> {
                       const SizedBox(height: 28),
                       Text(
                         localization.minifluxServer,
-                        style: theme.textTheme.headlineMedium?.copyWith(fontSize: 36),
+                        style: theme.textTheme.headlineMedium
+                            ?.copyWith(fontSize: 36),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -376,10 +392,13 @@ class _LoginState extends State<Login> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localization.minifluxServer),
+        title: Text(localization.minifluxServer,
+            style: Theme.of(context).textTheme.titleLarge),
       ),
       body: SafeArea(
-        child: appState.isTablet ? _buildTabletLayout(context, localization) : _buildPhoneLayout(context, localization),
+        child: appState.isTablet
+            ? _buildTabletLayout(context, localization)
+            : _buildPhoneLayout(context, localization),
       ),
     );
   }

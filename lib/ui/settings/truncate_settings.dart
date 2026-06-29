@@ -33,14 +33,16 @@ class TruncateSettings extends StatelessWidget {
     }
   }
 
-  Scaffold truncateSettingsLayout(BuildContext context, FluxNewsState appState) {
+  Scaffold truncateSettingsLayout(
+      BuildContext context, FluxNewsState appState) {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.truncateSettings),
+          title: Text(AppLocalizations.of(context)!.truncateSettings,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // show the news list
         body: const FluxNewsTruncateSettingsBody());
@@ -52,7 +54,18 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
     super.key,
   });
 
-  static const List<int> amountOfCharactersToTruncate = <int>[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+  static const List<int> amountOfCharactersToTruncate = <int>[
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    700,
+    800,
+    900,
+    1000
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -63,13 +76,15 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             alignment: Alignment.center,
             // this is the main column of the settings page
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Divider(),
               // this sections contains the truncate options
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.cut_outlined,
                     ),
@@ -84,12 +99,15 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.activateTruncate,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.activateTruncate = value;
-                      appState.storage.write(key: FluxNewsState.secureStorageActivateTruncateKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState.secureStorageActivateTruncateKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -117,36 +135,43 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                       onChanged: (int? value) {
                         if (value != null) {
                           appState.truncateMode = value;
-                          appState.storage
-                              .write(key: FluxNewsState.secureStorageTruncateModeKey, value: value.toString());
+                          appState.storage.write(
+                              key: FluxNewsState.secureStorageTruncateModeKey,
+                              value: value.toString());
                           appState.refreshView();
                         }
                       },
                       child: Column(children: [
                         RadioListTile<int>(
-                          title: Text(AppLocalizations.of(context)!.truncateModeAll,
+                          title: Text(
+                              AppLocalizations.of(context)!.truncateModeAll,
                               style: Theme.of(context).textTheme.titleMedium),
                           value: 0,
                         ),
                         RadioListTile<int>(
-                          title: Text(AppLocalizations.of(context)!.truncateModeScraper,
+                          title: Text(
+                              AppLocalizations.of(context)!.truncateModeScraper,
                               style: Theme.of(context).textTheme.titleMedium),
                           value: 1,
                         ),
                         RadioListTile<int>(
-                          title: Text(AppLocalizations.of(context)!.truncateModeManual,
+                          title: Text(
+                              AppLocalizations.of(context)!.truncateModeManual,
                               style: Theme.of(context).textTheme.titleMedium),
                           value: 2,
                         )
                       ]))
                   : const SizedBox.shrink(),
 
-              appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
+              appState.activateTruncate
+                  ? const Divider()
+                  : const SizedBox.shrink(),
               appState.activateTruncate
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.cut_outlined,
                           ),
@@ -169,11 +194,14 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                             if (value != null) {
                               appState.charactersToTruncate = value;
                               appState.storage.write(
-                                  key: FluxNewsState.secureStorageCharactersToTruncateKey, value: value.toString());
+                                  key: FluxNewsState
+                                      .secureStorageCharactersToTruncateKey,
+                                  value: value.toString());
                               appState.refreshView();
                             }
                           },
-                          items: amountOfCharactersToTruncate.map<DropdownMenuItem<int>>((int value) {
+                          items: amountOfCharactersToTruncate
+                              .map<DropdownMenuItem<int>>((int value) {
                             return DropdownMenuItem<int>(
                               value: value,
                               child: Text(value.toString()),
@@ -183,25 +211,30 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                       ],
                     )
                   : const SizedBox.shrink(),
-              appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
+              appState.activateTruncate
+                  ? const Divider()
+                  : const SizedBox.shrink(),
               appState.activateTruncate
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.cut_outlined,
                           ),
                         ),
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.charactersToTruncateLimit,
+                            AppLocalizations.of(context)!
+                                .charactersToTruncateLimit,
                             style: Theme.of(context).textTheme.titleMedium,
                             overflow: TextOverflow.visible,
                           ),
                         ),
                         DropdownButton<KeyValueRecordType>(
-                          value: appState.amountOfCharactersToTruncateLimitSelection,
+                          value: appState
+                              .amountOfCharactersToTruncateLimitSelection,
                           elevation: 16,
                           underline: Container(
                             height: 2,
@@ -209,16 +242,22 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                           alignment: AlignmentDirectional.centerEnd,
                           onChanged: (KeyValueRecordType? value) {
                             if (value != null) {
-                              appState.charactersToTruncateLimit = int.parse(value.key);
-                              appState.amountOfCharactersToTruncateLimitSelection = value;
+                              appState.charactersToTruncateLimit =
+                                  int.parse(value.key);
+                              appState.amountOfCharactersToTruncateLimitSelection =
+                                  value;
                               appState.storage.write(
-                                  key: FluxNewsState.secureStorageCharactersToTruncateLimitKey, value: value.key);
+                                  key: FluxNewsState
+                                      .secureStorageCharactersToTruncateLimitKey,
+                                  value: value.key);
                               appState.refreshView();
                             }
                           },
-                          items: appState.recordTypesAmountOfCharactersToTruncateLimit!
+                          items: appState
+                              .recordTypesAmountOfCharactersToTruncateLimit!
                               .map<DropdownMenuItem<KeyValueRecordType>>(
-                                  (recordType) => DropdownMenuItem<KeyValueRecordType>(
+                                  (recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
                                         value: recordType,
                                         child: Text(
                                           recordType.value,
@@ -229,7 +268,9 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                       ],
                     )
                   : const SizedBox.shrink(),
-              appState.activateTruncate ? const Divider() : const SizedBox.shrink(),
+              appState.activateTruncate
+                  ? const Divider()
+                  : const SizedBox.shrink(),
             ])));
   }
 }
@@ -237,7 +278,8 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
 class FluxNewsTruncateSettingsStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsTruncateSettingsStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsTruncateSettingsStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }

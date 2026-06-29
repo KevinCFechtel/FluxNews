@@ -39,7 +39,8 @@ class HeaderSettings extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.headers),
+          title: Text(AppLocalizations.of(context)!.headers,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // show the news list
         body: const FluxNewsHeaderSettingsBody());
@@ -62,7 +63,8 @@ class FluxNewsHeaderSettingsBody extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             alignment: Alignment.center,
             // this is the main column of the settings page
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Wrap(children: [
                 Text(AppLocalizations.of(context)!.headerKey),
                 TextField(
@@ -163,7 +165,8 @@ class FluxNewsHeaderSettingsBody extends StatelessWidget {
 class FluxNewsHeaderSettingsStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsHeaderSettingsStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsHeaderSettingsStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }

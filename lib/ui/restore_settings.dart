@@ -217,7 +217,8 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.restoreSettings),
+        title: Text(AppLocalizations.of(context)!.restoreSettings,
+            style: Theme.of(context).textTheme.titleLarge),
       ),
       body: Column(
         children: [

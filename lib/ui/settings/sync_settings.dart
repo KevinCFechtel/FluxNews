@@ -41,7 +41,8 @@ class SyncSettings extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.syncSettings),
+          title: Text(AppLocalizations.of(context)!.syncSettings,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // show the news list
         body: const FluxNewsSyncSettingsBody());

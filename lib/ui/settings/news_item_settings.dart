@@ -33,14 +33,16 @@ class NewsItemSettings extends StatelessWidget {
     }
   }
 
-  Scaffold newsItemSettingsLayout(BuildContext context, FluxNewsState appState) {
+  Scaffold newsItemSettingsLayout(
+      BuildContext context, FluxNewsState appState) {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.newsItemSettings),
+          title: Text(AppLocalizations.of(context)!.newsItemSettings,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // show the news list
         body: const FluxNewsNewsItemSettingsBody());
@@ -61,13 +63,15 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             alignment: Alignment.center,
             // this is the main column of the settings page
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Divider(),
               // this row contains the selection of the tab action
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.touch_app,
                     ),
@@ -79,10 +83,14 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium,
                         overflow: TextOverflow.visible,
                       ),
-                      appState.tabAction == FluxNewsState.tabActionSplittedString
+                      appState.tabAction ==
+                              FluxNewsState.tabActionSplittedString
                           ? Text(
                               AppLocalizations.of(context)!.splittedDescription,
-                              style: Theme.of(context).textTheme.titleMedium!.copyWith(fontStyle: FontStyle.italic),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(fontStyle: FontStyle.italic),
                               overflow: TextOverflow.visible,
                             )
                           : SizedBox.shrink(),
@@ -99,13 +107,18 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                       if (value != null) {
                         appState.tabAction = value.key;
                         appState.tabActionSelection = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageTabActionKey, value: value.key);
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageTabActionKey,
+                            value: value.key);
                         appState.refreshView();
                       }
                     },
                     items: appState.recordTypesTabActions!
-                        .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                            DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                        .map<DropdownMenuItem<KeyValueRecordType>>(
+                            (recordType) =>
+                                DropdownMenuItem<KeyValueRecordType>(
+                                    value: recordType,
+                                    child: Text(recordType.value)))
                         .toList(),
                   ),
                 ],
@@ -115,7 +128,8 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.touch_app_outlined,
                     ),
@@ -138,13 +152,18 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                       if (value != null) {
                         appState.longPressAction = value.key;
                         appState.longPressActionSelection = value;
-                        appState.storage.write(key: FluxNewsState.secureStorageLongPressActionKey, value: value.key);
+                        appState.storage.write(
+                            key: FluxNewsState.secureStorageLongPressActionKey,
+                            value: value.key);
                         appState.refreshView();
                       }
                     },
                     items: appState.recordTypesLongPressActions!
-                        .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                            DropdownMenuItem<KeyValueRecordType>(value: recordType, child: Text(recordType.value)))
+                        .map<DropdownMenuItem<KeyValueRecordType>>(
+                            (recordType) =>
+                                DropdownMenuItem<KeyValueRecordType>(
+                                    value: recordType,
+                                    child: Text(recordType.value)))
                         .toList(),
                   ),
                 ],
@@ -154,7 +173,8 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.remove_from_queue,
                     ),
@@ -169,13 +189,16 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.removeNewsFromListWhenRead,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.removeNewsFromListWhenRead = value;
-                      appState.storage
-                          .write(key: FluxNewsState.secureStorageRemoveNewsFromListWhenReadKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageRemoveNewsFromListWhenReadKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -186,7 +209,8 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.swipe,
                     ),
@@ -201,13 +225,16 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                   Switch.adaptive(
                     value: appState.activateSwipeGestures,
                     onChanged: (bool value) {
-                      String stringValue = FluxNewsState.secureStorageFalseString;
+                      String stringValue =
+                          FluxNewsState.secureStorageFalseString;
                       if (value == true) {
                         stringValue = FluxNewsState.secureStorageTrueString;
                       }
                       appState.activateSwipeGestures = value;
-                      appState.storage
-                          .write(key: FluxNewsState.secureStorageActivateSwipeGesturesKey, value: stringValue);
+                      appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageActivateSwipeGesturesKey,
+                          value: stringValue);
                       appState.refreshView();
                     },
                   ),
@@ -220,14 +247,16 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.swipe_left,
                           ),
                         ),
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.leftSwipeSelectionOption,
+                            AppLocalizations.of(context)!
+                                .leftSwipeSelectionOption,
                             style: Theme.of(context).textTheme.titleMedium,
                             overflow: TextOverflow.visible,
                           ),
@@ -243,35 +272,43 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             if (value != null) {
                               appState.leftSwipeAction = value.key;
                               appState.leftSwipeActionSelection = value;
-                              appState.storage
-                                  .write(key: FluxNewsState.secureStorageLeftSwipeActionKey, value: value.key);
+                              appState.storage.write(
+                                  key: FluxNewsState
+                                      .secureStorageLeftSwipeActionKey,
+                                  value: value.key);
                               appState.refreshView();
                             }
                           },
                           items: appState.recordTypesSwipeActions!
-                              .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                  DropdownMenuItem<KeyValueRecordType>(
-                                      value: recordType, child: Text(recordType.value)))
+                              .map<DropdownMenuItem<KeyValueRecordType>>(
+                                  (recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType,
+                                          child: Text(recordType.value)))
                               .toList(),
                         ),
                       ],
                     )
                   : const SizedBox.shrink(),
-              appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+              appState.activateSwipeGestures
+                  ? const Divider()
+                  : const SizedBox.shrink(),
               // this row contains the selection of second left swipe action
               // there are the choices of none, read, bookmark and save
               appState.activateSwipeGestures
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.swipe_left,
                           ),
                         ),
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.secondLeftSwipeSelectionOption,
+                            AppLocalizations.of(context)!
+                                .secondLeftSwipeSelectionOption,
                             style: Theme.of(context).textTheme.titleMedium,
                             overflow: TextOverflow.visible,
                           ),
@@ -287,35 +324,43 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             if (value != null) {
                               appState.secondLeftSwipeAction = value.key;
                               appState.secondLeftSwipeActionSelection = value;
-                              appState.storage
-                                  .write(key: FluxNewsState.secureStorageSecondLeftSwipeActionKey, value: value.key);
+                              appState.storage.write(
+                                  key: FluxNewsState
+                                      .secureStorageSecondLeftSwipeActionKey,
+                                  value: value.key);
                               appState.refreshView();
                             }
                           },
                           items: appState.recordTypesSecondSwipeActions!
-                              .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                  DropdownMenuItem<KeyValueRecordType>(
-                                      value: recordType, child: Text(recordType.value)))
+                              .map<DropdownMenuItem<KeyValueRecordType>>(
+                                  (recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType,
+                                          child: Text(recordType.value)))
                               .toList(),
                         ),
                       ],
                     )
                   : const SizedBox.shrink(),
-              appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+              appState.activateSwipeGestures
+                  ? const Divider()
+                  : const SizedBox.shrink(),
               // this row contains the selection of right swipe action
               // there are the choices of read, bookmark and save
               appState.activateSwipeGestures
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.swipe_right,
                           ),
                         ),
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.rightSwipeSelectionOption,
+                            AppLocalizations.of(context)!
+                                .rightSwipeSelectionOption,
                             style: Theme.of(context).textTheme.titleMedium,
                             overflow: TextOverflow.visible,
                           ),
@@ -331,35 +376,43 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             if (value != null) {
                               appState.rightSwipeAction = value.key;
                               appState.rightSwipeActionSelection = value;
-                              appState.storage
-                                  .write(key: FluxNewsState.secureStorageRightSwipeActionKey, value: value.key);
+                              appState.storage.write(
+                                  key: FluxNewsState
+                                      .secureStorageRightSwipeActionKey,
+                                  value: value.key);
                               appState.refreshView();
                             }
                           },
                           items: appState.recordTypesSwipeActions!
-                              .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                  DropdownMenuItem<KeyValueRecordType>(
-                                      value: recordType, child: Text(recordType.value)))
+                              .map<DropdownMenuItem<KeyValueRecordType>>(
+                                  (recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType,
+                                          child: Text(recordType.value)))
                               .toList(),
                         ),
                       ],
                     )
                   : const SizedBox.shrink(),
-              appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+              appState.activateSwipeGestures
+                  ? const Divider()
+                  : const SizedBox.shrink(),
               // this row contains the selection of second right swipe action
               // there are the choices of none, read, bookmark and save
               appState.activateSwipeGestures
                   ? Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                          padding: EdgeInsets.only(
+                              left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                           child: const Icon(
                             Icons.swipe_right,
                           ),
                         ),
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.secondRightSwipeSelectionOption,
+                            AppLocalizations.of(context)!
+                                .secondRightSwipeSelectionOption,
                             style: Theme.of(context).textTheme.titleMedium,
                             overflow: TextOverflow.visible,
                           ),
@@ -375,21 +428,27 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             if (value != null) {
                               appState.secondRightSwipeAction = value.key;
                               appState.secondRightSwipeActionSelection = value;
-                              appState.storage
-                                  .write(key: FluxNewsState.secureStorageSecondRightSwipeActionKey, value: value.key);
+                              appState.storage.write(
+                                  key: FluxNewsState
+                                      .secureStorageSecondRightSwipeActionKey,
+                                  value: value.key);
                               appState.refreshView();
                             }
                           },
                           items: appState.recordTypesSecondSwipeActions!
-                              .map<DropdownMenuItem<KeyValueRecordType>>((recordType) =>
-                                  DropdownMenuItem<KeyValueRecordType>(
-                                      value: recordType, child: Text(recordType.value)))
+                              .map<DropdownMenuItem<KeyValueRecordType>>(
+                                  (recordType) =>
+                                      DropdownMenuItem<KeyValueRecordType>(
+                                          value: recordType,
+                                          child: Text(recordType.value)))
                               .toList(),
                         ),
                       ],
                     )
                   : const SizedBox.shrink(),
-              appState.activateSwipeGestures ? const Divider() : const SizedBox.shrink(),
+              appState.activateSwipeGestures
+                  ? const Divider()
+                  : const SizedBox.shrink(),
             ])));
   }
 }
@@ -397,7 +456,8 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
 class FluxNewsNewsItemSettingsStatefulWrapper extends StatefulWidget {
   final Function onInit;
   final Widget child;
-  const FluxNewsNewsItemSettingsStatefulWrapper({super.key, required this.onInit, required this.child});
+  const FluxNewsNewsItemSettingsStatefulWrapper(
+      {super.key, required this.onInit, required this.child});
   @override
   FluxNewsBodyState createState() => FluxNewsBodyState();
 }

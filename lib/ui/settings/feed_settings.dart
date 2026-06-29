@@ -44,7 +44,8 @@ class FeedSettings extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.feedSettings),
+          title: Text(AppLocalizations.of(context)!.feedSettings,
+              style: Theme.of(context).textTheme.titleLarge),
         ),
         // show the news list
         body: const FluxNewsFeedSettingsBody());

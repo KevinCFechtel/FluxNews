@@ -137,7 +137,8 @@ class _WidgetSettingsState extends State<WidgetSettings> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(AppLocalizations.of(context)!.widgetSettings),
+        title: Text(AppLocalizations.of(context)!.widgetSettings,
+            style: Theme.of(context).textTheme.titleLarge),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -220,8 +221,8 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                 const Divider(),
                 _DropdownRow<KeyValueRecordType>(
                   icon: Icons.feed,
-                  label:
-                      AppLocalizations.of(context)!.widgetFilterCategorySelection,
+                  label: AppLocalizations.of(context)!
+                      .widgetFilterCategorySelection,
                   value: _selectedCategoryOption(appState)!,
                   items: _categoryOptions
                       .map((option) => DropdownMenuItem<KeyValueRecordType>(

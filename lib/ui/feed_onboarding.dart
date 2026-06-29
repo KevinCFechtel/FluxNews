@@ -118,7 +118,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         _SuggestedFeed(
           title: 'Spektrum',
           siteUrl: 'https://www.spektrum.de',
-          feedUrl: 'http://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406',
+          feedUrl:
+              'http://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406',
           iconAssetPath: 'assets/spektrum.png',
         ),
       ],
@@ -168,7 +169,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         _SuggestedFeed(
           title: '11KM: der tagesschau-Podcast',
           siteUrl: 'https://www.tagesschau.de/multimedia/podcasts/11km/',
-          feedUrl: 'https://www.tagesschau.de/multimedia/podcasts/11km/index~podcast.xml',
+          feedUrl:
+              'https://www.tagesschau.de/multimedia/podcasts/11km/index~podcast.xml',
           iconAssetPath: 'assets/tagesschau.png',
         ),
       ],
@@ -191,7 +193,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
     setState(() {
       _selectedFeedUrls
         ..clear()
-        ..addAll(_categories.expand((category) => category.feeds.map((feed) => feed.feedUrl)));
+        ..addAll(_categories
+            .expand((category) => category.feeds.map((feed) => feed.feedUrl)));
     });
   }
 
@@ -209,7 +212,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         width: 20,
         height: 20,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => const Icon(Icons.rss_feed),
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.rss_feed),
       ),
     );
   }
@@ -221,7 +225,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
 
     if (_selectedFeedUrls.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.minimumFeedSelection)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.minimumFeedSelection)),
       );
       return;
     }
@@ -236,7 +241,9 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
     final List<String> failedFeeds = <String>[];
 
     for (final category in _categories) {
-      final selectedFeeds = category.feeds.where((feed) => _selectedFeedUrls.contains(feed.feedUrl)).toList();
+      final selectedFeeds = category.feeds
+          .where((feed) => _selectedFeedUrls.contains(feed.feedUrl))
+          .toList();
       if (selectedFeeds.isEmpty) {
         continue;
       }
@@ -281,7 +288,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
       appState.syncNow = true;
       appState.refreshView();
       if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, FluxNewsState.rootRouteString, (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, FluxNewsState.rootRouteString, (route) => false);
       }
       return;
     } else {
@@ -292,11 +300,14 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
 
     final String failedText = failedFeeds.isEmpty ? '' : failedFeeds.join(', ');
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${AppLocalizations.of(context)!.feedCreationError} $failedText')),
+      SnackBar(
+          content: Text(
+              '${AppLocalizations.of(context)!.feedCreationError} $failedText')),
     );
   }
 
-  Widget _buildSelectionList(BuildContext context, AppLocalizations localization) {
+  Widget _buildSelectionList(
+      BuildContext context, AppLocalizations localization) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: <Widget>[
@@ -327,11 +338,13 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
     );
   }
 
-  Widget _buildPhoneLayout(BuildContext context, AppLocalizations localization) {
+  Widget _buildPhoneLayout(
+      BuildContext context, AppLocalizations localization) {
     return _buildSelectionList(context, localization);
   }
 
-  Widget _buildTabletLayout(BuildContext context, AppLocalizations localization) {
+  Widget _buildTabletLayout(
+      BuildContext context, AppLocalizations localization) {
     final theme = Theme.of(context);
 
     return Center(
@@ -357,7 +370,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
                       const SizedBox(height: 20),
                       Text(
                         localization.feedSelection,
-                        style: theme.textTheme.headlineMedium?.copyWith(fontSize: 36),
+                        style: theme.textTheme.headlineMedium
+                            ?.copyWith(fontSize: 36),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -388,7 +402,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localization.feedSelection),
+        title: Text(localization.feedSelection,
+            style: Theme.of(context).textTheme.titleLarge),
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -401,10 +416,14 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.cloud_upload),
-          label: Text(_isSubmitting ? localization.feedCreationDuration : '${localization.save} ($_selectedCount)'),
+          label: Text(_isSubmitting
+              ? localization.feedCreationDuration
+              : '${localization.save} ($_selectedCount)'),
         ),
       ),
-      body: appState.isTablet ? _buildTabletLayout(context, localization) : _buildPhoneLayout(context, localization),
+      body: appState.isTablet
+          ? _buildTabletLayout(context, localization)
+          : _buildPhoneLayout(context, localization),
     );
   }
 
@@ -433,7 +452,8 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
 }
 
 class _SuggestedCategory {
-  _SuggestedCategory({required this.title, required this.icon, required this.feeds});
+  _SuggestedCategory(
+      {required this.title, required this.icon, required this.feeds});
 
   final String title;
   final IconData icon;
