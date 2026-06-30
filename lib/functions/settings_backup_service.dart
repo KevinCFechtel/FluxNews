@@ -621,72 +621,77 @@ class SettingsBackupService {
 
           if (Platform.isIOS) {
             return CupertinoAlertDialog(
-              title: Text(title),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (allowUnencryptedBackup) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(localizations.createUnencryptedBackup),
-                                const SizedBox(height: 3),
-                                Text(
-                                  localizations.createUnencryptedBackupWarning,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: CupertinoColors.secondaryLabel,
+              title: Text(title, textAlign: TextAlign.left),
+              content: DefaultTextStyle.merge(
+                textAlign: TextAlign.left,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (allowUnencryptedBackup) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(localizations.createUnencryptedBackup),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    localizations
+                                        .createUnencryptedBackupWarning,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: CupertinoColors.secondaryLabel,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          CupertinoSwitch(
-                            value: unencryptedBackup,
-                            onChanged: setUnencrypted,
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    CupertinoTextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      enabled: !unencryptedBackup,
-                      placeholder: localizations.backupPassword,
-                      padding: const EdgeInsets.all(10),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          errorText!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: CupertinoColors.systemRed,
-                          ),
+                            const SizedBox(width: 8),
+                            CupertinoSwitch(
+                              value: unencryptedBackup,
+                              onChanged: setUnencrypted,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                    if (confirmPassword) ...[
-                      const SizedBox(height: 8),
+                      ],
+                      const SizedBox(height: 12),
                       CupertinoTextField(
-                        controller: confirmController,
+                        controller: passwordController,
                         obscureText: true,
                         enabled: !unencryptedBackup,
-                        placeholder: localizations.backupPasswordRepeat,
+                        placeholder: localizations.backupPassword,
                         padding: const EdgeInsets.all(10),
                       ),
+                      if (errorText != null) ...[
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            errorText!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: CupertinoColors.systemRed,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (confirmPassword) ...[
+                        const SizedBox(height: 8),
+                        CupertinoTextField(
+                          controller: confirmController,
+                          obscureText: true,
+                          enabled: !unencryptedBackup,
+                          placeholder: localizations.backupPasswordRepeat,
+                          padding: const EdgeInsets.all(10),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
               actions: [
