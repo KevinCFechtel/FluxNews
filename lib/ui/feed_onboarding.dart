@@ -21,6 +21,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
       title: 'Technologie',
       icon: Icons.memory,
       feeds: <_SuggestedFeed>[
+        /*
         _SuggestedFeed(
           title: '9to5Mac',
           siteUrl: 'https://9to5mac.com',
@@ -28,12 +29,14 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
           iconAssetPath: 'assets/9to5mac.png',
           scraperRules: null,
         ),
+        */
         _SuggestedFeed(
           title: 'The Verge',
           siteUrl: 'https://www.theverge.com',
           feedUrl: 'https://www.theverge.com/rss/index.xml',
           iconAssetPath: 'assets/verge.png',
         ),
+        /*
         _SuggestedFeed(
           title: 'heise online',
           siteUrl: 'https://www.heise.de',
@@ -41,6 +44,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
           iconAssetPath: 'assets/heise.png',
           scraperRules: null,
         ),
+        */
       ],
     ),
     _SuggestedCategory(
@@ -60,14 +64,17 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
           iconAssetPath: 'assets/aljazeera.png',
           scraperRules: 'p.article__subhead, div.responsive-image',
         ),
+        /*
         _SuggestedFeed(
           title: 'The Wall Street Journal',
           siteUrl: 'https://www.wsj.com',
           feedUrl: 'https://feeds.content.dowjones.io/public/rss/RSSWorldNews',
           iconAssetPath: 'assets/wsj.png',
         ),
+        */
       ],
     ),
+    /*
     _SuggestedCategory(
       title: 'News - National Germany',
       icon: Icons.public,
@@ -99,6 +106,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         ),
       ],
     ),
+    */
     _SuggestedCategory(
       title: 'Science',
       icon: Icons.science,
@@ -150,6 +158,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         ),
       ],
     ),
+    /*
     _SuggestedCategory(
       title: 'Podcasts - National Germany',
       icon: Icons.podcasts,
@@ -175,6 +184,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         ),
       ],
     ),
+    */
   ];
 
   int get _selectedCount => _selectedFeedUrls.length;

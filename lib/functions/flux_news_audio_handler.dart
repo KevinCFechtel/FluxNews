@@ -1087,16 +1087,14 @@ class FluxNewsAudioHandler extends BaseAudioHandler
   PlaybackState _buildPlaybackState() {
     return PlaybackState(
       controls: [
-        MediaControl.skipToPrevious,
+        MediaControl.rewind,
         if (_player.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.skipToNext,
+        MediaControl.fastForward,
       ],
       systemActions: const {
         MediaAction.play,
         MediaAction.pause,
         MediaAction.playPause,
-        MediaAction.skipToPrevious,
-        MediaAction.skipToNext,
         MediaAction.seek,
         MediaAction.seekForward,
         MediaAction.seekBackward,
