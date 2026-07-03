@@ -1090,6 +1090,7 @@ class FluxNewsAudioHandler extends BaseAudioHandler
         MediaControl.rewind,
         if (_player.playing) MediaControl.pause else MediaControl.play,
         MediaControl.fastForward,
+        MediaControl.stop,
       ],
       systemActions: const {
         MediaAction.play,
