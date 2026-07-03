@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -14,6 +15,95 @@ import '../miniflux/miniflux_backend.dart';
 import '../models/news_model.dart';
 
 const int _sqliteInChunkSize = 500;
+
+Future<void> _prepareNewsListMetadata(News news, FluxNewsState appState) async {
+  final rows = await appState.db!.rawQuery(
+    '''SELECT preferParagraph, preferAttachmentImage
+         FROM feeds
+        WHERE feedID = ?
+        LIMIT 1''',
+    [news.feedID],
+  );
+  if (rows.isNotEmpty) {
+    news.preferParagraph = rows.first['preferParagraph'] == 1;
+    news.preferAttachmentImage = rows.first['preferAttachmentImage'] == 1;
+  }
+  news.prepareListMetadata();
+}
+
+Future<void> _refreshStoredNewsMetadataForFeed(
+    int feedID, FluxNewsState appState) async {
+  final idRows = await appState.db!.rawQuery(
+    'SELECT newsID FROM news WHERE feedID = ?',
+    [feedID],
+  );
+  final batch = appState.db!.batch();
+  for (final row in idRows) {
+    final news = await queryNewsByNewsId(appState, row['newsID'] as int);
+    if (news == null) continue;
+    news.prepareListMetadata();
+    batch.rawUpdate(
+      'UPDATE news SET previewText = ?, imageUrl = ? WHERE newsID = ?',
+      [news.previewText, news.imageUrl, news.newsID],
+    );
+  }
+  await batch.commit(noResult: true);
+}
+
+Future<void> _backfillMissingNewsMetadata(
+  FluxNewsState appState,
+  List<News> visibleNews,
+) async {
+  if (appState.newsMetadataBackfillRunning) return;
+  appState.newsMetadataBackfillRunning = true;
+  final visibleNewsByID = {for (final news in visibleNews) news.newsID: news};
+  var visibleNewsChanged = false;
+
+  try {
+    while (appState.db != null) {
+      final rows = await appState.db!.rawQuery(
+        '''SELECT newsID
+             FROM news
+            WHERE previewText IS NULL OR imageUrl IS NULL
+            ORDER BY newsID
+            LIMIT 50''',
+      );
+      if (rows.isEmpty) break;
+
+      final batch = appState.db!.batch();
+      for (final row in rows) {
+        final newsID = row['newsID'] as int;
+        final news = await queryNewsByNewsId(appState, newsID);
+        if (news == null) continue;
+        news.prepareListMetadata();
+        batch.rawUpdate(
+          'UPDATE news SET previewText = ?, imageUrl = ? WHERE newsID = ?',
+          [news.previewText, news.imageUrl, newsID],
+        );
+
+        final visibleItem = visibleNewsByID[newsID];
+        if (visibleItem != null) {
+          visibleItem.previewText = news.previewText;
+          visibleItem.imageUrl = news.imageUrl;
+          visibleNewsChanged = true;
+        }
+      }
+      await batch.commit(noResult: true);
+      await Future<void>.delayed(Duration.zero);
+    }
+  } catch (error) {
+    logThis(
+      'newsMetadataBackfill',
+      'Could not finish news metadata backfill: $error',
+      LogLevel.WARNING,
+    );
+  } finally {
+    appState.newsMetadataBackfillRunning = false;
+    if (visibleNewsChanged) {
+      appState.refreshView();
+    }
+  }
+}
 
 const List<String> _feedSettingsOverrideFields = [
   'manualTruncate',
@@ -131,16 +221,28 @@ Future<void> applyFeedSettingsOverridesToDB(FluxNewsState appState) async {
   final overrides = await readFeedSettingsOverrides(appState);
   if (overrides.isEmpty) return;
 
-  final existingRows =
-      await appState.db!.rawQuery('SELECT feedID FROM feeds ORDER BY feedID');
+  final existingRows = await appState.db!.rawQuery(
+    '''SELECT feedID, preferParagraph, preferAttachmentImage
+         FROM feeds
+        ORDER BY feedID''',
+  );
   final existingFeedIDs = existingRows
       .map((row) => row['feedID'])
       .whereType<int>()
       .map((id) => id.toString())
       .toSet();
   if (existingFeedIDs.isEmpty) return;
+  final existingMetadataSettings = {
+    for (final row in existingRows)
+      if (row['feedID'] is int)
+        row['feedID'] as int: (
+          preferParagraph: row['preferParagraph'] == 1,
+          preferAttachmentImage: row['preferAttachmentImage'] == 1,
+        ),
+  };
 
   final batch = appState.db!.batch();
+  final metadataFeedIDs = <int>{};
   var updateCount = 0;
   var changedOverrides = false;
   final normalizedOverrides = Map<String, dynamic>.from(overrides);
@@ -153,6 +255,17 @@ Future<void> applyFeedSettingsOverridesToDB(FluxNewsState appState) async {
     }
     if (entry.value is! Map) continue;
     final settings = Map<String, dynamic>.from(entry.value as Map);
+    final feedID = int.parse(entry.key);
+    final preferParagraph =
+        _overrideIntValue(settings['preferParagraph'], 0) == 1;
+    final preferAttachmentImage =
+        _overrideIntValue(settings['preferAttachmentImage'], 0) == 1;
+    final existingSettings = existingMetadataSettings[feedID];
+    if (existingSettings != null &&
+        (existingSettings.preferParagraph != preferParagraph ||
+            existingSettings.preferAttachmentImage != preferAttachmentImage)) {
+      metadataFeedIDs.add(feedID);
+    }
     batch.rawUpdate('''UPDATE feeds SET manualTruncate = ?,
                                         preferParagraph = ?,
                                         preferAttachmentImage = ?,
@@ -170,13 +283,16 @@ Future<void> applyFeedSettingsOverridesToDB(FluxNewsState appState) async {
       _overrideIntValue(settings['openMinifluxEntry'], 0),
       _overrideIntValue(settings['expandedWithFulltext'], 0),
       _overrideIntValue(settings['expandedFulltextLimit'], 0),
-      int.parse(entry.key),
+      feedID,
     ]);
     updateCount++;
   }
 
   if (updateCount > 0) {
     await batch.commit(noResult: true, continueOnError: true);
+    for (final feedID in metadataFeedIDs) {
+      await _refreshStoredNewsMetadataForFeed(feedID, appState);
+    }
   }
   if (changedOverrides) {
     await writeFeedSettingsOverrides(appState, normalizedOverrides);
@@ -345,6 +461,7 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
     // iterate over the new news
     for (News news in newsList.news) {
       if (!appState.longSyncAborted) {
+        await _prepareNewsListMetadata(news, appState);
         // check if news already present in the database
         resultSelect = await appState.db!.rawQuery('''
           SELECT news.newsID, 
@@ -389,9 +506,20 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
           }
         } else {
           // if the news is present, update the status of the news
-          batch.rawUpdate(
-              'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?',
-              [news.status, FluxNewsState.notSyncedSyncStatus, news.newsID]);
+          batch.rawUpdate('''UPDATE news
+                                SET status = ?,
+                                    syncStatus = ?,
+                                    content = ?,
+                                    previewText = ?,
+                                    imageUrl = ?
+                              WHERE newsId = ?''', [
+            news.status,
+            FluxNewsState.notSyncedSyncStatus,
+            news.content,
+            news.previewText,
+            news.imageUrl,
+            news.newsID,
+          ]);
           // also update mediaProgression for existing attachments so the
           // server's playback position is persisted and survives app restarts
           if (news.attachments != null) {
@@ -477,6 +605,7 @@ Future<int> updateStarredNewsInDB(
   if (appState.db != null) {
     List<Map<String, Object?>> resultSelect = [];
     for (News news in newsList.news) {
+      await _prepareNewsListMetadata(news, appState);
       resultSelect = await appState.db!.rawQuery('''
         SELECT news.newsID, 
                  news.feedID, 
@@ -866,7 +995,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         substr(news.url, 1, 1000000) as url, 
                         substr(news.commentsUrl, 1, 1000000) as commentsUrl,
                         substr(news.shareCode, 1, 1000000) as shareCode,
-                        substr(news.content, 1, 1000000) as content, 
+                        '' as content,
+                        0 as contentLoaded,
+                        news.previewText,
+                        news.imageUrl,
                         news.hash, 
                         news.publishedAt, 
                         news.createdAt, 
@@ -903,7 +1035,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         substr(news.url, 1, 1000000) as url, 
                         substr(news.commentsUrl, 1, 1000000) as commentsUrl,
                         substr(news.shareCode, 1, 1000000) as shareCode,
-                        substr(news.content, 1, 1000000) as content, 
+                        '' as content,
+                        0 as contentLoaded,
+                        news.previewText,
+                        news.imageUrl,
                         news.hash, 
                         news.publishedAt, 
                         news.createdAt, 
@@ -940,7 +1075,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         substr(news.url, 1, 1000000) as url, 
                         substr(news.commentsUrl, 1, 1000000) as commentsUrl,
                         substr(news.shareCode, 1, 1000000) as shareCode,
-                        substr(news.content, 1, 1000000) as content, 
+                        '' as content,
+                        0 as contentLoaded,
+                        news.previewText,
+                        news.imageUrl,
                         news.hash, 
                         news.publishedAt, 
                         news.createdAt, 
@@ -1011,6 +1149,16 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
     for (News news in newList) {
       news.saveFeedIcon(feedList);
     }
+
+    final missingMetadata = await appState.db!.rawQuery(
+      '''SELECT 1
+           FROM news
+          WHERE previewText IS NULL OR imageUrl IS NULL
+          LIMIT 1''',
+    );
+    if (missingMetadata.isNotEmpty) {
+      unawaited(_backfillMissingNewsMetadata(appState, newList));
+    }
   }
   if (appState.debugMode) {
     logThis('queryNewsFromDB', 'Finished querying news from DB', LogLevel.INFO);
@@ -1064,6 +1212,20 @@ Future<News?> queryNewsByIdFromDB(FluxNewsState appState, int newsID) async {
   return news;
 }
 
+Future<void> ensureNewsContentLoaded(FluxNewsState appState, News news) async {
+  if (news.contentLoaded) return;
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) return;
+
+  final rows = await appState.db!.rawQuery(
+    'SELECT content FROM news WHERE newsID = ? LIMIT 1',
+    [news.newsID],
+  );
+  if (rows.isEmpty) return;
+  news.content = rows.first['content'] as String? ?? '';
+  news.contentLoaded = true;
+}
+
 Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState,
     {int? limit}) async {
   appState.db ??= await appState.initializeDB();
@@ -1108,7 +1270,10 @@ Future<List<News>> queryWidgetNewsFromDB(FluxNewsState appState,
                substr(news.url, 1, 1000000) as url,
                substr(news.commentsUrl, 1, 1000000) as commentsUrl,
                substr(news.shareCode, 1, 1000000) as shareCode,
-               substr(news.content, 1, 1000000) as content,
+               '' as content,
+               0 as contentLoaded,
+               news.previewText,
+               news.imageUrl,
                news.hash,
                news.publishedAt,
                news.createdAt,
@@ -1243,6 +1408,7 @@ Future<void> updatePreferParagraphStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET preferParagraph = ? WHERE feedID = ?',
         [preferParagraph ? 1 : 0, feedID]);
+    await _refreshStoredNewsMetadataForFeed(feedID, appState);
     await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
@@ -1265,6 +1431,7 @@ Future<void> updatePreferAttachmentImageStatusOfFeedInDB(
     await appState.db!.rawUpdate(
         'UPDATE feeds SET preferAttachmentImage = ? WHERE feedID = ?',
         [preferAttachmentImage ? 1 : 0, feedID]);
+    await _refreshStoredNewsMetadataForFeed(feedID, appState);
     await saveCurrentFeedSettingsOverride(appState, feedID);
   }
   if (appState.debugMode) {
@@ -2074,7 +2241,9 @@ Future<void> deleteLocalNewsCache(
                             url TEXT,
                             commentsUrl TEXT,
                             shareCode TEXT, 
-                            content TEXT, 
+                            content TEXT,
+                            previewText TEXT,
+                            imageUrl TEXT,
                             hash TEXT, 
                             publishedAt TEXT, 
                             createdAt TEXT, 

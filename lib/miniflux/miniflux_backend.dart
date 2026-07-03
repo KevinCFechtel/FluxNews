@@ -29,7 +29,7 @@ class ReadNewsList {
 }
 
 // fetch unread news from the miniflux backend
-Future<NewsList> fetchNews(FluxNewsState appState) async {
+Future<NewsList> fetchNews(FluxNewsState appState, {Client? httpClient}) async {
   if (appState.debugMode) {
     logThis('fetchNews', 'Starting fetching news from miniflux server',
         LogLevel.INFO);
@@ -65,7 +65,9 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
   // check if the miniflux url and api key is set.
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final Client client;
-    if (Platform.isAndroid) {
+    if (httpClient != null) {
+      client = httpClient;
+    } else if (Platform.isAndroid) {
       final engine = CronetEngine.build(
           cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
@@ -186,7 +188,7 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
         }
       }
     }
-    client.close();
+    if (httpClient == null) client.close();
     if (appState.debugMode) {
       logThis('fetchNews', 'Finished fetching news from miniflux server',
           LogLevel.INFO);
@@ -208,7 +210,8 @@ Future<NewsList> fetchNews(FluxNewsState appState) async {
 // the only difference is that the requested parameter is
 // starred=true and not status=unread
 // for details of the implementation see the comments above
-Future<NewsList> fetchStarredNews(FluxNewsState appState) async {
+Future<NewsList> fetchStarredNews(FluxNewsState appState,
+    {Client? httpClient}) async {
   if (appState.debugMode) {
     logThis('fetchStarredNews',
         'Starting fetching starred news from miniflux server', LogLevel.INFO);
@@ -231,7 +234,9 @@ Future<NewsList> fetchStarredNews(FluxNewsState appState) async {
   }
   if (appState.minifluxURL != null && appState.minifluxAPIKey != null) {
     final Client client;
-    if (Platform.isAndroid) {
+    if (httpClient != null) {
+      client = httpClient;
+    } else if (Platform.isAndroid) {
       final engine = CronetEngine.build(
           cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
       client = CronetClient.fromCronetEngine(engine, closeEngine: true);
@@ -288,7 +293,7 @@ Future<NewsList> fetchStarredNews(FluxNewsState appState) async {
         throw FluxNewsState.httpUnexpectedResponseErrorString;
       }
     }
-    client.close();
+    if (httpClient == null) client.close();
     if (appState.debugMode) {
       logThis('fetchStarredNews',
           'Finished fetching starred news from miniflux server', LogLevel.INFO);
@@ -442,8 +447,24 @@ Future<List<News>> fetchSearchedNews(
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
       List<Feed> feedList = [];
-      List<Map<String, Object?>> queryResult = await appState.db!.rawQuery(
-          'SELECT feedID, title, site_url, iconMimeType, iconID, newsCount, categoryID FROM feeds');
+      List<Map<String, Object?>> queryResult =
+          await appState.db!.rawQuery('''SELECT feedID,
+                    title,
+                    site_url,
+                    iconMimeType,
+                    iconID,
+                    newsCount,
+                    crawler,
+                    manualTruncate,
+                    preferParagraph,
+                    preferAttachmentImage,
+                    manualAdaptLightModeToIcon,
+                    manualAdaptDarkModeToIcon,
+                    openMinifluxEntry,
+                    expandedWithFulltext,
+                    expandedFulltextLimit,
+                    categoryID
+               FROM feeds''');
       for (Feed feed in queryResult.map((e) => Feed.fromMap(e)).toList()) {
         if (feed.feedIconID != null && feed.feedIconID != 0) {
           feed.icon = appState.readFeedIconFile(feed.feedIconID!);
@@ -455,6 +476,7 @@ Future<List<News>> fetchSearchedNews(
       for (News news in newList) {
         // get the feed icon and the feed icon mime type
         news.getFeedInfo(feedList);
+        news.prepareListMetadata();
 
         if (appState.debugMode) {
           logThis(
@@ -486,7 +508,8 @@ Future<List<News>> fetchSearchedNews(
 }
 
 // mark the news as read at the miniflux server
-Future<void> toggleNewsAsRead(FluxNewsState appState) async {
+Future<void> toggleNewsAsRead(FluxNewsState appState,
+    {Client? httpClient}) async {
   if (appState.debugMode) {
     logThis('toggleNewsAsRead',
         'Starting toggle news as read at miniflux server', LogLevel.INFO);
@@ -532,7 +555,9 @@ Future<void> toggleNewsAsRead(FluxNewsState appState) async {
         ReadNewsList newReadNewsList = ReadNewsList(
             newsIds: newsIds, status: FluxNewsState.readNewsStatus);
         final Client client;
-        if (Platform.isAndroid) {
+        if (httpClient != null) {
+          client = httpClient;
+        } else if (Platform.isAndroid) {
           final engine = CronetEngine.build(
               cacheMode: CacheMode.memory, cacheMaxSize: 2 * 1024 * 1024);
           client = CronetClient.fromCronetEngine(engine, closeEngine: true);
@@ -574,7 +599,7 @@ Future<void> toggleNewsAsRead(FluxNewsState appState) async {
             }
           }
         }
-        client.close();
+        if (httpClient == null) client.close();
       }
     }
   }

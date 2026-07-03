@@ -27,6 +27,9 @@ class News {
       required this.commentsUrl,
       required this.shareCode,
       required this.content,
+      this.previewText = '',
+      this.imageUrl = '',
+      this.contentLoaded = true,
       required this.hash,
       required this.publishedAt,
       required this.createdAt,
@@ -54,6 +57,9 @@ class News {
   String commentsUrl = '';
   String shareCode = '';
   String content = '';
+  String previewText = '';
+  String imageUrl = '';
+  bool contentLoaded = true;
   String hash = '';
   String publishedAt = '';
   String createdAt = '';
@@ -78,6 +84,11 @@ class News {
   bool? expandedWithFulltext = false;
   int? expandedFulltextLimit = 0;
   bool expanded = false;
+
+  int? _previewTextCacheKey;
+  String? _previewTextCache;
+  int? _imageUrlCacheKey;
+  String? _imageUrlCache;
 
   // define the method to convert the json to the model
   factory News.fromJson(Map<String, dynamic> json) {
@@ -116,6 +127,8 @@ class News {
       'commentsUrl': commentsUrl,
       'shareCode': shareCode,
       'content': content,
+      'previewText': previewText,
+      'imageUrl': imageUrl,
       'hash': hash,
       'publishedAt': publishedAt,
       'createdAt': createdAt,
@@ -135,7 +148,10 @@ class News {
         url = res['url'],
         commentsUrl = res['commentsUrl'],
         shareCode = res['shareCode'],
-        content = res['content'],
+        content = res['content'] as String? ?? '',
+        previewText = res['previewText'] as String? ?? '',
+        imageUrl = res['imageUrl'] as String? ?? '',
+        contentLoaded = (res['contentLoaded'] as int? ?? 1) == 1,
         hash = res['hash'],
         publishedAt = res['publishedAt'],
         createdAt = res['createdAt'],
@@ -165,53 +181,22 @@ class News {
   // if no text is found the empty string is returned
   // if there is no raw text the text is searched in the p tags
   String getText(FluxNewsState appState) {
-    final document = parse(content);
-    String? text = '';
-    List<dom.Element> elements = document.getElementsByTagName('p');
-    text = parse(document.body?.text).documentElement?.text;
-
-    if (preferParagraph != null && preferParagraph!) {
-      if (elements.length > 1) {
-        for (dom.Element element in elements) {
-          text = element.text;
-          if (text.isNotEmpty) {
-            break;
-          }
-        }
-      } else {
-        if (text != null) {
-          text = text.split('\n').first;
-          if (text.length < 50) {
-            elements = document.getElementsByTagName('p');
-            if (elements.isNotEmpty) {
-              text = elements.first.text;
-            }
-          }
-        } else {
-          elements = document.getElementsByTagName('p');
-          if (elements.isNotEmpty) {
-            text = elements.first.text;
-          }
-        }
-      }
-    } else {
-      if (text != null) {
-        text = text.split('\n').first;
-        if (text.length < 50) {
-          elements = document.getElementsByTagName('p');
-          if (elements.isNotEmpty) {
-            text = elements.first.text;
-          }
-        }
-      } else {
-        elements = document.getElementsByTagName('p');
-        if (elements.isNotEmpty) {
-          text = elements.first.text;
-        }
-      }
+    final previewTextCacheKey = Object.hash(
+      content,
+      preferParagraph,
+      appState.activateTruncate,
+      appState.truncateMode,
+      appState.charactersToTruncateLimit,
+      appState.charactersToTruncate,
+      crawler,
+      manualTruncate,
+    );
+    if (_previewTextCacheKey == previewTextCacheKey && _previewTextCache != null) {
+      return _previewTextCache!;
     }
 
-    text ??= '';
+    String text =
+        previewText.isNotEmpty ? previewText : createPreviewText(content, preferParagraph: preferParagraph == true);
     if (appState.activateTruncate) {
       switch (appState.truncateMode) {
         case 0:
@@ -240,7 +225,89 @@ class News {
       }
     }
 
+    _previewTextCacheKey = previewTextCacheKey;
+    _previewTextCache = text;
     return text;
+  }
+
+  static String createPreviewText(String html, {required bool preferParagraph}) {
+    final document = parse(html);
+    return _createPreviewTextFromDocument(
+      document,
+      preferParagraph: preferParagraph,
+    );
+  }
+
+  static String _createPreviewTextFromDocument(
+    dom.Document document, {
+    required bool preferParagraph,
+  }) {
+    for (final element in document.querySelectorAll('script, style, noscript, svg')) {
+      element.remove();
+    }
+
+    String normalize(String value) => value.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    String text = '';
+    if (preferParagraph) {
+      for (final paragraph in document.querySelectorAll('p')) {
+        final candidate = normalize(paragraph.text);
+        if (candidate.length >= 20) {
+          text = candidate;
+          break;
+        }
+      }
+    }
+    if (text.isEmpty) {
+      text = normalize(document.body?.text ?? '');
+    }
+    return text.length > 2000 ? text.substring(0, 2000) : text;
+  }
+
+  void prepareListMetadata() {
+    final document = parse(content);
+    imageUrl = _resolveImageUrl(document: document);
+    previewText = _createPreviewTextFromDocument(
+      document,
+      preferParagraph: preferParagraph == true,
+    );
+    _previewTextCacheKey = null;
+    _previewTextCache = null;
+    _imageUrlCacheKey = null;
+    _imageUrlCache = null;
+  }
+
+  static String extractImageUrlFromHtml(String html) {
+    final document = parse(html);
+    return _extractImageUrlFromDocument(document);
+  }
+
+  static String _extractImageUrlFromDocument(dom.Document document) {
+    String? normalize(String? rawUrl) {
+      if (rawUrl == null) return null;
+      final trimmed = rawUrl.trim();
+      if (trimmed.isEmpty) return null;
+      if (trimmed.startsWith('//')) return 'https:$trimmed';
+      final uri = Uri.tryParse(trimmed);
+      if (uri == null || !uri.hasScheme) return null;
+      final scheme = uri.scheme.toLowerCase();
+      return scheme == 'http' || scheme == 'https' ? trimmed : null;
+    }
+
+    for (final image in document.getElementsByTagName('img')) {
+      final directSrc = normalize(image.attributes['src']);
+      if (directSrc != null) return directSrc;
+      final lazySrc = normalize(image.attributes['data-src']);
+      if (lazySrc != null) return lazySrc;
+      final srcSet = image.attributes['srcset'];
+      if (srcSet == null) continue;
+      for (final candidate in srcSet.split(',')) {
+        final urlPart = candidate.trim().split(RegExp(r'\s+')).first;
+        final normalized = normalize(urlPart);
+        if (normalized != null) return normalized;
+      }
+    }
+    return FluxNewsState.noImageUrlString;
   }
 
   // define the method to extract the text from the html content
@@ -249,8 +316,7 @@ class News {
   // if there is no raw text the text is searched in the p tags
   String getFullText(FluxNewsState appState) {
     final document = parse(content);
-    String? text = '';
-    text = parse(document.body?.text).documentElement?.text;
+    String? text = parse(document.body?.text).documentElement?.text;
     text ??= '';
     if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
       text = truncateText(text, expandedFulltextLimit!);
@@ -395,8 +461,34 @@ class News {
   // the image url must start with http
   // if no image url is found the noImageUrlString is returned
   String getImageURL() {
-    String imageUrl = FluxNewsState.noImageUrlString;
-    final document = parse(content);
+    if (imageUrl.isNotEmpty) return imageUrl;
+    final attachmentSignature = Object.hashAll(
+      attachments?.map((attachment) => Object.hash(
+                attachment.attachmentURL,
+                attachment.attachmentMimeType,
+              )) ??
+          const <Object>[],
+    );
+    final imageUrlCacheKey = Object.hash(
+      content,
+      preferAttachmentImage,
+      attachmentURL,
+      attachmentMimeType,
+      attachmentSignature,
+    );
+    if (_imageUrlCacheKey == imageUrlCacheKey && _imageUrlCache != null) {
+      return _imageUrlCache!;
+    }
+
+    final resolvedImageUrl = _resolveImageUrl();
+    _imageUrlCacheKey = imageUrlCacheKey;
+    _imageUrlCache = resolvedImageUrl;
+    return resolvedImageUrl;
+  }
+
+  String _resolveImageUrl({dom.Document? document}) {
+    String resolvedImageUrl = FluxNewsState.noImageUrlString;
+    final parsedDocument = document ?? parse(content);
 
     String? normalizeImageUrl(String? rawUrl) {
       if (rawUrl == null) return null;
@@ -437,7 +529,7 @@ class News {
     }
 
     String? firstImageFromHtml() {
-      final images = document.getElementsByTagName('img');
+      final images = parsedDocument.getElementsByTagName('img');
       for (final image in images) {
         final directSrc = normalizeImageUrl(image.attributes['src']);
         if (directSrc != null) {
@@ -464,12 +556,11 @@ class News {
     }
 
     if (preferAttachmentImage != null && preferAttachmentImage!) {
-      imageUrl = firstImageFromAttachments() ?? firstImageFromHtml() ?? FluxNewsState.noImageUrlString;
+      resolvedImageUrl = firstImageFromAttachments() ?? firstImageFromHtml() ?? FluxNewsState.noImageUrlString;
     } else {
-      imageUrl = firstImageFromHtml() ?? firstImageFromAttachments() ?? FluxNewsState.noImageUrlString;
+      resolvedImageUrl = firstImageFromHtml() ?? firstImageFromAttachments() ?? FluxNewsState.noImageUrlString;
     }
-
-    return imageUrl;
+    return resolvedImageUrl;
   }
 
   // define the method to get the publishing date in local date format
@@ -647,6 +738,15 @@ class News {
       if (feed.feedID == feedID) {
         icon = feed.icon;
         iconMimeType = feed.iconMimeType;
+        crawler = feed.crawler;
+        manualTruncate = feed.manualTruncate;
+        preferParagraph = feed.preferParagraph;
+        preferAttachmentImage = feed.preferAttachmentImage;
+        manualAdaptLightModeToIcon = feed.manualAdaptLightModeToIcon;
+        manualAdaptDarkModeToIcon = feed.manualAdaptDarkModeToIcon;
+        openMinifluxEntry = feed.openMinifluxEntry;
+        expandedWithFulltext = feed.expandedWithFulltext;
+        expandedFulltextLimit = feed.expandedFulltextLimit;
       }
     }
   }

@@ -8,6 +8,7 @@ import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/news_items.dart';
+import 'package:flux_news/ui/news_image_dimensions.dart';
 import 'package:provider/provider.dart';
 
 class NewsRowIOS extends StatelessWidget {
@@ -35,12 +36,9 @@ class NewsRowIOS extends StatelessWidget {
           onTap: () async {
             onTabAction(appState, context, news, searchView, itemIndex, newsList);
           },
-          onLongPress: () {
-            if (news.expanded) {
-              news.expanded = false;
-            } else {
-              news.expanded = true;
-            }
+          onLongPress: () async {
+            await toggleNewsExpanded(news, appState);
+            if (!context.mounted) return;
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           },
           child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
@@ -67,6 +65,7 @@ class NewsRowIOS extends StatelessWidget {
   }
 
   Widget newsRow(FluxNewsState appState, Animation<double> animation, bool isTablet) {
+    final imageUrl = news.getImageURL();
     return Card(
       // inkwell is used for the onTab and onLongPress functions
       child: InkWell(
@@ -80,7 +79,7 @@ class NewsRowIOS extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            news.getImageURL() != FluxNewsState.noImageUrlString
+            imageUrl != FluxNewsState.noImageUrlString
                 ? Flexible(
                     flex: searchView
                         ? isTablet
@@ -88,9 +87,11 @@ class NewsRowIOS extends StatelessWidget {
                             : 5
                         : 5,
                     child: ExtendedImage.network(
-                      news.getImageURL(),
+                      imageUrl,
                       height: 230,
                       width: MediaQuery.sizeOf(context).width / 2,
+                      cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width / 2),
+                      cacheHeight: newsImageCacheDimension(context, 230),
                       fit: BoxFit.cover,
                       cache: true,
                       alignment: Alignment.center,

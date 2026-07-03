@@ -417,6 +417,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // the database connection as a variable
   Database? db;
+  bool newsMetadataBackfillRunning = false;
 
   // init the database connection
   Future<Database> initializeDB() async {
@@ -454,6 +455,8 @@ class FluxNewsState extends ChangeNotifier {
                           commentsUrl TEXT,
                           shareCode TEXT,
                           content TEXT,
+                          previewText TEXT,
+                          imageUrl TEXT,
                           hash TEXT,
                           publishedAt TEXT,
                           createdAt TEXT,
@@ -1521,9 +1524,15 @@ class FluxNewsState extends ChangeNotifier {
           );
         }
 
+        if (oldVersion < 11) {
+          logThis('upgradeDB', 'Upgrading DB to version 11', LogLevel.INFO);
+          await db.execute('ALTER TABLE news ADD COLUMN previewText TEXT');
+          await db.execute('ALTER TABLE news ADD COLUMN imageUrl TEXT');
+        }
+
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 10,
+      version: 11,
     );
   }
 

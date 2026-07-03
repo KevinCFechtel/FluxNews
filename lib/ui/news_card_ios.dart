@@ -8,6 +8,7 @@ import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/news_items.dart';
+import 'package:flux_news/ui/news_image_dimensions.dart';
 import 'package:provider/provider.dart';
 
 class NewsCardIOS extends StatelessWidget {
@@ -34,12 +35,9 @@ class NewsCardIOS extends StatelessWidget {
           onTap: () async {
             onTabAction(appState, context, news, searchView, itemIndex, newsList);
           },
-          onLongPress: () {
-            if (news.expanded) {
-              news.expanded = false;
-            } else {
-              news.expanded = true;
-            }
+          onLongPress: () async {
+            await toggleNewsExpanded(news, appState);
+            if (!context.mounted) return;
             markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
           },
           child: newsCard(appState, AlwaysStoppedAnimation(1)));
@@ -86,17 +84,20 @@ class NewsCardIOS extends StatelessWidget {
   }
 
   Widget newsCardContent(FluxNewsState appState, Animation<double> animation) {
+    final imageUrl = news.getImageURL();
     return Column(
       children: [
         appState.showHeadlineOnTop ? NewsTopHeadline(news: news) : SizedBox.shrink(),
         // load the news image if present
-        news.getImageURL() != FluxNewsState.noImageUrlString
+        imageUrl != FluxNewsState.noImageUrlString
             ?
             // the ExtendedImage is used to load the images
             ExtendedImage.network(
-                news.getImageURL(),
+                imageUrl,
                 height: appState.isTablet ? 250 : 175,
                 width: MediaQuery.sizeOf(context).width,
+                cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width),
+                cacheHeight: newsImageCacheDimension(context, appState.isTablet ? 250 : 175),
                 fit: BoxFit.cover,
                 cache: true,
                 loadStateChanged: (state) {

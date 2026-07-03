@@ -10,6 +10,7 @@ import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/news_card_ios.dart';
+import 'package:flux_news/ui/news_image_dimensions.dart';
 import 'package:flux_news/ui/news_items.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -405,6 +406,7 @@ class NewsCard extends StatelessWidget {
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
       leftSwipeActions.add(openCommentsAction);
     }
+    final imageUrl = news.getImageURL();
     return ClipRect(
       clipBehavior: Clip.none,
       child: Slidable(
@@ -566,16 +568,13 @@ class NewsCard extends StatelessWidget {
                     onTapDown: (details) {
                       getTapPosition(details, context, appState);
                     },
-                    onLongPress: () {
+                    onLongPress: () async {
                       if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
                         showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>(),
                             itemIndex, newsList);
                       } else if (appState.longPressAction == FluxNewsState.longPressActionExpandString) {
-                        if (news.expanded) {
-                          news.expanded = false;
-                        } else {
-                          news.expanded = true;
-                        }
+                        await toggleNewsExpanded(news, appState);
+                        if (!context.mounted) return;
                         markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
                       }
                     },
@@ -583,13 +582,15 @@ class NewsCard extends StatelessWidget {
                       children: [
                         appState.showHeadlineOnTop ? NewsTopHeadline(news: news) : SizedBox.shrink(),
                         // load the news image if present
-                        news.getImageURL() != FluxNewsState.noImageUrlString
+                        imageUrl != FluxNewsState.noImageUrlString
                             ?
                             // the ExtendedImage is used to load the images
                             ExtendedImage.network(
-                                news.getImageURL(),
+                                imageUrl,
                                 height: appState.isTablet ? 250 : 175,
                                 width: MediaQuery.sizeOf(context).width,
+                                cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width),
+                                cacheHeight: newsImageCacheDimension(context, appState.isTablet ? 250 : 175),
                                 fit: BoxFit.cover,
                                 cache: true,
                                 loadStateChanged: (state) {

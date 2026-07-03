@@ -10,6 +10,7 @@ import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/news_items.dart';
+import 'package:flux_news/ui/news_image_dimensions.dart';
 import 'package:flux_news/ui/news_row_ios.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -405,6 +406,7 @@ class NewsRow extends StatelessWidget {
     } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
       leftSwipeActions.add(openCommentsAction);
     }
+    final imageUrl = news.getImageURL();
     return ClipRect(
         clipBehavior: Clip.none,
         child: Slidable(
@@ -566,16 +568,13 @@ class NewsRow extends StatelessWidget {
                       onTapDown: (details) {
                         getTapPosition(details, context, appState);
                       },
-                      onLongPress: () {
+                      onLongPress: () async {
                         if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
                           showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>(),
                               itemIndex, newsList);
                         } else if (appState.longPressAction == FluxNewsState.longPressActionExpandString) {
-                          if (news.expanded) {
-                            news.expanded = false;
-                          } else {
-                            news.expanded = true;
-                          }
+                          await toggleNewsExpanded(news, appState);
+                          if (!context.mounted) return;
                           markNewsAsReadAction(
                               news, appState, context, searchView, context.read<FluxNewsCounterState>());
                         }
@@ -583,7 +582,7 @@ class NewsRow extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          news.getImageURL() != FluxNewsState.noImageUrlString
+                          imageUrl != FluxNewsState.noImageUrlString
                               ? Expanded(
                                   flex: searchView
                                       ? context.select((FluxNewsState model) => model.isTablet)
@@ -591,8 +590,10 @@ class NewsRow extends StatelessWidget {
                                           : 5
                                       : 5,
                                   child: ExtendedImage.network(
-                                    news.getImageURL(),
+                                    imageUrl,
                                     height: 230,
+                                    cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width / 2),
+                                    cacheHeight: newsImageCacheDimension(context, 230),
                                     fit: BoxFit.cover,
                                     alignment: Alignment.center,
                                     cache: true,

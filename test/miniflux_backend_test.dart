@@ -1,15 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 
-import 'package:flux_news/main.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'miniflux_backend_test.mocks.dart';
@@ -26,7 +23,11 @@ void main() {
                           feedID INTEGER, 
                           title TEXT, 
                           url TEXT, 
-                          content TEXT, 
+                          commentsUrl TEXT,
+                          shareCode TEXT,
+                          content TEXT,
+                          previewText TEXT,
+                          imageUrl TEXT,
                           hash TEXT, 
                           publishedAt TEXT, 
                           createdAt TEXT, 
@@ -53,14 +54,17 @@ void main() {
     await database.insert('news', newNews.toMap());
   });
 
+  tearDownAll(() async {
+    await database.close();
+  });
+
   group('miniflux backend', () {
-    testWidgets('fetchNews success test', (WidgetTester tester) async {
-      await tester.pumpWidget(const FluxNews());
-      var fluxNewsApp = tester.firstState(find.byType(FluxNewsBody));
-      FluxNewsState appState = fluxNewsApp.context.read<FluxNewsState>();
+    test('fetchNews success test', () async {
+      FluxNewsState appState = FluxNewsState();
       var offset = 0;
       appState.minifluxURL = 'https://circle-dev.local/v1/';
       appState.minifluxAPIKey = 'test';
+      appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 
       final client = MockClient();
       final header = {
@@ -70,7 +74,7 @@ void main() {
 
       when(client.get(
               Uri.parse(
-                  '${appState.minifluxURL}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
+                  '${appState.minifluxURL}entries?order=published_at&status=unread&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
               headers: header))
           .thenAnswer((_) async => http.Response('''{
         "total": 5,
@@ -378,19 +382,18 @@ void main() {
         ]
       }''', 200));
 
-      var newsList = await fetchNews(appState);
+      var newsList = await fetchNews(appState, httpClient: client);
       expect(newsList, isA<NewsList>());
       expect(newsList.newsCount == 5, isTrue);
       expect(newsList.news.length == 5, isTrue);
       expect(newsList.news.first.title == 'Test Title 1', isTrue);
     });
-    testWidgets('fetchNews failure test', (WidgetTester tester) async {
-      await tester.pumpWidget(const FluxNews());
-      var fluxNewsApp = tester.firstState(find.byType(FluxNewsBody));
-      FluxNewsState appState = fluxNewsApp.context.read<FluxNewsState>();
+    test('fetchNews failure test', () async {
+      FluxNewsState appState = FluxNewsState();
       var offset = 0;
       appState.minifluxURL = 'https://circle-dev.local/v1/';
       appState.minifluxAPIKey = 'test';
+      appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 
       final client = MockClient();
       final header = {
@@ -399,25 +402,24 @@ void main() {
       };
       when(client.get(
               Uri.parse(
-                  '${appState.minifluxURL!}entries?status=unread&order=published_at&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
+                  '${appState.minifluxURL!}entries?order=published_at&status=unread&direction=asc&limit=${FluxNewsState.amountOfNewlyCaughtNews}&offset=$offset'),
               headers: header))
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
       try {
-        await fetchNews(appState);
+        await fetchNews(appState, httpClient: client);
         fail("exception not thrown");
       } catch (e) {
         expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString, isTrue);
       }
     });
 
-    testWidgets('fetchStarredNews success test', (WidgetTester tester) async {
-      await tester.pumpWidget(const FluxNews());
-      var fluxNewsApp = tester.firstState(find.byType(FluxNewsBody));
-      FluxNewsState appState = fluxNewsApp.context.read<FluxNewsState>();
+    test('fetchStarredNews success test', () async {
+      FluxNewsState appState = FluxNewsState();
       var offset = 0;
       appState.minifluxURL = 'https://circle-dev.local/v1/';
       appState.minifluxAPIKey = 'test';
+      appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 
       final client = MockClient();
       final header = {
@@ -555,19 +557,18 @@ void main() {
         ]
       }''', 200));
 
-      var newsList = await fetchStarredNews(appState);
+      var newsList = await fetchStarredNews(appState, httpClient: client);
       expect(newsList, isA<NewsList>());
       expect(newsList.newsCount == 2, isTrue);
       expect(newsList.news.length == 2, isTrue);
       expect(newsList.news.first.title == 'Test Title 1', isTrue);
     });
-    testWidgets('fetchStarredNews failure test', (WidgetTester tester) async {
-      await tester.pumpWidget(const FluxNews());
-      var fluxNewsApp = tester.firstState(find.byType(FluxNewsBody));
-      FluxNewsState appState = fluxNewsApp.context.read<FluxNewsState>();
+    test('fetchStarredNews failure test', () async {
+      FluxNewsState appState = FluxNewsState();
       var offset = 0;
       appState.minifluxURL = 'https://circle-dev.local/v1/';
       appState.minifluxAPIKey = 'test';
+      appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 
       final client = MockClient();
       final header = {
@@ -581,17 +582,24 @@ void main() {
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
       try {
-        await fetchStarredNews(appState);
+        await fetchStarredNews(appState, httpClient: client);
         fail("exception not thrown");
       } catch (e) {
         expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString, isTrue);
       }
     });
-    testWidgets('toggleNewsAsRead failure test', (WidgetTester tester) async {
-      await tester.pumpWidget(const FluxNews());
-      var fluxNewsApp = tester.firstState(find.byType(FluxNewsBody));
-      FluxNewsState appState = fluxNewsApp.context.read<FluxNewsState>();
+    test('toggleNewsAsRead failure test', () async {
+      FluxNewsState appState = FluxNewsState();
       appState.db = database;
+      await database.update(
+        'news',
+        {
+          'status': FluxNewsState.readNewsStatus,
+          'syncStatus': FluxNewsState.notSyncedSyncStatus,
+        },
+        where: 'newsID = ?',
+        whereArgs: [1],
+      );
       appState.minifluxURL = 'https://circle-dev.local/v1/';
       appState.minifluxAPIKey = 'test';
       final client = MockClient();
@@ -600,11 +608,11 @@ void main() {
         FluxNewsState.httpMinifluxContentTypeHeaderString: FluxNewsState.httpContentTypeString,
       };
 
-      when(client.put(Uri.parse('${appState.minifluxURL!}entries'), headers: header))
+      when(client.put(Uri.parse('${appState.minifluxURL!}entries'), headers: header, body: anyNamed('body')))
           .thenAnswer((_) async => http.Response('Internal server error', 500));
 
       try {
-        await toggleNewsAsRead(appState);
+        await toggleNewsAsRead(appState, httpClient: client);
         fail("exception not thrown");
       } catch (e) {
         expect(e.toString() == FluxNewsState.httpUnexpectedResponseErrorString, isTrue);

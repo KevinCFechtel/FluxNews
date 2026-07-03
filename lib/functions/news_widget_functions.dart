@@ -874,12 +874,13 @@ Future<void> setNextFeed(
   }
 }
 
-void onTabAction(FluxNewsState appState, BuildContext context, News news,
-    bool searchView, int itemIndex, List<News>? newsList) {
-  if (_openAudioPlayerIfAvailable(
+Future<void> onTabAction(FluxNewsState appState, BuildContext context,
+    News news, bool searchView, int itemIndex, List<News>? newsList) async {
+  if (await _openAudioPlayerIfAvailable(
       news, appState, context, searchView, itemIndex, newsList)) {
     return;
   }
+  if (!context.mounted) return;
 
   if (appState.tabAction != FluxNewsState.tabActionExpandString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
@@ -907,22 +908,20 @@ void onTabAction(FluxNewsState appState, BuildContext context, News news,
       }
     }
   } else {
-    if (news.expanded) {
-      news.expanded = false;
-    } else {
-      news.expanded = true;
-    }
+    await toggleNewsExpanded(news, appState);
+    if (!context.mounted) return;
     markNewsAsReadAction(news, appState, context, searchView,
         context.read<FluxNewsCounterState>());
   }
 }
 
-void onTabContentAction(FluxNewsState appState, BuildContext context, News news,
-    bool searchView, int itemIndex, List<News>? newsList) {
-  if (_openAudioPlayerIfAvailable(
+Future<void> onTabContentAction(FluxNewsState appState, BuildContext context,
+    News news, bool searchView, int itemIndex, List<News>? newsList) async {
+  if (await _openAudioPlayerIfAvailable(
       news, appState, context, searchView, itemIndex, newsList)) {
     return;
   }
+  if (!context.mounted) return;
 
   if (appState.tabAction == FluxNewsState.tabActionOpenString) {
     if (news.status == FluxNewsState.unreadNewsStatus) {
@@ -950,24 +949,31 @@ void onTabContentAction(FluxNewsState appState, BuildContext context, News news,
       }
     }
   } else {
-    if (news.expanded) {
-      news.expanded = false;
-    } else {
-      news.expanded = true;
-    }
+    await toggleNewsExpanded(news, appState);
+    if (!context.mounted) return;
     markNewsAsReadAction(news, appState, context, searchView,
         context.read<FluxNewsCounterState>());
   }
 }
 
-bool _openAudioPlayerIfAvailable(
+Future<void> toggleNewsExpanded(News news, FluxNewsState appState) async {
+  if (news.expanded) {
+    news.expanded = false;
+  } else {
+    await ensureNewsContentLoaded(appState, news);
+    news.expanded = true;
+  }
+  appState.refreshView();
+}
+
+Future<bool> _openAudioPlayerIfAvailable(
   News news,
   FluxNewsState appState,
   BuildContext context,
   bool searchView,
   int itemIndex,
   List<News>? newsList,
-) {
+) async {
   if (!appState.openAudioItemsInPlayer) {
     return false;
   }
@@ -976,6 +982,9 @@ bool _openAudioPlayerIfAvailable(
   if (!hasAudio) {
     return false;
   }
+
+  await ensureNewsContentLoaded(appState, news);
+  if (!context.mounted) return true;
 
   if (news.status == FluxNewsState.unreadNewsStatus) {
     markNewsAsReadAction(news, appState, context, searchView,
