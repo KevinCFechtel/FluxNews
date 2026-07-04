@@ -593,7 +593,6 @@ class NewsRow extends StatelessWidget {
                                     imageUrl,
                                     height: 230,
                                     cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width / 2),
-                                    cacheHeight: newsImageCacheDimension(context, 230),
                                     fit: BoxFit.cover,
                                     alignment: Alignment.center,
                                     cache: true,

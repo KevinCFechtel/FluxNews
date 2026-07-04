@@ -590,7 +590,6 @@ class NewsCard extends StatelessWidget {
                                 height: appState.isTablet ? 250 : 175,
                                 width: MediaQuery.sizeOf(context).width,
                                 cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width),
-                                cacheHeight: newsImageCacheDimension(context, appState.isTablet ? 250 : 175),
                                 fit: BoxFit.cover,
                                 cache: true,
                                 loadStateChanged: (state) {
