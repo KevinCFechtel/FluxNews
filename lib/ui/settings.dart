@@ -704,7 +704,7 @@ class Settings extends StatelessWidget {
     FluxNewsState appState = context.read<FluxNewsState>();
     appState.recordTypesStartupCategories = <KeyValueRecordType>[];
     appState.recordTypesStartupFeeds = <KeyValueRecordType>[];
-    await appState.readConfigValues();
+    if (!await appState.readConfigValues()) return;
     if (context.mounted) {
       appState.readConfig(context);
       appState.readThemeConfigValues(context);

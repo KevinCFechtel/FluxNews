@@ -70,6 +70,14 @@ Future<void> initializeFluxNewsBackgroundSync() async {
 Future<void> configureFluxNewsBackgroundSync(FluxNewsState appState,
     {String reason = 'unspecified'}) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
+  if (!appState.configValuesReadSuccessfully) {
+    logThis(
+        'backgroundSync',
+        'Background sync configuration skipped because app configuration '
+            'was not read successfully: reason=$reason',
+        LogLevel.WARNING);
+    return;
+  }
   logThis(
       'backgroundSync',
       'Configuring background sync: reason=$reason '
@@ -208,7 +216,15 @@ Future<void> runFluxNewsBackgroundSync() async {
 
     logThis('backgroundSync', 'Reading background sync configuration',
         LogLevel.INFO);
-    await appState.readConfigValues();
+    final configReadSuccessfully = await appState.readConfigValues();
+    if (!configReadSuccessfully) {
+      logThis(
+          'backgroundSync',
+          'Skipped: background configuration could not be read; '
+              'stored values and schedule remain unchanged',
+          LogLevel.WARNING);
+      return;
+    }
     appState.applyStoredConfigValuesHeadless();
     if (appState.backgroundSyncIntervalMinutes > 0 &&
         appState.backgroundSyncIntervalMinutes !=

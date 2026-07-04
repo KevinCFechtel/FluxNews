@@ -314,6 +314,9 @@ class FluxNewsState extends ChangeNotifier {
 
   // vars for settings
   Map<String, String> storageValues = {};
+  bool configValuesReadSuccessfully = false;
+  bool configInitializationInProgress = false;
+  bool configReadFailed = false;
   KeyValueRecordType? brightnessModeSelection;
   KeyValueRecordType? amontOfSyncedNewsSelection;
   KeyValueRecordType? amontOfSearchedNewsSelection;
@@ -1560,14 +1563,17 @@ class FluxNewsState extends ChangeNotifier {
       // Timeout guards against the headless CarPlay case: if the device was
       // never unlocked since boot, pre-migration WhenUnlocked Keychain items
       // would make readAll() hang indefinitely.
-      storageValues =
+      final readValues =
           await storage.readAll().timeout(const Duration(seconds: 5));
+      storageValues = readValues;
+      configValuesReadSuccessfully = true;
     } catch (e) {
       logThis(
           'readConfigValues',
-          'readAll failed or timed out: $e — using empty config',
+          'readAll failed or timed out: $e — preserving existing config values',
           LogLevel.WARNING);
-      storageValues = {};
+      configValuesReadSuccessfully = false;
+      return false;
     }
 
     const migrationKey = '_keychain_migrated_first_unlock_v2';

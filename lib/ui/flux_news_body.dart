@@ -67,7 +67,8 @@ class FluxNewsBody extends StatelessWidget {
             'FluxNewsBody',
             'Resumed with null minifluxURL — re-running initConfig',
             LogLevel.INFO);
-        initConfig(context, appState, true);
+        await initConfig(context, appState, true);
+        return;
       }
 
       final shouldTreatResumeAsStartup = inactiveDuration == null ||
@@ -185,8 +186,69 @@ class FluxNewsBody extends StatelessWidget {
   // helper function for the initState() to use async function on init
   Future<void> initConfig(
       BuildContext context, FluxNewsState appState, bool resume) async {
+    if (appState.configInitializationInProgress) {
+      logThis(
+          'FluxNewsBody',
+          'Config initialization skipped because it is already running',
+          LogLevel.INFO);
+      return;
+    }
+    appState.configInitializationInProgress = true;
+    try {
+      await _initConfigInternal(context, appState, resume);
+    } finally {
+      appState.configInitializationInProgress = false;
+    }
+  }
+
+  Future<bool> _readConfigValuesWithRetry(FluxNewsState appState) async {
+    const maxAttempts = 3;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (await appState.readConfigValues()) {
+        if (attempt > 1) {
+          logThis('FluxNewsBody', 'Config read succeeded on attempt $attempt',
+              LogLevel.INFO);
+        }
+        return true;
+      }
+      if (attempt < maxAttempts) {
+        logThis(
+            'FluxNewsBody',
+            'Config read attempt $attempt failed; retrying in 1 second',
+            LogLevel.WARNING);
+        await Future<void>.delayed(const Duration(seconds: 1));
+      }
+    }
+    return false;
+  }
+
+  Future<void> _initConfigInternal(
+      BuildContext context, FluxNewsState appState, bool resume) async {
     // read persistent saved config
-    bool completed = await appState.readConfigValues();
+    final completed = await _readConfigValuesWithRetry(appState);
+    if (!completed) {
+      appState.configReadFailed = true;
+      appState.syncProcess = false;
+      appState.startUp = true;
+      if (context.mounted) {
+        appState.errorString = AppLocalizations.of(context)!.databaseError;
+        appState.newError = true;
+        appState.refreshView();
+      }
+      FlutterNativeSplash.remove();
+      logThis(
+          'FluxNewsBody',
+          'Config initialization aborted after failed storage reads; '
+              'welcome navigation and follow-up startup actions are suppressed',
+          LogLevel.ERROR);
+      return;
+    }
+
+    if (appState.configReadFailed) {
+      appState.configReadFailed = false;
+      appState.errorString = '';
+      appState.newError = false;
+    }
 
     // One-time migration: rewrite all Keychain items with first_unlock
     // accessibility so they are accessible during headless CarPlay launches.

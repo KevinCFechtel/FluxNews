@@ -535,7 +535,14 @@ class SettingsBackupService {
         await writeStoredBackupPassword(appState, password.password);
       }
       await markAndroidAutoBackupHandled(appState, file);
-      await appState.readConfigValues();
+      if (!await appState.readConfigValues()) {
+        logThis(
+            'SettingsBackupService',
+            'Android auto backup was restored, but restored settings could '
+                'not be read from secure storage',
+            LogLevel.ERROR);
+        return false;
+      }
       if (context.mounted) {
         appState.readConfig(context);
         appState.readThemeConfigValues(context);

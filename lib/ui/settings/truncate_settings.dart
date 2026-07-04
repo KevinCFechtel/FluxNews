@@ -26,7 +26,7 @@ class TruncateSettings extends StatelessWidget {
   // accordingly.
   // It also initializes the database connection.
   Future<void> initConfig(BuildContext context, FluxNewsState appState) async {
-    await appState.readConfigValues();
+    if (!await appState.readConfigValues()) return;
     if (context.mounted) {
       appState.readConfig(context);
       appState.readThemeConfigValues(context);

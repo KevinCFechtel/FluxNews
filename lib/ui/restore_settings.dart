@@ -177,7 +177,10 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
 
       await SettingsBackupService.restoreBackup(appState, parsed);
 
-      await appState.readConfigValues();
+      if (!await appState.readConfigValues()) {
+        throw StateError(
+            'Restored settings could not be read from secure storage');
+      }
       if (mounted) {
         appState.readConfig(context);
         appState.readThemeConfigValues(context);
