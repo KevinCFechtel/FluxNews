@@ -4,6 +4,9 @@ on:
     tags:
       - v*
 
+env:
+  FLUTTER_VERSION: 3.44.4
+
 jobs:
   build:
     name: Build & Release 
@@ -12,9 +15,17 @@ jobs:
     steps:
         #1 Checkout Repository
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Restore Flutter Version Metadata
+        run: |
+          git -C vendor/flutter fetch --force --depth=1 origin \
+            "refs/tags/${FLUTTER_VERSION}:refs/tags/${FLUTTER_VERSION}"
+          test "$(git -C vendor/flutter rev-parse HEAD)" = \
+            "$(git -C vendor/flutter rev-list -n 1 "${FLUTTER_VERSION}")"
+          vendor/flutter/bin/flutter --version
         
         #2 Setup Java
       - name: Set Up Java
