@@ -16,6 +16,16 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 
+class FluxNewsWidgetSnapshotPayload {
+  const FluxNewsWidgetSnapshotPayload({
+    required this.payload,
+    required this.statusPayload,
+  });
+
+  final Map<String, Object?> payload;
+  final Map<String, Object?> statusPayload;
+}
+
 class FluxNewsWidgetService {
   static const MethodChannel _channel =
       MethodChannel('dev.kevincfechtel.fluxnews/widgets');
@@ -35,6 +45,29 @@ class FluxNewsWidgetService {
   static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
+    final snapshotPayload = await buildWidgetSnapshotPayload(appState);
+    logThis(
+        'WidgetService',
+        'Updating widget snapshot: platform=${Platform.operatingSystem} '
+            'displayTitle=${snapshotPayload.payload['displayTitle']} '
+            'items=${(snapshotPayload.payload['items'] as List).length} '
+            'count=${snapshotPayload.payload['unreadCount']} '
+            'countLabel=${snapshotPayload.payload['countLabel']} '
+            'lastUpdated=${snapshotPayload.payload['lastUpdated']} '
+            'unreadOnly=${appState.widgetUnreadOnly} '
+            'filterType=${appState.widgetFilterType} '
+            'filterId=${appState.widgetFilterId}',
+        LogLevel.INFO);
+    await _saveSnapshotAndReload(
+      snapshot: jsonEncode(snapshotPayload.payload),
+      statusSnapshot: jsonEncode(snapshotPayload.statusPayload),
+    );
+    _lastSnapshotUpdatedAt = DateTime.now();
+  }
+
+  @visibleForTesting
+  static Future<FluxNewsWidgetSnapshotPayload> buildWidgetSnapshotPayload(
+      FluxNewsState appState) async {
     final news = await queryWidgetNewsFromDB(appState);
     final countStatus = appState.widgetUnreadOnly
         ? FluxNewsState.unreadNewsStatus
@@ -67,22 +100,10 @@ class FluxNewsWidgetService {
       'lastUpdated': lastUpdated,
     };
 
-    logThis(
-        'WidgetService',
-        'Updating widget snapshot: platform=${Platform.operatingSystem} '
-            'displayTitle=$displayTitle '
-            'items=${news.length} count=$count '
-            'countLabel=$countLabel '
-            'lastUpdated=$lastUpdated '
-            'unreadOnly=${appState.widgetUnreadOnly} '
-            'filterType=${appState.widgetFilterType} '
-            'filterId=${appState.widgetFilterId}',
-        LogLevel.INFO);
-    await _saveSnapshotAndReload(
-      snapshot: jsonEncode(payload),
-      statusSnapshot: jsonEncode(statusPayload),
+    return FluxNewsWidgetSnapshotPayload(
+      payload: payload,
+      statusPayload: statusPayload,
     );
-    _lastSnapshotUpdatedAt = DateTime.now();
   }
 
   static Future<void> refreshSnapshotForForegroundOpen(

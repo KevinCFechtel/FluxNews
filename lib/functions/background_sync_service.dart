@@ -397,10 +397,14 @@ Future<bool> isFluxNewsForegroundActive() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(_foregroundActiveAtKey);
-    if (value == null || value.isEmpty) return false;
-
-    final activeAt = DateTime.tryParse(value);
-    if (activeAt == null) {
+    final status = evaluateFluxNewsForegroundActiveMarker(
+      value,
+      now: DateTime.now(),
+    );
+    if (status == FluxNewsForegroundActiveMarkerStatus.missing) {
+      return false;
+    }
+    if (status == FluxNewsForegroundActiveMarkerStatus.invalid) {
       await prefs.remove(_foregroundActiveAtKey);
       logThis(
           'backgroundSync',
@@ -408,9 +412,11 @@ Future<bool> isFluxNewsForegroundActive() async {
           LogLevel.WARNING);
       return false;
     }
-
-    final age = DateTime.now().difference(activeAt);
-    if (age > _foregroundActiveStaleAfter) {
+    if (status == FluxNewsForegroundActiveMarkerStatus.stale) {
+      final activeAt = DateTime.tryParse(value!);
+      final age = activeAt == null
+          ? Duration.zero
+          : DateTime.now().difference(activeAt);
       await prefs.remove(_foregroundActiveAtKey);
       logThis(
           'backgroundSync',
@@ -420,6 +426,9 @@ Future<bool> isFluxNewsForegroundActive() async {
       return false;
     }
 
+    final activeAt = DateTime.tryParse(value!);
+    final age =
+        activeAt == null ? Duration.zero : DateTime.now().difference(activeAt);
     logThis(
         'backgroundSync',
         'Foreground active marker found: ageSeconds=${age.inSeconds}',
@@ -430,6 +439,31 @@ Future<bool> isFluxNewsForegroundActive() async {
         LogLevel.WARNING);
     return false;
   }
+}
+
+enum FluxNewsForegroundActiveMarkerStatus {
+  missing,
+  invalid,
+  stale,
+  active,
+}
+
+@visibleForTesting
+FluxNewsForegroundActiveMarkerStatus evaluateFluxNewsForegroundActiveMarker(
+  String? value, {
+  required DateTime now,
+}) {
+  if (value == null || value.isEmpty) {
+    return FluxNewsForegroundActiveMarkerStatus.missing;
+  }
+  final activeAt = DateTime.tryParse(value);
+  if (activeAt == null) {
+    return FluxNewsForegroundActiveMarkerStatus.invalid;
+  }
+  if (now.difference(activeAt) > _foregroundActiveStaleAfter) {
+    return FluxNewsForegroundActiveMarkerStatus.stale;
+  }
+  return FluxNewsForegroundActiveMarkerStatus.active;
 }
 
 Future<void> _logScheduledBackgroundTasks() async {

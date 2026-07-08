@@ -1952,6 +1952,23 @@ Future<int> insertCategoriesInDB(
       }
     }
 
+    final fetchedFeedCount = categoryList.categories
+        .fold<int>(0, (sum, category) => sum + category.feeds.length);
+    final localFeedCountResult =
+        await appState.db!.rawQuery('SELECT COUNT(*) AS count FROM feeds');
+    final localFeedCount = localFeedCountResult.isEmpty
+        ? 0
+        : localFeedCountResult.first['count'] as int? ?? 0;
+    if (localFeedCount > 0 && fetchedFeedCount == 0) {
+      logThis(
+          'insertCategoriesInDB',
+          'Skipped local category/feed cleanup because fetched feed list is empty while local feeds exist. '
+              'localFeeds=$localFeedCount fetchedCategories=${categoryList.categories.length}',
+          LogLevel.WARNING);
+      await applyFeedSettingsOverridesToDB(appState);
+      return result;
+    }
+
     // check if the local categories exists in the fetched categories.
     // if they don't exists, the category is deleted and needs also to be deleted locally
     List<Category> existingCategories = [];
@@ -2004,18 +2021,6 @@ Future<int> insertCategoriesInDB(
                                                       ORDER BY feedID ASC''');
     if (resultSelect.isNotEmpty) {
       existingFeeds = resultSelect.map((e) => Feed.fromMap(e)).toList();
-    }
-
-    final fetchedFeedCount = categoryList.categories
-        .fold<int>(0, (sum, category) => sum + category.feeds.length);
-    if (existingFeeds.isNotEmpty && fetchedFeedCount == 0) {
-      logThis(
-          'insertCategoriesInDB',
-          'Skipped local category/feed cleanup because fetched feed list is empty while local feeds exist. '
-              'localFeeds=${existingFeeds.length} fetchedCategories=${categoryList.categories.length}',
-          LogLevel.WARNING);
-      await applyFeedSettingsOverridesToDB(appState);
-      return result;
     }
 
     final protectedNewsIDs = await _getProtectedNewsIdsFromDownloads(appState);
