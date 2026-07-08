@@ -6,6 +6,7 @@ on:
 
 env:
   FLUTTER_VERSION: 3.44.4
+  REPRO_BUILD_DIR: /home/vagrant/build/de.circle_dev.flux_news
 
 jobs:
   build:
@@ -19,7 +20,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prepare F-Droid Compatible Build Directory
+        run: |
+          sudo mkdir -p "$(dirname "${REPRO_BUILD_DIR}")"
+          sudo chown -R "${USER}:${USER}" /home/vagrant
+          mkdir -p "${REPRO_BUILD_DIR}"
+          cp -a "${GITHUB_WORKSPACE}/." "${REPRO_BUILD_DIR}/"
+          rm -rf "${REPRO_BUILD_DIR}/ios"
+
       - name: Restore Flutter Version Metadata
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
           git -C vendor/flutter fetch --force --depth=1 origin \
             "refs/tags/${FLUTTER_VERSION}:refs/tags/${FLUTTER_VERSION}"
@@ -36,8 +46,9 @@ jobs:
       
         #3 Install Dependencies with the same Flutter checkout used by F-Droid
       - name: Install Dependencies
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
         env:
-          PUB_CACHE: ${{ github.workspace }}/.pub-cache
+          PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
         run: |
           vendor/flutter/bin/flutter config --no-analytics
           vendor/flutter/bin/flutter pub get
@@ -45,10 +56,12 @@ jobs:
           
         #4 Setup Keystore
       - name: Decode Keystore
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
           
       - name: Create key.properties
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
@@ -57,13 +70,20 @@ jobs:
         
         #5 Build each ABI exactly like F-Droid, then build the universal APK
       - name: Build APK
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
         env:
-          PUB_CACHE: ${{ github.workspace }}/.pub-cache
+          PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
         run: |
           vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform=android-x64 --dart-define=cronetHttpNoPlay=true
           vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform=android-arm --dart-define=cronetHttpNoPlay=true
           vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform=android-arm64 --dart-define=cronetHttpNoPlay=true
           vendor/flutter/bin/flutter build apk --release --dart-define=cronetHttpNoPlay=true
+
+      - name: Copy Release Artifacts
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/build/app/outputs/flutter-apk"
+          cp "${REPRO_BUILD_DIR}"/build/app/outputs/flutter-apk/* \
+            "${GITHUB_WORKSPACE}/build/app/outputs/flutter-apk/"
 
         #6 Upload Artifacts
       - name: Upload Artifacts
@@ -74,6 +94,7 @@ jobs:
         #7 Extract Version
       - name: Extract version and release from pubspec.yaml
         id: extract_version
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r' | cut -d+ -f 1)
           echo "VERSION=$version" >> $GITHUB_ENV
