@@ -122,6 +122,46 @@ void main() {
     expect(newsList.single.previewText, contains('Full article content'));
   });
 
+  test('updating from list-only news preserves stored content metadata',
+      () async {
+    final appState = FluxNewsState()..db = database;
+    final listOnlyNews = News(
+      newsID: 1,
+      feedID: 1,
+      title: 'Title',
+      url: 'https://example.com/article',
+      commentsUrl: '',
+      shareCode: '',
+      content: '',
+      contentLoaded: false,
+      hash: 'hash',
+      publishedAt: '2026-07-03T10:00:00Z',
+      createdAt: '2026-07-03T10:00:00Z',
+      status: FluxNewsState.readNewsStatus,
+      readingTime: 1,
+      starred: false,
+      feedTitle: 'Feed',
+    );
+
+    await insertNewsInDB(
+      NewsList(news: [listOnlyNews], newsCount: 1),
+      appState,
+    );
+
+    final storedNews = await queryNewsByNewsId(appState, 1);
+    expect(storedNews?.status, FluxNewsState.readNewsStatus);
+    expect(storedNews?.content, contains('Full article content'));
+    expect(storedNews?.previewText, contains('Full article content'));
+    expect(storedNews?.imageUrl, 'https://example.com/image.jpg');
+
+    await database.update(
+      'news',
+      {'status': FluxNewsState.unreadNewsStatus},
+      where: 'newsID = ?',
+      whereArgs: [1],
+    );
+  });
+
   test('missing metadata is backfilled with feed and attachment settings', () async {
     await database.update(
       'feeds',

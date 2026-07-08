@@ -17,6 +17,7 @@ import '../models/news_model.dart';
 const int _sqliteInChunkSize = 500;
 
 Future<void> _prepareNewsListMetadata(News news, FluxNewsState appState) async {
+  if (!news.contentLoaded) return;
   final rows = await appState.db!.rawQuery(
     '''SELECT preferParagraph, preferAttachmentImage
          FROM feeds
@@ -505,21 +506,33 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
                 'Inserted news with id ${news.newsID} in DB', LogLevel.INFO);
           }
         } else {
-          // if the news is present, update the status of the news
-          batch.rawUpdate('''UPDATE news
-                                SET status = ?,
-                                    syncStatus = ?,
-                                    content = ?,
-                                    previewText = ?,
-                                    imageUrl = ?
-                              WHERE newsId = ?''', [
-            news.status,
-            FluxNewsState.notSyncedSyncStatus,
-            news.content,
-            news.previewText,
-            news.imageUrl,
-            news.newsID,
-          ]);
+          if (news.contentLoaded) {
+            // Full Miniflux entries may refresh content and cached list
+            // metadata. List-only entries intentionally leave content empty.
+            batch.rawUpdate('''UPDATE news
+                                  SET status = ?,
+                                      syncStatus = ?,
+                                      content = ?,
+                                      previewText = ?,
+                                      imageUrl = ?
+                                WHERE newsId = ?''', [
+              news.status,
+              FluxNewsState.notSyncedSyncStatus,
+              news.content,
+              news.previewText,
+              news.imageUrl,
+              news.newsID,
+            ]);
+          } else {
+            batch.rawUpdate('''UPDATE news
+                                  SET status = ?,
+                                      syncStatus = ?
+                                WHERE newsId = ?''', [
+              news.status,
+              FluxNewsState.notSyncedSyncStatus,
+              news.newsID,
+            ]);
+          }
           // also update mediaProgression for existing attachments so the
           // server's playback position is persisted and survives app restarts
           if (news.attachments != null) {
@@ -804,6 +817,8 @@ Future<News?> queryNewsByNewsId(FluxNewsState appState, int newsID) async {
               substr(news.commentsUrl, 1, 1000000) as commentsUrl,
               substr(news.shareCode, 1, 1000000) as shareCode,
               substr(news.content, 1, 1000000) as content,
+              news.previewText,
+              news.imageUrl,
               news.hash,
               news.publishedAt,
               news.createdAt,
@@ -1178,6 +1193,8 @@ Future<News?> queryNewsByIdFromDB(FluxNewsState appState, int newsID) async {
                substr(news.commentsUrl, 1, 1000000) as commentsUrl,
                substr(news.shareCode, 1, 1000000) as shareCode,
                substr(news.content, 1, 1000000) as content,
+               news.previewText,
+               news.imageUrl,
                news.hash,
                news.publishedAt,
                news.createdAt,
