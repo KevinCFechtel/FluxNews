@@ -5,7 +5,6 @@ on:
       - v*
 
 env:
-  FLUTTER_VERSION: 3.44.4
   REPRO_BUILD_DIR: /home/vagrant/build/de.circle_dev.flux_news
 
 jobs:
@@ -31,10 +30,31 @@ jobs:
       - name: Restore Flutter Version Metadata
         working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
+          flutter_commit="$(git -C vendor/flutter rev-parse HEAD)"
+          flutter_version="$(
+            git -C vendor/flutter ls-remote --tags origin |
+              awk -v commit="${flutter_commit}" '
+                $1 == commit {
+                  tag = $2
+                  sub(/^refs\/tags\//, "", tag)
+                  sub(/\^\{\}$/, "", tag)
+                  if (tag ~ /^[0-9]+\.[0-9]+\.[0-9]+$/) {
+                    print tag
+                  }
+                }
+              ' |
+              sort -V |
+              tail -n 1
+          )"
+          if [[ -z "${flutter_version}" ]]; then
+            echo "::error::Flutter submodule commit ${flutter_commit} has no release tag"
+            exit 1
+          fi
           git -C vendor/flutter fetch --force --depth=1 origin \
-            "refs/tags/${FLUTTER_VERSION}:refs/tags/${FLUTTER_VERSION}"
+            "refs/tags/${flutter_version}:refs/tags/${flutter_version}"
           test "$(git -C vendor/flutter rev-parse HEAD)" = \
-            "$(git -C vendor/flutter rev-list -n 1 "${FLUTTER_VERSION}")"
+            "$(git -C vendor/flutter rev-list -n 1 "${flutter_version}")"
+          echo "FLUTTER_VERSION=${flutter_version}" >> "${GITHUB_ENV}"
           vendor/flutter/bin/flutter --version
         
         #2 Setup Java
