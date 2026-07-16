@@ -1,0 +1,2 @@
+The following has been improved:
+ •	Fix a bug with downloading podcasts and fetch the news content
