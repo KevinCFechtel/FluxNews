@@ -34,25 +34,30 @@ class NewsRowIOS extends StatelessWidget {
       return InkWell(
           splashFactory: NoSplash.splashFactory,
           onTap: () async {
-            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+            onTabAction(
+                appState, context, news, searchView, itemIndex, newsList);
           },
           onLongPress: () async {
             await toggleNewsExpanded(news, appState);
             if (!context.mounted) return;
-            markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            markNewsAsReadAction(news, appState, context, searchView,
+                context.read<FluxNewsCounterState>());
           },
           child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
-    } else if (appState.longPressAction == FluxNewsState.longPressActionNoneString) {
+    } else if (appState.longPressAction ==
+        FluxNewsState.longPressActionNoneString) {
       return InkWell(
           splashFactory: NoSplash.splashFactory,
           onTap: () async {
-            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+            onTabAction(
+                appState, context, news, searchView, itemIndex, newsList);
           },
           child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
     } else {
       return CupertinoContextMenu.builder(
         enableHapticFeedback: true,
-        actions: getIOSContextMenuActions(appState, news, context, searchView, itemIndex, newsList),
+        actions: getIOSContextMenuActions(
+            appState, news, context, searchView, itemIndex, newsList),
         builder: (context, animation) {
           if (animation.status == AnimationStatus.completed) {
             return newsRow(appState, animation, isTablet);
@@ -64,7 +69,8 @@ class NewsRowIOS extends StatelessWidget {
     }
   }
 
-  Widget newsRow(FluxNewsState appState, Animation<double> animation, bool isTablet) {
+  Widget newsRow(
+      FluxNewsState appState, Animation<double> animation, bool isTablet) {
     final imageUrl = news.getImageURL();
     return Card(
       // inkwell is used for the onTab and onLongPress functions
@@ -72,7 +78,8 @@ class NewsRowIOS extends StatelessWidget {
         splashFactory: NoSplash.splashFactory,
         onTap: () async {
           if (animation.status != AnimationStatus.completed) {
-            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+            onTabAction(
+                appState, context, news, searchView, itemIndex, newsList);
           }
         },
         child: Row(
@@ -90,19 +97,23 @@ class NewsRowIOS extends StatelessWidget {
                       imageUrl,
                       height: 230,
                       width: MediaQuery.sizeOf(context).width / 2,
-                      cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width / 2),
+                      cacheWidth: newsImageCacheDimension(
+                          context, MediaQuery.sizeOf(context).width / 2),
                       fit: BoxFit.cover,
                       cache: true,
-                      alignment: Alignment.center,
+                      alignment: newsImageCropAlignment,
                       loadStateChanged: (state) {
                         if (state.extendedImageLoadState == LoadState.failed) {
                           return const Icon(
                             Icons.error,
                           );
-                        } else if (state.extendedImageLoadState == LoadState.loading) {
+                        } else if (state.extendedImageLoadState ==
+                            LoadState.loading) {
                           return Center(
                             child: CircularProgressIndicator.adaptive(
-                                padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                                padding: Platform.isAndroid
+                                    ? EdgeInsetsGeometry.all(20)
+                                    : null),
                           );
                         }
                         return null;
@@ -134,7 +145,10 @@ class NewsRowIOS extends StatelessWidget {
                     news.title,
                     style: news.status == FluxNewsState.unreadNewsStatus
                         ? Theme.of(context).textTheme.titleLarge
-                        : Theme.of(context).textTheme.titleLarge!.copyWith(color: Theme.of(context).disabledColor),
+                        : Theme.of(context)
+                            .textTheme
+                            .titleLarge!
+                            .copyWith(color: Theme.of(context).disabledColor),
                   ),
                   subtitle: animation.status != AnimationStatus.dismissed
                       ? SingleChildScrollView(
@@ -150,7 +164,8 @@ class NewsRowIOS extends StatelessWidget {
     );
   }
 
-  Widget getNewsRowContent(FluxNewsState appState, Animation<double> animation) {
+  Widget getNewsRowContent(
+      FluxNewsState appState, Animation<double> animation) {
     return Column(
       children: [
         Padding(
@@ -178,7 +193,9 @@ class NewsRowIOS extends StatelessWidget {
                             color: Theme.of(context).disabledColor,
                           ))),
               appState.showFeedIcons
-                  ? Padding(padding: const EdgeInsets.only(right: 5.0), child: news.getFeedIcon(16.0, context))
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 5.0),
+                      child: news.getFeedIcon(16.0, context))
                   : const SizedBox.shrink(),
               news.getAudioAttachments().isNotEmpty
                   ? Padding(
@@ -199,7 +216,10 @@ class NewsRowIOS extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: news.status == FluxNewsState.unreadNewsStatus
                         ? Theme.of(context).textTheme.bodyMedium
-                        : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                        : Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
+                            .copyWith(color: Theme.of(context).disabledColor),
                   ),
                 ),
               ),
@@ -209,13 +229,17 @@ class NewsRowIOS extends StatelessWidget {
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
                           overflow: TextOverflow.ellipsis,
-                          context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
+                          context
+                              .read<FluxNewsState>()
+                              .dateFormat
+                              .format(news.getPublishingDate()),
                           style: news.status == FluxNewsState.unreadNewsStatus
                               ? Theme.of(context).textTheme.bodyMedium
                               : Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
-                                  .copyWith(color: Theme.of(context).disabledColor),
+                                  .copyWith(
+                                      color: Theme.of(context).disabledColor),
                         ),
                       ),
                     )
@@ -223,10 +247,14 @@ class NewsRowIOS extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 8.0),
                       child: Text(
                         overflow: TextOverflow.ellipsis,
-                        context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
+                        context
+                            .read<FluxNewsState>()
+                            .dateFormat
+                            .format(news.getPublishingDate()),
                         style: news.status == FluxNewsState.unreadNewsStatus
                             ? Theme.of(context).textTheme.bodyMedium
-                            : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                            : Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                color: Theme.of(context).disabledColor),
                       ),
                     ),
               SizedBox(
@@ -249,7 +277,8 @@ class NewsRowIOS extends StatelessWidget {
           splashFactory: NoSplash.splashFactory,
           onTap: () {
             if (animation.status != AnimationStatus.completed) {
-              onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
+              onTabContentAction(
+                  appState, context, news, searchView, itemIndex, newsList);
             }
           },
           child: NewsContent(

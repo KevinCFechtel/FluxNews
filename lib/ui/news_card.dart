@@ -41,17 +41,22 @@ class NewsCard extends StatelessWidget {
     Widget bookmarkSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(200, 254, 180, 0)
                   : const Color.fromARGB(255, 255, 210, 95),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 Icon(
                   news.starred ? Icons.star_outline : Icons.star,
@@ -76,20 +81,27 @@ class NewsCard extends StatelessWidget {
     Widget readSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 172)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(255, 0, 100, 10)
                   : const Color.fromARGB(255, 92, 251, 145),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 Icon(
-                  news.status == FluxNewsState.readNewsStatus ? Icons.fiber_new : Icons.check,
+                  news.status == FluxNewsState.readNewsStatus
+                      ? Icons.fiber_new
+                      : Icons.check,
                 ),
                 Text(
                   news.status == FluxNewsState.readNewsStatus
@@ -103,9 +115,11 @@ class NewsCard extends StatelessWidget {
         ),
         onTap: () {
           if (news.status == FluxNewsState.readNewsStatus) {
-            markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            markNewsAsUnreadAction(news, appState, context, searchView,
+                context.read<FluxNewsCounterState>());
           } else {
-            markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            markNewsAsReadAction(news, appState, context, searchView,
+                context.read<FluxNewsCounterState>());
             if (appState.removeNewsFromListWhenRead && !searchView) {
               newsList?.removeAt(itemIndex);
             }
@@ -116,17 +130,22 @@ class NewsCard extends StatelessWidget {
     Widget saveSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 0, 160, 235)
                   : const Color.fromARGB(197, 82, 200, 255),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.save,
@@ -148,17 +167,22 @@ class NewsCard extends StatelessWidget {
       child: Builder(
         builder: (actionContext) => InkWell(
           child: Card(
-            color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+            color: themeState.brightnessMode ==
+                    FluxNewsState.brightnessModeSystemString
                 ? MediaQuery.of(context).platformBrightness == Brightness.dark
                     ? const Color.fromARGB(200, 24, 115, 185)
                     : const Color.fromARGB(220, 109, 192, 255)
-                : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                : themeState.brightnessMode ==
+                        FluxNewsState.brightnessModeDarkString
                     ? const Color.fromARGB(200, 24, 115, 185)
                     : const Color.fromARGB(220, 109, 192, 255),
             child: Padding(
-              padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+              padding:
+                  news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
               child: Column(
-                mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+                mainAxisAlignment: news.expanded
+                    ? MainAxisAlignment.start
+                    : MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.download,
@@ -183,17 +207,22 @@ class NewsCard extends StatelessWidget {
     Widget openMinifluxAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 133, 0, 235)
                   : const Color.fromARGB(130, 191, 120, 245),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.open_in_browser,
@@ -222,17 +251,22 @@ class NewsCard extends StatelessWidget {
     Widget openAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 147, 59, 215)
                   : const Color.fromARGB(199, 179, 95, 244)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 147, 59, 215)
                   : const Color.fromARGB(199, 179, 95, 244),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.open_in_browser,
@@ -261,17 +295,22 @@ class NewsCard extends StatelessWidget {
     Widget openCommentsAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(130, 147, 59, 215)
                   : const Color.fromARGB(199, 179, 95, 244)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(130, 147, 59, 215)
                   : const Color.fromARGB(199, 179, 95, 244),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.comment,
@@ -293,17 +332,22 @@ class NewsCard extends StatelessWidget {
     Widget shareSlidableAction = Expanded(
       child: InkWell(
         child: Card(
-          color: themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
+          color: themeState.brightnessMode ==
+                  FluxNewsState.brightnessModeSystemString
               ? MediaQuery.of(context).platformBrightness == Brightness.dark
                   ? const Color.fromARGB(204, 44, 56, 189)
                   : const Color.fromARGB(197, 119, 131, 255)
-              : themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+              : themeState.brightnessMode ==
+                      FluxNewsState.brightnessModeDarkString
                   ? const Color.fromARGB(204, 44, 56, 189)
                   : const Color.fromARGB(197, 119, 131, 255),
           child: Padding(
-            padding: news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
+            padding:
+                news.expanded ? EdgeInsets.only(top: 170) : EdgeInsets.zero,
             child: Column(
-              mainAxisAlignment: news.expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: news.expanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 Icon(
                   Icons.share,
@@ -328,82 +372,118 @@ class NewsCard extends StatelessWidget {
               final box = context.findRenderObject() as RenderBox?;
               SharePlus.instance.share(ShareParams(
                   uri: Uri.parse(news.url),
-                  sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+                  sharePositionOrigin:
+                      box!.localToGlobal(Offset.zero) & const Size(100, 100)));
             }
           }
         },
       ),
     );
 
-    if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+    if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionReadUnreadString) {
       leftSwipeActions.add(readSlidableAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+    } else if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionBookmarkString) {
       leftSwipeActions.add(bookmarkSlidableAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionSaveString) {
+    } else if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionSaveString) {
       leftSwipeActions.add(saveSlidableAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+    } else if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionOpenMinifluxString) {
       leftSwipeActions.add(openMinifluxAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionShareString) {
+    } else if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionShareString) {
       leftSwipeActions.add(shareSlidableAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenString) {
+    } else if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionOpenString) {
       leftSwipeActions.add(openAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+    } else if (appState.secondLeftSwipeAction ==
+            FluxNewsState.swipeActionDownloadString &&
+        hasAudioAttachment) {
       leftSwipeActions.add(downloadSlidableAction);
-    } else if (appState.secondLeftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+    } else if (appState.secondLeftSwipeAction ==
+        FluxNewsState.swipeActionOpenCommentsString) {
       leftSwipeActions.add(openCommentsAction);
     }
 
-    if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+    if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionReadUnreadString) {
       rightSwipeActions.add(readSlidableAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+    } else if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionBookmarkString) {
       rightSwipeActions.add(bookmarkSlidableAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
+    } else if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionSaveString) {
       rightSwipeActions.add(saveSlidableAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+    } else if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionShareString) {
+    } else if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionShareString) {
       rightSwipeActions.add(shareSlidableAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
+    } else if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionOpenString) {
       rightSwipeActions.add(openAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+    } else if (appState.rightSwipeAction ==
+            FluxNewsState.swipeActionDownloadString &&
+        hasAudioAttachment) {
       rightSwipeActions.add(downloadSlidableAction);
-    } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+    } else if (appState.rightSwipeAction ==
+        FluxNewsState.swipeActionOpenCommentsString) {
       rightSwipeActions.add(openCommentsAction);
     }
 
-    if (appState.secondRightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+    if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionReadUnreadString) {
       rightSwipeActions.add(readSlidableAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+    } else if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionBookmarkString) {
       rightSwipeActions.add(bookmarkSlidableAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionSaveString) {
+    } else if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionSaveString) {
       rightSwipeActions.add(saveSlidableAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+    } else if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionOpenMinifluxString) {
       rightSwipeActions.add(openMinifluxAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionShareString) {
+    } else if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionShareString) {
       rightSwipeActions.add(shareSlidableAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenString) {
+    } else if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionOpenString) {
       rightSwipeActions.add(openAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+    } else if (appState.secondRightSwipeAction ==
+            FluxNewsState.swipeActionDownloadString &&
+        hasAudioAttachment) {
       rightSwipeActions.add(downloadSlidableAction);
-    } else if (appState.secondRightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+    } else if (appState.secondRightSwipeAction ==
+        FluxNewsState.swipeActionOpenCommentsString) {
       rightSwipeActions.add(openCommentsAction);
     }
 
     if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
       leftSwipeActions.add(readSlidableAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+    } else if (appState.leftSwipeAction ==
+        FluxNewsState.swipeActionBookmarkString) {
       leftSwipeActions.add(bookmarkSlidableAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
+    } else if (appState.leftSwipeAction ==
+        FluxNewsState.swipeActionSaveString) {
       leftSwipeActions.add(saveSlidableAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+    } else if (appState.leftSwipeAction ==
+        FluxNewsState.swipeActionOpenMinifluxString) {
       leftSwipeActions.add(openMinifluxAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionShareString) {
+    } else if (appState.leftSwipeAction ==
+        FluxNewsState.swipeActionShareString) {
       leftSwipeActions.add(shareSlidableAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
+    } else if (appState.leftSwipeAction ==
+        FluxNewsState.swipeActionOpenString) {
       leftSwipeActions.add(openAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionDownloadString && hasAudioAttachment) {
+    } else if (appState.leftSwipeAction ==
+            FluxNewsState.swipeActionDownloadString &&
+        hasAudioAttachment) {
       leftSwipeActions.add(downloadSlidableAction);
-    } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+    } else if (appState.leftSwipeAction ==
+        FluxNewsState.swipeActionOpenCommentsString) {
       leftSwipeActions.add(openCommentsAction);
     }
     final imageUrl = news.getImageURL();
@@ -422,20 +502,26 @@ class NewsCard extends StatelessWidget {
               closeOnCancel: true,
               dismissThreshold: 0.6,
               confirmDismiss: () async {
-                if (appState.rightSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+                if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionReadUnreadString) {
                   if (news.status == FluxNewsState.readNewsStatus) {
-                    markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    markNewsAsUnreadAction(news, appState, context, searchView,
+                        context.read<FluxNewsCounterState>());
                   } else {
-                    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    markNewsAsReadAction(news, appState, context, searchView,
+                        context.read<FluxNewsCounterState>());
                     if (appState.removeNewsFromListWhenRead && !searchView) {
                       newsList?.removeAt(itemIndex);
                     }
                   }
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionBookmarkString) {
                   bookmarkAction(news, appState, context, searchView);
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionSaveString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionSaveString) {
                   saveToThirdPartyAction(news, appState, context);
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionOpenMinifluxString) {
                   if (news.status == FluxNewsState.unreadNewsStatus) {
                     openNewsAction(news, appState, context, true);
                     if (appState.removeNewsFromListWhenRead && !searchView) {
@@ -444,7 +530,8 @@ class NewsCard extends StatelessWidget {
                   } else {
                     openNewsAction(news, appState, context, true);
                   }
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionShareString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionShareString) {
                   if (Platform.isAndroid) {
                     SharePlus.instance.share(ShareParams(
                       uri: Uri.parse(news.url),
@@ -454,10 +541,12 @@ class NewsCard extends StatelessWidget {
                       final box = context.findRenderObject() as RenderBox?;
                       SharePlus.instance.share(ShareParams(
                           uri: Uri.parse(news.url),
-                          sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+                          sharePositionOrigin: box!.localToGlobal(Offset.zero) &
+                              const Size(100, 100)));
                     }
                   }
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionOpenString) {
                   if (news.status == FluxNewsState.unreadNewsStatus) {
                     openNewsAction(news, appState, context, false);
                     if (appState.removeNewsFromListWhenRead && !searchView) {
@@ -466,9 +555,11 @@ class NewsCard extends StatelessWidget {
                   } else {
                     openNewsAction(news, appState, context, false);
                   }
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionDownloadString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionDownloadString) {
                   await downloadAudioAction(news, appState, context);
-                } else if (appState.rightSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+                } else if (appState.rightSwipeAction ==
+                    FluxNewsState.swipeActionOpenCommentsString) {
                   openNewsCommentsAction(news, context);
                 }
                 return false;
@@ -492,20 +583,26 @@ class NewsCard extends StatelessWidget {
               closeOnCancel: true,
               dismissThreshold: 0.6,
               confirmDismiss: () async {
-                if (appState.leftSwipeAction == FluxNewsState.swipeActionReadUnreadString) {
+                if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionReadUnreadString) {
                   if (news.status == FluxNewsState.readNewsStatus) {
-                    markNewsAsUnreadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    markNewsAsUnreadAction(news, appState, context, searchView,
+                        context.read<FluxNewsCounterState>());
                   } else {
-                    markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                    markNewsAsReadAction(news, appState, context, searchView,
+                        context.read<FluxNewsCounterState>());
                     if (appState.removeNewsFromListWhenRead && !searchView) {
                       newsList?.removeAt(itemIndex);
                     }
                   }
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionBookmarkString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionBookmarkString) {
                   bookmarkAction(news, appState, context, searchView);
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionSaveString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionSaveString) {
                   saveToThirdPartyAction(news, appState, context);
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenMinifluxString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionOpenMinifluxString) {
                   if (news.status == FluxNewsState.unreadNewsStatus) {
                     openNewsAction(news, appState, context, true);
                     if (appState.removeNewsFromListWhenRead && !searchView) {
@@ -514,7 +611,8 @@ class NewsCard extends StatelessWidget {
                   } else {
                     openNewsAction(news, appState, context, true);
                   }
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionShareString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionShareString) {
                   if (Platform.isAndroid) {
                     SharePlus.instance.share(ShareParams(
                       uri: Uri.parse(news.url),
@@ -524,10 +622,12 @@ class NewsCard extends StatelessWidget {
                       final box = context.findRenderObject() as RenderBox?;
                       SharePlus.instance.share(ShareParams(
                           uri: Uri.parse(news.url),
-                          sharePositionOrigin: box!.localToGlobal(Offset.zero) & const Size(100, 100)));
+                          sharePositionOrigin: box!.localToGlobal(Offset.zero) &
+                              const Size(100, 100)));
                     }
                   }
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionOpenString) {
                   if (news.status == FluxNewsState.unreadNewsStatus) {
                     openNewsAction(news, appState, context, false);
                     if (appState.removeNewsFromListWhenRead && !searchView) {
@@ -536,9 +636,11 @@ class NewsCard extends StatelessWidget {
                   } else {
                     openNewsAction(news, appState, context, false);
                   }
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionDownloadString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionDownloadString) {
                   await downloadAudioAction(news, appState, context);
-                } else if (appState.leftSwipeAction == FluxNewsState.swipeActionOpenCommentsString) {
+                } else if (appState.leftSwipeAction ==
+                    FluxNewsState.swipeActionOpenCommentsString) {
                   openNewsCommentsAction(news, context);
                 }
                 return false;
@@ -555,13 +657,18 @@ class NewsCard extends StatelessWidget {
           // component is not dragged.
           child: Platform.isIOS
               ? NewsCardIOS(
-                  news: news, context: context, searchView: searchView, itemIndex: itemIndex, newsList: newsList)
+                  news: news,
+                  context: context,
+                  searchView: searchView,
+                  itemIndex: itemIndex,
+                  newsList: newsList)
               : Card(
                   // inkwell is used for the onTab and onLongPress functions
                   child: InkWell(
                     splashFactory: NoSplash.splashFactory,
                     onTap: () async {
-                      onTabAction(appState, context, news, searchView, itemIndex, newsList);
+                      onTabAction(appState, context, news, searchView,
+                          itemIndex, newsList);
                     },
                     // on tap get the actual position of the list on tab
                     // to place the context menu on this position
@@ -569,18 +676,29 @@ class NewsCard extends StatelessWidget {
                       getTapPosition(details, context, appState);
                     },
                     onLongPress: () async {
-                      if (appState.longPressAction == FluxNewsState.longPressActionMenuString) {
-                        showContextMenu(news, context, searchView, appState, context.read<FluxNewsCounterState>(),
-                            itemIndex, newsList);
-                      } else if (appState.longPressAction == FluxNewsState.longPressActionExpandString) {
+                      if (appState.longPressAction ==
+                          FluxNewsState.longPressActionMenuString) {
+                        showContextMenu(
+                            news,
+                            context,
+                            searchView,
+                            appState,
+                            context.read<FluxNewsCounterState>(),
+                            itemIndex,
+                            newsList);
+                      } else if (appState.longPressAction ==
+                          FluxNewsState.longPressActionExpandString) {
                         await toggleNewsExpanded(news, appState);
                         if (!context.mounted) return;
-                        markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+                        markNewsAsReadAction(news, appState, context,
+                            searchView, context.read<FluxNewsCounterState>());
                       }
                     },
                     child: Column(
                       children: [
-                        appState.showHeadlineOnTop ? NewsTopHeadline(news: news) : SizedBox.shrink(),
+                        appState.showHeadlineOnTop
+                            ? NewsTopHeadline(news: news)
+                            : SizedBox.shrink(),
                         // load the news image if present
                         imageUrl != FluxNewsState.noImageUrlString
                             ?
@@ -589,18 +707,24 @@ class NewsCard extends StatelessWidget {
                                 imageUrl,
                                 height: appState.isTablet ? 250 : 175,
                                 width: MediaQuery.sizeOf(context).width,
-                                cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width),
+                                cacheWidth: newsImageCacheDimension(
+                                    context, MediaQuery.sizeOf(context).width),
                                 fit: BoxFit.cover,
+                                alignment: newsImageCropAlignment,
                                 cache: true,
                                 loadStateChanged: (state) {
-                                  if (state.extendedImageLoadState == LoadState.failed) {
+                                  if (state.extendedImageLoadState ==
+                                      LoadState.failed) {
                                     return const Icon(
                                       Icons.error,
                                     );
-                                  } else if (state.extendedImageLoadState == LoadState.loading) {
+                                  } else if (state.extendedImageLoadState ==
+                                      LoadState.loading) {
                                     return Center(
                                       child: CircularProgressIndicator.adaptive(
-                                          padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                                          padding: Platform.isAndroid
+                                              ? EdgeInsetsGeometry.all(20)
+                                              : null),
                                     );
                                   }
                                   return null;
@@ -614,12 +738,15 @@ class NewsCard extends StatelessWidget {
                             title: !appState.showHeadlineOnTop
                                 ? Text(
                                     news.title,
-                                    style: news.status == FluxNewsState.unreadNewsStatus
+                                    style: news.status ==
+                                            FluxNewsState.unreadNewsStatus
                                         ? Theme.of(context).textTheme.titleLarge
                                         : Theme.of(context)
                                             .textTheme
                                             .titleLarge!
-                                            .copyWith(color: Theme.of(context).disabledColor),
+                                            .copyWith(
+                                                color: Theme.of(context)
+                                                    .disabledColor),
                                   )
                                 : const SizedBox.shrink(),
                             subtitle: Column(
@@ -631,9 +758,12 @@ class NewsCard extends StatelessWidget {
                                         ),
                                         child: Row(
                                           children: [
-                                            news.status == FluxNewsState.unreadNewsStatus
+                                            news.status ==
+                                                    FluxNewsState
+                                                        .unreadNewsStatus
                                                 ? const Padding(
-                                                    padding: EdgeInsets.only(right: 15.0),
+                                                    padding: EdgeInsets.only(
+                                                        right: 15.0),
                                                     child: SizedBox(
                                                         width: 15,
                                                         height: 35,
@@ -641,58 +771,92 @@ class NewsCard extends StatelessWidget {
                                                           Icons.fiber_new,
                                                         )))
                                                 : Padding(
-                                                    padding: const EdgeInsets.only(right: 15.0),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 15.0),
                                                     child: SizedBox(
                                                         width: 15,
                                                         height: 35,
                                                         child: Icon(
                                                           Icons.check,
-                                                          color: Theme.of(context).disabledColor,
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .disabledColor,
                                                         ))),
                                             appState.showFeedIcons
                                                 ? Padding(
-                                                    padding: const EdgeInsets.only(right: 5.0),
-                                                    child: news.getFeedIcon(16.0, context))
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 5.0),
+                                                    child: news.getFeedIcon(
+                                                        16.0, context))
                                                 : const SizedBox.shrink(),
-                                            news.getAudioAttachments().isNotEmpty
+                                            news
+                                                    .getAudioAttachments()
+                                                    .isNotEmpty
                                                 ? Padding(
-                                                    padding: const EdgeInsets.only(right: 5.0),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 5.0),
                                                     child: Icon(
                                                       Icons.headphones,
                                                       size: 16.0,
-                                                      color: news.status == FluxNewsState.unreadNewsStatus
-                                                          ? Theme.of(context).primaryIconTheme.color
-                                                          : Theme.of(context).disabledColor,
+                                                      color: news.status ==
+                                                              FluxNewsState
+                                                                  .unreadNewsStatus
+                                                          ? Theme.of(context)
+                                                              .primaryIconTheme
+                                                              .color
+                                                          : Theme.of(context)
+                                                              .disabledColor,
                                                     ))
                                                 : const SizedBox.shrink(),
                                             Expanded(
                                               child: Padding(
-                                                padding: const EdgeInsets.only(left: 0.0),
+                                                padding: const EdgeInsets.only(
+                                                    left: 0.0),
                                                 child: Text(
                                                   news.feedTitle,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: news.status == FluxNewsState.unreadNewsStatus
-                                                      ? Theme.of(context).textTheme.bodyMedium
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: news.status ==
+                                                          FluxNewsState
+                                                              .unreadNewsStatus
+                                                      ? Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium
                                                       : Theme.of(context)
                                                           .textTheme
                                                           .bodyMedium!
-                                                          .copyWith(color: Theme.of(context).disabledColor),
+                                                          .copyWith(
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .disabledColor),
                                                 ),
                                               ),
                                             ),
                                             Padding(
-                                              padding: const EdgeInsets.only(left: 8.0),
+                                              padding: const EdgeInsets.only(
+                                                  left: 8.0),
                                               child: Text(
                                                 context
                                                     .read<FluxNewsState>()
                                                     .dateFormat
-                                                    .format(news.getPublishingDate()),
-                                                style: news.status == FluxNewsState.unreadNewsStatus
-                                                    ? Theme.of(context).textTheme.bodyMedium
+                                                    .format(news
+                                                        .getPublishingDate()),
+                                                style: news.status ==
+                                                        FluxNewsState
+                                                            .unreadNewsStatus
+                                                    ? Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
                                                     : Theme.of(context)
                                                         .textTheme
                                                         .bodyMedium!
-                                                        .copyWith(color: Theme.of(context).disabledColor),
+                                                        .copyWith(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .disabledColor),
                                               ),
                                             ),
                                             SizedBox(
@@ -701,9 +865,14 @@ class NewsCard extends StatelessWidget {
                                               child: news.starred
                                                   ? Icon(
                                                       Icons.star,
-                                                      color: news.status == FluxNewsState.unreadNewsStatus
-                                                          ? Theme.of(context).primaryIconTheme.color
-                                                          : Theme.of(context).disabledColor,
+                                                      color: news.status ==
+                                                              FluxNewsState
+                                                                  .unreadNewsStatus
+                                                          ? Theme.of(context)
+                                                              .primaryIconTheme
+                                                              .color
+                                                          : Theme.of(context)
+                                                              .disabledColor,
                                                     )
                                                   : const SizedBox.shrink(),
                                             ),
@@ -715,7 +884,8 @@ class NewsCard extends StatelessWidget {
                                 InkWell(
                                   splashFactory: NoSplash.splashFactory,
                                   onTap: () {
-                                    onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
+                                    onTabContentAction(appState, context, news,
+                                        searchView, itemIndex, newsList);
                                   },
                                   child: NewsContent(
                                     news: news,

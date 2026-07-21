@@ -37,7 +37,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '2.2.4';
+  static const String applicationVersion = '2.2.5';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       'https://github.com/KevinCFechtel/FluxNews';

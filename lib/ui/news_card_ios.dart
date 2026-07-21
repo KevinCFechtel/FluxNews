@@ -33,25 +33,30 @@ class NewsCardIOS extends StatelessWidget {
       return InkWell(
           splashFactory: NoSplash.splashFactory,
           onTap: () async {
-            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+            onTabAction(
+                appState, context, news, searchView, itemIndex, newsList);
           },
           onLongPress: () async {
             await toggleNewsExpanded(news, appState);
             if (!context.mounted) return;
-            markNewsAsReadAction(news, appState, context, searchView, context.read<FluxNewsCounterState>());
+            markNewsAsReadAction(news, appState, context, searchView,
+                context.read<FluxNewsCounterState>());
           },
           child: newsCard(appState, AlwaysStoppedAnimation(1)));
-    } else if (appState.longPressAction == FluxNewsState.longPressActionNoneString) {
+    } else if (appState.longPressAction ==
+        FluxNewsState.longPressActionNoneString) {
       return InkWell(
           splashFactory: NoSplash.splashFactory,
           onTap: () async {
-            onTabAction(appState, context, news, searchView, itemIndex, newsList);
+            onTabAction(
+                appState, context, news, searchView, itemIndex, newsList);
           },
           child: newsCard(appState, AlwaysStoppedAnimation(1)));
     } else {
       return CupertinoContextMenu.builder(
           enableHapticFeedback: true,
-          actions: getIOSContextMenuActions(appState, news, context, searchView, itemIndex, newsList),
+          actions: getIOSContextMenuActions(
+              appState, news, context, searchView, itemIndex, newsList),
           builder: (context, animation) {
             if (animation.status == AnimationStatus.completed) {
               return Container(
@@ -73,7 +78,8 @@ class NewsCardIOS extends StatelessWidget {
             splashFactory: NoSplash.splashFactory,
             onTap: () async {
               if (animation.status != AnimationStatus.completed) {
-                onTabAction(appState, context, news, searchView, itemIndex, newsList);
+                onTabAction(
+                    appState, context, news, searchView, itemIndex, newsList);
               }
             },
             child: animation.status != AnimationStatus.dismissed
@@ -87,7 +93,9 @@ class NewsCardIOS extends StatelessWidget {
     final imageUrl = news.getImageURL();
     return Column(
       children: [
-        appState.showHeadlineOnTop ? NewsTopHeadline(news: news) : SizedBox.shrink(),
+        appState.showHeadlineOnTop
+            ? NewsTopHeadline(news: news)
+            : SizedBox.shrink(),
         // load the news image if present
         imageUrl != FluxNewsState.noImageUrlString
             ?
@@ -96,18 +104,23 @@ class NewsCardIOS extends StatelessWidget {
                 imageUrl,
                 height: appState.isTablet ? 250 : 175,
                 width: MediaQuery.sizeOf(context).width,
-                cacheWidth: newsImageCacheDimension(context, MediaQuery.sizeOf(context).width),
+                cacheWidth: newsImageCacheDimension(
+                    context, MediaQuery.sizeOf(context).width),
                 fit: BoxFit.cover,
+                alignment: newsImageCropAlignment,
                 cache: true,
                 loadStateChanged: (state) {
                   if (state.extendedImageLoadState == LoadState.failed) {
                     return const Icon(
                       Icons.error,
                     );
-                  } else if (state.extendedImageLoadState == LoadState.loading) {
+                  } else if (state.extendedImageLoadState ==
+                      LoadState.loading) {
                     return Center(
                       child: CircularProgressIndicator.adaptive(
-                          padding: Platform.isAndroid ? EdgeInsetsGeometry.all(20) : null),
+                          padding: Platform.isAndroid
+                              ? EdgeInsetsGeometry.all(20)
+                              : null),
                     );
                   }
                   return null;
@@ -125,7 +138,8 @@ class NewsCardIOS extends StatelessWidget {
                         news.title,
                         style: news.status == FluxNewsState.unreadNewsStatus
                             ? Theme.of(context).textTheme.titleLarge
-                            : Theme.of(context).textTheme.titleLarge!.copyWith(color: Theme.of(context).disabledColor),
+                            : Theme.of(context).textTheme.titleLarge!.copyWith(
+                                color: Theme.of(context).disabledColor),
                       )
                     : const SizedBox.shrink(),
                 subtitle: Column(
@@ -147,27 +161,34 @@ class NewsCardIOS extends StatelessWidget {
                                               Icons.fiber_new,
                                             )))
                                     : Padding(
-                                        padding: const EdgeInsets.only(right: 15.0),
+                                        padding:
+                                            const EdgeInsets.only(right: 15.0),
                                         child: SizedBox(
                                             width: 15,
                                             height: 35,
                                             child: Icon(
                                               Icons.check,
-                                              color: Theme.of(context).disabledColor,
+                                              color: Theme.of(context)
+                                                  .disabledColor,
                                             ))),
                                 appState.showFeedIcons
                                     ? Padding(
-                                        padding: const EdgeInsets.only(right: 5.0),
+                                        padding:
+                                            const EdgeInsets.only(right: 5.0),
                                         child: news.getFeedIcon(16.0, context))
                                     : const SizedBox.shrink(),
                                 news.getAudioAttachments().isNotEmpty
                                     ? Padding(
-                                        padding: const EdgeInsets.only(right: 5.0),
+                                        padding:
+                                            const EdgeInsets.only(right: 5.0),
                                         child: Icon(
                                           Icons.headphones,
                                           size: 16.0,
-                                          color: news.status == FluxNewsState.unreadNewsStatus
-                                              ? Theme.of(context).primaryIconTheme.color
+                                          color: news.status ==
+                                                  FluxNewsState.unreadNewsStatus
+                                              ? Theme.of(context)
+                                                  .primaryIconTheme
+                                                  .color
                                               : Theme.of(context).disabledColor,
                                         ))
                                     : const SizedBox.shrink(),
@@ -177,25 +198,36 @@ class NewsCardIOS extends StatelessWidget {
                                     child: Text(
                                       news.feedTitle,
                                       overflow: TextOverflow.ellipsis,
-                                      style: news.status == FluxNewsState.unreadNewsStatus
-                                          ? Theme.of(context).textTheme.bodyMedium
+                                      style: news.status ==
+                                              FluxNewsState.unreadNewsStatus
+                                          ? Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
                                           : Theme.of(context)
                                               .textTheme
                                               .bodyMedium!
-                                              .copyWith(color: Theme.of(context).disabledColor),
+                                              .copyWith(
+                                                  color: Theme.of(context)
+                                                      .disabledColor),
                                     ),
                                   ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 8.0),
                                   child: Text(
-                                    context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
-                                    style: news.status == FluxNewsState.unreadNewsStatus
+                                    context
+                                        .read<FluxNewsState>()
+                                        .dateFormat
+                                        .format(news.getPublishingDate()),
+                                    style: news.status ==
+                                            FluxNewsState.unreadNewsStatus
                                         ? Theme.of(context).textTheme.bodyMedium
                                         : Theme.of(context)
                                             .textTheme
                                             .bodyMedium!
-                                            .copyWith(color: Theme.of(context).disabledColor),
+                                            .copyWith(
+                                                color: Theme.of(context)
+                                                    .disabledColor),
                                   ),
                                 ),
                                 SizedBox(
@@ -204,8 +236,11 @@ class NewsCardIOS extends StatelessWidget {
                                   child: news.starred
                                       ? Icon(
                                           Icons.star,
-                                          color: news.status == FluxNewsState.unreadNewsStatus
-                                              ? Theme.of(context).primaryIconTheme.color
+                                          color: news.status ==
+                                                  FluxNewsState.unreadNewsStatus
+                                              ? Theme.of(context)
+                                                  .primaryIconTheme
+                                                  .color
                                               : Theme.of(context).disabledColor,
                                         )
                                       : const SizedBox.shrink(),
@@ -219,7 +254,8 @@ class NewsCardIOS extends StatelessWidget {
                       splashFactory: NoSplash.splashFactory,
                       onTap: () {
                         if (animation.status != AnimationStatus.completed) {
-                          onTabContentAction(appState, context, news, searchView, itemIndex, newsList);
+                          onTabContentAction(appState, context, news,
+                              searchView, itemIndex, newsList);
                         }
                       },
                       child: NewsContent(
