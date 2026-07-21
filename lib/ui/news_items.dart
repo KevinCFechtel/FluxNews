@@ -19,7 +19,10 @@ class NewsTopHeadline extends StatelessWidget {
           news.title,
           style: news.status == FluxNewsState.unreadNewsStatus
               ? Theme.of(context).textTheme.titleLarge
-              : Theme.of(context).textTheme.titleLarge!.copyWith(color: Theme.of(context).disabledColor),
+              : Theme.of(context)
+                  .textTheme
+                  .titleLarge!
+                  .copyWith(color: Theme.of(context).disabledColor),
         ),
         subtitle: Column(
           children: [
@@ -48,7 +51,9 @@ class NewsTopHeadline extends StatelessWidget {
                                 color: Theme.of(context).disabledColor,
                               ))),
                   appState.showFeedIcons
-                      ? Padding(padding: const EdgeInsets.only(right: 5.0), child: news.getFeedIcon(16.0, context))
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: 5.0),
+                          child: news.getFeedIcon(16.0, context))
                       : const SizedBox.shrink(),
                   news.getAudioAttachments().isNotEmpty
                       ? Padding(
@@ -70,27 +75,36 @@ class NewsTopHeadline extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: news.status == FluxNewsState.unreadNewsStatus
                             ? Theme.of(context).textTheme.bodyMedium
-                            : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                            : Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                color: Theme.of(context).disabledColor),
                       ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: Text(
-                      context.read<FluxNewsState>().dateFormat.format(news.getPublishingDate()),
+                      context
+                          .read<FluxNewsState>()
+                          .dateFormat
+                          .format(news.getPublishingDate()),
                       style: news.status == FluxNewsState.unreadNewsStatus
                           ? Theme.of(context).textTheme.bodyMedium
-                          : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                          : Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: Theme.of(context).disabledColor),
                     ),
                   ),
-                  if (news.getAudioAttachments().isNotEmpty && news.getFormattedPlaybackTime().isNotEmpty)
+                  if (news.getAudioAttachments().isNotEmpty &&
+                      news.getFormattedPlaybackTime().isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: Text(
                         news.getFormattedPlaybackTime(),
                         style: news.status == FluxNewsState.unreadNewsStatus
                             ? Theme.of(context).textTheme.bodyMedium
-                            : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                            : Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                color: Theme.of(context).disabledColor),
                       ),
                     ),
                   SizedBox(
@@ -126,7 +140,8 @@ class NewsContent extends StatelessWidget {
 
     // Prepare audio playback time if audio attachments exist
     String playbackPrefix = '';
-    if (news.getAudioAttachments().isNotEmpty && news.getFormattedPlaybackTime().isNotEmpty) {
+    if (news.getAudioAttachments().isNotEmpty &&
+        news.getFormattedPlaybackTime().isNotEmpty) {
       playbackPrefix = '🎧 ${news.getFormattedPlaybackTime()} • ';
     }
 
@@ -140,7 +155,10 @@ class NewsContent extends StatelessWidget {
             playbackPrefix + news.getText(appState),
             style: news.status == FluxNewsState.unreadNewsStatus
                 ? Theme.of(context).textTheme.bodyMedium
-                : Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).disabledColor),
+                : Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(color: Theme.of(context).disabledColor),
           );
 
     return Padding(

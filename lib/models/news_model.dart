@@ -111,7 +111,8 @@ class News {
     );
 
     if (json['enclosures'] != null) {
-      news.attachments = List<Attachment>.from(json['enclosures'].map((i) => Attachment.fromJson(i)));
+      news.attachments = List<Attachment>.from(
+          json['enclosures'].map((i) => Attachment.fromJson(i)));
     }
 
     return news;
@@ -167,9 +168,12 @@ class News {
         crawler = res['crawler'] == 1 ? true : false,
         manualTruncate = res['manualTruncate'] == 1 ? true : false,
         preferParagraph = res['preferParagraph'] == 1 ? true : false,
-        preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
-        manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
-        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        preferAttachmentImage =
+            res['preferAttachmentImage'] == 1 ? true : false,
+        manualAdaptLightModeToIcon =
+            res['manualAdaptLightModeToIcon'] == 1 ? true : false,
+        manualAdaptDarkModeToIcon =
+            res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
         openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
         expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false,
         expandedFulltextLimit = res['expandedFulltextLimit'];
@@ -191,23 +195,27 @@ class News {
       crawler,
       manualTruncate,
     );
-    if (_previewTextCacheKey == previewTextCacheKey && _previewTextCache != null) {
+    if (_previewTextCacheKey == previewTextCacheKey &&
+        _previewTextCache != null) {
       return _previewTextCache!;
     }
 
-    String text =
-        previewText.isNotEmpty ? previewText : createPreviewText(content, preferParagraph: preferParagraph == true);
+    String text = previewText.isNotEmpty
+        ? previewText
+        : createPreviewText(content, preferParagraph: preferParagraph == true);
     if (appState.activateTruncate) {
       switch (appState.truncateMode) {
         case 0:
-          if (appState.charactersToTruncateLimit == 0 || appState.charactersToTruncateLimit < text.length) {
+          if (appState.charactersToTruncateLimit == 0 ||
+              appState.charactersToTruncateLimit < text.length) {
             text = truncateText(text, appState.charactersToTruncate);
           }
           break;
         case 1:
           if (crawler != null) {
             if (crawler == true) {
-              if (appState.charactersToTruncateLimit == 0 || appState.charactersToTruncateLimit < text.length) {
+              if (appState.charactersToTruncateLimit == 0 ||
+                  appState.charactersToTruncateLimit < text.length) {
                 text = truncateText(text, appState.charactersToTruncate);
               }
             }
@@ -216,7 +224,8 @@ class News {
         case 2:
           if (manualTruncate != null) {
             if (manualTruncate == true) {
-              if (appState.charactersToTruncateLimit == 0 || appState.charactersToTruncateLimit < text.length) {
+              if (appState.charactersToTruncateLimit == 0 ||
+                  appState.charactersToTruncateLimit < text.length) {
                 text = truncateText(text, appState.charactersToTruncate);
               }
             }
@@ -230,7 +239,8 @@ class News {
     return text;
   }
 
-  static String createPreviewText(String html, {required bool preferParagraph}) {
+  static String createPreviewText(String html,
+      {required bool preferParagraph}) {
     final document = parse(html);
     return _createPreviewTextFromDocument(
       document,
@@ -242,11 +252,13 @@ class News {
     dom.Document document, {
     required bool preferParagraph,
   }) {
-    for (final element in document.querySelectorAll('script, style, noscript, svg')) {
+    for (final element
+        in document.querySelectorAll('script, style, noscript, svg')) {
       element.remove();
     }
 
-    String normalize(String value) => value.replaceAll(RegExp(r'\s+'), ' ').trim();
+    String normalize(String value) =>
+        value.replaceAll(RegExp(r'\s+'), ' ').trim();
 
     String text = '';
     if (preferParagraph) {
@@ -386,11 +398,18 @@ class News {
   }
 
   Attachment getFirstImageAttachment() {
-    Attachment imageAttachment = Attachment(attachmentID: -1, newsID: -1, attachmentURL: "", attachmentMimeType: "");
+    Attachment imageAttachment = Attachment(
+        attachmentID: -1,
+        newsID: -1,
+        attachmentURL: "",
+        attachmentMimeType: "");
 
     if (attachments != null) {
       for (final attachment in attachments!) {
-        if (attachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
+        if (attachment.attachmentMimeType
+            .trim()
+            .toLowerCase()
+            .startsWith('image/')) {
           imageAttachment = attachment;
           break;
         }
@@ -509,7 +528,10 @@ class News {
     String? firstImageFromAttachments() {
       if (attachments != null) {
         for (final attachment in attachments!) {
-          if (attachment.attachmentMimeType.trim().toLowerCase().startsWith('image/')) {
+          if (attachment.attachmentMimeType
+              .trim()
+              .toLowerCase()
+              .startsWith('image/')) {
             final normalized = normalizeImageUrl(attachment.attachmentURL);
             if (normalized != null) {
               return normalized;
@@ -556,9 +578,13 @@ class News {
     }
 
     if (preferAttachmentImage != null && preferAttachmentImage!) {
-      resolvedImageUrl = firstImageFromAttachments() ?? firstImageFromHtml() ?? FluxNewsState.noImageUrlString;
+      resolvedImageUrl = firstImageFromAttachments() ??
+          firstImageFromHtml() ??
+          FluxNewsState.noImageUrlString;
     } else {
-      resolvedImageUrl = firstImageFromHtml() ?? firstImageFromAttachments() ?? FluxNewsState.noImageUrlString;
+      resolvedImageUrl = firstImageFromHtml() ??
+          firstImageFromAttachments() ??
+          FluxNewsState.noImageUrlString;
     }
     return resolvedImageUrl;
   }
@@ -577,10 +603,13 @@ class News {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsThemeState>().brightnessMode ==
+        FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
-      darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    } else if (context.read<FluxNewsThemeState>().brightnessMode ==
+        FluxNewsState.brightnessModeSystemString) {
+      darkModeEnabled =
+          MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     manualAdaptLightModeToIcon ??= false;
     manualAdaptDarkModeToIcon ??= false;
@@ -663,14 +692,16 @@ class News {
                     icon!,
                     width: size,
                     height: size,
-                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                    errorBuilder: (context, error, stackTrace) =>
+                        SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               return Image.memory(
                 icon!,
                 width: size,
                 height: size,
-                errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                errorBuilder: (context, error, stackTrace) =>
+                    SizedBox.fromSize(size: Size(size, size)),
               );
             }
           } else {
@@ -685,7 +716,8 @@ class News {
                     icon!,
                     width: size,
                     height: size,
-                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                    errorBuilder: (context, error, stackTrace) =>
+                        SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               if (manualAdaptLightModeToIcon!) {
@@ -699,14 +731,16 @@ class News {
                       icon!,
                       width: size,
                       height: size,
-                      errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                      errorBuilder: (context, error, stackTrace) =>
+                          SizedBox.fromSize(size: Size(size, size)),
                     ));
               } else {
                 return Image.memory(
                   icon!,
                   width: size,
                   height: size,
-                  errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                  errorBuilder: (context, error, stackTrace) =>
+                      SizedBox.fromSize(size: Size(size, size)),
                 );
               }
             }
@@ -716,7 +750,8 @@ class News {
             icon!,
             width: size,
             height: size,
-            errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+            errorBuilder: (context, error, stackTrace) =>
+                SizedBox.fromSize(size: Size(size, size)),
           );
         }
       }
@@ -806,9 +841,11 @@ class Feed {
   int? expandedFulltextLimit = 0;
   int? categoryID;
 
-  List<KeyValueRecordType> getAmountOfCharactersToTruncateExpandRecordTypes(BuildContext context) {
+  List<KeyValueRecordType> getAmountOfCharactersToTruncateExpandRecordTypes(
+      BuildContext context) {
     if (AppLocalizations.of(context) != null) {
-      List<KeyValueRecordType> recordTypesAmountOfCharactersToTruncateExpand = <KeyValueRecordType>[
+      List<KeyValueRecordType> recordTypesAmountOfCharactersToTruncateExpand =
+          <KeyValueRecordType>[
         KeyValueRecordType(key: "0", value: AppLocalizations.of(context)!.all),
         const KeyValueRecordType(key: "500", value: "500"),
         const KeyValueRecordType(key: "600", value: "600"),
@@ -826,14 +863,17 @@ class Feed {
     }
   }
 
-  KeyValueRecordType getAmountOfCharactersToTruncateExpandSelection(BuildContext context) {
+  KeyValueRecordType getAmountOfCharactersToTruncateExpandSelection(
+      BuildContext context) {
     List<KeyValueRecordType> recordTypesAmountOfCharactersToTruncateExpand =
         getAmountOfCharactersToTruncateExpandRecordTypes(context);
-    KeyValueRecordType amountOfCharactersToTruncateExpandSelection = recordTypesAmountOfCharactersToTruncateExpand[0];
+    KeyValueRecordType amountOfCharactersToTruncateExpandSelection =
+        recordTypesAmountOfCharactersToTruncateExpand[0];
     // init the amount of characters to truncate expand selection with the first value of the above generated maps
     if (recordTypesAmountOfCharactersToTruncateExpand.isNotEmpty) {
       if (expandedFulltextLimit != null) {
-        for (KeyValueRecordType recordSet in recordTypesAmountOfCharactersToTruncateExpand) {
+        for (KeyValueRecordType recordSet
+            in recordTypesAmountOfCharactersToTruncateExpand) {
           if (expandedFulltextLimit == int.parse(recordSet.key)) {
             amountOfCharactersToTruncateExpandSelection = recordSet;
           }
@@ -886,9 +926,12 @@ class Feed {
         crawler = res['crawler'] == 1 ? true : false,
         manualTruncate = res['manualTruncate'] == 1 ? true : false,
         preferParagraph = res['preferParagraph'] == 1 ? true : false,
-        preferAttachmentImage = res['preferAttachmentImage'] == 1 ? true : false,
-        manualAdaptLightModeToIcon = res['manualAdaptLightModeToIcon'] == 1 ? true : false,
-        manualAdaptDarkModeToIcon = res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
+        preferAttachmentImage =
+            res['preferAttachmentImage'] == 1 ? true : false,
+        manualAdaptLightModeToIcon =
+            res['manualAdaptLightModeToIcon'] == 1 ? true : false,
+        manualAdaptDarkModeToIcon =
+            res['manualAdaptDarkModeToIcon'] == 1 ? true : false,
         openMinifluxEntry = res['openMinifluxEntry'] == 1 ? true : false,
         expandedWithFulltext = res['expandedWithFulltext'] == 1 ? true : false,
         expandedFulltextLimit = res['expandedFulltextLimit'],
@@ -902,10 +945,13 @@ class Feed {
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
     bool darkModeEnabled = false;
-    if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeDarkString) {
+    if (context.read<FluxNewsThemeState>().brightnessMode ==
+        FluxNewsState.brightnessModeDarkString) {
       darkModeEnabled = true;
-    } else if (context.read<FluxNewsThemeState>().brightnessMode == FluxNewsState.brightnessModeSystemString) {
-      darkModeEnabled = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    } else if (context.read<FluxNewsThemeState>().brightnessMode ==
+        FluxNewsState.brightnessModeSystemString) {
+      darkModeEnabled =
+          MediaQuery.of(context).platformBrightness == Brightness.dark;
     }
     manualAdaptLightModeToIcon ??= false;
     manualAdaptDarkModeToIcon ??= false;
@@ -988,7 +1034,8 @@ class Feed {
                     icon!,
                     width: size,
                     height: size,
-                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                    errorBuilder: (context, error, stackTrace) =>
+                        SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               if (manualAdaptLightModeToIcon!) {
@@ -1002,14 +1049,16 @@ class Feed {
                       icon!,
                       width: size,
                       height: size,
-                      errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                      errorBuilder: (context, error, stackTrace) =>
+                          SizedBox.fromSize(size: Size(size, size)),
                     ));
               } else {
                 return Image.memory(
                   icon!,
                   width: size,
                   height: size,
-                  errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                  errorBuilder: (context, error, stackTrace) =>
+                      SizedBox.fromSize(size: Size(size, size)),
                 );
               }
             }
@@ -1025,14 +1074,16 @@ class Feed {
                     icon!,
                     width: size,
                     height: size,
-                    errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                    errorBuilder: (context, error, stackTrace) =>
+                        SizedBox.fromSize(size: Size(size, size)),
                   ));
             } else {
               return Image.memory(
                 icon!,
                 width: size,
                 height: size,
-                errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+                errorBuilder: (context, error, stackTrace) =>
+                    SizedBox.fromSize(size: Size(size, size)),
               );
             }
           }
@@ -1041,7 +1092,8 @@ class Feed {
             icon!,
             width: size,
             height: size,
-            errorBuilder: (context, error, stackTrace) => SizedBox.fromSize(size: Size(size, size)),
+            errorBuilder: (context, error, stackTrace) =>
+                SizedBox.fromSize(size: Size(size, size)),
           );
         }
       }
@@ -1075,7 +1127,8 @@ class FeedIcon {
 
 // define the model for a category
 class Category {
-  Category({required this.categoryID, required this.title, List<Feed>? feeds}) : feeds = feeds ?? [];
+  Category({required this.categoryID, required this.title, List<Feed>? feeds})
+      : feeds = feeds ?? [];
 
   // define the properties
   int categoryID = 0;
@@ -1127,7 +1180,8 @@ class Categories {
   // the news count of a category is the sum of the news count of each feed
   // the news count is stored in the appBarNewsCount variable if the category is currently displayed
   // the appState listener are notified to update the news count in the app bar
-  Future<void> renewNewsCount(FluxNewsState appState, BuildContext context) async {
+  Future<void> renewNewsCount(
+      FluxNewsState appState, BuildContext context) async {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     appState.db ??= await appState.initializeDB();
     if (appState.db != null) {
@@ -1141,9 +1195,11 @@ class Categories {
         int? categoryNewsCount = 0;
         for (Feed feed in category.feeds) {
           int? feedNewsCount;
-          List<Map<String, Object?>> result = await appState.db!
-              .rawQuery('SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?', [feed.feedID, status]);
-          feedNewsCount = result.isNotEmpty ? result.first.values.first as int? : 0;
+          List<Map<String, Object?>> result = await appState.db!.rawQuery(
+              'SELECT COUNT(*) FROM news WHERE feedID = ? AND status LIKE ?',
+              [feed.feedID, status]);
+          feedNewsCount =
+              result.isNotEmpty ? result.first.values.first as int? : 0;
           feedNewsCount ??= 0;
           categoryNewsCount ??= 0;
           categoryNewsCount = categoryNewsCount + feedNewsCount;

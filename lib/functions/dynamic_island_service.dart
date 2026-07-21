@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 class DynamicIslandService {
-  static const platform = MethodChannel('dev.kevincfechtel.fluxnews/dynamicisland');
+  static const platform =
+      MethodChannel('dev.kevincfechtel.fluxnews/dynamicisland');
 
   static String? _currentActivityId;
   late final StreamController<void> _playPauseController;

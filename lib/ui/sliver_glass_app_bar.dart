@@ -51,7 +51,10 @@ class SliverGlassAppBar extends StatelessWidget {
                 child: FlexibleSpaceBar(
                   expandedTitleScale: 1.0,
                   background: Container(
-                    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor.withAlpha(90)),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withAlpha(90)),
                     child: const SizedBox.expand(),
                   ),
                 ),
@@ -67,7 +70,8 @@ class SliverGlassAppBar extends StatelessWidget {
                         width: double.infinity,
                         decoration: BoxDecoration(
                           boxShadow: [
-                            themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                            themeState.brightnessMode ==
+                                    FluxNewsState.brightnessModeDarkString
                                 ? BoxShadow(
                                     color: Colors.black,
                                     blurRadius: 2,
@@ -75,8 +79,11 @@ class SliverGlassAppBar extends StatelessWidget {
                                     offset: const Offset(0, 1),
                                     blurStyle: BlurStyle.normal,
                                   )
-                                : themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
-                                    ? MediaQuery.of(context).platformBrightness == Brightness.light
+                                : themeState.brightnessMode ==
+                                        FluxNewsState.brightnessModeSystemString
+                                    ? MediaQuery.of(context)
+                                                .platformBrightness ==
+                                            Brightness.light
                                         ? BoxShadow()
                                         : BoxShadow(
                                             color: Colors.black,
@@ -86,7 +93,8 @@ class SliverGlassAppBar extends StatelessWidget {
                                             blurStyle: BlurStyle.normal,
                                           )
                                     : BoxShadow(),
-                            themeState.brightnessMode == FluxNewsState.brightnessModeDarkString
+                            themeState.brightnessMode ==
+                                    FluxNewsState.brightnessModeDarkString
                                 ? BoxShadow(
                                     color: Colors.black,
                                     blurRadius: 4,
@@ -94,8 +102,11 @@ class SliverGlassAppBar extends StatelessWidget {
                                     offset: const Offset(0, 4),
                                     blurStyle: BlurStyle.normal,
                                   )
-                                : themeState.brightnessMode == FluxNewsState.brightnessModeSystemString
-                                    ? MediaQuery.of(context).platformBrightness == Brightness.light
+                                : themeState.brightnessMode ==
+                                        FluxNewsState.brightnessModeSystemString
+                                    ? MediaQuery.of(context)
+                                                .platformBrightness ==
+                                            Brightness.light
                                         ? BoxShadow(
                                             color: Colors.black,
                                             blurRadius: 4,
@@ -126,12 +137,16 @@ class SliverGlassAppBar extends StatelessWidget {
         ),
         shape: emptyBody
             ? Border()
-            : Border(bottom: BorderSide(color: Theme.of(context).scaffoldBackgroundColor, width: 1)),
+            : Border(
+                bottom: BorderSide(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    width: 1)),
         actions: appBarButtons(context),
       );
     } else if (appState.scrolloverAppBar) {
       return SliverAppBar(
-        backgroundColor: Colors.transparent, //Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Colors.transparent, //Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         floating: true,
@@ -172,7 +187,10 @@ class SliverGlassAppBar extends StatelessWidget {
           }
         },
         icon: appState.syncProcess
-            ? const SizedBox(height: 15.0, width: 15.0, child: CircularProgressIndicator.adaptive())
+            ? const SizedBox(
+                height: 15.0,
+                width: 15.0,
+                child: CircularProgressIndicator.adaptive())
             : const Icon(Icons.refresh),
       ),
       // here is the popup menu where the user can search,
@@ -196,8 +214,12 @@ class SliverGlassAppBar extends StatelessWidget {
               value: 0,
               child: Row(
                 children: [
-                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.search)),
-                  Expanded(child: Text(AppLocalizations.of(context)!.search, overflow: TextOverflow.visible)),
+                  const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(Icons.search)),
+                  Expanded(
+                      child: Text(AppLocalizations.of(context)!.search,
+                          overflow: TextOverflow.visible)),
                 ],
               ),
             ),
@@ -209,13 +231,17 @@ class SliverGlassAppBar extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(right: 5),
                     child: Icon(
-                      appState.newsStatus == FluxNewsState.unreadNewsStatus ? Icons.checklist : Icons.fiber_new,
+                      appState.newsStatus == FluxNewsState.unreadNewsStatus
+                          ? Icons.checklist
+                          : Icons.fiber_new,
                     ),
                   ),
                   Expanded(
                     child: appState.newsStatus == FluxNewsState.unreadNewsStatus
-                        ? Text(AppLocalizations.of(context)!.showRead, overflow: TextOverflow.visible)
-                        : Text(AppLocalizations.of(context)!.showUnread, overflow: TextOverflow.visible),
+                        ? Text(AppLocalizations.of(context)!.showRead,
+                            overflow: TextOverflow.visible)
+                        : Text(AppLocalizations.of(context)!.showUnread,
+                            overflow: TextOverflow.visible),
                   ),
                 ],
               ),
@@ -225,11 +251,16 @@ class SliverGlassAppBar extends StatelessWidget {
               value: 2,
               child: Row(
                 children: [
-                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.sort)),
+                  const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(Icons.sort)),
                   Expanded(
-                    child: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
-                        ? Text(AppLocalizations.of(context)!.oldestFirst, overflow: TextOverflow.visible)
-                        : Text(AppLocalizations.of(context)!.newestFirst, overflow: TextOverflow.visible),
+                    child: appState.sortOrder ==
+                            FluxNewsState.sortOrderNewestFirstString
+                        ? Text(AppLocalizations.of(context)!.oldestFirst,
+                            overflow: TextOverflow.visible)
+                        : Text(AppLocalizations.of(context)!.newestFirst,
+                            overflow: TextOverflow.visible),
                   ),
                 ],
               ),
@@ -238,16 +269,29 @@ class SliverGlassAppBar extends StatelessWidget {
               value: 3,
               child: Row(
                 children: [
-                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.check_circle_outline)),
+                  const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(Icons.check_circle_outline)),
                   Expanded(
-                    child: appState.selectedCategoryElementType == FluxNewsState.feedElementType
-                        ? Text(AppLocalizations.of(context)!.markFeedAsRead, overflow: TextOverflow.visible)
-                        : appState.selectedCategoryElementType == FluxNewsState.categoryElementType
-                            ? Text(AppLocalizations.of(context)!.markCategoryAsRead, overflow: TextOverflow.visible)
-                            : appState.selectedCategoryElementType == FluxNewsState.bookmarkedNewsElementType
-                                ? Text(AppLocalizations.of(context)!.markBookmarkedAsRead,
+                    child: appState.selectedCategoryElementType ==
+                            FluxNewsState.feedElementType
+                        ? Text(AppLocalizations.of(context)!.markFeedAsRead,
+                            overflow: TextOverflow.visible)
+                        : appState.selectedCategoryElementType ==
+                                FluxNewsState.categoryElementType
+                            ? Text(
+                                AppLocalizations.of(context)!
+                                    .markCategoryAsRead,
+                                overflow: TextOverflow.visible)
+                            : appState.selectedCategoryElementType ==
+                                    FluxNewsState.bookmarkedNewsElementType
+                                ? Text(
+                                    AppLocalizations.of(context)!
+                                        .markBookmarkedAsRead,
                                     overflow: TextOverflow.visible)
-                                : Text(AppLocalizations.of(context)!.markAllAsRead, overflow: TextOverflow.visible),
+                                : Text(
+                                    AppLocalizations.of(context)!.markAllAsRead,
+                                    overflow: TextOverflow.visible),
                   ),
                 ],
               ),
@@ -274,8 +318,12 @@ class SliverGlassAppBar extends StatelessWidget {
               value: 5,
               child: Row(
                 children: [
-                  const Padding(padding: EdgeInsets.only(right: 5), child: Icon(Icons.settings)),
-                  Expanded(child: Text(AppLocalizations.of(context)!.settings, overflow: TextOverflow.visible)),
+                  const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(Icons.settings)),
+                  Expanded(
+                      child: Text(AppLocalizations.of(context)!.settings,
+                          overflow: TextOverflow.visible)),
                 ],
               ),
             ),
@@ -293,7 +341,9 @@ class SliverGlassAppBar extends StatelessWidget {
               appState.newsStatus = FluxNewsState.allNewsString;
 
               // save the state persistent
-              appState.storage.write(key: FluxNewsState.secureStorageNewsStatusKey, value: FluxNewsState.allNewsString);
+              appState.storage.write(
+                  key: FluxNewsState.secureStorageNewsStatusKey,
+                  value: FluxNewsState.allNewsString);
 
               // refresh news list with the all news state
               appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -328,7 +378,8 @@ class SliverGlassAppBar extends StatelessWidget {
           } else if (value == 2) {
             // switch between newest first and oldest first
             // if the current sort order is newest first change to oldest first
-            if (appState.sortOrder == FluxNewsState.sortOrderNewestFirstString) {
+            if (appState.sortOrder ==
+                FluxNewsState.sortOrderNewestFirstString) {
               // switch the state to all news
               appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
 

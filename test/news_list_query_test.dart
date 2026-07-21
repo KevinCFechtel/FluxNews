@@ -73,7 +73,8 @@ void main() {
       url: 'https://example.com/article',
       commentsUrl: '',
       shareCode: '',
-      content: '<p>Full article content</p><img src="https://example.com/image.jpg">',
+      content:
+          '<p>Full article content</p><img src="https://example.com/image.jpg">',
       hash: 'hash',
       publishedAt: '2026-07-03T10:00:00Z',
       createdAt: '2026-07-03T10:00:00Z',
@@ -162,7 +163,8 @@ void main() {
     );
   });
 
-  test('missing metadata is backfilled with feed and attachment settings', () async {
+  test('missing metadata is backfilled with feed and attachment settings',
+      () async {
     await database.update(
       'feeds',
       {'preferAttachmentImage': 1},
@@ -205,7 +207,8 @@ void main() {
         whereArgs: [2],
       );
       migratedRow = rows.single;
-      if (migratedRow['previewText'] != null && migratedRow['imageUrl'] != null) {
+      if (migratedRow['previewText'] != null &&
+          migratedRow['imageUrl'] != null) {
         break;
       }
       await Future<void>.delayed(const Duration(milliseconds: 10));

@@ -45,10 +45,12 @@ class SearchNewsList extends StatelessWidget {
                       // otherwise create list view with the news of the search result
                       : Stack(children: [
                           SuperListView.builder(
-                              key: const PageStorageKey<String>('NewsSearchList'),
+                              key: const PageStorageKey<String>(
+                                  'NewsSearchList'),
                               itemCount: snapshot.data!.length,
                               itemBuilder: (context, i) {
-                                return appState.orientation == Orientation.landscape
+                                return appState.orientation ==
+                                        Orientation.landscape
                                     ? NewsRow(
                                         news: snapshot.data![i],
                                         context: context,

@@ -8,7 +8,8 @@ class DownloadStorageSettings extends StatefulWidget {
   const DownloadStorageSettings({super.key});
 
   @override
-  State<DownloadStorageSettings> createState() => _DownloadStorageSettingsState();
+  State<DownloadStorageSettings> createState() =>
+      _DownloadStorageSettingsState();
 }
 
 class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
@@ -20,7 +21,8 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
   void initState() {
     super.initState();
     _reload();
-    _downloadedAudiosChangedSubscription = AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
+    _downloadedAudiosChangedSubscription =
+        AudioDownloadService.downloadedAudiosChangedStream.listen((_) {
       if (!mounted) return;
       setState(_reload);
     });
@@ -46,8 +48,10 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(AppLocalizations.of(context)!.downloadsManagerClearAllTitle),
-            content: Text(AppLocalizations.of(context)!.downloadsManagerClearAllMessage),
+            title: Text(
+                AppLocalizations.of(context)!.downloadsManagerClearAllTitle),
+            content: Text(
+                AppLocalizations.of(context)!.downloadsManagerClearAllMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -68,7 +72,9 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
     if (!mounted) return;
     setState(_reload);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.downloadsManagerClearedSnackbar)),
+      SnackBar(
+          content: Text(
+              AppLocalizations.of(context)!.downloadsManagerClearedSnackbar)),
     );
   }
 
@@ -92,7 +98,8 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
             FutureBuilder<List<DownloadedAudioInfo>>(
               future: _downloadsFuture,
               builder: (context, snapshot) {
-                final count = (snapshot.data ?? const <DownloadedAudioInfo>[]).length;
+                final count =
+                    (snapshot.data ?? const <DownloadedAudioInfo>[]).length;
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -102,7 +109,8 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
                         Text(AppLocalizations.of(context)!.downloadedData,
                             style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),
-                        Text('$count ${AppLocalizations.of(context)!.fileList}'),
+                        Text(
+                            '$count ${AppLocalizations.of(context)!.fileList}'),
                       ],
                     ),
                   ),
@@ -146,7 +154,8 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
                       child: FilledButton.icon(
                         onPressed: totalSize == 0 ? null : _deleteAll,
                         icon: const Icon(Icons.delete_sweep_outlined),
-                        label: Text(AppLocalizations.of(context)!.downloadsManagerClearAll),
+                        label: Text(AppLocalizations.of(context)!
+                            .downloadsManagerClearAll),
                       ),
                     ),
                   ),

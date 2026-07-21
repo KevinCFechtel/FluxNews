@@ -43,7 +43,8 @@ class FeedSettingsList extends StatelessWidget {
                         ))
                       // otherwise create list view with the news of the search result
                       : ListView(children: [
-                          for (Feed feed in snapshot.data!) showFeed(feed, context),
+                          for (Feed feed in snapshot.data!)
+                            showFeed(feed, context),
                         ]);
             }
         }
@@ -71,7 +72,8 @@ class FeedSettingsList extends StatelessWidget {
             ? Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                    padding: EdgeInsets.only(
+                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
                     child: const Icon(
                       Icons.cut,
                     ),
@@ -84,12 +86,16 @@ class FeedSettingsList extends StatelessWidget {
                     ),
                   ),
                   Switch.adaptive(
-                    value: feed.manualTruncate == null ? false : feed.manualTruncate!,
+                    value: feed.manualTruncate == null
+                        ? false
+                        : feed.manualTruncate!,
                     onChanged: (bool value) async {
                       feed.manualTruncate = value;
-                      await updateManualTruncateStatusOfFeedInDB(feed.feedID, value, appState);
+                      await updateManualTruncateStatusOfFeedInDB(
+                          feed.feedID, value, appState);
                       // reload the news list with the new filter
-                      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                      appState.newsList =
+                          queryNewsFromDB(appState).whenComplete(() {
                         appState.jumpToItem(0);
                       });
                       appState.refreshView();
@@ -102,7 +108,8 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.html,
               ),
@@ -115,10 +122,12 @@ class FeedSettingsList extends StatelessWidget {
               ),
             ),
             Switch.adaptive(
-              value: feed.preferParagraph == null ? false : feed.preferParagraph!,
+              value:
+                  feed.preferParagraph == null ? false : feed.preferParagraph!,
               onChanged: (bool value) async {
                 feed.preferParagraph = value;
-                await updatePreferParagraphStatusOfFeedInDB(feed.feedID, value, appState);
+                await updatePreferParagraphStatusOfFeedInDB(
+                    feed.feedID, value, appState);
                 // reload the news list with the new filter
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
@@ -132,7 +141,8 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.image,
               ),
@@ -145,10 +155,13 @@ class FeedSettingsList extends StatelessWidget {
               ),
             ),
             Switch.adaptive(
-              value: feed.preferAttachmentImage == null ? false : feed.preferAttachmentImage!,
+              value: feed.preferAttachmentImage == null
+                  ? false
+                  : feed.preferAttachmentImage!,
               onChanged: (bool value) async {
                 feed.preferAttachmentImage = value;
-                await updatePreferAttachmentImageStatusOfFeedInDB(feed.feedID, value, appState);
+                await updatePreferAttachmentImageStatusOfFeedInDB(
+                    feed.feedID, value, appState);
                 // reload the news list with the new filter
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
                   appState.jumpToItem(0);
@@ -162,7 +175,8 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.light_mode,
               ),
@@ -175,12 +189,16 @@ class FeedSettingsList extends StatelessWidget {
               ),
             ),
             Switch.adaptive(
-              value: feed.manualAdaptLightModeToIcon == null ? false : feed.manualAdaptLightModeToIcon!,
+              value: feed.manualAdaptLightModeToIcon == null
+                  ? false
+                  : feed.manualAdaptLightModeToIcon!,
               onChanged: (bool value) async {
                 feed.manualAdaptLightModeToIcon = value;
-                await updateManualAdaptLightModeToIconStatusOfFeedInDB(feed.feedID, value, appState);
+                await updateManualAdaptLightModeToIconStatusOfFeedInDB(
+                    feed.feedID, value, appState);
                 if (context.mounted) {
-                  appState.categoryList = queryCategoriesFromDB(appState, context);
+                  appState.categoryList =
+                      queryCategoriesFromDB(appState, context);
                 }
 
                 // reload the news list with the new filter
@@ -196,7 +214,8 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.dark_mode,
               ),
@@ -209,12 +228,16 @@ class FeedSettingsList extends StatelessWidget {
               ),
             ),
             Switch.adaptive(
-              value: feed.manualAdaptDarkModeToIcon == null ? false : feed.manualAdaptDarkModeToIcon!,
+              value: feed.manualAdaptDarkModeToIcon == null
+                  ? false
+                  : feed.manualAdaptDarkModeToIcon!,
               onChanged: (bool value) async {
                 feed.manualAdaptDarkModeToIcon = value;
-                await updateManualAdaptDarkModeToIconStatusOfFeedInDB(feed.feedID, value, appState);
+                await updateManualAdaptDarkModeToIconStatusOfFeedInDB(
+                    feed.feedID, value, appState);
                 if (context.mounted) {
-                  appState.categoryList = queryCategoriesFromDB(appState, context);
+                  appState.categoryList =
+                      queryCategoriesFromDB(appState, context);
                 }
 
                 // reload the news list with the new filter
@@ -230,7 +253,8 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.open_in_browser,
               ),
@@ -243,10 +267,13 @@ class FeedSettingsList extends StatelessWidget {
               ),
             ),
             Switch.adaptive(
-              value: feed.openMinifluxEntry == null ? false : feed.openMinifluxEntry!,
+              value: feed.openMinifluxEntry == null
+                  ? false
+                  : feed.openMinifluxEntry!,
               onChanged: (bool value) async {
                 feed.openMinifluxEntry = value;
-                await updateOpenMinifluxEntryStatusOfFeedInDB(feed.feedID, value, appState);
+                await updateOpenMinifluxEntryStatusOfFeedInDB(
+                    feed.feedID, value, appState);
 
                 // reload the news list with the new filter
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -261,7 +288,8 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.text_snippet,
               ),
@@ -274,10 +302,13 @@ class FeedSettingsList extends StatelessWidget {
               ),
             ),
             Switch.adaptive(
-              value: feed.expandedWithFulltext == null ? false : feed.expandedWithFulltext!,
+              value: feed.expandedWithFulltext == null
+                  ? false
+                  : feed.expandedWithFulltext!,
               onChanged: (bool value) async {
                 feed.expandedWithFulltext = value;
-                await updateExpandedWithFulltextStatusOfFeedInDB(feed.feedID, value, appState);
+                await updateExpandedWithFulltextStatusOfFeedInDB(
+                    feed.feedID, value, appState);
 
                 // reload the news list with the new filter
                 appState.newsList = queryNewsFromDB(appState).whenComplete(() {
@@ -294,20 +325,23 @@ class FeedSettingsList extends StatelessWidget {
         Row(
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+              padding: EdgeInsets.only(
+                  left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
               child: const Icon(
                 Icons.cut_outlined,
               ),
             ),
             Expanded(
               child: Text(
-                AppLocalizations.of(context)!.amountOfCharactersToTruncateExpand,
+                AppLocalizations.of(context)!
+                    .amountOfCharactersToTruncateExpand,
                 style: Theme.of(context).textTheme.titleMedium,
                 overflow: TextOverflow.visible,
               ),
             ),
             DropdownButton<KeyValueRecordType>(
-              value: feed.getAmountOfCharactersToTruncateExpandSelection(context),
+              value:
+                  feed.getAmountOfCharactersToTruncateExpandSelection(context),
               elevation: 16,
               underline: Container(
                 height: 2,
@@ -316,10 +350,12 @@ class FeedSettingsList extends StatelessWidget {
               onChanged: (KeyValueRecordType? value) async {
                 if (value != null) {
                   feed.expandedFulltextLimit = int.parse(value.key);
-                  await updateExpandedFulltextLimitOfFeedInDB(feed.feedID, int.parse(value.key), appState);
+                  await updateExpandedFulltextLimitOfFeedInDB(
+                      feed.feedID, int.parse(value.key), appState);
 
                   // reload the news list with the new filter
-                  appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+                  appState.newsList =
+                      queryNewsFromDB(appState).whenComplete(() {
                     appState.jumpToItem(0);
                   });
                   appState.refreshView();
@@ -327,12 +363,13 @@ class FeedSettingsList extends StatelessWidget {
               },
               items: feed
                   .getAmountOfCharactersToTruncateExpandRecordTypes(context)
-                  .map<DropdownMenuItem<KeyValueRecordType>>((recordType) => DropdownMenuItem<KeyValueRecordType>(
-                        value: recordType,
-                        child: Text(
-                          recordType.value,
-                        ),
-                      ))
+                  .map<DropdownMenuItem<KeyValueRecordType>>(
+                      (recordType) => DropdownMenuItem<KeyValueRecordType>(
+                            value: recordType,
+                            child: Text(
+                              recordType.value,
+                            ),
+                          ))
                   .toList(),
             ),
           ],
