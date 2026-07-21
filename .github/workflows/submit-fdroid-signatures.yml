@@ -1,0 +1,246 @@
+name: Submit F-Droid Signatures
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "GitHub release tag to verify, for example v2.2.5"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: submit-fdroid-signatures
+  cancel-in-progress: false
+
+jobs:
+  compare-and-submit:
+    # Enable with repository variable ENABLE_FDROID_SIGNATURE_SUBMISSION=true.
+    # Also configure FDROID_GITLAB_FORK and the FDROID_GITLAB_TOKEN secret.
+    if: ${{ vars.ENABLE_FDROID_SIGNATURE_SUBMISSION == 'true' }}
+    name: Compare and submit signatures
+    runs-on: ubuntu-latest
+    env:
+      APP_ID: de.circle_dev.flux_news
+      FDROID_GITLAB_FORK: ${{ vars.FDROID_GITLAB_FORK }}
+      FDROID_GITLAB_TOKEN: ${{ secrets.FDROID_GITLAB_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+
+    steps:
+      - name: Check configuration
+        run: |
+          if [[ -z "${FDROID_GITLAB_FORK}" ]]; then
+            echo "::error::Repository variable FDROID_GITLAB_FORK is not configured"
+            exit 1
+          fi
+          if [[ -z "${FDROID_GITLAB_TOKEN}" ]]; then
+            echo "::error::Repository secret FDROID_GITLAB_TOKEN is not configured"
+            exit 1
+          fi
+
+      - name: Select release
+        id: release
+        run: |
+          if [[ -n "${INPUT_RELEASE_TAG}" ]]; then
+            tag="${INPUT_RELEASE_TAG}"
+          else
+            tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name)"
+          fi
+
+          if [[ ! "${tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Unsupported release tag: ${tag}"
+            exit 1
+          fi
+
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "version=${tag#v}" >> "${GITHUB_OUTPUT}"
+
+      - name: Download GitHub release assets
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          mkdir -p "${RUNNER_TEMP}/github-apks" "${RUNNER_TEMP}/signatures"
+          gh release download "${RELEASE_TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --dir "${RUNNER_TEMP}/github-apks" \
+            --pattern "app-x86_64-release.apk" \
+            --pattern "app-armeabi-v7a-release.apk" \
+            --pattern "app-arm64-v8a-release.apk" \
+            --pattern "fdroid-signatures-v${RELEASE_VERSION}.tar.gz"
+
+          tar -xzf \
+            "${RUNNER_TEMP}/github-apks/fdroid-signatures-v${RELEASE_VERSION}.tar.gz" \
+            -C "${RUNNER_TEMP}/signatures"
+
+      - name: Determine F-Droid version codes
+        id: version_codes
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          pubspec="$(
+            gh api \
+              -H "Accept: application/vnd.github.raw+json" \
+              "repos/${GITHUB_REPOSITORY}/contents/pubspec.yaml?ref=${RELEASE_TAG}"
+          )"
+          base_version_code="$(
+            printf '%s\n' "${pubspec}" |
+              sed -n 's/^version: .*+\([0-9][0-9]*\)$/\1/p'
+          )"
+
+          if [[ -z "${base_version_code}" ]]; then
+            echo "::error::Could not read the base version code from ${RELEASE_TAG}"
+            exit 1
+          fi
+
+          echo "x86_64=$((base_version_code + 1))" >> "${GITHUB_OUTPUT}"
+          echo "armeabi_v7a=$((base_version_code + 2))" >> "${GITHUB_OUTPUT}"
+          echo "arm64_v8a=$((base_version_code + 3))" >> "${GITHUB_OUTPUT}"
+
+          for version_code in \
+            "$((base_version_code + 1))" \
+            "$((base_version_code + 2))" \
+            "$((base_version_code + 3))"; do
+            signature_dir="${RUNNER_TEMP}/signatures/metadata/${APP_ID}/signatures/${version_code}"
+            if [[ ! -d "${signature_dir}" ]] ||
+               [[ -z "$(find "${signature_dir}" -maxdepth 1 -type f -size +0c -print -quit)" ]]; then
+              echo "::error::Signature archive has no files for version code ${version_code}"
+              exit 1
+            fi
+          done
+
+      - name: Download matching F-Droid APKs
+        id: fdroid_download
+        env:
+          X86_64_VERSION_CODE: ${{ steps.version_codes.outputs.x86_64 }}
+          ARMEABI_V7A_VERSION_CODE: ${{ steps.version_codes.outputs.armeabi_v7a }}
+          ARM64_V8A_VERSION_CODE: ${{ steps.version_codes.outputs.arm64_v8a }}
+        run: |
+          mkdir -p "${RUNNER_TEMP}/fdroid-apks"
+
+          declare -A version_codes=(
+            [x86_64]="${X86_64_VERSION_CODE}"
+            [armeabi-v7a]="${ARMEABI_V7A_VERSION_CODE}"
+            [arm64-v8a]="${ARM64_V8A_VERSION_CODE}"
+          )
+
+          for abi in x86_64 armeabi-v7a arm64-v8a; do
+            version_code="${version_codes[$abi]}"
+            url="https://f-droid.org/repo/${APP_ID}_${version_code}.apk"
+            output="${RUNNER_TEMP}/fdroid-apks/${abi}.apk"
+            if ! curl --fail --location --silent --show-error \
+              --retry 3 --output "${output}" "${url}"; then
+              echo "F-Droid APK is not available yet: ${url}"
+              echo "ready=false" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+          done
+
+          echo "ready=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Install APK comparison tools
+        if: ${{ steps.fdroid_download.outputs.ready == 'true' }}
+        run: |
+          python3 -m pip install --user --disable-pip-version-check \
+            apksigcopier==1.1.1
+          export PATH="${HOME}/.local/bin:${PATH}"
+
+          apksigner_dir="${ANDROID_HOME}/build-tools/34.0.0"
+          if [[ ! -x "${apksigner_dir}/apksigner" ]]; then
+            "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" \
+              "build-tools;34.0.0"
+          fi
+
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          echo "${apksigner_dir}" >> "${GITHUB_PATH}"
+
+      - name: Compare all ABI APKs
+        if: ${{ steps.fdroid_download.outputs.ready == 'true' }}
+        run: |
+          declare -A github_apks=(
+            [x86_64]=app-x86_64-release.apk
+            [armeabi-v7a]=app-armeabi-v7a-release.apk
+            [arm64-v8a]=app-arm64-v8a-release.apk
+          )
+          failed=0
+          signer_fingerprints=()
+
+          for abi in x86_64 armeabi-v7a arm64-v8a; do
+            github_apk="${RUNNER_TEMP}/github-apks/${github_apks[$abi]}"
+            fingerprint="$(
+              apksigner verify --print-certs "${github_apk}" |
+                sed -n 's/^Signer #1 certificate SHA-256 digest: //p' |
+                head -n 1
+            )"
+            if [[ -z "${fingerprint}" ]]; then
+              echo "::error::Could not read the developer signer for ${abi}"
+              failed=1
+            else
+              signer_fingerprints+=("${fingerprint}")
+            fi
+
+            if ! apksigcopier compare \
+              "${github_apk}" \
+              "${RUNNER_TEMP}/fdroid-apks/${abi}.apk"; then
+              echo "::error::Reproducibility comparison failed for ${abi}"
+              failed=1
+            fi
+          done
+
+          if [[ "$(printf '%s\n' "${signer_fingerprints[@]}" | sort -u | wc -l)" -ne 1 ]]; then
+            echo "::error::GitHub ABI APKs do not use one consistent developer signer"
+            failed=1
+          fi
+
+          exit "${failed}"
+
+      - name: Submit signatures to fdroiddata
+        if: ${{ steps.fdroid_download.outputs.ready == 'true' }}
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          checkout="${RUNNER_TEMP}/fdroiddata"
+          branch="fluxnews-signatures-${RELEASE_TAG}"
+          signature_source="${RUNNER_TEMP}/signatures/metadata/${APP_ID}/signatures"
+
+          git clone --depth=1 \
+            https://gitlab.com/fdroid/fdroiddata.git "${checkout}"
+
+          mkdir -p "${checkout}/metadata/${APP_ID}/signatures"
+          cp -a "${signature_source}/." \
+            "${checkout}/metadata/${APP_ID}/signatures/"
+
+          cd "${checkout}"
+          git switch -c "${branch}"
+          git config user.name "Flux News release bot"
+          git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+          git add "metadata/${APP_ID}/signatures"
+
+          if git diff --cached --quiet; then
+            echo "Developer signatures for ${RELEASE_TAG} are already present"
+            exit 0
+          fi
+
+          git commit -m "Add Flux News ${RELEASE_VERSION} developer signatures"
+          git remote add fork \
+            "https://oauth2:${FDROID_GITLAB_TOKEN}@gitlab.com/${FDROID_GITLAB_FORK}.git"
+
+          if git ls-remote --exit-code --heads fork "${branch}" >/dev/null 2>&1; then
+            echo "Branch ${branch} already exists in ${FDROID_GITLAB_FORK}"
+            exit 0
+          fi
+
+          description="Adds the developer signatures for Flux News ${RELEASE_VERSION}.\n\nAll x86_64, armeabi-v7a, and arm64-v8a APKs were compared successfully with the corresponding published F-Droid APKs using apksigcopier. This keeps the existing F-Droid-signed APKs and enables dual publication."
+          git push fork "HEAD:refs/heads/${branch}" \
+            -o merge_request.create \
+            -o merge_request.target=master \
+            -o merge_request.target_project=fdroid/fdroiddata \
+            -o merge_request.remove_source_branch \
+            -o merge_request.title="Add Flux News ${RELEASE_VERSION} developer signatures" \
+            -o merge_request.description="${description}"

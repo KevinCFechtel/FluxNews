@@ -105,13 +105,7 @@ jobs:
           cp "${REPRO_BUILD_DIR}"/build/app/outputs/flutter-apk/* \
             "${GITHUB_WORKSPACE}/build/app/outputs/flutter-apk/"
 
-        #6 Upload Artifacts
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          path: build/app/outputs/flutter-apk/*
-
-        #7 Extract Version
+        #6 Extract Version
       - name: Extract version and release from pubspec.yaml
         id: extract_version
         working-directory: ${{ env.REPRO_BUILD_DIR }}
@@ -122,8 +116,42 @@ jobs:
           echo "VERSIONCODE=$versioncode" >> $GITHUB_ENV
           changelog_versioncode=$((versioncode + 1))
           echo "CHANGELOG_VERSIONCODE=$changelog_versioncode" >> $GITHUB_ENV
+
+        #7 Extract the developer signatures for F-Droid dual publication
+      - name: Extract F-Droid Signatures
+        env:
+          APK_DIR: ${{ github.workspace }}/build/app/outputs/flutter-apk
+          SIGNATURE_ROOT: ${{ github.workspace }}/build/fdroid-signatures
+        run: |
+          python3 -m pip install --user --disable-pip-version-check \
+            apksigcopier==1.1.1
+          export PATH="${HOME}/.local/bin:${PATH}"
+
+          declare -A apk_version_codes=(
+            [app-x86_64-release.apk]=$((VERSIONCODE + 1))
+            [app-armeabi-v7a-release.apk]=$((VERSIONCODE + 2))
+            [app-arm64-v8a-release.apk]=$((VERSIONCODE + 3))
+          )
+
+          for apk in "${!apk_version_codes[@]}"; do
+            version_code="${apk_version_codes[$apk]}"
+            output_dir="${SIGNATURE_ROOT}/metadata/de.circle_dev.flux_news/signatures/${version_code}"
+            mkdir -p "${output_dir}"
+            apksigcopier extract --v1-only=auto \
+              "${APK_DIR}/${apk}" "${output_dir}"
+          done
+
+          archive="${APK_DIR}/fdroid-signatures-v${VERSION}.tar.gz"
+          tar -czf "${archive}" -C "${SIGNATURE_ROOT}" metadata
+          tar -tzf "${archive}"
+
+        #8 Upload APKs and the extracted F-Droid signatures
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: build/app/outputs/flutter-apk/*
         
-        #8 Create Release
+        #9 Create Release
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
