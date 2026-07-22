@@ -15,7 +15,7 @@ jobs:
     steps:
         #1 Checkout Repository
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -59,7 +59,7 @@ jobs:
         
         #2 Setup Java
       - name: Set Up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -147,7 +147,7 @@ jobs:
 
         #8 Upload APKs and the extracted F-Droid signatures
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           path: build/app/outputs/flutter-apk/*
         
