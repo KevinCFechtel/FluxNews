@@ -20,7 +20,8 @@ concurrency:
 jobs:
   submit-signatures:
     # Enable with repository variable ENABLE_FDROID_SIGNATURE_SUBMISSION=true.
-    # Also configure FDROID_GITLAB_FORK and the FDROID_GITLAB_TOKEN secret.
+    # Also configure FDROID_GITLAB_FORK, FDROID_GITLAB_TOKEN, and
+    # FDROID_WORKFLOW_CONTROL_TOKEN.
     if: ${{ vars.ENABLE_FDROID_SIGNATURE_SUBMISSION == 'true' }}
     name: Wait for metadata and submit signatures
     runs-on: ubuntu-latest
@@ -33,6 +34,8 @@ jobs:
 
     steps:
       - name: Check configuration
+        env:
+          FDROID_WORKFLOW_CONTROL_TOKEN: ${{ secrets.FDROID_WORKFLOW_CONTROL_TOKEN }}
         run: |
           if [[ -z "${FDROID_GITLAB_FORK}" ]]; then
             echo "::error::Repository variable FDROID_GITLAB_FORK is not configured"
@@ -40,6 +43,10 @@ jobs:
           fi
           if [[ -z "${FDROID_GITLAB_TOKEN}" ]]; then
             echo "::error::Repository secret FDROID_GITLAB_TOKEN is not configured"
+            exit 1
+          fi
+          if [[ -z "${FDROID_WORKFLOW_CONTROL_TOKEN}" ]]; then
+            echo "::error::Repository secret FDROID_WORKFLOW_CONTROL_TOKEN is not configured"
             exit 1
           fi
 
@@ -148,6 +155,7 @@ jobs:
           echo "ready=true" >> "${GITHUB_OUTPUT}"
 
       - name: Submit signatures to fdroiddata
+        id: submit
         if: ${{ steps.fdroid_metadata.outputs.ready == 'true' }}
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
@@ -169,6 +177,7 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "Developer signatures for ${RELEASE_TAG} are already present"
+            echo "complete=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
 
@@ -178,6 +187,7 @@ jobs:
 
           if git ls-remote --exit-code --heads fork "${branch}" >/dev/null 2>&1; then
             echo "Branch ${branch} already exists in ${FDROID_GITLAB_FORK}"
+            echo "complete=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
 
@@ -189,3 +199,14 @@ jobs:
             -o merge_request.remove_source_branch \
             -o merge_request.title="Add Flux News ${RELEASE_VERSION} developer signatures" \
             -o merge_request.description="${description}"
+
+          echo "complete=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Disable F-Droid Signature Submission
+        if: ${{ steps.submit.outputs.complete == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.FDROID_WORKFLOW_CONTROL_TOKEN }}
+        run: |
+          gh variable set ENABLE_FDROID_SIGNATURE_SUBMISSION \
+            --repo "${GITHUB_REPOSITORY}" \
+            --body "false"

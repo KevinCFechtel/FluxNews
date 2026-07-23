@@ -160,3 +160,16 @@ jobs:
           name: ${{ env.VERSION }}
           bodyFile: metadata/en-US/changelogs/${{ env.CHANGELOG_VERSIONCODE }}.txt
           token: ${{ secrets.TOKEN }}
+
+      - name: Enable F-Droid Signature Submission
+        env:
+          GH_TOKEN: ${{ secrets.FDROID_WORKFLOW_CONTROL_TOKEN }}
+        run: |
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo "::error::Repository secret FDROID_WORKFLOW_CONTROL_TOKEN is not configured"
+            exit 1
+          fi
+
+          gh variable set ENABLE_FDROID_SIGNATURE_SUBMISSION \
+            --repo "${GITHUB_REPOSITORY}" \
+            --body "true"
