@@ -7,6 +7,9 @@ on:
 env:
   REPRO_BUILD_DIR: /home/vagrant/build/de.circle_dev.flux_news
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build & Release 
@@ -161,15 +164,10 @@ jobs:
           bodyFile: metadata/en-US/changelogs/${{ env.CHANGELOG_VERSIONCODE }}.txt
           token: ${{ secrets.TOKEN }}
 
-      - name: Enable F-Droid Signature Submission
-        env:
-          GH_TOKEN: ${{ secrets.FDROID_WORKFLOW_CONTROL_TOKEN }}
-        run: |
-          if [[ -z "${GH_TOKEN}" ]]; then
-            echo "::error::Repository secret FDROID_WORKFLOW_CONTROL_TOKEN is not configured"
-            exit 1
-          fi
-
-          gh variable set ENABLE_FDROID_SIGNATURE_SUBMISSION \
-            --repo "${GITHUB_REPOSITORY}" \
-            --body "true"
+  submit-fdroid-update:
+    name: Submit F-Droid Update
+    needs: build
+    uses: ./.github/workflows/submit-fdroid-signatures.yml
+    with:
+      release_tag: ${{ github.ref_name }}
+    secrets: inherit

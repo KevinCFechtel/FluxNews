@@ -1,8 +1,12 @@
-name: Submit F-Droid Signatures
+name: Submit F-Droid Update
 
 on:
-  schedule:
-    - cron: "17 * * * *"
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "GitHub release tag to submit"
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       release_tag:
@@ -19,11 +23,7 @@ concurrency:
 
 jobs:
   submit-signatures:
-    # Enable with repository variable ENABLE_FDROID_SIGNATURE_SUBMISSION=true.
-    # Also configure FDROID_GITLAB_FORK, FDROID_GITLAB_TOKEN, and
-    # FDROID_WORKFLOW_CONTROL_TOKEN.
-    if: ${{ vars.ENABLE_FDROID_SIGNATURE_SUBMISSION == 'true' }}
-    name: Wait for metadata and submit signatures
+    name: Submit F-Droid update and signatures
     runs-on: ubuntu-latest
     env:
       APP_ID: de.circle_dev.flux_news
@@ -35,9 +35,15 @@ jobs:
       INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
 
     steps:
+      - name: Checkout automation scripts
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Test F-Droid metadata automation
+        run: python3 .github/scripts/test_prepare_fdroid_metadata.py
+
       - name: Check configuration
-        env:
-          FDROID_WORKFLOW_CONTROL_TOKEN: ${{ secrets.FDROID_WORKFLOW_CONTROL_TOKEN }}
         run: |
           if [[ -z "${FDROID_GITLAB_FORK}" ]]; then
             echo "::error::Repository variable FDROID_GITLAB_FORK is not configured"
@@ -45,10 +51,6 @@ jobs:
           fi
           if [[ -z "${FDROID_GITLAB_TOKEN}" ]]; then
             echo "::error::Repository secret FDROID_GITLAB_TOKEN is not configured"
-            exit 1
-          fi
-          if [[ -z "${FDROID_WORKFLOW_CONTROL_TOKEN}" ]]; then
-            echo "::error::Repository secret FDROID_WORKFLOW_CONTROL_TOKEN is not configured"
             exit 1
           fi
 
@@ -88,6 +90,7 @@ jobs:
         id: version_codes
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           pubspec="$(
             gh api \
@@ -104,6 +107,27 @@ jobs:
             exit 1
           fi
 
+          declared_version="$(
+            printf '%s\n' "${pubspec}" |
+              sed -n 's/^version: \([^+]*\)+[0-9][0-9]*$/\1/p'
+          )"
+          if [[ "${declared_version}" != "${RELEASE_VERSION}" ]]; then
+            echo "::error::Tag ${RELEASE_TAG} does not match pubspec version ${declared_version}"
+            exit 1
+          fi
+
+          release_commit="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_TAG}" \
+              --jq .sha
+          )"
+          if [[ ! "${release_commit}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Could not resolve ${RELEASE_TAG} to a full commit SHA"
+            exit 1
+          fi
+
+          echo "base=${base_version_code}" >> "${GITHUB_OUTPUT}"
+          echo "commit=${release_commit}" >> "${GITHUB_OUTPUT}"
           echo "x86_64=$((base_version_code + 1))" >> "${GITHUB_OUTPUT}"
           echo "armeabi_v7a=$((base_version_code + 2))" >> "${GITHUB_OUTPUT}"
           echo "arm64_v8a=$((base_version_code + 3))" >> "${GITHUB_OUTPUT}"
@@ -120,12 +144,11 @@ jobs:
             fi
           done
 
-      - name: Check F-Droid build metadata
-        id: fdroid_metadata
+      - name: Prepare F-Droid update metadata
         env:
-          X86_64_VERSION_CODE: ${{ steps.version_codes.outputs.x86_64 }}
-          ARMEABI_V7A_VERSION_CODE: ${{ steps.version_codes.outputs.armeabi_v7a }}
-          ARM64_V8A_VERSION_CODE: ${{ steps.version_codes.outputs.arm64_v8a }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.version_codes.outputs.commit }}
+          BASE_VERSION_CODE: ${{ steps.version_codes.outputs.base }}
         run: |
           checkout="${RUNNER_TEMP}/fdroiddata"
           metadata="${checkout}/metadata/${APP_ID}.yml"
@@ -138,32 +161,17 @@ jobs:
             "metadata/${APP_ID}/signatures/"
           git -C "${checkout}" checkout master
 
-          missing=false
-          for version_code in \
-            "${X86_64_VERSION_CODE}" \
-            "${ARMEABI_V7A_VERSION_CODE}" \
-            "${ARM64_V8A_VERSION_CODE}"; do
-            if grep -Eq \
-              "^[[:space:]]+versionCode:[[:space:]]+${version_code}[[:space:]]*$" \
-              "${metadata}"; then
-              echo "Found F-Droid build entry for version code ${version_code}"
-            else
-              echo "F-Droid build entry is not available yet: ${version_code}"
-              missing=true
-            fi
-          done
+          python3 \
+            "${GITHUB_WORKSPACE}/.github/scripts/prepare_fdroid_metadata.py" \
+            --metadata "${metadata}" \
+            --version "${RELEASE_VERSION}" \
+            --base-version-code "${BASE_VERSION_CODE}" \
+            --commit "${RELEASE_COMMIT}" \
+            --developer-key "${DEVELOPER_SIGNING_KEY}" \
+            --fdroid-key "${FDROID_SIGNING_KEY}"
 
-          if [[ "${missing}" == "true" ]]; then
-            echo "ready=false" >> "${GITHUB_OUTPUT}"
-            echo "The scheduled workflow will check fdroiddata again later"
-            exit 0
-          fi
-
-          echo "ready=true" >> "${GITHUB_OUTPUT}"
-
-      - name: Submit signatures to fdroiddata
+      - name: Submit update and signatures to fdroiddata
         id: submit
-        if: ${{ steps.fdroid_metadata.outputs.ready == 'true' }}
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
@@ -172,38 +180,6 @@ jobs:
           branch="fluxnews-signatures-${RELEASE_TAG}"
           metadata="${checkout}/metadata/${APP_ID}.yml"
           signature_source="${RUNNER_TEMP}/signatures/metadata/${APP_ID}/signatures"
-
-          if ! grep -q '^AllowedAPKSigningKeys:' "${metadata}"; then
-            awk \
-              -v developer_key="${DEVELOPER_SIGNING_KEY}" \
-              -v fdroid_key="${FDROID_SIGNING_KEY}" \
-              '
-                !inserted && /^AutoUpdateMode:/ {
-                  print "AllowedAPKSigningKeys:"
-                  print "  - " developer_key
-                  print "  - " fdroid_key
-                  print ""
-                  inserted = 1
-                }
-                { print }
-                END {
-                  if (!inserted) {
-                    exit 1
-                  }
-                }
-              ' "${metadata}" > "${metadata}.tmp"
-            mv "${metadata}.tmp" "${metadata}"
-          fi
-
-          for signing_key in \
-            "${DEVELOPER_SIGNING_KEY}" \
-            "${FDROID_SIGNING_KEY}"; do
-            if ! grep -Eq "^[[:space:]]+-[[:space:]]+${signing_key}[[:space:]]*$" \
-              "${metadata}"; then
-              echo "::error::AllowedAPKSigningKeys is missing ${signing_key}"
-              exit 1
-            fi
-          done
 
           mkdir -p "${checkout}/metadata/${APP_ID}/signatures"
           cp -a "${signature_source}/." \
@@ -223,7 +199,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Add Flux News ${RELEASE_VERSION} developer signatures"
+          git commit -m "Update Flux News to ${RELEASE_VERSION} with developer signatures"
           git remote add fork \
             "https://oauth2:${FDROID_GITLAB_TOKEN}@gitlab.com/${FDROID_GITLAB_FORK}.git"
 
@@ -231,30 +207,25 @@ jobs:
             git ls-remote --heads fork "refs/heads/${branch}" |
               awk '{ print $1 }'
           )"
+
+          description="$(
+            printf '%s\n\n%s' \
+              "Updates Flux News to ${RELEASE_VERSION} and adds the developer signatures for dual publication." \
+              "The x86_64, armeabi-v7a, and arm64-v8a build entries use the latest existing F-Droid recipes. AutoUpdateMode remains disabled because every release requires matching signature data."
+          )"
           if [[ -n "${remote_branch}" ]]; then
-            git push fork "HEAD:refs/heads/${branch}" \
-              --force-with-lease="refs/heads/${branch}:${remote_branch}"
-            echo "Updated existing branch ${branch} in ${FDROID_GITLAB_FORK}"
-            echo "complete=true" >> "${GITHUB_OUTPUT}"
-            exit 0
+            git push \
+              "--force-with-lease=refs/heads/${branch}:${remote_branch}" \
+              fork "HEAD:refs/heads/${branch}"
+          else
+            git push \
+              -o merge_request.create \
+              -o merge_request.target=master \
+              -o merge_request.target_project=fdroid/fdroiddata \
+              -o merge_request.remove_source_branch \
+              -o merge_request.title="Update Flux News to ${RELEASE_VERSION} with developer signatures" \
+              -o merge_request.description="${description}" \
+              fork "HEAD:refs/heads/${branch}"
           fi
 
-          description="Adds the developer signatures for Flux News ${RELEASE_VERSION}.\n\nThe matching x86_64, armeabi-v7a, and arm64-v8a build entries are present in fdroiddata. The merge request pipeline can rebuild the APKs and verify the signatures before dual publication."
-          git push fork "HEAD:refs/heads/${branch}" \
-            -o merge_request.create \
-            -o merge_request.target=master \
-            -o merge_request.target_project=fdroid/fdroiddata \
-            -o merge_request.remove_source_branch \
-            -o merge_request.title="Add Flux News ${RELEASE_VERSION} developer signatures" \
-            -o merge_request.description="${description}"
-
           echo "complete=true" >> "${GITHUB_OUTPUT}"
-
-      - name: Disable F-Droid Signature Submission
-        if: ${{ steps.submit.outputs.complete == 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.FDROID_WORKFLOW_CONTROL_TOKEN }}
-        run: |
-          gh variable set ENABLE_FDROID_SIGNATURE_SUBMISSION \
-            --repo "${GITHUB_REPOSITORY}" \
-            --body "false"
