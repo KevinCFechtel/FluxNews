@@ -6,6 +6,7 @@ on:
 
 env:
   REPRO_BUILD_DIR: /home/vagrant/build/de.circle_dev.flux_news
+  DEVELOPER_SIGNING_CERT_SHA256: fee5401bc9d59cf5a8a461ba9698c482e87ed8ffb9258786a3d01d0356ea2ebb
 
 permissions:
   contents: read
@@ -142,6 +143,20 @@ jobs:
             mkdir -p "${output_dir}"
             apksigcopier extract --v1-only=auto \
               "${APK_DIR}/${apk}" "${output_dir}"
+            python3 .github/scripts/extract_signer_certificate.py \
+              --apk "${APK_DIR}/${apk}" \
+              --output "${output_dir}/signer-certificate.der" \
+              --expected-sha256 "${DEVELOPER_SIGNING_CERT_SHA256}"
+
+            for signature_file in \
+              APKSigningBlock \
+              APKSigningBlockOffset \
+              signer-certificate.der; do
+              if [[ ! -s "${output_dir}/${signature_file}" ]]; then
+                echo "::error::Missing ${signature_file} for ${apk}"
+                exit 1
+              fi
+            done
           done
 
           archive="${APK_DIR}/fdroid-signatures-v${VERSION}.tar.gz"
