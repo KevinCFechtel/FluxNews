@@ -128,8 +128,13 @@ jobs:
           checkout="${RUNNER_TEMP}/fdroiddata"
           metadata="${checkout}/metadata/${APP_ID}.yml"
 
-          git clone --depth=1 \
+          git clone --filter=blob:none --no-checkout \
             https://gitlab.com/fdroid/fdroiddata.git "${checkout}"
+          git -C "${checkout}" sparse-checkout init --no-cone
+          git -C "${checkout}" sparse-checkout set \
+            "metadata/${APP_ID}.yml" \
+            "metadata/${APP_ID}/signatures/"
+          git -C "${checkout}" checkout master
 
           missing=false
           for version_code in \
