@@ -2752,10 +2752,8 @@ class FluxNewsState extends ChangeNotifier {
       final fileIconPath = FluxNewsState.feedIconFilePath
           .substring(0, FluxNewsState.feedIconFilePath.lastIndexOf('/'));
       final dir = Directory(externalDirectory!.path + fileIconPath);
-      final List<FileSystemEntity> entities = await dir.list().toList();
-      final Iterable<File> files = entities.whereType<File>();
-      for (final file in files) {
-        file.deleteSync();
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
       }
     }
   }

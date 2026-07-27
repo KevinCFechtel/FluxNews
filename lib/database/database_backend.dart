@@ -2246,12 +2246,12 @@ Future<void> renewAllNewsCount(
 }
 
 // calculate the news count of the "all news" section
-Future<void> deleteLocalNewsCache(
-    FluxNewsState appState, BuildContext context) async {
+Future<void> deleteLocalNewsCache(FluxNewsState appState) async {
   if (appState.debugMode) {
     logThis('deleteLocalNewsCache', 'Starting deleting the local news cache',
         LogLevel.INFO);
   }
+  await AudioDownloadService.deleteAllDownloadedAudios();
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     // create the table news

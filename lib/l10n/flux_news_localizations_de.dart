@@ -186,14 +186,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get clearLogsOnStartDescription => 'Alle Logs beim App-Start löschen';
 
   @override
-  String get deleteLocalCache => 'Lösche den lokalen Nachrichtenspeicher';
+  String get deleteLocalCache => 'Lokale Daten löschen';
 
   @override
-  String get deleteLocalCacheDialogTitle => 'Nachrichtenspeicher löschen';
+  String get deleteLocalCacheDialogTitle => 'Lokale Daten löschen';
 
   @override
   String get deleteLocalCacheDialogContent =>
-      'Möchten Sie wirklich den lokalen Nachrichtenspeicher löschen?';
+      'Wählen Sie, ob nur die Feed-Icons oder alle lokalen Daten einschließlich der heruntergeladenen Audio-Dateien gelöscht werden sollen.';
+
+  @override
+  String get deleteFeedIconsOnly => 'Nur Feed-Icons';
+
+  @override
+  String get deleteAllLocalData => 'Alle Daten';
 
   @override
   String get contextSaveButton => 'Nachricht in Drittsystem speichern';

@@ -9,6 +9,7 @@ import 'package:flux_news/functions/flux_news_carplay_service.dart';
 import 'package:flux_news/ui/log_viewer.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/settings_backup_service.dart';
+import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
@@ -1150,24 +1151,83 @@ class Settings extends StatelessWidget {
         });
   }
 
-  // this method shows a dialog to enter the miniflux api key
-  // the api key is saved in the secure storage
-  // if the url is set, the connection is tested
+  Future<void> _deleteFeedIconsOnly(
+      BuildContext context, FluxNewsState appState) async {
+    await appState.deleteAllFeedIconFiles();
+
+    try {
+      final news = await appState.newsList;
+      for (final item in news) {
+        item.icon = null;
+      }
+    } catch (error) {
+      logThis('deleteFeedIconsOnly',
+          'Could not clear loaded news icons: $error', LogLevel.WARNING);
+    }
+
+    try {
+      final categories = await appState.categoryList;
+      for (final category in categories.categories) {
+        for (final feed in category.feeds) {
+          feed.icon = null;
+        }
+      }
+    } catch (error) {
+      logThis('deleteFeedIconsOnly',
+          'Could not clear loaded feed icons: $error', LogLevel.WARNING);
+    }
+
+    final actualCategories = appState.actualCategoryList;
+    if (actualCategories != null) {
+      for (final category in actualCategories.categories) {
+        for (final feed in category.feeds) {
+          feed.icon = null;
+        }
+      }
+    }
+
+    try {
+      await FluxNewsWidgetService.updateWidgetSnapshot(appState);
+    } catch (error) {
+      logThis('deleteFeedIconsOnly', 'Could not update widget snapshot: $error',
+          LogLevel.WARNING);
+    }
+
+    if (!context.mounted) return;
+    appState.refreshView();
+    Navigator.pop(context);
+  }
+
+  Future<void> _deleteAllLocalData(
+      BuildContext context, FluxNewsState appState) async {
+    await stopFluxNewsAudioHandlerIfInitialized();
+    await deleteLocalNewsCache(appState);
+    if (!context.mounted) return;
+
+    appState.newsList = Future<List<News>>.value([]);
+    appState.categoryList =
+        Future<Categories>.value(Categories(categories: []));
+    context.read<FluxNewsCounterState>().allNewsCount = 0;
+    context.read<FluxNewsCounterState>().appBarNewsCount = 0;
+    context.read<FluxNewsCounterState>().starredCount = 0;
+    context.read<FluxNewsCounterState>().refreshView();
+    appState.refreshView();
+    Navigator.pop(context);
+  }
+
   Future _showDeleteLocalCacheDialog(
       BuildContext context, FluxNewsState appState) {
-    TextEditingController controller = TextEditingController();
-    if (appState.minifluxAPIKey != null) {
-      controller.text = appState.minifluxAPIKey!;
-    }
     return showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog.adaptive(
             title:
                 Text(AppLocalizations.of(context)!.deleteLocalCacheDialogTitle),
-            content: Wrap(children: [
-              Text(AppLocalizations.of(context)!.deleteLocalCacheDialogContent),
-            ]),
+            content: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                  AppLocalizations.of(context)!.deleteLocalCacheDialogContent),
+            ),
             actions: Platform.isIOS
                 ? <CupertinoDialogAction>[
                     CupertinoDialogAction(
@@ -1178,24 +1238,19 @@ class Settings extends StatelessWidget {
                       child: Text(AppLocalizations.of(context)!.cancel),
                     ),
                     CupertinoDialogAction(
-                      /// This parameter indicates the action would perform
-                      /// a destructive action such as deletion, and turns
-                      /// the action's text color to red.
-                      isDestructiveAction: true,
-                      onPressed: () {
-                        deleteLocalNewsCache(appState, context);
-                        appState.newsList = Future<List<News>>.value([]);
-                        appState.categoryList = Future<Categories>.value(
-                            Categories(categories: []));
-                        context.read<FluxNewsCounterState>().allNewsCount = 0;
-                        context.read<FluxNewsCounterState>().appBarNewsCount =
-                            0;
-                        context.read<FluxNewsCounterState>().starredCount = 0;
-                        context.read<FluxNewsCounterState>().refreshView();
-                        appState.refreshView();
-                        Navigator.pop(context);
+                      onPressed: () async {
+                        await _deleteFeedIconsOnly(context, appState);
                       },
-                      child: Text(AppLocalizations.of(context)!.ok),
+                      child: Text(
+                          AppLocalizations.of(context)!.deleteFeedIconsOnly),
+                    ),
+                    CupertinoDialogAction(
+                      isDestructiveAction: true,
+                      onPressed: () async {
+                        await _deleteAllLocalData(context, appState);
+                      },
+                      child: Text(
+                          AppLocalizations.of(context)!.deleteAllLocalData),
                     ),
                   ]
                 : <Widget>[
@@ -1206,20 +1261,17 @@ class Settings extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () async {
-                        deleteLocalNewsCache(appState, context);
-                        appState.newsList = Future<List<News>>.value([]);
-                        appState.categoryList = Future<Categories>.value(
-                            Categories(categories: []));
-                        context.read<FluxNewsCounterState>().allNewsCount = 0;
-                        context.read<FluxNewsCounterState>().appBarNewsCount =
-                            0;
-                        context.read<FluxNewsCounterState>().starredCount = 0;
-                        context.read<FluxNewsCounterState>().refreshView();
-                        appState.refreshView();
-                        Navigator.pop(context);
+                        await _deleteFeedIconsOnly(context, appState);
                       },
                       child: Text(
-                        AppLocalizations.of(context)!.ok,
+                          AppLocalizations.of(context)!.deleteFeedIconsOnly),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await _deleteAllLocalData(context, appState);
+                      },
+                      child: Text(
+                        AppLocalizations.of(context)!.deleteAllLocalData,
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),

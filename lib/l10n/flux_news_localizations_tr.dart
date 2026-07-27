@@ -184,14 +184,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'Delete all logs when the app starts';
 
   @override
-  String get deleteLocalCache => 'Yerel haber deposunu temizle';
+  String get deleteLocalCache => 'Yerel verileri temizle';
 
   @override
-  String get deleteLocalCacheDialogTitle => 'Yerel önbelleği sil';
+  String get deleteLocalCacheDialogTitle => 'Yerel verileri sil';
 
   @override
   String get deleteLocalCacheDialogContent =>
-      'Yerel haber deposunu silmek istediğinizden emin misiniz?';
+      'Yalnızca akış simgelerini veya indirilen ses dosyaları dahil tüm yerel verileri silmeyi seçin.';
+
+  @override
+  String get deleteFeedIconsOnly => 'Yalnızca akış simgeleri';
+
+  @override
+  String get deleteAllLocalData => 'Tüm veriler';
 
   @override
   String get contextSaveButton => 'Haberleri üçüncü tarafa kaydet';

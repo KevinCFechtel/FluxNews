@@ -133,6 +133,7 @@ class AudioDownloadService {
   static final _activeClients = <int, HttpClient>{};
   // Sequential queue: each new download is chained onto the previous one.
   static var _downloadQueue = Future<void>.value();
+  static int _downloadQueueGeneration = 0;
   // IDs explicitly cancelled by the user — distinguishes cancellations from real errors.
   static final _cancelledByUser = <int>{};
   static const String _downloadSkippedKeyPrefix =
@@ -270,13 +271,17 @@ class AudioDownloadService {
     _activeClients[storageAttachmentId]?.close(force: true);
   }
 
-  /// Cancels all running downloads. For sequential batch downloads
-  /// (e.g. auto-download), aborting the active one propagates an exception
-  /// through the loop, which also cancels all queued downloads.
+  /// Cancels running and queued downloads.
   static void cancelAllDownloads() {
-    for (final id in List<int>.from(_activeClients.keys)) {
+    _downloadQueueGeneration++;
+    for (final id in List<int>.from(_activeDownloads.keys)) {
       cancelDownload(id);
     }
+  }
+
+  static Future<void> cancelAllDownloadsAndWait() async {
+    cancelAllDownloads();
+    await _downloadQueue;
   }
 
   /// Adds [attachment] to the sequential download queue. Returns a Future that
@@ -313,8 +318,15 @@ class AudioDownloadService {
     ));
 
     final completer = Completer<String?>();
+    final queueGeneration = _downloadQueueGeneration;
 
     _downloadQueue = _downloadQueue.then((_) async {
+      if (queueGeneration != _downloadQueueGeneration) {
+        _removeActiveDownload(storageId);
+        if (!completer.isCompleted) completer.complete(null);
+        return;
+      }
+
       String? result;
       Object? downloadError;
       try {
@@ -1589,10 +1601,50 @@ class AudioDownloadService {
   }
 
   static Future<void> deleteAllDownloadedAudios() async {
-    final downloads = await getDownloadedAudios();
-    for (final download in downloads) {
-      await deleteDownloadedAudioByStorageId(download.storageID);
+    await cancelAllDownloadsAndWait();
+
+    final appSupport = await _getAppSupportDir();
+    final audioDirectory =
+        Directory(p.join(appSupport.path, FluxNewsState.audioCachePath));
+    if (await audioDirectory.exists()) {
+      await for (final entity in audioDirectory.list(followLinks: false)) {
+        if (entity is File &&
+            p.basename(entity.path).startsWith(FluxNewsState.audioFilePrefix)) {
+          await entity.delete();
+        }
+      }
     }
+
+    final artworkDirectory =
+        Directory(p.join(appSupport.path, _artworkCacheDirectoryName));
+    if (await artworkDirectory.exists()) {
+      await artworkDirectory.delete(recursive: true);
+    }
+
+    final allValues = await _storage.readAll();
+    for (final key in allValues.keys) {
+      if (key.startsWith(_downloadPathKeyPrefix) ||
+          key.startsWith(_downloadPathByUrlKeyPrefix) ||
+          key.startsWith(_downloadTimestampKeyPrefix) ||
+          key.startsWith(_downloadSkippedKeyPrefix) ||
+          key.startsWith(_downloadTitleKeyPrefix) ||
+          key.startsWith(_downloadFeedTitleKeyPrefix)) {
+        await _storage.delete(key: key);
+      }
+    }
+
+    _activeDownloads.clear();
+    _activeClients.clear();
+    _cancelledByUser.clear();
+    _userSkippedDownloads.clear();
+    _downloadTitleCache.clear();
+    _downloadFeedTitleCache.clear();
+    _downloadFeedIdCache.clear();
+    _downloadFeedIconIdCache.clear();
+    _downloadNewsIdCache.clear();
+    _downloadMediaProgressionCache.clear();
+    _emitActiveDownloads();
+    _emitDownloadedAudiosChanged();
   }
 
   static String formatBytes(int bytes) {
@@ -1717,6 +1769,10 @@ class AudioDownloadService {
     }
 
     if (onlyOnWifi && !await _isWifiConnected()) {
+      return null;
+    }
+
+    if (_cancelledByUser.contains(storageAttachmentId)) {
       return null;
     }
 

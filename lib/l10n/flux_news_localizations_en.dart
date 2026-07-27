@@ -183,14 +183,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delete all logs when the app starts';
 
   @override
-  String get deleteLocalCache => 'Clear local news storage';
+  String get deleteLocalCache => 'Clear local data';
 
   @override
-  String get deleteLocalCacheDialogTitle => 'Delete local cache';
+  String get deleteLocalCacheDialogTitle => 'Delete local data';
 
   @override
   String get deleteLocalCacheDialogContent =>
-      'Do you really want to delete the local news storage?';
+      'Choose whether to delete only the feed icons or all local data, including downloaded audio files.';
+
+  @override
+  String get deleteFeedIconsOnly => 'Feed icons only';
+
+  @override
+  String get deleteAllLocalData => 'All data';
 
   @override
   String get contextSaveButton => 'Save news to third party';

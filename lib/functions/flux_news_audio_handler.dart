@@ -63,6 +63,19 @@ Future<FluxNewsAudioHandler> initFluxNewsAudioHandler() {
   return _fluxNewsAudioHandlerFuture!;
 }
 
+Future<void> stopFluxNewsAudioHandlerIfInitialized() async {
+  final existingHandler = _fluxNewsAudioHandler;
+  if (existingHandler != null) {
+    await existingHandler.stop();
+    return;
+  }
+
+  final initializingHandler = _fluxNewsAudioHandlerFuture;
+  if (initializingHandler != null) {
+    await (await initializingHandler).stop();
+  }
+}
+
 enum SleepTimerEvent { stateChanged, fired }
 
 class FluxNewsAudioHandler extends BaseAudioHandler

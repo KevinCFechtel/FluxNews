@@ -184,14 +184,20 @@ class AppLocalizationsGl extends AppLocalizations {
       'Eliminar todos os rexistros cando se inicia a app';
 
   @override
-  String get deleteLocalCache => 'Limpar as novas da almacenaxe local';
+  String get deleteLocalCache => 'Limpar os datos locais';
 
   @override
-  String get deleteLocalCacheDialogTitle => 'Eliminar a memoria tobo local';
+  String get deleteLocalCacheDialogTitle => 'Eliminar os datos locais';
 
   @override
   String get deleteLocalCacheDialogContent =>
-      'Tes certeza de querer eliminar as novas da almacenaxe local?';
+      'Escolle se queres eliminar só as iconas das fontes ou todos os datos locais, incluídos os ficheiros de audio descargados.';
+
+  @override
+  String get deleteFeedIconsOnly => 'Só as iconas das fontes';
+
+  @override
+  String get deleteAllLocalData => 'Todos os datos';
 
   @override
   String get contextSaveButton => 'Gardar as novas en outro servizo';

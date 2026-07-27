@@ -443,20 +443,32 @@ abstract class AppLocalizations {
   /// No description provided for @deleteLocalCache.
   ///
   /// In en, this message translates to:
-  /// **'Clear local news storage'**
+  /// **'Clear local data'**
   String get deleteLocalCache;
 
   /// No description provided for @deleteLocalCacheDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete local cache'**
+  /// **'Delete local data'**
   String get deleteLocalCacheDialogTitle;
 
   /// No description provided for @deleteLocalCacheDialogContent.
   ///
   /// In en, this message translates to:
-  /// **'Do you really want to delete the local news storage?'**
+  /// **'Choose whether to delete only the feed icons or all local data, including downloaded audio files.'**
   String get deleteLocalCacheDialogContent;
+
+  /// No description provided for @deleteFeedIconsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed icons only'**
+  String get deleteFeedIconsOnly;
+
+  /// No description provided for @deleteAllLocalData.
+  ///
+  /// In en, this message translates to:
+  /// **'All data'**
+  String get deleteAllLocalData;
 
   /// No description provided for @contextSaveButton.
   ///

@@ -186,14 +186,20 @@ class AppLocalizationsNl extends AppLocalizations {
       'Delete all logs when the app starts';
 
   @override
-  String get deleteLocalCache => 'Wis het lokale nieuwsgeheugen';
+  String get deleteLocalCache => 'Lokale gegevens wissen';
 
   @override
-  String get deleteLocalCacheDialogTitle => 'Wis het nieuwscache';
+  String get deleteLocalCacheDialogTitle => 'Lokale gegevens wissen';
 
   @override
   String get deleteLocalCacheDialogContent =>
-      'Wil je echt het lokale berichtgeheugen wissen?';
+      'Kies of je alleen de feedpictogrammen of alle lokale gegevens, inclusief gedownloade audiobestanden, wilt verwijderen.';
+
+  @override
+  String get deleteFeedIconsOnly => 'Alleen feedpictogrammen';
+
+  @override
+  String get deleteAllLocalData => 'Alle gegevens';
 
   @override
   String get contextSaveButton => 'Nieuws opslaan in systeem van derden';
