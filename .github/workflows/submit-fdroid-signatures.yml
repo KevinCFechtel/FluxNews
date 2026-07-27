@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       APP_ID: de.circle_dev.flux_news
+      DEVELOPER_SIGNING_KEY: fee5401bc9d59cf5a8a461ba9698c482e87ed8ffb9258786a3d01d0356ea2ebb
+      FDROID_SIGNING_KEY: d8e5c241fc3ed7e8b1fdcfb237e4b2680e763e3c2c1412c91ff568d6c57eabd7
       FDROID_GITLAB_FORK: ${{ vars.FDROID_GITLAB_FORK }}
       FDROID_GITLAB_TOKEN: ${{ secrets.FDROID_GITLAB_TOKEN }}
       GH_TOKEN: ${{ github.token }}
@@ -168,7 +170,40 @@ jobs:
         run: |
           checkout="${RUNNER_TEMP}/fdroiddata"
           branch="fluxnews-signatures-${RELEASE_TAG}"
+          metadata="${checkout}/metadata/${APP_ID}.yml"
           signature_source="${RUNNER_TEMP}/signatures/metadata/${APP_ID}/signatures"
+
+          if ! grep -q '^AllowedAPKSigningKeys:' "${metadata}"; then
+            awk \
+              -v developer_key="${DEVELOPER_SIGNING_KEY}" \
+              -v fdroid_key="${FDROID_SIGNING_KEY}" \
+              '
+                !inserted && /^AutoUpdateMode:/ {
+                  print "AllowedAPKSigningKeys:"
+                  print "  - " developer_key
+                  print "  - " fdroid_key
+                  print ""
+                  inserted = 1
+                }
+                { print }
+                END {
+                  if (!inserted) {
+                    exit 1
+                  }
+                }
+              ' "${metadata}" > "${metadata}.tmp"
+            mv "${metadata}.tmp" "${metadata}"
+          fi
+
+          for signing_key in \
+            "${DEVELOPER_SIGNING_KEY}" \
+            "${FDROID_SIGNING_KEY}"; do
+            if ! grep -Eq "^[[:space:]]+-[[:space:]]+${signing_key}[[:space:]]*$" \
+              "${metadata}"; then
+              echo "::error::AllowedAPKSigningKeys is missing ${signing_key}"
+              exit 1
+            fi
+          done
 
           mkdir -p "${checkout}/metadata/${APP_ID}/signatures"
           cp -a "${signature_source}/." \
@@ -178,7 +213,9 @@ jobs:
           git switch -c "${branch}"
           git config user.name "Flux News release bot"
           git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
-          git add "metadata/${APP_ID}/signatures"
+          git add \
+            "metadata/${APP_ID}.yml" \
+            "metadata/${APP_ID}/signatures"
 
           if git diff --cached --quiet; then
             echo "Developer signatures for ${RELEASE_TAG} are already present"
@@ -190,8 +227,14 @@ jobs:
           git remote add fork \
             "https://oauth2:${FDROID_GITLAB_TOKEN}@gitlab.com/${FDROID_GITLAB_FORK}.git"
 
-          if git ls-remote --exit-code --heads fork "${branch}" >/dev/null 2>&1; then
-            echo "Branch ${branch} already exists in ${FDROID_GITLAB_FORK}"
+          remote_branch="$(
+            git ls-remote --heads fork "refs/heads/${branch}" |
+              awk '{ print $1 }'
+          )"
+          if [[ -n "${remote_branch}" ]]; then
+            git push fork "HEAD:refs/heads/${branch}" \
+              --force-with-lease="refs/heads/${branch}:${remote_branch}"
+            echo "Updated existing branch ${branch} in ${FDROID_GITLAB_FORK}"
             echo "complete=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
