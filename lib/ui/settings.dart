@@ -1223,10 +1223,9 @@ class Settings extends StatelessWidget {
           return AlertDialog.adaptive(
             title:
                 Text(AppLocalizations.of(context)!.deleteLocalCacheDialogTitle),
-            content: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                  AppLocalizations.of(context)!.deleteLocalCacheDialogContent),
+            content: Text(
+              AppLocalizations.of(context)!.deleteLocalCacheDialogContent,
+              textAlign: TextAlign.start,
             ),
             actions: Platform.isIOS
                 ? <CupertinoDialogAction>[
