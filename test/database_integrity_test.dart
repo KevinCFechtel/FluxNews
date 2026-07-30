@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/database/database_schema.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -149,5 +150,67 @@ void main() {
     expect(rawOverrides, isNotNull);
     final overrides = jsonDecode(rawOverrides!) as Map<String, dynamic>;
     expect(overrides['1']['preferParagraph'], 1);
+  });
+
+  test('database schema creates query indexes', () async {
+    final rows = await database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'index'",
+    );
+    final names = rows.map((row) => row['name']).toSet();
+
+    expect(
+        names,
+        containsAll(<String>{
+          'idx_news_published',
+          'idx_news_status_published',
+          'idx_news_feed_status_published',
+          'idx_news_starred_published',
+          'idx_news_sync_status',
+          'idx_attachments_news',
+          'idx_attachments_url',
+          'idx_feeds_category',
+        }));
+    expect(fluxNewsDatabaseVersion, 12);
+  });
+
+  test('starred news and attachments are persisted before update returns',
+      () async {
+    final appState = FluxNewsState()..db = database;
+    final news = News(
+      newsID: 99,
+      feedID: 7,
+      title: 'Saved episode',
+      url: 'https://example.com/99',
+      commentsUrl: '',
+      shareCode: '',
+      content: 'Episode',
+      hash: 'hash-99',
+      publishedAt: '2026-07-30T10:00:00Z',
+      createdAt: '2026-07-30T10:00:00Z',
+      status: FluxNewsState.readNewsStatus,
+      readingTime: 1,
+      starred: true,
+      feedTitle: 'Podcast',
+      attachments: [
+        Attachment(
+          attachmentID: 199,
+          newsID: 99,
+          attachmentURL: 'https://example.com/99.mp3',
+          attachmentMimeType: 'audio/mpeg',
+          mediaProgression: 0,
+        ),
+      ],
+    )..prepareListMetadata();
+
+    await updateStarredNewsInDB(
+      NewsList(news: [news], newsCount: 1),
+      appState,
+    );
+
+    expect(await database.query('news', where: 'newsID = 99'), hasLength(1));
+    expect(
+      await database.query('attachments', where: 'attachmentID = 199'),
+      hasLength(1),
+    );
   });
 }

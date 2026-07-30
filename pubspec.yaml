@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.2.7+2026072802
+version: 2.2.7+2026073001
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -56,12 +56,13 @@ dependencies:
   share_plus: ^13.1.0
   shared_preferences: ^2.5.3
   path_provider: ^2.0.15
+  package_info_plus: ^10.2.1
   file_picker: ^12.0.0-beta.5
   cronet_http: ^1.8.0
   scrollview_observer: ^1.21.0
   super_sliver_list: ^0.4.1
   flutter_slidable: ^4.0.0
-  sqflite_common_ffi: ^2.3.5
+  sqflite: ^2.4.2
   html2md: ^1.3.2
   markdown_widget: ^2.3.2+8
   extended_image: ^10.0.1
@@ -89,6 +90,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mockito: ^5.4.0
   build_runner: ^2.3.3
+  sqflite_common_ffi: ^2.3.5
 
 
 # For information on the generic Dart part of this file, see the

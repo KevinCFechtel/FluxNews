@@ -16,7 +16,7 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:path/path.dart' as path;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 
 class AudioChapter {
   const AudioChapter({
@@ -392,11 +392,10 @@ class AudioDownloadService {
     // Fall back to a direct read-only query of the SQLite database.
     Database? db;
     try {
-      //databaseFactory = databaseFactoryFfi;
       final dbPath = await _resolveDatabasePath();
       if (dbPath == null || !await File(dbPath).exists()) return;
 
-      db = await databaseFactoryFfi.openDatabase(dbPath);
+      db = await openDatabase(dbPath, readOnly: true);
       for (final id in needsLookup) {
         final rows = await db.rawQuery(
           '''SELECT news.title, news.feedTitle, attachments.newsID,

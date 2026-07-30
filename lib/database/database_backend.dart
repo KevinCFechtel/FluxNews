@@ -8,10 +8,9 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../state_management/flux_news_state.dart';
-import '../miniflux/miniflux_backend.dart';
 import '../models/news_model.dart';
 
 const int _sqliteInChunkSize = 500;
@@ -551,42 +550,6 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
                 'Updated news with id ${news.newsID} in DB', LogLevel.INFO);
           }
         }
-        // check if the feed of the news already contains an icon
-        resultSelect = await appState.db!.rawQuery(
-            'SELECT iconID FROM feeds WHERE feedID = ?', [news.feedID]);
-        if (resultSelect.isEmpty) {
-          if (resultSelect.isNotEmpty) {
-            if (resultSelect.first.entries.isNotEmpty) {
-              news.feedIconID = resultSelect.first.entries.first.value as int?;
-            }
-            if (news.feedIconID != null) {
-              // if the feed doesn't contain a icon, fetch the icon from the miniflux server
-              FeedIcon? icon = await getFeedIcon(appState, news.feedIconID!);
-              if (icon != null) {
-                // if the icon is successfully fetched, insert the icon into the database
-                batch.rawInsert(
-                    'INSERT INTO feeds (feedID, title, iconMimeType, iconID) VALUES(?,?,?,?)',
-                    [
-                      news.feedID,
-                      news.feedTitle,
-                      icon.iconMimeType,
-                      news.feedIconID!
-                    ]);
-
-                // if the feed icon id is null, assign the icon id to the feed
-                await appState.saveFeedIconFile(
-                    news.feedIconID!, icon.getIcon());
-
-                if (appState.debugMode) {
-                  logThis(
-                      'insertNewsInDB',
-                      'Inserted Feed icon for feed with id ${news.feedID} in DB',
-                      LogLevel.INFO);
-                }
-              }
-            }
-          }
-        }
       } else {
         if (appState.debugMode) {
           logThis(
@@ -638,7 +601,7 @@ Future<int> updateStarredNewsInDB(
           FROM news 
           WHERE newsID = ?''', [news.newsID]);
       if (resultSelect.isEmpty) {
-        appState.db!.insert('news', news.toMap());
+        await appState.db!.insert('news', news.toMap());
 
         // insert all attachments (images and audio)
         if (news.attachments != null && news.attachments!.isNotEmpty) {
@@ -648,7 +611,7 @@ Future<int> updateStarredNewsInDB(
                   'SELECT * FROM attachments WHERE attachmentID = ?',
                   [attachment.attachmentID]);
               if (resultSelect.isEmpty) {
-                appState.db!.insert('attachments', attachment.toMap());
+                await appState.db!.insert('attachments', attachment.toMap());
               }
             }
           }
@@ -988,6 +951,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
     } else {
       status = appState.newsStatus;
     }
+    final statusClause =
+        status == FluxNewsState.databaseAllString ? '1 = 1' : 'news.status = ?';
+    final statusParameters =
+        status == FluxNewsState.databaseAllString ? <Object?>[] : [status];
 
     // decide if the sort order is ascending or descending
     String sortOrder = FluxNewsState.databaseDescString;
@@ -1075,10 +1042,10 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.expandedFulltextLimit
                     FROM news 
                     LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-                    WHERE (news.status LIKE ?) 
+                    WHERE $statusClause
                       AND $feedIdClause
                     ORDER BY news.publishedAt $sortOrder''',
-            [status, ...feedParameters]);
+            [...statusParameters, ...feedParameters]);
         newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
       }
     } else {
@@ -1115,9 +1082,9 @@ Future<List<News>> queryNewsFromDB(FluxNewsState appState) async {
                         feeds.expandedFulltextLimit
                 FROM news 
                 LEFT OUTER JOIN feeds ON news.feedID = feeds.feedID
-                WHERE (news.status LIKE ?) 
+                WHERE $statusClause
                 ORDER BY news.publishedAt $sortOrder
-                ''', [status]);
+                ''', statusParameters);
       newList.addAll(queryResult.map((e) => News.fromMap(e)).toList());
     }
 

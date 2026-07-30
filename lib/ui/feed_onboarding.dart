@@ -121,7 +121,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
           title: 'Science News',
           siteUrl: 'https://www.sciencenews.org',
           feedUrl: 'https://www.sciencenews.org/feed',
-          iconAssetPath: 'assets/sciencenews.png',
+          iconAssetPath: 'assets/sciencenews.jpeg',
         ),
         _SuggestedFeed(
           title: 'Spektrum',

@@ -23,6 +23,7 @@ import 'package:flux_news/ui/settings/sync_settings.dart';
 import 'package:flux_news/ui/settings/truncate_settings.dart';
 import 'package:flux_news/ui/settings/widget_settings.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:system_date_time_format/system_date_time_format.dart';
@@ -39,6 +40,13 @@ import 'ui/restore_settings.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initFluxNewsLogging();
+  try {
+    FluxNewsState.applicationVersion =
+        (await PackageInfo.fromPlatform()).version;
+  } catch (error) {
+    _startupLogError(
+        'main', 'Could not read installed application version: $error');
+  }
   await initializeFluxNewsBackgroundSync();
   if (Platform.isAndroid || Platform.isIOS) {
     await _cleanupLogs(logRetentionDays: 7, zipRetentionDays: 1);
@@ -403,12 +411,7 @@ class FluxNews extends StatelessWidget {
         },
         // define localization with english as fallback
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: const [
-          Locale('en', ''),
-          Locale('de', ''),
-          Locale('tr', ''),
-          Locale('nl', ''),
-        ],
+        supportedLocales: AppLocalizations.supportedLocales,
       );
     });
   }

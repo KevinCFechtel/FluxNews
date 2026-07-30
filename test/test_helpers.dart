@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flux_news/database/database_schema.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -100,6 +101,7 @@ Future<Database> createFluxNewsTestDatabase() async {
     attachmentMimeType TEXT,
     mediaProgression INTEGER NOT NULL DEFAULT 0
   )''');
+  await createFluxNewsDatabaseIndexes(database);
   return database;
 }
 

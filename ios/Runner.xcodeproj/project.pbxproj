@@ -486,7 +486,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605224;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 8X9VDP43J9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -694,13 +694,14 @@
 		};
 			AA00000D0000000000000001 /* Debug */ = {
 				isa = XCBuildConfiguration;
+				baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 				buildSettings = {
 					APPLICATION_EXTENSION_API_ONLY = YES;
 					CLANG_ENABLE_MODULES = YES;
 					CODE_SIGN_ENTITLEMENTS = FluxNewsWidgets/FluxNewsWidgets.entitlements;
 					CODE_SIGN_IDENTITY = "Apple Development";
 					CODE_SIGN_STYLE = Automatic;
-					CURRENT_PROJECT_VERSION = 202605224;
+					CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 					DEVELOPMENT_TEAM = 8X9VDP43J9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FluxNewsWidgets/Info.plist;
@@ -710,7 +711,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kevincfechtel.fluxNews.FluxNewsWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -724,13 +725,14 @@
 		};
 		AA00000E0000000000000001 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FluxNewsWidgets/FluxNewsWidgets.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605224;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 8X9VDP43J9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FluxNewsWidgets/Info.plist;
@@ -740,7 +742,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kevincfechtel.fluxNews.FluxNewsWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -753,13 +755,14 @@
 		};
 		AA00000F0000000000000001 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FluxNewsWidgets/FluxNewsWidgets.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605224;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 8X9VDP43J9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FluxNewsWidgets/Info.plist;
@@ -769,7 +772,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kevincfechtel.fluxNews.FluxNewsWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

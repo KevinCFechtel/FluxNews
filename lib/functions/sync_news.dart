@@ -89,7 +89,9 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       });
 
       // fetch only unread news from the miniflux server
+      var newNewsFetchSucceeded = true;
       NewsList newNews = await fetchNews(appState).onError((error, stackTrace) {
+        newNewsFetchSucceeded = false;
         logThis(
             'fetchNews',
             'Caught an error in fetchNews function! : ${error.toString()}',
@@ -105,10 +107,64 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         }
         return NewsList(news: [], newsCount: 0);
       });
-      if (!appState.longSyncAborted && appState.errorString == '') {
-        // if news in this app are marked as unread, but don't exist in the list from
-        // the previous step, this news must be marked as read by another app.
-        // So this step mark news, which are not fetched previous as read in this app.
+      var categoriesFetchSucceeded = false;
+      Categories newCategories = Categories(categories: []);
+      if (newNewsFetchSucceeded &&
+          !appState.longSyncAborted &&
+          appState.errorString == '') {
+        // fetch the categories from the miniflux server
+        newCategories = await fetchCategoryInformation(appState)
+            .onError((error, stackTrace) {
+          logThis(
+              'fetchCategoryInformation',
+              'Caught an error in fetchCategoryInformation function! : ${error.toString()}',
+              LogLevel.ERROR);
+          if (context.mounted) {
+            if (appState.errorString !=
+                AppLocalizations.of(context)!.communicateionMinifluxError) {
+              appState.errorString =
+                  AppLocalizations.of(context)!.communicateionMinifluxError;
+              appState.newError = true;
+              appState.refreshView();
+            }
+          }
+          return Future<Categories>.value(Categories(categories: []));
+        });
+        categoriesFetchSucceeded = appState.errorString == '';
+      }
+
+      var starredNewsFetchSucceeded = false;
+      NewsList starredNews = NewsList(news: [], newsCount: 0);
+      if (newNewsFetchSucceeded &&
+          categoriesFetchSucceeded &&
+          !appState.longSyncAborted &&
+          appState.errorString == '') {
+        starredNews =
+            await fetchStarredNews(appState).onError((error, stackTrace) {
+          logThis(
+              'fetchStarredNews',
+              'Caught an error in fetchStarredNews function! : ${error.toString()}',
+              LogLevel.ERROR);
+          if (context.mounted) {
+            if (appState.errorString !=
+                AppLocalizations.of(context)!.communicateionMinifluxError) {
+              appState.errorString =
+                  AppLocalizations.of(context)!.communicateionMinifluxError;
+              appState.newError = true;
+              appState.refreshView();
+            }
+          }
+          return NewsList(news: [], newsCount: 0);
+        });
+        starredNewsFetchSucceeded = appState.errorString == '';
+      }
+
+      final remoteSnapshotComplete = newNewsFetchSucceeded &&
+          categoriesFetchSucceeded &&
+          starredNewsFetchSucceeded &&
+          appState.errorString == '';
+
+      if (remoteSnapshotComplete && !appState.longSyncAborted) {
         await markNotFetchedNewsAsRead(newNews, appState)
             .onError((error, stackTrace) {
           logThis(
@@ -128,29 +184,9 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         });
       }
 
-      Categories newCategories = Categories(categories: []);
-      if (!appState.longSyncAborted) {
-        // fetch the categories from the miniflux server
-        newCategories = await fetchCategoryInformation(appState)
-            .onError((error, stackTrace) {
-          logThis(
-              'fetchCategoryInformation',
-              'Caught an error in fetchCategoryInformation function! : ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.communicateionMinifluxError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.communicateionMinifluxError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return Future<Categories>.value(Categories(categories: []));
-        });
-      }
-
-      if (!appState.longSyncAborted && appState.errorString == '') {
+      if (remoteSnapshotComplete &&
+          !appState.longSyncAborted &&
+          appState.errorString == '') {
         // insert or update the fetched categories in the database
         await insertCategoriesInDB(newCategories, appState)
             .onError((error, stackTrace) {
@@ -171,7 +207,9 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         });
       }
 
-      if (!appState.longSyncAborted && appState.errorString == '') {
+      if (remoteSnapshotComplete &&
+          !appState.longSyncAborted &&
+          appState.errorString == '') {
         // insert or update the fetched news in the database
         await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
           logThis(
@@ -229,29 +267,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // Moved to the beginning of sync
       //FlutterNativeSplash.remove();
 
-      NewsList starredNews = NewsList(news: [], newsCount: 0);
-      if (!appState.longSyncAborted) {
-        // fetch the starred news (read or unread) from the miniflux server
-        starredNews =
-            await fetchStarredNews(appState).onError((error, stackTrace) {
-          logThis(
-              'fetchStarredNews',
-              'Caught an error in fetchStarredNews function! : ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.communicateionMinifluxError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.communicateionMinifluxError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return NewsList(news: [], newsCount: 0);
-        });
-      }
-
-      if (!appState.longSyncAborted) {
+      if (remoteSnapshotComplete && !appState.longSyncAborted) {
         // update the previous fetched starred news in the database
         // maybe some other app has marked a news a starred
         // also refresh progression cache for starred news (includes read+starred)
@@ -277,7 +293,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
             starredNews.news);
       }
 
-      if (!appState.longSyncAborted) {
+      if (remoteSnapshotComplete && !appState.longSyncAborted) {
         // Sync media progression for downloaded episodes not covered by the
         // regular syncs (i.e. already-read, non-starred downloaded podcasts).
         await _syncDownloadedAudioProgressions(
@@ -290,7 +306,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
             'Error syncing downloaded progression: $e', LogLevel.ERROR));
       }
 
-      if (!appState.longSyncAborted) {
+      if (remoteSnapshotComplete && !appState.longSyncAborted) {
         // delete all unstarred news depending the defined limit in the settings,
         await cleanUnstarredNews(appState).onError((error, stackTrace) {
           logThis(
@@ -309,7 +325,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         });
       }
 
-      if (!appState.longSyncAborted) {
+      if (remoteSnapshotComplete && !appState.longSyncAborted) {
         // delete all starred news depending the defines limit in the settings
         await cleanStarredNews(appState).onError((error, stackTrace) {
           logThis(

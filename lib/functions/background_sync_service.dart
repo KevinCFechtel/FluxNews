@@ -271,18 +271,24 @@ Future<void> runFluxNewsBackgroundSync() async {
 
     logThis('backgroundSync', 'Running Miniflux sync steps', LogLevel.INFO);
     await toggleNewsAsRead(appState);
-    final newNews = await fetchNews(appState).onError((error, stackTrace) {
-      logThis('backgroundSync', 'Fetching news failed: $error', LogLevel.ERROR);
-      return NewsList(news: [], newsCount: 0);
-    });
+    final NewsList newNews;
+    try {
+      newNews = await fetchNews(appState);
+    } catch (error, stackTrace) {
+      logThis(
+          'backgroundSync',
+          'Fetching news failed; aborting before local reconciliation: '
+              '$error\n$stackTrace',
+          LogLevel.ERROR);
+      return;
+    }
     logThis(
         'backgroundSync',
         'Fetched news: count=${newNews.news.length} '
             'reportedCount=${newNews.newsCount}',
         LogLevel.INFO);
-    await markNotFetchedNewsAsRead(newNews, appState);
 
-    Categories categories;
+    final Categories categories;
     try {
       categories = await fetchCategoryInformation(appState);
     } catch (error, stackTrace) {
@@ -297,20 +303,30 @@ Future<void> runFluxNewsBackgroundSync() async {
         'backgroundSync',
         'Fetched categories: count=${categories.categories.length}',
         LogLevel.INFO);
-    await insertCategoriesInDB(categories, appState);
-    await insertNewsInDB(newNews, appState);
-    AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
 
-    final starredNews =
-        await fetchStarredNews(appState).onError((error, stackTrace) {
-      logThis('backgroundSync', 'Fetching starred news failed: $error',
+    final NewsList starredNews;
+    try {
+      starredNews = await fetchStarredNews(appState);
+    } catch (error, stackTrace) {
+      logThis(
+          'backgroundSync',
+          'Fetching starred news failed; aborting before local reconciliation: '
+              '$error\n$stackTrace',
           LogLevel.ERROR);
-      return NewsList(news: [], newsCount: 0);
-    });
+      return;
+    }
     logThis(
         'backgroundSync',
         'Fetched starred news: count=${starredNews.news.length}',
         LogLevel.INFO);
+
+    // Reconcile only after every authoritative server snapshot was fetched.
+    // A transport error must never be interpreted as an empty server list.
+    await markNotFetchedNewsAsRead(newNews, appState);
+    await insertCategoriesInDB(categories, appState);
+    await insertNewsInDB(newNews, appState);
+    AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
+
     await updateStarredNewsInDB(starredNews, appState);
     AudioDownloadService.refreshMediaProgressionCacheFromSync(starredNews.news);
 

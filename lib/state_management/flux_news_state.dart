@@ -7,13 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;
+import 'package:flux_news/database/database_schema.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import '../models/news_model.dart';
@@ -37,7 +38,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // define static const variables to replace text within code
   static const String applicationName = 'Flux News';
-  static const String applicationVersion = '2.2.7';
+  static String applicationVersion = 'unknown';
   static const String applicationLegalese = '\u{a9} 2023 Kevin Fechtel';
   static const String applicationProjectUrl =
       'https://github.com/KevinCFechtel/FluxNews';
@@ -426,7 +427,6 @@ class FluxNewsState extends ChangeNotifier {
   Future<Database> initializeDB() async {
     logThis('initializeDB', 'Starting initializeDB', LogLevel.INFO);
     String databasePath = "/";
-    //databaseFactory = databaseFactoryFfi;
     if (Platform.isIOS) {
       externalDirectory = await getApplicationDocumentsDirectory();
       Directory rootPath = await getLibraryDirectory();
@@ -504,6 +504,7 @@ class FluxNewsState extends ChangeNotifier {
                           attachmentMimeType TEXT,
                           mediaProgression INTEGER NOT NULL DEFAULT 0)''',
         );
+        await createFluxNewsDatabaseIndexes(db);
 
         logThis('initializeDB', 'Finished creating DB', LogLevel.INFO);
       },
@@ -1533,9 +1534,10 @@ class FluxNewsState extends ChangeNotifier {
           await db.execute('ALTER TABLE news ADD COLUMN imageUrl TEXT');
         }
 
+        await createFluxNewsDatabaseIndexes(db);
         logThis('upgradeDB', 'Finished upgrading DB', LogLevel.INFO);
       },
-      version: 11,
+      version: fluxNewsDatabaseVersion,
     );
   }
 
