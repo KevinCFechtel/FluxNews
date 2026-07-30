@@ -7,6 +7,7 @@ import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/sync_lock.dart';
+import 'package:flux_news/functions/sync_pipeline.dart';
 import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -271,63 +272,50 @@ Future<void> runFluxNewsBackgroundSync() async {
 
     logThis('backgroundSync', 'Running Miniflux sync steps', LogLevel.INFO);
     await toggleNewsAsRead(appState);
-    final NewsList newNews;
+    final RemoteSyncSnapshot remoteSnapshot;
     try {
-      newNews = await fetchNews(appState);
-    } catch (error, stackTrace) {
+      remoteSnapshot = await fetchRemoteSyncSnapshot(appState);
+    } on RemoteSyncAbortedException {
+      logThis('backgroundSync', 'Remote sync snapshot fetch was aborted',
+          LogLevel.INFO);
+      return;
+    } on RemoteSyncFetchException catch (error) {
       logThis(
           'backgroundSync',
-          'Fetching news failed; aborting before local reconciliation: '
-              '$error\n$stackTrace',
+          'Fetching complete remote snapshot failed at ${error.stage.name}; '
+              'aborting before local reconciliation: '
+              '${error.error}\n${error.stackTrace}',
           LogLevel.ERROR);
       return;
     }
+    final newNews = remoteSnapshot.news;
+    final categories = remoteSnapshot.categories;
+    final starredNews = remoteSnapshot.starredNews;
     logThis(
         'backgroundSync',
         'Fetched news: count=${newNews.news.length} '
             'reportedCount=${newNews.newsCount}',
         LogLevel.INFO);
-
-    final Categories categories;
-    try {
-      categories = await fetchCategoryInformation(appState);
-    } catch (error, stackTrace) {
-      logThis(
-          'backgroundSync',
-          'Fetching categories failed; aborting background sync before local feed/category cleanup: '
-              '$error\n$stackTrace',
-          LogLevel.ERROR);
-      return;
-    }
     logThis(
         'backgroundSync',
         'Fetched categories: count=${categories.categories.length}',
         LogLevel.INFO);
-
-    final NewsList starredNews;
-    try {
-      starredNews = await fetchStarredNews(appState);
-    } catch (error, stackTrace) {
-      logThis(
-          'backgroundSync',
-          'Fetching starred news failed; aborting before local reconciliation: '
-              '$error\n$stackTrace',
-          LogLevel.ERROR);
-      return;
-    }
     logThis(
         'backgroundSync',
         'Fetched starred news: count=${starredNews.news.length}',
         LogLevel.INFO);
 
-    // Reconcile only after every authoritative server snapshot was fetched.
-    // A transport error must never be interpreted as an empty server list.
-    await markNotFetchedNewsAsRead(newNews, appState);
-    await insertCategoriesInDB(categories, appState);
-    await insertNewsInDB(newNews, appState);
+    try {
+      await reconcileRemoteSyncSnapshot(remoteSnapshot, appState);
+    } on LocalSyncReconciliationException catch (error) {
+      logThis(
+          'backgroundSync',
+          'Local reconciliation failed at ${error.stage.name}: '
+              '${error.error}\n${error.stackTrace}',
+          LogLevel.ERROR);
+      Error.throwWithStackTrace(error, error.stackTrace);
+    }
     AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
-
-    await updateStarredNewsInDB(starredNews, appState);
     AudioDownloadService.refreshMediaProgressionCacheFromSync(starredNews.news);
 
     await cleanUnstarredNews(appState);

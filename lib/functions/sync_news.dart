@@ -7,6 +7,7 @@ import 'package:flux_news/functions/audio_progress_store.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/sync_lock.dart';
+import 'package:flux_news/functions/sync_pipeline.dart';
 import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
@@ -88,88 +89,47 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         }
       });
 
-      // fetch only unread news from the miniflux server
-      var newNewsFetchSucceeded = true;
-      NewsList newNews = await fetchNews(appState).onError((error, stackTrace) {
-        newNewsFetchSucceeded = false;
-        logThis(
-            'fetchNews',
-            'Caught an error in fetchNews function! : ${error.toString()}',
-            LogLevel.ERROR);
-        if (context.mounted) {
-          if (appState.errorString !=
-              AppLocalizations.of(context)!.communicateionMinifluxError) {
-            appState.errorString =
-                AppLocalizations.of(context)!.communicateionMinifluxError;
-            appState.newError = true;
-            appState.refreshView();
+      RemoteSyncSnapshot? remoteSnapshot;
+      if (appState.errorString == '') {
+        try {
+          remoteSnapshot = await fetchRemoteSyncSnapshot(appState);
+        } on RemoteSyncAbortedException {
+          logThis('syncNews', 'Remote sync snapshot fetch was aborted',
+              LogLevel.INFO);
+        } on RemoteSyncFetchException catch (error) {
+          logThis(
+              'syncNews',
+              'Could not fetch complete remote snapshot at '
+                  '${error.stage.name}: ${error.error}',
+              LogLevel.ERROR);
+          if (context.mounted) {
+            if (appState.errorString !=
+                AppLocalizations.of(context)!.communicateionMinifluxError) {
+              appState.errorString =
+                  AppLocalizations.of(context)!.communicateionMinifluxError;
+              appState.newError = true;
+              appState.refreshView();
+            }
           }
         }
-        return NewsList(news: [], newsCount: 0);
-      });
-      var categoriesFetchSucceeded = false;
-      Categories newCategories = Categories(categories: []);
-      if (newNewsFetchSucceeded &&
-          !appState.longSyncAborted &&
-          appState.errorString == '') {
-        // fetch the categories from the miniflux server
-        newCategories = await fetchCategoryInformation(appState)
-            .onError((error, stackTrace) {
-          logThis(
-              'fetchCategoryInformation',
-              'Caught an error in fetchCategoryInformation function! : ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.communicateionMinifluxError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.communicateionMinifluxError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return Future<Categories>.value(Categories(categories: []));
-        });
-        categoriesFetchSucceeded = appState.errorString == '';
       }
 
-      var starredNewsFetchSucceeded = false;
-      NewsList starredNews = NewsList(news: [], newsCount: 0);
-      if (newNewsFetchSucceeded &&
-          categoriesFetchSucceeded &&
+      final newNews = remoteSnapshot?.news ?? NewsList(news: [], newsCount: 0);
+      final starredNews =
+          remoteSnapshot?.starredNews ?? NewsList(news: [], newsCount: 0);
+      var reconciliationSucceeded = false;
+
+      if (remoteSnapshot != null &&
           !appState.longSyncAborted &&
           appState.errorString == '') {
-        starredNews =
-            await fetchStarredNews(appState).onError((error, stackTrace) {
+        try {
+          await reconcileRemoteSyncSnapshot(remoteSnapshot, appState);
+          reconciliationSucceeded = true;
+        } on LocalSyncReconciliationException catch (error) {
           logThis(
-              'fetchStarredNews',
-              'Caught an error in fetchStarredNews function! : ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.communicateionMinifluxError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.communicateionMinifluxError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return NewsList(news: [], newsCount: 0);
-        });
-        starredNewsFetchSucceeded = appState.errorString == '';
-      }
-
-      final remoteSnapshotComplete = newNewsFetchSucceeded &&
-          categoriesFetchSucceeded &&
-          starredNewsFetchSucceeded &&
-          appState.errorString == '';
-
-      if (remoteSnapshotComplete && !appState.longSyncAborted) {
-        await markNotFetchedNewsAsRead(newNews, appState)
-            .onError((error, stackTrace) {
-          logThis(
-              'markNotFetchedNewsAsRead',
-              'Caught an error in markNotFetchedNewsAsRead function! : ${error.toString()}',
+              'syncNews',
+              'Could not reconcile remote snapshot at '
+                  '${error.stage.name}: ${error.error}',
               LogLevel.ERROR);
           if (context.mounted) {
             if (appState.errorString !=
@@ -180,57 +140,15 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
               appState.refreshView();
             }
           }
-          return 0;
-        });
+        }
       }
 
-      if (remoteSnapshotComplete &&
-          !appState.longSyncAborted &&
-          appState.errorString == '') {
-        // insert or update the fetched categories in the database
-        await insertCategoriesInDB(newCategories, appState)
-            .onError((error, stackTrace) {
-          logThis(
-              'insertCategoriesInDB',
-              'Caught an error in insertCategoriesInDB function! : ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.databaseError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return 0;
-        });
-      }
-
-      if (remoteSnapshotComplete &&
-          !appState.longSyncAborted &&
-          appState.errorString == '') {
-        // insert or update the fetched news in the database
-        await insertNewsInDB(newNews, appState).onError((error, stackTrace) {
-          logThis(
-              'insertNewsInDB',
-              'Caught an error in insertNewsInDB function! : ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.databaseError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return 0;
-        });
-
+      if (reconciliationSucceeded) {
         // Refresh the in-memory mediaProgression cache so CarPlay / Android Auto
         // pick up the server's latest position on the next playback without a DB query.
         AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
+        AudioDownloadService.refreshMediaProgressionCacheFromSync(
+            starredNews.news);
 
         if (appState.autoDownloadAudioAfterSync) {
           unawaited(AudioDownloadService.downloadAudioForNewsList(
@@ -267,33 +185,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
       // Moved to the beginning of sync
       //FlutterNativeSplash.remove();
 
-      if (remoteSnapshotComplete && !appState.longSyncAborted) {
-        // update the previous fetched starred news in the database
-        // maybe some other app has marked a news a starred
-        // also refresh progression cache for starred news (includes read+starred)
-        await updateStarredNewsInDB(starredNews, appState)
-            .onError((error, stackTrace) {
-          logThis(
-              'updateStarredNewsInDB',
-              'Caught an error in updateStarredNewsInDB function! ${error.toString()}',
-              LogLevel.ERROR);
-          if (context.mounted) {
-            if (appState.errorString !=
-                AppLocalizations.of(context)!.databaseError) {
-              appState.errorString =
-                  AppLocalizations.of(context)!.databaseError;
-              appState.newError = true;
-              appState.refreshView();
-            }
-          }
-          return 0;
-        });
-        // Refresh progression cache for starred (read or unread) news.
-        AudioDownloadService.refreshMediaProgressionCacheFromSync(
-            starredNews.news);
-      }
-
-      if (remoteSnapshotComplete && !appState.longSyncAborted) {
+      if (reconciliationSucceeded && !appState.longSyncAborted) {
         // Sync media progression for downloaded episodes not covered by the
         // regular syncs (i.e. already-read, non-starred downloaded podcasts).
         await _syncDownloadedAudioProgressions(
@@ -306,7 +198,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
             'Error syncing downloaded progression: $e', LogLevel.ERROR));
       }
 
-      if (remoteSnapshotComplete && !appState.longSyncAborted) {
+      if (reconciliationSucceeded && !appState.longSyncAborted) {
         // delete all unstarred news depending the defined limit in the settings,
         await cleanUnstarredNews(appState).onError((error, stackTrace) {
           logThis(
@@ -325,7 +217,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         });
       }
 
-      if (remoteSnapshotComplete && !appState.longSyncAborted) {
+      if (reconciliationSucceeded && !appState.longSyncAborted) {
         // delete all starred news depending the defines limit in the settings
         await cleanStarredNews(appState).onError((error, stackTrace) {
           logThis(
