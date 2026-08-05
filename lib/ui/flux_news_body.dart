@@ -1118,7 +1118,20 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       appState.refreshView();
       return;
     }
-    await syncNews(appState, context);
+    await syncNews(
+      appState,
+      context,
+      onSuccessfulListReset: _revealExpandedTitleAfterSync,
+    );
+  }
+
+  void _revealExpandedTitleAfterSync() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final scrollController = _largeTitleController.scrollController;
+      if (!scrollController.hasClients) return;
+      scrollController.jumpTo(scrollController.position.minScrollExtent);
+    });
   }
 
   Future<void> _refreshList(FluxNewsState appState) async {
@@ -2444,7 +2457,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
     // reload the news list with the new filter
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _resetListAfterNavigationSelection(appState);
     });
     // set the category title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -2470,7 +2483,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.allNewsElementType;
     // reload the news list with the new filter (empty)
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _resetListAfterNavigationSelection(appState);
     });
     // set the "All News" title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -2502,7 +2515,7 @@ class CategoryList extends StatelessWidget {
         FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _resetListAfterNavigationSelection(appState);
     });
     // set the "Bookmarked" title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -2572,7 +2585,7 @@ class FeedTile extends StatelessWidget {
                   // reload the news list with the new filter
                   appState.newsList =
                       queryNewsFromDB(appState).whenComplete(() {
-                    appState.jumpToItem(0);
+                    _resetListAfterNavigationSelection(appState);
                   });
                   // set the feed title as app bar title
                   // and update the news count in the app bar, if the function is activated.
@@ -2622,7 +2635,7 @@ class FeedTile extends StatelessWidget {
                   FluxNewsState.feedElementType;
               // reload the news list with the new filter
               appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                appState.jumpToItem(0);
+                _resetListAfterNavigationSelection(appState);
               });
               // set the feed title as app bar title
               // and update the news count in the app bar, if the function is activated.
@@ -2640,6 +2653,23 @@ class FeedTile extends StatelessWidget {
             },
           );
   }
+}
+
+void _resetListAfterNavigationSelection(FluxNewsState appState) {
+  if (!Platform.isIOS) {
+    appState.jumpToItem(0);
+    return;
+  }
+
+  // Wait until the newly selected list has replaced the previous sliver.
+  // On iOS the state's controller is the shared GlassLargeTitleController,
+  // so its minimum extent reveals the complete large title before the first
+  // card instead of aligning that card beneath the collapsed title.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final scrollController = appState.scrollController;
+    if (!scrollController.hasClients) return;
+    scrollController.jumpTo(scrollController.position.minScrollExtent);
+  });
 }
 
 class FluxNewsBodyStatefulWrapper extends StatefulWidget {

@@ -14,7 +14,11 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 
-Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
+Future<void> syncNews(
+  FluxNewsState appState,
+  BuildContext context, {
+  VoidCallback? onSuccessfulListReset,
+}) async {
   final syncLock = await FluxNewsSyncLock.tryAcquire('foreground');
   if (syncLock == null) {
     appState.syncProcess = false;
@@ -119,6 +123,14 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
           remoteSnapshot?.starredNews ?? NewsList(news: [], newsCount: 0);
       var reconciliationSucceeded = false;
 
+      void resetListPosition() {
+        if (reconciliationSucceeded && onSuccessfulListReset != null) {
+          onSuccessfulListReset();
+        } else {
+          appState.jumpToItem(0);
+        }
+      }
+
       if (remoteSnapshot != null &&
           !appState.longSyncAborted &&
           appState.errorString == '') {
@@ -164,7 +176,7 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
         appState.storage.write(
             key: FluxNewsState.secureStorageSavedScrollPositionKey, value: '0');
         appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-          appState.jumpToItem(0);
+          resetListPosition();
         });
       }
 
@@ -269,14 +281,14 @@ Future<void> syncNews(FluxNewsState appState, BuildContext context) async {
           if (newNews.newsCount > 0 && appState.feedIDs == null) {
             // if new news exists and the "All News" category is selected,
             // set the list view position to the top
-            appState.jumpToItem(0);
+            resetListPosition();
           } else if (starredNews.newsCount > 0 && appState.feedIDs != null) {
             if (appState.feedIDs != null &&
                 appState.feedIDs!.isNotEmpty &&
                 appState.feedIDs?.first == -1) {
               // if new news exists and the "Bookmarked" category is selected,
               // set the list view position to the top
-              appState.jumpToItem(0);
+              resetListPosition();
             }
           }
         });
