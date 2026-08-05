@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/background_sync_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -34,18 +36,12 @@ class SyncSettings extends StatelessWidget {
     }
   }
 
-  Scaffold syncSettingsLayout(BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.syncSettings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsSyncSettingsBody());
+  Widget syncSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.syncSettings,
+      useLargeTitle: true,
+      body: const FluxNewsSyncSettingsBody(),
+    );
   }
 }
 
@@ -114,7 +110,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<int>(
+                  AdaptiveSettingsDropdown<int>(
                     value: appState.amountOfSavedNews,
                     elevation: 16,
                     underline: Container(
@@ -160,7 +156,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<int>(
+                  AdaptiveSettingsDropdown<int>(
                     value: appState.amountOfSavedStarredNews,
                     elevation: 16,
                     underline: Container(
@@ -206,7 +202,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<KeyValueRecordType>(
+                  AdaptiveSettingsDropdown<KeyValueRecordType>(
                     value: appState.amontOfSyncedNewsSelection,
                     elevation: 16,
                     underline: Container(
@@ -256,7 +252,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<KeyValueRecordType>(
+                  AdaptiveSettingsDropdown<KeyValueRecordType>(
                     value: appState.amontOfSearchedNewsSelection,
                     elevation: 16,
                     underline: Container(
@@ -304,7 +300,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.backgroundSyncIntervalMinutes > 0,
                     onChanged: (bool value) async {
                       final interval = value
@@ -340,7 +336,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.syncReadNews,
                     onChanged: (bool value) {
                       String stringValue =
@@ -376,7 +372,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.syncReadNewsAfterDaysSelection,
                           elevation: 16,
                           underline: Container(
@@ -426,7 +422,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.autoDownloadAudioAfterSync,
                     onChanged: (bool value) {
                       String stringValue =
@@ -461,7 +457,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<int>(
+                  AdaptiveSettingsDropdown<int>(
                     value: appState.audioDownloadRetentionDays,
                     elevation: 16,
                     underline: Container(
@@ -505,7 +501,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.downloadAudioOnlyOnWifi,
                     onChanged: (bool value) {
                       String stringValue =
@@ -541,7 +537,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.deleteAudioAfterPlayback,
                     onChanged: (bool value) {
                       String stringValue =
@@ -577,7 +573,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.skipLongSync,
                     onChanged: (bool value) {
                       String stringValue =
@@ -611,7 +607,7 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.syncReadStatusImmediately,
                     onChanged: (bool value) {
                       String stringValue =

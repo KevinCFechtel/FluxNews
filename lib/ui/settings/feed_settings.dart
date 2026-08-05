@@ -5,6 +5,8 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:flux_news/ui/settings/feed_settings_list.dart';
 import 'package:provider/provider.dart';
 
@@ -37,25 +39,33 @@ class FeedSettings extends StatelessWidget {
     }
   }
 
-  Scaffold feedSettingsLayout(BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.feedSettings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsFeedSettingsBody());
+  Widget feedSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.feedSettings,
+      useLargeTitle: true,
+      body: const FluxNewsFeedSettingsBody(),
+    );
   }
 }
 
-class FluxNewsFeedSettingsBody extends StatelessWidget {
+class FluxNewsFeedSettingsBody extends StatefulWidget {
   const FluxNewsFeedSettingsBody({
     super.key,
   });
+
+  @override
+  State<FluxNewsFeedSettingsBody> createState() =>
+      _FluxNewsFeedSettingsBodyState();
+}
+
+class _FluxNewsFeedSettingsBodyState extends State<FluxNewsFeedSettingsBody> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +74,8 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
     return Column(children: [
       Padding(
         padding: EdgeInsets.only(left: 10, right: 10),
-        child: TextField(
-          controller: appState.searchController,
+        child: AdaptiveSettingsTextField(
+          controller: _searchController,
           style: Theme.of(context).textTheme.bodyLarge,
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context)!.searchHint,
@@ -74,7 +84,7 @@ class FluxNewsFeedSettingsBody extends StatelessWidget {
                 UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
             suffixIcon: IconButton(
               onPressed: () {
-                appState.searchController.clear();
+                _searchController.clear();
                 appState.feedSettingsList =
                     queryFeedsFromDB(appState, context, '');
                 appState.refreshView();

@@ -18,7 +18,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:flux_news/ui/settings/download_storage_settings.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../state_management/flux_news_state.dart';
@@ -35,665 +39,610 @@ class Settings extends StatelessWidget {
       initConfig(context);
     }, child: OrientationBuilder(builder: (context, orientation) {
       appState.orientation = orientation;
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the settings page to the localized settings string
-          title: Text(AppLocalizations.of(context)!.settings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // set the body of the settings page
-        body: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            alignment: Alignment.center,
-            // this is the main column of the settings page
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // the first row contains the headline of the settings for the miniflux server
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(AppLocalizations.of(context)!.minifluxSettings,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.normal,
-                        )),
-                  ],
+      final overviewContent = Container(
+        padding: const EdgeInsets.all(12),
+        alignment: Alignment.center,
+        // this is the main column of the settings page
+        child: _AdaptiveSettingsOverviewContent(
+          children: [
+            // the first row contains the headline of the settings for the miniflux server
+            _SettingsSectionHeader(
+              title: AppLocalizations.of(context)!.minifluxSettings,
+            ),
+            // this list tile contains the url of the miniflux server
+            // it is clickable and opens a dialog to edit the url
+            ListTile(
+              leading: const Icon(
+                Icons.link,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  '${AppLocalizations.of(context)!.apiUrl}: ${appState.minifluxURL ?? ''}',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                // this list tile contains the url of the miniflux server
-                // it is clickable and opens a dialog to edit the url
-                ListTile(
-                  leading: const Icon(
-                    Icons.link,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      '${AppLocalizations.of(context)!.apiUrl}: ${appState.minifluxURL ?? ''}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    _showURLEditDialog(context, appState);
-                  },
+              ),
+              onTap: () {
+                _showURLEditDialog(context, appState);
+              },
+            ),
+            const Divider(),
+            // this list tile contains the api key of the miniflux server
+            // it is clickable and opens a dialog to edit the api key
+            ListTile(
+              leading: const Icon(
+                Icons.api,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  '${AppLocalizations.of(context)!.apiKey}: ${appState.minifluxAPIKey != null ? '******************' : ''}',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
-                // this list tile contains the api key of the miniflux server
-                // it is clickable and opens a dialog to edit the api key
-                ListTile(
-                  leading: const Icon(
-                    Icons.api,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      '${AppLocalizations.of(context)!.apiKey}: ${appState.minifluxAPIKey != null ? '******************' : ''}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    _showApiKeyEditDialog(context, appState);
-                  },
+              ),
+              onTap: () {
+                _showApiKeyEditDialog(context, appState);
+              },
+            ),
+            const Divider(),
+            // this list tile contains sync settings
+            // it is clickable and opens the sync settings
+            ListTile(
+              leading: const Icon(
+                Icons.code,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.headerSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
-                // this list tile contains sync settings
-                // it is clickable and opens the sync settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.code,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.headerSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(
-                        context, FluxNewsState.headerSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+              ),
+              onTap: () {
+                // navigate to the search page
+                Navigator.pushNamed(
+                    context, FluxNewsState.headerSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(
+                Icons.numbers,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(
-                    Icons.numbers,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      '${AppLocalizations.of(context)!.minifluxVersion}: ${appState.minifluxVersionString ?? ''}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                ),
-                // it there is an error on the authentication of the miniflux server
-                // there is shown a error message
-                appState.errorOnMinifluxAuth
-                    ? appState.minifluxAPIKey != null
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 10, bottom: 10),
-                            child: Text(
-                              AppLocalizations.of(context)!.authError,
-                              style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          )
-                        : const SizedBox.shrink()
-                    : const SizedBox.shrink(),
-                appState.insecureMinifluxURL
+              ),
+            ),
+            // it there is an error on the authentication of the miniflux server
+            // there is shown a error message
+            appState.errorOnMinifluxAuth
+                ? appState.minifluxAPIKey != null
                     ? Padding(
                         padding: const EdgeInsets.only(top: 10, bottom: 10),
                         child: Text(
-                          AppLocalizations.of(context)!.insecureMinifluxURL,
+                          AppLocalizations.of(context)!.authError,
                           style: const TextStyle(
                               color: Colors.red,
-                              fontSize: 15,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold),
                         ),
                       )
-                    : const SizedBox.shrink(),
-                const Divider(),
-                // this list tile contains general settings
-                // it is clickable and opens the general settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.settings_applications,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    : const SizedBox.shrink()
+                : const SizedBox.shrink(),
+            appState.insecureMinifluxURL
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 10),
                     child: Text(
-                      AppLocalizations.of(context)!.generalSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      AppLocalizations.of(context)!.insecureMinifluxURL,
+                      style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(
-                        context, FluxNewsState.generalSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+                  )
+                : const SizedBox.shrink(),
+            const Divider(),
+            _SettingsSectionHeader(
+              title: AppLocalizations.of(context)!.settings,
+              showOnAndroid: false,
+            ),
+            // this list tile contains general settings
+            // it is clickable and opens the general settings
+            ListTile(
+              leading: const Icon(
+                Icons.settings_applications,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.generalSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
+              ),
+              onTap: () {
+                // navigate to the search page
+                Navigator.pushNamed(
+                    context, FluxNewsState.generalSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
+            const Divider(),
 
-                // this list tile contains sync settings
-                // it is clickable and opens the sync settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.sync,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.syncSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(
-                        context, FluxNewsState.syncSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+            // this list tile contains sync settings
+            // it is clickable and opens the sync settings
+            ListTile(
+              leading: const Icon(
+                Icons.sync,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.syncSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
-                // this list tile contains news item settings
-                // it is clickable and opens the news item settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.article,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.newsItemSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(
-                        context, FluxNewsState.newsItemSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+              ),
+              onTap: () {
+                // navigate to the search page
+                Navigator.pushNamed(
+                    context, FluxNewsState.syncSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
+            const Divider(),
+            // this list tile contains news item settings
+            // it is clickable and opens the news item settings
+            ListTile(
+              leading: const Icon(
+                Icons.article,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.newsItemSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
+              ),
+              onTap: () {
+                // navigate to the search page
+                Navigator.pushNamed(
+                    context, FluxNewsState.newsItemSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
+            const Divider(),
 
-                // this list tile contains feed settings
-                // it is clickable and opens the feed settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.feed,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.feedSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(
-                        context, FluxNewsState.feedSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+            // this list tile contains feed settings
+            // it is clickable and opens the feed settings
+            ListTile(
+              leading: const Icon(
+                Icons.feed,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.feedSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Divider(),
+              ),
+              onTap: () {
+                // navigate to the search page
+                Navigator.pushNamed(
+                    context, FluxNewsState.feedSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
+            const Divider(),
 
-                // this list tile contains truncate settings
-                // it is clickable and opens the truncate settings
-                ListTile(
-                  leading: const Icon(
-                    Icons.cut_outlined,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.truncateMode,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    // navigate to the search page
-                    Navigator.pushNamed(
-                        context, FluxNewsState.truncateSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+            // this list tile contains truncate settings
+            // it is clickable and opens the truncate settings
+            ListTile(
+              leading: const Icon(
+                Icons.cut_outlined,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.truncateMode,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
+              ),
+              onTap: () {
+                // navigate to the search page
+                Navigator.pushNamed(
+                    context, FluxNewsState.truncateSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
 
-                const Divider(),
-                ListTile(
-                  leading: const Icon(
-                    Icons.storage_rounded,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.downloadedData,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.downloadsManagerClearAll,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (context) => const DownloadStorageSettings(),
-                      ),
-                    );
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(
+                Icons.storage_rounded,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.downloadedData,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-
-                const Divider(),
-                ListTile(
-                  leading: const Icon(
-                    Icons.widgets_outlined,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.widgetSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pushNamed(
-                        context, FluxNewsState.widgetSettingsRouteString);
-                  },
-                  trailing: const Icon(
-                    Icons.arrow_right,
-                  ),
+              ),
+              subtitle: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.downloadsManagerClearAll,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const DownloadStorageSettings(),
+                  ),
+                );
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
 
-                const Divider(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+            const Divider(),
+            ListTile(
+              leading: const Icon(
+                Icons.widgets_outlined,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.widgetSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              onTap: () {
+                Navigator.pushNamed(
+                    context, FluxNewsState.widgetSettingsRouteString);
+              },
+              trailing: const Icon(
+                Icons.arrow_right,
+              ),
+            ),
+
+            const Divider(),
+            _SettingsSectionHeader(
+              title: AppLocalizations.of(context)!.debugSettings,
+              topPadding: 12,
+            ),
+            // this row contains the selection if the debug mode is turned on
+            _AdaptiveSettingsSwitchRow(
+              icon: Icons.developer_mode,
+              title: AppLocalizations.of(context)!.debugModeTextSettings,
+              value: appState.debugMode,
+              onChanged: (bool value) {
+                String stringValue = FluxNewsState.secureStorageFalseString;
+                if (value == true) {
+                  stringValue = FluxNewsState.secureStorageTrueString;
+                }
+                appState.debugMode = value;
+                appState.storage.write(
+                    key: FluxNewsState.secureStorageDebugModeKey,
+                    value: stringValue);
+                if (Platform.isIOS) {
+                  FluxNewsCarPlayService.setDebugMode(value);
+                }
+                FluxNewsAudioHandler.setDebugMode(value);
+                appState.refreshView();
+              },
+            ),
+            const Divider(),
+            // clear logs on start toggle
+            _AdaptiveSettingsSwitchRow(
+              icon: Icons.delete_sweep,
+              title: AppLocalizations.of(context)!.clearLogsOnStart,
+              value: appState.clearLogsOnStart,
+              onChanged: (bool value) {
+                appState.clearLogsOnStart = value;
+                appState.storage.write(
+                  key: FluxNewsState.secureStorageClearLogsOnStartKey,
+                  value: value
+                      ? FluxNewsState.secureStorageTrueString
+                      : FluxNewsState.secureStorageFalseString,
+                );
+                appState.refreshView();
+              },
+            ),
+            const Divider(),
+            // Log viewer
+            ListTile(
+              leading: const Icon(Icons.list_alt),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.showLogs,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const LogViewerScreen(),
+                  ),
+                );
+              },
+              trailing: const Icon(Icons.arrow_right),
+            ),
+            const Divider(),
+            // this list tile contains the ability to export the collected logs
+            ListTile(
+              leading: const Icon(
+                Icons.import_export,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.exportLogs,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              onTap: () async {
+                if (Platform.isAndroid || Platform.isIOS) {
+                  await exportLogs(context);
+                }
+              },
+            ),
+            const Divider(),
+            _SettingsSectionHeader(
+              title: AppLocalizations.of(context)!.backupSettings,
+              showOnAndroid: false,
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.backup,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.backupSettings,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              subtitle: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.backupSettingsDescription,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              onTap: () {
+                exportSettingsBackup(context, appState);
+              },
+            ),
+            if (Platform.isAndroid) const Divider(),
+            if (Platform.isAndroid)
+              FutureBuilder<bool>(
+                future: SettingsBackupService.readAndroidAutoBackupEnabled(
+                    appState),
+                builder: (context, snapshot) {
+                  final enabled = snapshot.data ?? false;
+                  return Column(
                     children: [
-                      Text(AppLocalizations.of(context)!.debugSettings,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.normal,
-                          )),
+                      ListTile(
+                        leading: const Icon(Icons.cloud_upload_outlined),
+                        title: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .includeSettingsInAndroidBackup,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .includeSettingsInAndroidBackupDescription,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                        trailing: AdaptiveSettingsSwitch(
+                          value: enabled,
+                          onChanged: snapshot.connectionState ==
+                                  ConnectionState.waiting
+                              ? null
+                              : (value) => _setAndroidAutoBackupEnabled(
+                                    context,
+                                    appState,
+                                    value,
+                                  ),
+                        ),
+                      ),
+                      if (enabled)
+                        FutureBuilder<AndroidAutoBackupFileStatus>(
+                          future: SettingsBackupService
+                              .readAndroidAutoBackupFileStatus(),
+                          builder: (context, statusSnapshot) {
+                            final status = statusSnapshot.data;
+                            final hasFile = status?.exists == true;
+                            final subtitle = hasFile && status?.modified != null
+                                ? '${AppLocalizations.of(context)!.lastChange}: '
+                                    '${appState.dateFormat.format(status!.modified!.toLocal())}'
+                                : AppLocalizations.of(context)!
+                                    .androidAutoBackupFileMissing;
+                            return ListTile(
+                              leading: const Icon(Icons.check_circle_outline),
+                              title: Padding(
+                                padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                child: Text(
+                                  hasFile
+                                      ? AppLocalizations.of(context)!
+                                          .androidAutoBackupSuccessful
+                                      : AppLocalizations.of(context)!
+                                          .androidAutoBackupNotCreated,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                child: Text(
+                                  subtitle,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  );
+                },
+              ),
+            const Divider(),
+            // this list tile delete the local news database
+            ListTile(
+              leading: const Icon(
+                Icons.delete_forever,
+                color: Colors.red,
+              ),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.deleteLocalCache,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(color: Colors.red),
+                ),
+              ),
+              onTap: () {
+                _showDeleteLocalCacheDialog(context, appState);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const FaIcon(FontAwesomeIcons.github),
+              title: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: Text(
+                  AppLocalizations.of(context)!.openSource,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              onTap: () async {
+                if (Platform.isAndroid) {
+                  AndroidUrlLauncher.launchUrl(
+                      context, FluxNewsState.applicationProjectUrl);
+                } else {
+                  // catch exception if no app is installed to handle the url
+                  final bool nativeAppLaunchSucceeded = await launchUrl(
+                    Uri.parse(FluxNewsState.applicationProjectUrl),
+                    mode: LaunchMode.externalNonBrowserApplication,
+                  );
+                  //if exception is caught, open the app in web-view
+                  if (!nativeAppLaunchSucceeded) {
+                    await launchUrl(
+                      Uri.parse(FluxNewsState.applicationProjectUrl),
+                      mode: LaunchMode.inAppWebView,
+                    );
+                  }
+                }
+              },
+              trailing: const Icon(Icons.open_in_new),
+            ),
+            const Divider(),
+            // this list tile contains the about dialog
+            AboutListTile(
+              icon: Padding(
+                padding: Platform.isAndroid
+                    ? const EdgeInsets.fromLTRB(0, 0, 15, 0)
+                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                child: const Icon(Icons.info),
+              ),
+              applicationIcon: const FaIcon(
+                FontAwesomeIcons.bookOpen,
+              ),
+              applicationName: FluxNewsState.applicationName,
+              applicationVersion: FluxNewsState.applicationVersion,
+              applicationLegalese: FluxNewsState.applicationLegalese,
+              aboutBoxChildren: [
+                const SizedBox(height: 24),
+                RichText(
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: AppLocalizations.of(context)!
+                              .descriptionMinifluxApp),
+                      const TextSpan(
+                          text: '${FluxNewsState.miniFluxProjectUrl}\n'),
+                      TextSpan(
+                          text: AppLocalizations.of(context)!
+                              .descriptionMoreInformation),
+                      const TextSpan(
+                          text: ' ${FluxNewsState.applicationProjectUrl}'),
                     ],
                   ),
                 ),
-                // this row contains the selection if the debug mode is turned on
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(
-                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(
-                        Icons.developer_mode,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.debugModeTextSettings,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.debugMode,
-                      onChanged: (bool value) {
-                        String stringValue =
-                            FluxNewsState.secureStorageFalseString;
-                        if (value == true) {
-                          stringValue = FluxNewsState.secureStorageTrueString;
-                        }
-                        appState.debugMode = value;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageDebugModeKey,
-                            value: stringValue);
-                        if (Platform.isIOS) {
-                          FluxNewsCarPlayService.setDebugMode(value);
-                        }
-                        FluxNewsAudioHandler.setDebugMode(value);
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // clear logs on start toggle
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(
-                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                      child: const Icon(Icons.delete_sweep),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.clearLogsOnStart,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: appState.clearLogsOnStart,
-                      onChanged: (bool value) {
-                        appState.clearLogsOnStart = value;
-                        appState.storage.write(
-                          key: FluxNewsState.secureStorageClearLogsOnStartKey,
-                          value: value
-                              ? FluxNewsState.secureStorageTrueString
-                              : FluxNewsState.secureStorageFalseString,
-                        );
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                // Log viewer
-                ListTile(
-                  leading: const Icon(Icons.list_alt),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.showLogs,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const LogViewerScreen(),
-                      ),
-                    );
-                  },
-                  trailing: const Icon(Icons.arrow_right),
-                ),
-                const Divider(),
-                // this list tile contains the ability to export the collected logs
-                ListTile(
-                  leading: const Icon(
-                    Icons.import_export,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.exportLogs,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () async {
-                    if (Platform.isAndroid || Platform.isIOS) {
-                      await exportLogs(context);
-                    }
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(
-                    Icons.backup,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.backupSettings,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.backupSettingsDescription,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                  onTap: () {
-                    exportSettingsBackup(context, appState);
-                  },
-                ),
-                if (Platform.isAndroid) const Divider(),
-                if (Platform.isAndroid)
-                  FutureBuilder<bool>(
-                    future: SettingsBackupService.readAndroidAutoBackupEnabled(
-                        appState),
-                    builder: (context, snapshot) {
-                      final enabled = snapshot.data ?? false;
-                      return Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.cloud_upload_outlined),
-                            title: Padding(
-                              padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
-                              child: Text(
-                                AppLocalizations.of(context)!
-                                    .includeSettingsInAndroidBackup,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
-                              child: Text(
-                                AppLocalizations.of(context)!
-                                    .includeSettingsInAndroidBackupDescription,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ),
-                            trailing: Switch.adaptive(
-                              value: enabled,
-                              onChanged: snapshot.connectionState ==
-                                      ConnectionState.waiting
-                                  ? null
-                                  : (value) => _setAndroidAutoBackupEnabled(
-                                        context,
-                                        appState,
-                                        value,
-                                      ),
-                            ),
-                          ),
-                          if (enabled)
-                            FutureBuilder<AndroidAutoBackupFileStatus>(
-                              future: SettingsBackupService
-                                  .readAndroidAutoBackupFileStatus(),
-                              builder: (context, statusSnapshot) {
-                                final status = statusSnapshot.data;
-                                final hasFile = status?.exists == true;
-                                final subtitle = hasFile &&
-                                        status?.modified != null
-                                    ? '${AppLocalizations.of(context)!.lastChange}: '
-                                        '${appState.dateFormat.format(status!.modified!.toLocal())}'
-                                    : AppLocalizations.of(context)!
-                                        .androidAutoBackupFileMissing;
-                                return ListTile(
-                                  leading:
-                                      const Icon(Icons.check_circle_outline),
-                                  title: Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(15, 0, 0, 0),
-                                    child: Text(
-                                      hasFile
-                                          ? AppLocalizations.of(context)!
-                                              .androidAutoBackupSuccessful
-                                          : AppLocalizations.of(context)!
-                                              .androidAutoBackupNotCreated,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ),
-                                  subtitle: Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(15, 0, 0, 0),
-                                    child: Text(
-                                      subtitle,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                const Divider(),
-                // this list tile delete the local news database
-                ListTile(
-                  leading: const Icon(
-                    Icons.delete_forever,
-                    color: Colors.red,
-                  ),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.deleteLocalCache,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium!
-                          .copyWith(color: Colors.red),
-                    ),
-                  ),
-                  onTap: () {
-                    _showDeleteLocalCacheDialog(context, appState);
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const FaIcon(FontAwesomeIcons.github),
-                  title: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      AppLocalizations.of(context)!.openSource,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  onTap: () async {
-                    if (Platform.isAndroid) {
-                      AndroidUrlLauncher.launchUrl(
-                          context, FluxNewsState.applicationProjectUrl);
-                    } else {
-                      // catch exception if no app is installed to handle the url
-                      final bool nativeAppLaunchSucceeded = await launchUrl(
-                        Uri.parse(FluxNewsState.applicationProjectUrl),
-                        mode: LaunchMode.externalNonBrowserApplication,
-                      );
-                      //if exception is caught, open the app in web-view
-                      if (!nativeAppLaunchSucceeded) {
-                        await launchUrl(
-                          Uri.parse(FluxNewsState.applicationProjectUrl),
-                          mode: LaunchMode.inAppWebView,
-                        );
-                      }
-                    }
-                  },
-                  trailing: const Icon(Icons.open_in_new),
-                ),
-                const Divider(),
-                // this list tile contains the about dialog
-                AboutListTile(
-                  icon: Padding(
-                    padding: Platform.isAndroid
-                        ? const EdgeInsets.fromLTRB(0, 0, 15, 0)
-                        : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: const Icon(Icons.info),
-                  ),
-                  applicationIcon: const FaIcon(
-                    FontAwesomeIcons.bookOpen,
-                  ),
-                  applicationName: FluxNewsState.applicationName,
-                  applicationVersion: FluxNewsState.applicationVersion,
-                  applicationLegalese: FluxNewsState.applicationLegalese,
-                  aboutBoxChildren: [
-                    const SizedBox(height: 24),
-                    RichText(
-                      text: TextSpan(
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        children: <TextSpan>[
-                          TextSpan(
-                              text: AppLocalizations.of(context)!
-                                  .descriptionMinifluxApp),
-                          const TextSpan(
-                              text: '${FluxNewsState.miniFluxProjectUrl}\n'),
-                          TextSpan(
-                              text: AppLocalizations.of(context)!
-                                  .descriptionMoreInformation),
-                          const TextSpan(
-                              text: ' ${FluxNewsState.applicationProjectUrl}'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
-          ),
+          ],
         ),
+      );
+      return AdaptiveSettingsScaffold(
+        title: AppLocalizations.of(context)!.settings,
+        useLargeTitle: true,
+        body: SingleChildScrollView(child: overviewContent),
+        iosLargeTitleBody: overviewContent,
       );
     }));
   }
@@ -939,48 +888,117 @@ class Settings extends StatelessWidget {
     if (appState.minifluxURL != null) {
       controller.text = appState.minifluxURL!;
     }
+    if (Platform.isIOS) {
+      StateSetter? updateDialog;
+      return showAdaptiveSettingsGlassDialog<void>(
+        context: context,
+        title: AppLocalizations.of(context)!.titleURL,
+        settings: iosLiquidGlassMenuSettings(
+          context,
+          useClearEffect: appState.iosClearLiquidGlass,
+        ),
+        quality: GlassQuality.standard,
+        maxWidth: 340,
+        content: StatefulBuilder(
+          builder: (dialogContext, setState) {
+            updateDialog = setState;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppLocalizations.of(dialogContext)!.enterURL),
+                const SizedBox(height: 10),
+                AdaptiveSettingsTextField(
+                  controller: controller,
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.done,
+                  useOwnLayer: false,
+                ),
+                if (errorInForm) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    AppLocalizations.of(dialogContext)!.enterValidURL,
+                    style: const TextStyle(color: CupertinoColors.systemRed),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+        actions: [
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.cancel,
+            onPressed: () => Navigator.pop(context),
+          ),
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.save,
+            isPrimary: true,
+            onPressed: () async {
+              final regex = RegExp(FluxNewsState.urlValidationRegex);
+              if (!regex.hasMatch(controller.text)) {
+                updateDialog?.call(() => errorInForm = true);
+                return;
+              }
+
+              String newText = controller.text;
+              if (!newText.endsWith('/v1/')) {
+                if (!newText.endsWith('/v1')) {
+                  newText = newText.endsWith('/')
+                      ? newText + FluxNewsState.apiVersionPath
+                      : '$newText/${FluxNewsState.apiVersionPath}';
+                } else {
+                  newText = '$newText/';
+                }
+              }
+              if (appState.minifluxAPIKey?.isNotEmpty ?? false) {
+                final authCheck = await checkMinifluxCredentials(
+                  newText,
+                  appState.minifluxAPIKey!,
+                  appState,
+                ).onError((error, stackTrace) => false);
+                appState.errorOnMinifluxAuth = !authCheck;
+                appState.insecureMinifluxURL =
+                    !newText.toLowerCase().startsWith('https');
+              }
+              await appState.storage.write(
+                key: FluxNewsState.secureStorageMinifluxURLKey,
+                value: newText,
+              );
+              appState.minifluxURL = newText;
+              if (context.mounted) {
+                Navigator.pop(context);
+                appState.refreshView();
+              }
+            },
+          ),
+        ],
+      );
+    }
     return showDialog(
         context: context,
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog.adaptive(
               title: Text(AppLocalizations.of(context)!.titleURL),
-              content: Platform.isIOS
-                  ? Wrap(children: [
-                      Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 5),
-                          child: Text(AppLocalizations.of(context)!.enterURL)),
-                      CupertinoTextField(
-                        controller: controller,
-                      ),
-                      errorInForm
-                          ? Text(
-                              AppLocalizations.of(context)!.enterValidURL,
-                              style: const TextStyle(color: Colors.red),
-                            )
-                          : const SizedBox.shrink()
-                    ])
-                  : Wrap(children: [
-                      Text(AppLocalizations.of(context)!.enterURL),
-                      Form(
-                        key: formKey,
-                        child: TextFormField(
-                          controller: controller,
-                          decoration: const InputDecoration(errorMaxLines: 2),
-                          validator: (value) {
-                            value ??= '';
-                            RegExp regex =
-                                RegExp(FluxNewsState.urlValidationRegex);
-                            if (!regex.hasMatch(value)) {
-                              return AppLocalizations.of(context)!
-                                  .enterValidURL;
-                            } else {
-                              return null;
-                            }
-                          },
-                        ),
-                      ),
-                    ]),
+              content: Wrap(children: [
+                Text(AppLocalizations.of(context)!.enterURL),
+                Form(
+                  key: formKey,
+                  child: TextFormField(
+                    controller: controller,
+                    decoration: const InputDecoration(errorMaxLines: 2),
+                    validator: (value) {
+                      value ??= '';
+                      RegExp regex = RegExp(FluxNewsState.urlValidationRegex);
+                      if (!regex.hasMatch(value)) {
+                        return AppLocalizations.of(context)!.enterValidURL;
+                      } else {
+                        return null;
+                      }
+                    },
+                  ),
+                ),
+              ]),
               actions: <Widget>[
                 TextButton(
                   onPressed: () =>
@@ -990,13 +1008,8 @@ class Settings extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     String? newText;
-                    if (Platform.isIOS) {
-                      RegExp regex = RegExp(FluxNewsState.urlValidationRegex);
-                      if (!regex.hasMatch(controller.text)) {
-                        setState(() {
-                          errorInForm = true;
-                        });
-                      } else {
+                    if (formKey.currentState!.validate()) {
+                      if (controller.text != '') {
                         newText = controller.text;
                         if (!newText.endsWith('/v1/')) {
                           if (!newText.endsWith('/v1')) {
@@ -1010,64 +1023,26 @@ class Settings extends StatelessWidget {
                             newText = "$newText/";
                           }
                         }
-                        if (appState.minifluxAPIKey != null &&
-                            appState.minifluxAPIKey != '') {
-                          bool authCheck = await checkMinifluxCredentials(
-                                  newText, appState.minifluxAPIKey!, appState)
-                              .onError((error, stackTrace) => false);
-
-                          appState.errorOnMinifluxAuth = !authCheck;
-                          appState.insecureMinifluxURL =
-                              !newText.toLowerCase().startsWith('https');
-                          appState.refreshView();
-                        }
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageMinifluxURLKey,
-                            value: newText);
-                        appState.minifluxURL = newText;
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          appState.refreshView();
-                        }
                       }
-                    } else {
-                      if (formKey.currentState!.validate()) {
-                        if (controller.text != '') {
-                          newText = controller.text;
-                          if (!newText.endsWith('/v1/')) {
-                            if (!newText.endsWith('/v1')) {
-                              if (newText.endsWith('/')) {
-                                newText =
-                                    newText + FluxNewsState.apiVersionPath;
-                              } else {
-                                newText =
-                                    "$newText/${FluxNewsState.apiVersionPath}";
-                              }
-                            } else {
-                              newText = "$newText/";
-                            }
-                          }
-                        }
-                        if (appState.minifluxAPIKey != null &&
-                            appState.minifluxAPIKey != '' &&
-                            newText != null) {
-                          bool authCheck = await checkMinifluxCredentials(
-                                  newText, appState.minifluxAPIKey!, appState)
-                              .onError((error, stackTrace) => false);
+                      if (appState.minifluxAPIKey != null &&
+                          appState.minifluxAPIKey != '' &&
+                          newText != null) {
+                        bool authCheck = await checkMinifluxCredentials(
+                                newText, appState.minifluxAPIKey!, appState)
+                            .onError((error, stackTrace) => false);
 
-                          appState.errorOnMinifluxAuth = !authCheck;
-                          appState.insecureMinifluxURL =
-                              !newText.toLowerCase().startsWith('https');
-                          appState.refreshView();
-                        }
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageMinifluxURLKey,
-                            value: newText);
-                        appState.minifluxURL = newText;
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          appState.refreshView();
-                        }
+                        appState.errorOnMinifluxAuth = !authCheck;
+                        appState.insecureMinifluxURL =
+                            !newText.toLowerCase().startsWith('https');
+                        appState.refreshView();
+                      }
+                      appState.storage.write(
+                          key: FluxNewsState.secureStorageMinifluxURLKey,
+                          value: newText);
+                      appState.minifluxURL = newText;
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        appState.refreshView();
                       }
                     }
                   },
@@ -1087,29 +1062,72 @@ class Settings extends StatelessWidget {
     if (appState.minifluxAPIKey != null) {
       controller.text = appState.minifluxAPIKey!;
     }
+    if (Platform.isIOS) {
+      return showAdaptiveSettingsGlassDialog<void>(
+        context: context,
+        title: AppLocalizations.of(context)!.titleAPIKey,
+        settings: iosLiquidGlassMenuSettings(
+          context,
+          useClearEffect: appState.iosClearLiquidGlass,
+        ),
+        quality: GlassQuality.standard,
+        maxWidth: 340,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(AppLocalizations.of(context)!.enterAPIKey),
+            const SizedBox(height: 10),
+            AdaptiveSettingsTextField(
+              controller: controller,
+              textInputAction: TextInputAction.done,
+              useOwnLayer: false,
+            ),
+          ],
+        ),
+        actions: [
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.cancel,
+            onPressed: () => Navigator.pop(context),
+          ),
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.save,
+            isPrimary: true,
+            onPressed: () async {
+              final newText = controller.text.isEmpty ? null : controller.text;
+              if (appState.minifluxURL?.isNotEmpty == true && newText != null) {
+                final authCheck = await checkMinifluxCredentials(
+                  appState.minifluxURL!,
+                  newText,
+                  appState,
+                ).onError((error, stackTrace) => false);
+                appState.errorOnMinifluxAuth = !authCheck;
+                appState.insecureMinifluxURL =
+                    !appState.minifluxURL!.toLowerCase().startsWith('https');
+              }
+              await appState.storage.write(
+                key: FluxNewsState.secureStorageMinifluxAPIKey,
+                value: newText,
+              );
+              appState.minifluxAPIKey = newText;
+              if (context.mounted) {
+                Navigator.pop(context);
+                appState.refreshView();
+              }
+            },
+          ),
+        ],
+      );
+    }
     return showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog.adaptive(
             title: Text(AppLocalizations.of(context)!.titleAPIKey),
-            content: Platform.isIOS
-                ? Wrap(
-                    children: [
-                      Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 5),
-                          child:
-                              Text(AppLocalizations.of(context)!.enterAPIKey)),
-                      CupertinoTextField(
-                        controller: controller,
-                      ),
-                    ],
-                  )
-                : Wrap(children: [
-                    Text(AppLocalizations.of(context)!.enterAPIKey),
-                    TextField(
-                      controller: controller,
-                    )
-                  ]),
+            content: Wrap(children: [
+              Text(AppLocalizations.of(context)!.enterAPIKey),
+              TextField(controller: controller),
+            ]),
             actions: <Widget>[
               TextButton(
                 onPressed: () =>
@@ -1217,6 +1235,35 @@ class Settings extends StatelessWidget {
 
   Future _showDeleteLocalCacheDialog(
       BuildContext context, FluxNewsState appState) {
+    if (Platform.isIOS) {
+      return showAdaptiveSettingsGlassDialog<void>(
+        context: context,
+        title: AppLocalizations.of(context)!.deleteLocalCacheDialogTitle,
+        message: AppLocalizations.of(context)!.deleteLocalCacheDialogContent,
+        settings: iosLiquidGlassMenuSettings(
+          context,
+          useClearEffect: appState.iosClearLiquidGlass,
+        ),
+        quality: GlassQuality.standard,
+        maxWidth: 360,
+        actions: [
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.cancel,
+            isPrimary: true,
+            onPressed: () => Navigator.pop(context),
+          ),
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.deleteFeedIconsOnly,
+            onPressed: () => _deleteFeedIconsOnly(context, appState),
+          ),
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.deleteAllLocalData,
+            isDestructive: true,
+            onPressed: () => _deleteAllLocalData(context, appState),
+          ),
+        ],
+      );
+    }
     return showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -1227,56 +1274,202 @@ class Settings extends StatelessWidget {
               AppLocalizations.of(context)!.deleteLocalCacheDialogContent,
               textAlign: TextAlign.start,
             ),
-            actions: Platform.isIOS
-                ? <CupertinoDialogAction>[
-                    CupertinoDialogAction(
-                      isDefaultAction: true,
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(AppLocalizations.of(context)!.cancel),
-                    ),
-                    CupertinoDialogAction(
-                      onPressed: () async {
-                        await _deleteFeedIconsOnly(context, appState);
-                      },
-                      child: Text(
-                          AppLocalizations.of(context)!.deleteFeedIconsOnly),
-                    ),
-                    CupertinoDialogAction(
-                      isDestructiveAction: true,
-                      onPressed: () async {
-                        await _deleteAllLocalData(context, appState);
-                      },
-                      child: Text(
-                          AppLocalizations.of(context)!.deleteAllLocalData),
-                    ),
-                  ]
-                : <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.pop(
-                          context, FluxNewsState.cancelContextString),
-                      child: Text(AppLocalizations.of(context)!.cancel),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        await _deleteFeedIconsOnly(context, appState);
-                      },
-                      child: Text(
-                          AppLocalizations.of(context)!.deleteFeedIconsOnly),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        await _deleteAllLocalData(context, appState);
-                      },
-                      child: Text(
-                        AppLocalizations.of(context)!.deleteAllLocalData,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
+            actions: <Widget>[
+              TextButton(
+                onPressed: () =>
+                    Navigator.pop(context, FluxNewsState.cancelContextString),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await _deleteFeedIconsOnly(context, appState);
+                },
+                child: Text(AppLocalizations.of(context)!.deleteFeedIconsOnly),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await _deleteAllLocalData(context, appState);
+                },
+                child: Text(
+                  AppLocalizations.of(context)!.deleteAllLocalData,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           );
         });
+  }
+}
+
+class _AdaptiveSettingsSwitchRow extends StatelessWidget {
+  const _AdaptiveSettingsSwitchRow({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: Platform.isIOS ? 44 : 0),
+      child: Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              left: 17,
+              right: Platform.isIOS ? 15 : 30,
+            ),
+            child: Icon(icon),
+          ),
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
+              overflow: TextOverflow.visible,
+            ),
+          ),
+          AdaptiveSettingsSwitch(
+            value: value,
+            onChanged: onChanged,
+            semanticLabel: title,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsSectionHeader extends StatelessWidget {
+  const _SettingsSectionHeader({
+    required this.title,
+    this.topPadding = 0,
+    this.showOnAndroid = true,
+  });
+
+  final String title;
+  final double topPadding;
+  final bool showOnAndroid;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!showOnAndroid) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(top: topPadding),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdaptiveSettingsOverviewContent extends StatelessWidget {
+  const _AdaptiveSettingsOverviewContent({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Platform.isIOS) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      );
+    }
+
+    final sections = <({String title, List<Widget> children})>[];
+    String? currentTitle;
+    var currentChildren = <Widget>[];
+
+    void finishSection() {
+      if (currentTitle == null) return;
+      while (currentChildren.isNotEmpty && currentChildren.first is Divider) {
+        currentChildren.removeAt(0);
+      }
+      while (currentChildren.isNotEmpty && currentChildren.last is Divider) {
+        currentChildren.removeLast();
+      }
+      sections.add((title: currentTitle, children: currentChildren));
+      currentChildren = <Widget>[];
+    }
+
+    for (final child in children) {
+      if (child is _SettingsSectionHeader) {
+        finishSection();
+        currentTitle = child.title;
+      } else {
+        currentChildren.add(child);
+      }
+    }
+    finishSection();
+
+    final sectionColor =
+        CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
+    final dividerColor = CupertinoColors.separator.resolveFrom(context);
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final section in sections)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding:
+                            const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 6),
+                        child: Text(
+                          section.title,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: CupertinoColors.secondaryLabel
+                                        .resolveFrom(context),
+                                  ),
+                        ),
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: ColoredBox(
+                          color: sectionColor,
+                          child: DividerTheme(
+                            data: DividerThemeData(
+                              color: dividerColor,
+                              space: 1,
+                              thickness: 0.5,
+                              indent: 56,
+                            ),
+                            child: Column(children: section.children),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

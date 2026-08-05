@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -34,18 +36,12 @@ class GeneralSettings extends StatelessWidget {
     }
   }
 
-  Scaffold generalSettingsLayout(BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.generalSettings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsGeneralSettingsBody());
+  Widget generalSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.generalSettings,
+      useLargeTitle: true,
+      body: const FluxNewsGeneralSettingsBody(),
+    );
   }
 }
 
@@ -105,27 +101,27 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     }
                   },
                   child: Column(children: [
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!.startupCategorieAll,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: 0,
                     ),
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!
                               .startupCategorieBookmarks,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: 1,
                     ),
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!
                               .startupCategorieCategorie,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: 2,
                     ),
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!.startupCategorieFeed,
                           style: Theme.of(context).textTheme.titleMedium),
@@ -254,7 +250,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<KeyValueRecordType>(
+                  AdaptiveSettingsDropdown<KeyValueRecordType>(
                     value: appState.brightnessModeSelection,
                     elevation: 16,
                     underline: Container(
@@ -302,7 +298,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        Switch.adaptive(
+                        AdaptiveSettingsSwitch(
                           value: themeState.useBlackMode,
                           onChanged: (bool value) {
                             String stringValue =
@@ -340,7 +336,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         overflow: TextOverflow.visible,
                       ),
                     ),
-                    Switch.adaptive(
+                    AdaptiveSettingsSwitch(
                       value: appState.iosClearLiquidGlass,
                       onChanged: (bool value) {
                         final storedValue = value
@@ -378,7 +374,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.markAsReadOnScrollOver,
                     onChanged: (bool value) {
                       String stringValue =
@@ -413,7 +409,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.openAudioItemsInPlayer,
                     onChanged: (bool value) {
                       String stringValue =
@@ -449,7 +445,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.syncOnStart,
                     onChanged: (bool value) {
                       String stringValue =
@@ -485,7 +481,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.showOnlyFeedCategoriesWithNewNews,
                     onChanged: (bool value) {
                       String stringValue =
@@ -522,7 +518,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.multilineAppBarText,
                     onChanged: (bool value) {
                       String stringValue =
@@ -558,7 +554,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.showFeedIcons,
                     onChanged: (bool value) {
                       String stringValue =
@@ -593,7 +589,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.showHeadlineOnTop,
                     onChanged: (bool value) {
                       String stringValue =
@@ -625,7 +621,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         overflow: TextOverflow.visible,
                       ),
                     ),
-                    Switch.adaptive(
+                    AdaptiveSettingsSwitch(
                       value: appState.iosMarkAsReadQuickAction,
                       onChanged: (bool value) {
                         appState.iosMarkAsReadQuickAction = value;
@@ -660,7 +656,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         overflow: TextOverflow.visible,
                       ),
                     ),
-                    Switch.adaptive(
+                    AdaptiveSettingsSwitch(
                       value: appState.floatingButtonVisible,
                       onChanged: (bool value) {
                         String stringValue =
@@ -697,7 +693,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        Switch.adaptive(
+                        AdaptiveSettingsSwitch(
                           value: appState.glassActionButton,
                           onChanged: (bool value) {
                             String stringValue =
@@ -741,7 +737,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.floatingButtonActionSelection,
                           elevation: 16,
                           underline: Container(
@@ -794,7 +790,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                         overflow: TextOverflow.visible,
                       ),
                     ),
-                    DropdownButton<KeyValueRecordType>(
+                    AdaptiveSettingsDropdown<KeyValueRecordType>(
                       value: appState.appBarTypeSelection,
                       elevation: 16,
                       underline: Container(
@@ -888,7 +884,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<int>(
+                  AdaptiveSettingsDropdown<int>(
                     value: appState.imageCacheDurationDays,
                     elevation: 16,
                     underline: Container(
@@ -945,7 +941,7 @@ class _ConstrainedDropdown<T> extends StatelessWidget {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
-      child: DropdownButton<T>(
+      child: AdaptiveSettingsDropdown<T>(
         value: value,
         elevation: 16,
         underline: Container(height: 2),

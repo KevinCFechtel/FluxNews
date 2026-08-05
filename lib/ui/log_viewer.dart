@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
 
 // ── Data ────────────────────────────────────────────────────────────────────
 
@@ -188,49 +192,39 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   Widget build(BuildContext context) {
     final filtered = _filtered;
     final theme = Theme.of(context);
+    final title = _loading
+        ? 'Logs …'
+        : _capped
+            ? 'Logs (${filtered.length}) — ${AppLocalizations.of(context)!.last} $_maxEntries'
+            : 'Logs (${filtered.length})';
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          _loading
-              ? 'Logs …'
-              : _capped
-                  ? 'Logs (${filtered.length}) — ${AppLocalizations.of(context)!.last} $_maxEntries'
-                  : 'Logs (${filtered.length})',
-          style: theme.textTheme.titleLarge,
+    return AdaptiveSettingsScaffold(
+      title: title,
+      useLargeTitle: true,
+      actions: [
+        AdaptiveSettingsIconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: AppLocalizations.of(context)!.reload,
+          loading: _loading,
+          onPressed: _loading ? null : _load,
         ),
-        actions: [
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: AppLocalizations.of(context)!.reload,
-              onPressed: _load,
-            ),
-          IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined),
-            tooltip: AppLocalizations.of(context)!.clearList,
-            onPressed: () => setState(() => _entries.clear()),
-          ),
-        ],
-      ),
+        AdaptiveSettingsIconButton(
+          icon: const Icon(Icons.delete_sweep_outlined),
+          tooltip: AppLocalizations.of(context)!.clearList,
+          onPressed: _entries.isEmpty
+              ? null
+              : () => setState(() {
+                    _entries.clear();
+                    _filteredCache = null;
+                  }),
+        ),
+      ],
       body: Column(
         children: [
           // Search field
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: TextField(
+            child: AdaptiveSettingsTextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context)!.search,
@@ -254,34 +248,58 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
           ),
 
           // Level filter chips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _levels.map((lvl) {
-                  final selected = _levelFilter == lvl;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    child: FilterChip(
-                      label: Text(
-                        lvl,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: selected && lvl != 'ALL'
-                              ? _levelColor(lvl, context)
-                              : null,
-                          fontWeight: selected ? FontWeight.bold : null,
+          if (Platform.isIOS)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: AdaptiveSettingsDropdown<String>(
+                  value: _levelFilter,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _levelFilter = value);
+                    }
+                  },
+                  items: _levels
+                      .map(
+                        (level) => DropdownMenuItem<String>(
+                          value: level,
+                          child: Text(level),
                         ),
+                      )
+                      .toList(),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _levels.map((lvl) {
+                    final selected = _levelFilter == lvl;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: FilterChip(
+                        label: Text(
+                          lvl,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: selected && lvl != 'ALL'
+                                ? _levelColor(lvl, context)
+                                : null,
+                            fontWeight: selected ? FontWeight.bold : null,
+                          ),
+                        ),
+                        selected: selected,
+                        onSelected: (_) => setState(() => _levelFilter = lvl),
+                        visualDensity: VisualDensity.compact,
                       ),
-                      selected: selected,
-                      onSelected: (_) => setState(() => _levelFilter = lvl),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
 
           const Divider(height: 1),
 

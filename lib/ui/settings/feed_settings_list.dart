@@ -7,6 +7,7 @@ import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:provider/provider.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 
 class FeedSettingsList extends StatelessWidget {
   const FeedSettingsList({
@@ -85,7 +86,7 @@ class FeedSettingsList extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: feed.manualTruncate == null
                         ? false
                         : feed.manualTruncate!,
@@ -121,7 +122,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value:
                   feed.preferParagraph == null ? false : feed.preferParagraph!,
               onChanged: (bool value) async {
@@ -154,7 +155,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.preferAttachmentImage == null
                   ? false
                   : feed.preferAttachmentImage!,
@@ -188,7 +189,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.manualAdaptLightModeToIcon == null
                   ? false
                   : feed.manualAdaptLightModeToIcon!,
@@ -227,7 +228,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.manualAdaptDarkModeToIcon == null
                   ? false
                   : feed.manualAdaptDarkModeToIcon!,
@@ -266,7 +267,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.openMinifluxEntry == null
                   ? false
                   : feed.openMinifluxEntry!,
@@ -301,7 +302,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.expandedWithFulltext == null
                   ? false
                   : feed.expandedWithFulltext!,
@@ -339,7 +340,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            DropdownButton<KeyValueRecordType>(
+            AdaptiveSettingsDropdown<KeyValueRecordType>(
               value:
                   feed.getAmountOfCharactersToTruncateExpandSelection(context),
               elevation: 16,

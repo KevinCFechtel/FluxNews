@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -32,31 +34,40 @@ class HeaderSettings extends StatelessWidget {
     }
   }
 
-  Scaffold headerSettingsLayout(BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.headers,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsHeaderSettingsBody());
+  Widget headerSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.headers,
+      useLargeTitle: true,
+      body: const FluxNewsHeaderSettingsBody(),
+    );
   }
 }
 
-class FluxNewsHeaderSettingsBody extends StatelessWidget {
+class FluxNewsHeaderSettingsBody extends StatefulWidget {
   const FluxNewsHeaderSettingsBody({
     super.key,
   });
 
   @override
+  State<FluxNewsHeaderSettingsBody> createState() =>
+      _FluxNewsHeaderSettingsBodyState();
+}
+
+class _FluxNewsHeaderSettingsBodyState
+    extends State<FluxNewsHeaderSettingsBody> {
+  final TextEditingController _headerKeyController = TextEditingController();
+  final TextEditingController _headerValueController = TextEditingController();
+
+  @override
+  void dispose() {
+    _headerKeyController.dispose();
+    _headerValueController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    TextEditingController haderKeycontroller = TextEditingController();
-    TextEditingController haderValuecontroller = TextEditingController();
     // return the body of the feed settings
     return SingleChildScrollView(
         child: Container(
@@ -67,28 +78,28 @@ class FluxNewsHeaderSettingsBody extends StatelessWidget {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Wrap(children: [
                 Text(AppLocalizations.of(context)!.headerKey),
-                TextField(
-                  controller: haderKeycontroller,
+                AdaptiveSettingsTextField(
+                  controller: _headerKeyController,
                 )
               ]),
               Wrap(children: [
                 Text(AppLocalizations.of(context)!.headerValue),
-                TextField(
-                  controller: haderValuecontroller,
+                AdaptiveSettingsTextField(
+                  controller: _headerValueController,
                 )
               ]),
               Padding(
                 padding: const EdgeInsets.only(top: 12.0),
-                child: OutlinedButton(
+                child: AdaptiveSettingsButton(
                   onPressed: () {
                     String newHeaderKey = "";
                     String newHeaderValue = "";
-                    if (haderKeycontroller.text != '') {
-                      newHeaderKey = haderKeycontroller.text;
+                    if (_headerKeyController.text != '') {
+                      newHeaderKey = _headerKeyController.text;
                     }
                     if (newHeaderKey != '') {
-                      if (haderValuecontroller.text != '') {
-                        newHeaderValue = haderValuecontroller.text;
+                      if (_headerValueController.text != '') {
+                        newHeaderValue = _headerValueController.text;
                       }
 
                       var header = {
