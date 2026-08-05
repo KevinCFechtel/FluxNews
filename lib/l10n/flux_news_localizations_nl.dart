@@ -30,6 +30,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get markAsRead => 'Markeer als gelezen';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Toon Markeer als gelezen in de onderste werkbalk';
+
+  @override
+  String get markAsReadAndNext => 'Markeer als gelezen en open volgende';
+
+  @override
+  String get moreActions => 'Meer acties';
+
+  @override
   String get markAsUnread => 'Markeer als ongelezen';
 
   @override

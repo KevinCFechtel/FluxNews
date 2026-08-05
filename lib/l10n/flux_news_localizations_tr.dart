@@ -30,6 +30,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get markAsRead => 'Okundu olarak işaretle';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster';
+
+  @override
+  String get markAsReadAndNext => 'Okundu olarak işaretle ve sonrakini aç';
+
+  @override
+  String get moreActions => 'Daha fazla işlem';
+
+  @override
   String get markAsUnread => 'Okunmadı olarak işaretle';
 
   @override

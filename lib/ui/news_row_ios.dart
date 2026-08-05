@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:extended_image/extended_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -9,6 +8,7 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/news_items.dart';
 import 'package:flux_news/ui/news_image_dimensions.dart';
+import 'package:flux_news/ui/news_glass_context_menu.dart';
 import 'package:provider/provider.dart';
 
 class NewsRowIOS extends StatelessWidget {
@@ -54,17 +54,12 @@ class NewsRowIOS extends StatelessWidget {
           },
           child: newsRow(appState, AlwaysStoppedAnimation(1), isTablet));
     } else {
-      return CupertinoContextMenu.builder(
-        enableHapticFeedback: true,
-        actions: getIOSContextMenuActions(
-            appState, news, context, searchView, itemIndex, newsList),
-        builder: (context, animation) {
-          if (animation.status == AnimationStatus.completed) {
-            return newsRow(appState, animation, isTablet);
-          } else {
-            return newsRow(appState, animation, isTablet);
-          }
-        },
+      return NewsGlassContextMenu(
+        news: news,
+        searchView: searchView,
+        itemIndex: itemIndex,
+        newsList: newsList,
+        child: newsRow(appState, const AlwaysStoppedAnimation(1), isTablet),
       );
     }
   }

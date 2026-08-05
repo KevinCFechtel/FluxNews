@@ -109,10 +109,10 @@ packages:
     dependency: transitive
     description:
       name: build_daemon
-      sha256: "8c0535c3b2f625619f4dd1036ef1127f2e77bfedf89ed2eb2676ef076e0b6712"
+      sha256: "57c62a6d85c39d2a8c984e3b73b29bf2775a865e690309405aeade647fb2184c"
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.3"
+    version: "4.1.4"
   build_runner:
     dependency: "direct dev"
     description:
@@ -491,6 +491,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.2.2"
+  flutter_shaders:
+    dependency: transitive
+    description:
+      name: flutter_shaders
+      sha256: "34794acadd8275d971e02df03afee3dee0f98dbfb8c4837082ad0034f612a3e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.3"
   flutter_slidable:
     dependency: "direct main"
     description:
@@ -741,6 +749,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  liquid_glass_widgets:
+    dependency: "direct main"
+    description:
+      name: liquid_glass_widgets
+      sha256: "4df4e820f693d0550f074f668f8fac5ac3c15d6fd4f7f42d64dcb8689b797595"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.29.2"
   logger:
     dependency: "direct main"
     description:
@@ -1190,10 +1206,10 @@ packages:
     dependency: transitive
     description:
       name: sqlite3
-      sha256: c73fd75df1332d76a6257f4823ae4df9c791f522b97e4a60cbcad214de1becf4
+      sha256: "64b2c63c8232dd20d14b34105a81ebfd74320442e8451f836179ec89986aa478"
       url: "https://pub.dev"
     source: hosted
-    version: "3.5.0"
+    version: "3.5.1"
   stack_trace:
     dependency: transitive
     description:
@@ -1358,10 +1374,10 @@ packages:
     dependency: transitive
     description:
       name: vector_graphics
-      sha256: "2306c03da2ba81724afeb589c351ebbc0aa7d86005925be8f8735856dbe5e42d"
+      sha256: "9d0e3b9cb16542ad660daee871e726a10d13a93b7b5391677c3160e8f5e83935"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
+    version: "1.2.3"
   vector_graphics_codec:
     dependency: transitive
     description:
@@ -1446,34 +1462,34 @@ packages:
     dependency: "direct main"
     description:
       name: workmanager
-      sha256: "065673b2a465865183093806925419d311a9a5e0995aa74ccf8920fd695e2d10"
+      sha256: "53c2ae5d54f46b2eefacf541446efe01039471b1f0a605d5bbf3c77690702448"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.0+3"
+    version: "0.9.3"
   workmanager_android:
     dependency: transitive
     description:
       name: workmanager_android
-      sha256: "9ae744db4ef891f5fcd2fb8671fccc712f4f96489a487a1411e0c8675e5e8cb7"
+      sha256: "757fd2ef0761a130c6f71cd46ea656b7ea393d813ace46c1ef4fc24a7136953d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.0+2"
+    version: "0.9.3"
   workmanager_apple:
     dependency: transitive
     description:
       name: workmanager_apple
-      sha256: "1cc12ae3cbf5535e72f7ba4fde0c12dd11b757caf493a28e22d684052701f2ca"
+      sha256: f960e829eea48859c7bdd730f59c4972f22259fb052416d611798e3976a3f4eb
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.1+2"
+    version: "0.9.6"
   workmanager_platform_interface:
     dependency: transitive
     description:
       name: workmanager_platform_interface
-      sha256: f40422f10b970c67abb84230b44da22b075147637532ac501729256fcea10a47
+      sha256: "687ce0e27f2f7ce716d8e66143381e63312478ecc4aa0880e8064c7bf72e3e90"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.1+1"
+    version: "0.9.4"
   xdg_directories:
     dependency: transitive
     description:

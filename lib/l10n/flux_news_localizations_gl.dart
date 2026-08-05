@@ -30,6 +30,16 @@ class AppLocalizationsGl extends AppLocalizations {
   String get markAsRead => 'Marcar como lido';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Mostrar Marcar como lido na barra inferior';
+
+  @override
+  String get markAsReadAndNext => 'Marcar como lido e abrir a seguinte';
+
+  @override
+  String get moreActions => 'Máis accións';
+
+  @override
   String get markAsUnread => 'Marcar como non lido';
 
   @override

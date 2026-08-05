@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:extended_image/extended_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/models/news_model.dart';
@@ -9,6 +8,7 @@ import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/news_items.dart';
 import 'package:flux_news/ui/news_image_dimensions.dart';
+import 'package:flux_news/ui/news_glass_context_menu.dart';
 import 'package:provider/provider.dart';
 
 class NewsCardIOS extends StatelessWidget {
@@ -53,21 +53,13 @@ class NewsCardIOS extends StatelessWidget {
           },
           child: newsCard(appState, AlwaysStoppedAnimation(1)));
     } else {
-      return CupertinoContextMenu.builder(
-          enableHapticFeedback: true,
-          actions: getIOSContextMenuActions(
-              appState, news, context, searchView, itemIndex, newsList),
-          builder: (context, animation) {
-            if (animation.status == AnimationStatus.completed) {
-              return Container(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * 0.45,
-                  ),
-                  child: newsCard(appState, animation));
-            } else {
-              return newsCard(appState, animation);
-            }
-          });
+      return NewsGlassContextMenu(
+        news: news,
+        searchView: searchView,
+        itemIndex: itemIndex,
+        newsList: newsList,
+        child: newsCard(appState, const AlwaysStoppedAnimation(1)),
+      );
     }
   }
 

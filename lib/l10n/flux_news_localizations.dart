@@ -146,6 +146,24 @@ abstract class AppLocalizations {
   /// **'Mark as read'**
   String get markAsRead;
 
+  /// No description provided for @iosMarkAsReadQuickAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Mark as read in the bottom toolbar'**
+  String get iosMarkAsReadQuickAction;
+
+  /// No description provided for @markAsReadAndNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read and open next'**
+  String get markAsReadAndNext;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get moreActions;
+
   /// No description provided for @markAsUnread.
   ///
   /// In en, this message translates to:

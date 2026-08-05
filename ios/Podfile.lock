@@ -1,21 +1,15 @@
 PODS:
   - Flutter (1.0.0)
-  - workmanager_apple (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - workmanager_apple (from `.symlinks/plugins/workmanager_apple/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  workmanager_apple:
-    :path: ".symlinks/plugins/workmanager_apple/ios"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
 
 PODFILE CHECKSUM: 02cdb2936503e481f7f97c8030010c32462c6689
 

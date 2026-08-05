@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
@@ -12,6 +13,7 @@ import 'package:flux_news/ui/news_card.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/ui/news_row.dart';
 import 'package:flux_news/ui/sliver_glass_app_bar.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -20,12 +22,53 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 class BodyNewsList extends StatelessWidget {
   const BodyNewsList({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
+    FluxNewsCounterState appCounterState =
+        context.watch<FluxNewsCounterState>();
     bool searchView = false;
+    Widget listHeader({required bool emptyBody}) {
+      if (largeTitleController != null) {
+        final largeTitle = GlassLargeTitle(
+          text: appState.appBarText.isEmpty
+              ? AppLocalizations.of(context)!.fluxNews
+              : appState.appBarText,
+          controller: largeTitleController!,
+          trailing: appState.multilineAppBarText
+              ? Semantics(
+                  label:
+                      '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
+                  child: Text(
+                    '${appCounterState.appBarNewsCount}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: CupertinoColors.label.resolveFrom(context),
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                )
+              : null,
+        );
+        if (topContentInset <= 0) return largeTitle;
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(child: SizedBox(height: topContentInset)),
+            largeTitle,
+          ],
+        );
+      }
+      return !appState.isTablet
+          ? SliverGlassAppBar(emptyBody: emptyBody)
+          : const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
     var getData = FutureBuilder<List<News>>(
       future: appState.newsList,
       builder: (context, snapshot) {
@@ -38,30 +81,10 @@ class BodyNewsList extends StatelessWidget {
             } else {
               return snapshot.data == null
                   // show empty dialog if list is null
-                  ? CustomScrollView(slivers: <Widget>[
-                      !appState.isTablet
-                          ? SliverGlassAppBar(emptyBody: true)
-                          : SliverToBoxAdapter(child: SizedBox.shrink()),
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Container(
-                            alignment: Alignment.center,
-                            child: Text(
-                              appState.syncProcess
-                                  ? AppLocalizations.of(context)!.syncInProgress
-                                  : AppLocalizations.of(context)!.noNewEntries,
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            )),
-                      )
-                    ])
-                  // show empty dialog if list is empty
-                  : snapshot.data!.isEmpty
-                      ? CustomScrollView(slivers: <Widget>[
-                          !appState.isTablet
-                              ? SliverGlassAppBar(
-                                  emptyBody: true,
-                                )
-                              : SliverToBoxAdapter(child: SizedBox.shrink()),
+                  ? CustomScrollView(
+                      controller: appState.scrollController,
+                      slivers: <Widget>[
+                          listHeader(emptyBody: true),
                           SliverFillRemaining(
                             hasScrollBody: false,
                             child: Container(
@@ -77,6 +100,28 @@ class BodyNewsList extends StatelessWidget {
                                 )),
                           )
                         ])
+                  // show empty dialog if list is empty
+                  : snapshot.data!.isEmpty
+                      ? CustomScrollView(
+                          controller: appState.scrollController,
+                          slivers: <Widget>[
+                              listHeader(emptyBody: true),
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      appState.syncProcess
+                                          ? AppLocalizations.of(context)!
+                                              .syncInProgress
+                                          : AppLocalizations.of(context)!
+                                              .noNewEntries,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall,
+                                    )),
+                              )
+                            ])
                       // otherwise create list view with ScrollablePositionedList
                       // to save scroll position persistent
                       : ListViewObserver(
@@ -89,13 +134,15 @@ class BodyNewsList extends StatelessWidget {
                             return renderObj.runtimeType.toString() ==
                                 'RenderSuperSliverList';
                           },
-                          child: !appState.isTablet
-                              ? appState.useSliverAppBar
+                          child: largeTitleController != null ||
+                                  !appState.isTablet
+                              ? largeTitleController != null ||
+                                      appState.useSliverAppBar
                                   ? CustomScrollView(
                                       controller: appState.scrollController,
                                       physics: AlwaysScrollableScrollPhysics(),
                                       slivers: <Widget>[
-                                          SliverGlassAppBar(emptyBody: false),
+                                          listHeader(emptyBody: false),
                                           SuperSliverList.builder(
                                               key: const PageStorageKey<String>(
                                                   'NewsList'),

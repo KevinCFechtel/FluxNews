@@ -30,6 +30,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAsRead => 'Mark as read';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Show Mark as read in the bottom toolbar';
+
+  @override
+  String get markAsReadAndNext => 'Mark as read and open next';
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
   String get markAsUnread => 'Mark as unread';
 
   @override

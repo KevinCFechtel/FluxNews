@@ -22,12 +22,50 @@ import 'package:flux_news/functions/sync_news.dart';
 import 'package:flux_news/functions/widget_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
+
+const _lightFloatingGlassSettings = LiquidGlassSettings(
+  glassColor: Color(0x3DFFFFFF),
+  thickness: 25,
+  blur: 16,
+  chromaticAberration: 0.02,
+  lightIntensity: 0.8,
+  ambientStrength: 0.2,
+  ambientRim: 0.35,
+  fresnelStrength: 1.4,
+  saturation: 1.0,
+  backerColor: Color(0x80FFFFFF),
+  whitenStrength: 0.15,
+  shadowElevation: 2,
+);
+
+const _darkFloatingGlassSettings = LiquidGlassSettings(
+  glassColor: Color(0x26FFFFFF),
+  thickness: 25,
+  blur: 16,
+  chromaticAberration: 0.02,
+  lightIntensity: 0.55,
+  ambientStrength: 0.12,
+  saturation: 1.1,
+  backerColor: Color(0x59000000),
+  shadowElevation: 1.5,
+);
+
+LiquidGlassSettings _floatingGlassSettings(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.light
+        ? _lightFloatingGlassSettings
+        : _darkFloatingGlassSettings;
+
+Color _floatingGlassForeground(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.light
+        ? CupertinoColors.black
+        : CupertinoColors.white;
 
 class FluxNewsBody extends StatelessWidget {
   const FluxNewsBody({super.key});
@@ -451,7 +489,12 @@ class FluxNewsBody extends StatelessWidget {
     });
   }
 
-  Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
+  Widget smartphoneLayout(BuildContext context, FluxNewsState appState) {
+    if (Platform.isIOS) {
+      return _IOSLiquidGlassHome(
+        drawer: getDrawer(context, appState),
+      );
+    }
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     bool useSliverAppBar = appState.useSliverAppBar;
     if (appState.minifluxURL == null ||
@@ -622,6 +665,9 @@ class FluxNewsBody extends StatelessWidget {
   }
 
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
+    if (Platform.isIOS) {
+      return const _IOSLiquidGlassHome(isTablet: true);
+    }
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
@@ -1056,10 +1102,407 @@ class FluxNewsBody extends StatelessWidget {
   }
 }
 
+class _IOSLiquidGlassHome extends StatefulWidget {
+  const _IOSLiquidGlassHome({this.drawer, this.isTablet = false});
+
+  final Drawer? drawer;
+  final bool isTablet;
+
+  @override
+  State<_IOSLiquidGlassHome> createState() => _IOSLiquidGlassHomeState();
+}
+
+class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
+  FluxNewsState? _attachedAppState;
+  ScrollController? _previousScrollController;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appState = context.read<FluxNewsState>();
+    if (identical(_attachedAppState, appState)) return;
+    _restoreScrollController();
+    _attachedAppState = appState;
+    _previousScrollController = appState.scrollController;
+    appState.scrollController = _largeTitleController.scrollController;
+  }
+
+  @override
+  void dispose() {
+    _restoreScrollController();
+    _largeTitleController.dispose();
+    super.dispose();
+  }
+
+  void _restoreScrollController() {
+    final appState = _attachedAppState;
+    if (appState != null &&
+        identical(appState.scrollController,
+            _largeTitleController.scrollController) &&
+        _previousScrollController != null) {
+      appState.scrollController = _previousScrollController!;
+    }
+    _attachedAppState = null;
+    _previousScrollController = null;
+  }
+
+  Future<void> _sync(FluxNewsState appState) async {
+    if (appState.syncProcess) {
+      appState.longSyncAborted = true;
+      appState.refreshView();
+      return;
+    }
+    await syncNews(appState, context);
+  }
+
+  Future<void> _refreshList(FluxNewsState appState) async {
+    final appCounterState = context.read<FluxNewsCounterState>();
+    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+      appState.jumpToItem(0);
+    });
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+    appState.refreshView();
+  }
+
+  Future<void> _toggleReadFilter(FluxNewsState appState) async {
+    appState.newsStatus = appState.newsStatus == FluxNewsState.unreadNewsStatus
+        ? FluxNewsState.allNewsString
+        : FluxNewsState.unreadNewsStatus;
+    await appState.storage.write(
+      key: FluxNewsState.secureStorageNewsStatusKey,
+      value: appState.newsStatus,
+    );
+    await _refreshList(appState);
+  }
+
+  Future<void> _toggleSortOrder(FluxNewsState appState) async {
+    appState.sortOrder =
+        appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+            ? FluxNewsState.sortOrderOldestFirstString
+            : FluxNewsState.sortOrderNewestFirstString;
+    await appState.storage.write(
+      key: FluxNewsState.secureStorageSortOrderKey,
+      value: appState.sortOrder,
+    );
+    await _refreshList(appState);
+  }
+
+  Future<void> _markAsReadAndAdvance(FluxNewsState appState) async {
+    final appCounterState = context.read<FluxNewsCounterState>();
+    await markNewsAsReadInDB(appState);
+    unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+    if (!mounted) return;
+
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.categoryElementType) {
+      final next = await queryNextCategoryFromDB(appState, context);
+      if (mounted) setNextCategory(next, appState, context);
+    } else if (appState.selectedCategoryElementType ==
+        FluxNewsState.feedElementType) {
+      final next = await queryNextFeedFromDB(appState, context);
+      if (mounted) setNextFeed(next, appState, context);
+    } else {
+      await _refreshList(appState);
+    }
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+  }
+
+  String _markScopeLabel(BuildContext context, FluxNewsState appState) {
+    final strings = AppLocalizations.of(context)!;
+    if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+      return strings.markFeedAsRead;
+    }
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.categoryElementType) {
+      return strings.markCategoryAsRead;
+    }
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.bookmarkedNewsElementType) {
+      return strings.markBookmarkedAsRead;
+    }
+    return strings.markAllAsRead;
+  }
+
+  List<Widget> _menuItems(FluxNewsState appState) {
+    final strings = AppLocalizations.of(context)!;
+    return <Widget>[
+      GlassMenuItem(
+        title: strings.search,
+        icon: const Icon(Icons.search),
+        onTap: () =>
+            Navigator.pushNamed(context, FluxNewsState.searchRouteString),
+      ),
+      GlassMenuItem(
+        title: appState.newsStatus == FluxNewsState.unreadNewsStatus
+            ? strings.showRead
+            : strings.showUnread,
+        icon: Icon(appState.newsStatus == FluxNewsState.unreadNewsStatus
+            ? Icons.checklist
+            : Icons.fiber_new),
+        onTap: () => unawaited(_toggleReadFilter(appState)),
+      ),
+      GlassMenuItem(
+        title: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+            ? strings.oldestFirst
+            : strings.newestFirst,
+        icon: const Icon(Icons.sort),
+        onTap: () => unawaited(_toggleSortOrder(appState)),
+      ),
+      const GlassMenuDivider(),
+      GlassMenuItem(
+        title: _markScopeLabel(context, appState),
+        icon: const Icon(Icons.check_circle_outline),
+        onTap: () => showDeleteAllDialog(
+          context,
+          appState,
+          context.read<FluxNewsCounterState>(),
+        ),
+      ),
+      GlassMenuItem(
+        title: strings.markAsReadAndNext,
+        icon: const Icon(Icons.skip_next),
+        onTap: () => unawaited(_markAsReadAndAdvance(appState)),
+      ),
+      const GlassMenuDivider(),
+      GlassMenuItem(
+        title: strings.audioDownloadsSettings,
+        icon: const Icon(Icons.podcasts),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (context) => const DownloadsOverview(),
+        )),
+      ),
+      GlassMenuItem(
+        title: strings.settings,
+        icon: const Icon(Icons.settings),
+        onTap: () =>
+            Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
+      ),
+    ];
+  }
+
+  Widget _bottomChrome(FluxNewsState appState) {
+    final strings = AppLocalizations.of(context)!;
+    final glassSettings = _floatingGlassSettings(context);
+    final glassForeground = _floatingGlassForeground(context);
+    final contentChrome = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _BottomBanners(
+          appState: appState,
+          respectBottomSafeArea: false,
+        ),
+        AdaptiveLiquidGlassLayer(
+          quality: GlassQuality.standard,
+          settings: glassSettings,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: GlassIconButton(
+                          quality: GlassQuality.standard,
+                          semanticLabel: appState.syncProcess
+                              ? strings.cancel
+                              : strings.syncNews,
+                          onPressed: () => unawaited(_sync(appState)),
+                          icon: appState.syncProcess
+                              ? SizedBox.square(
+                                  dimension: 18,
+                                  child: CupertinoActivityIndicator(
+                                    radius: 9,
+                                    color: glassForeground,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.refresh,
+                                  color: glassForeground,
+                                ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: appState.iosMarkAsReadQuickAction
+                            ? GlassIconButton(
+                                quality: GlassQuality.standard,
+                                semanticLabel:
+                                    _markScopeLabel(context, appState),
+                                onPressed: () => showDeleteAllDialog(
+                                  context,
+                                  appState,
+                                  context.read<FluxNewsCounterState>(),
+                                ),
+                                icon: Icon(
+                                  Icons.check_circle_outline,
+                                  color: glassForeground,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: GlassPullDownButton(
+                          quality: GlassQuality.standard,
+                          semanticLabel: strings.moreActions,
+                          icon: Icon(
+                            CupertinoIcons.ellipsis_circle,
+                            color: glassForeground,
+                          ),
+                          items: _menuItems(appState),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    if (!widget.isTablet) return contentChrome;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const Expanded(flex: 4, child: SizedBox.shrink()),
+        Expanded(flex: 10, child: contentChrome),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<FluxNewsState>();
+    final appCounterState = context.watch<FluxNewsCounterState>();
+    final hasNewsConfiguration = appState.startUp ||
+        (appState.minifluxURL != null &&
+            appState.minifluxAPIKey != null &&
+            !appState.errorOnMinifluxAuth);
+    final titleController = hasNewsConfiguration ? _largeTitleController : null;
+    final title = appState.appBarText.isEmpty
+        ? AppLocalizations.of(context)!.fluxNews
+        : appState.appBarText;
+    final glassSettings = _floatingGlassSettings(context);
+    final glassForeground = _floatingGlassForeground(context);
+    final compactTitle = GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      settings: glassSettings,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: glassForeground,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          if (appState.multilineAppBarText) ...[
+            const SizedBox(width: 6),
+            Semantics(
+              label:
+                  '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
+              child: Text(
+                '${appCounterState.appBarNewsCount}',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: glassForeground,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+    final topContentInset = MediaQuery.paddingOf(context).top + 44;
+    Widget list = FluxNewsBodyList(
+      largeTitleController: titleController,
+      topContentInset: topContentInset,
+    );
+    if (widget.isTablet) {
+      list = Row(
+        children: [
+          const Expanded(
+            flex: 4,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: EdgeInsets.only(top: 44),
+                child: SingleChildScrollView(child: CategoryList()),
+              ),
+            ),
+          ),
+          Expanded(flex: 10, child: list),
+        ],
+      );
+    }
+
+    return Scaffold(
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      appBar: GlassAppBar(
+        centerTitle: false,
+        largeTitleController: titleController,
+        leading: widget.isTablet
+            ? null
+            : Builder(builder: (context) {
+                return GlassIconButton(
+                  quality: GlassQuality.standard,
+                  useOwnLayer: true,
+                  settings: glassSettings,
+                  semanticLabel:
+                      MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  icon: FaIcon(
+                    FontAwesomeIcons.bookOpen,
+                    size: 18,
+                    color: glassForeground,
+                  ),
+                );
+              }),
+        title: widget.isTablet
+            ? Row(
+                children: [
+                  const Expanded(flex: 4, child: SizedBox.shrink()),
+                  Expanded(flex: 10, child: compactTitle),
+                ],
+              )
+            : compactTitle,
+      ),
+      drawer: widget.drawer,
+      body: list,
+      bottomNavigationBar: _bottomChrome(appState),
+    );
+  }
+}
+
 class PersistentAudioMiniPlayer extends StatefulWidget {
-  const PersistentAudioMiniPlayer({super.key, required this.appState});
+  const PersistentAudioMiniPlayer({
+    super.key,
+    required this.appState,
+    this.respectBottomSafeArea = true,
+  });
 
   final FluxNewsState appState;
+  final bool respectBottomSafeArea;
 
   @override
   State<PersistentAudioMiniPlayer> createState() =>
@@ -1253,6 +1696,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
 
             return SafeArea(
               top: false,
+              bottom: widget.respectBottomSafeArea,
               child: Material(
                 elevation: 8,
                 color: miniPlayerBackground,
@@ -1372,24 +1816,39 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
 // ── Bottom banners: download progress + mini player stacked ─────────────────
 
 class _BottomBanners extends StatelessWidget {
-  const _BottomBanners({required this.appState});
+  const _BottomBanners({
+    required this.appState,
+    this.respectBottomSafeArea = true,
+  });
   final FluxNewsState appState;
+  final bool respectBottomSafeArea;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        PersistentDownloadBanner(appState: appState),
-        PersistentAudioMiniPlayer(appState: appState),
+        PersistentDownloadBanner(
+          appState: appState,
+          respectBottomSafeArea: respectBottomSafeArea,
+        ),
+        PersistentAudioMiniPlayer(
+          appState: appState,
+          respectBottomSafeArea: respectBottomSafeArea,
+        ),
       ],
     );
   }
 }
 
 class PersistentDownloadBanner extends StatelessWidget {
-  const PersistentDownloadBanner({super.key, required this.appState});
+  const PersistentDownloadBanner({
+    super.key,
+    required this.appState,
+    this.respectBottomSafeArea = true,
+  });
   final FluxNewsState appState;
+  final bool respectBottomSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -1409,6 +1868,7 @@ class PersistentDownloadBanner extends StatelessWidget {
 
         return SafeArea(
           top: false,
+          bottom: respectBottomSafeArea,
           child: Material(
             elevation: 8,
             color: bg,
@@ -1521,7 +1981,12 @@ class _DownloadRow extends StatelessWidget {
 class FluxNewsBodyList extends StatelessWidget {
   const FluxNewsBodyList({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1534,15 +1999,30 @@ class FluxNewsBodyList extends StatelessWidget {
             appState.minifluxAPIKey == null ||
             appState.errorOnMinifluxAuth == true) &&
         !appState.startUp) {
-      return const NoSettings();
+      return Padding(
+        padding: EdgeInsets.only(top: topContentInset),
+        child: const NoSettings(),
+      );
     } else if (appState.errorString != '' && appState.newError) {
-      return const ErrorWidget();
+      return ErrorWidget(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     } else if (appState.longSync) {
-      return const LongSyncWidget();
+      return LongSyncWidget(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     } else if (appState.tooManyNews) {
-      return const TooManyNewsWidget();
+      return TooManyNewsWidget(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     } else {
-      return const BodyNewsList();
+      return BodyNewsList(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     }
   }
 }
@@ -1552,7 +2032,12 @@ class FluxNewsBodyList extends StatelessWidget {
 class ErrorWidget extends StatelessWidget {
   const ErrorWidget({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1563,7 +2048,10 @@ class ErrorWidget extends StatelessWidget {
         appState.refreshView();
       });
     });
-    return const BodyNewsList();
+    return BodyNewsList(
+      largeTitleController: largeTitleController,
+      topContentInset: topContentInset,
+    );
   }
 
   // this is the error dialog which is shown, if a error occurs.
@@ -1598,7 +2086,12 @@ class ErrorWidget extends StatelessWidget {
 class LongSyncWidget extends StatelessWidget {
   const LongSyncWidget({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1610,7 +2103,10 @@ class LongSyncWidget extends StatelessWidget {
         appState.refreshView();
       });
     });
-    return const BodyNewsList();
+    return BodyNewsList(
+      largeTitleController: largeTitleController,
+      topContentInset: topContentInset,
+    );
   }
 
   // this is the error dialog which is shown, if a error occurs.
@@ -1656,7 +2152,12 @@ class LongSyncWidget extends StatelessWidget {
 class TooManyNewsWidget extends StatelessWidget {
   const TooManyNewsWidget({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1667,7 +2168,10 @@ class TooManyNewsWidget extends StatelessWidget {
         appState.refreshView();
       });
     });
-    return const BodyNewsList();
+    return BodyNewsList(
+      largeTitleController: largeTitleController,
+      topContentInset: topContentInset,
+    );
   }
 
   // this is the error dialog which is shown, if a error occurs.
