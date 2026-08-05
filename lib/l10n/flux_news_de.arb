@@ -152,6 +152,7 @@
     "headerValue": "Header Inhalt:",
     "delete": "Löschen",
     "headers": "Headers",
+    "optional": "Optional",
     "scrolloverAppBar": "Die Appbar verschwindet beim überscrollen",
     "syncNews": "Sync News",
     "floatingButtonAction": "Wähle die Aktion für den extra Button",

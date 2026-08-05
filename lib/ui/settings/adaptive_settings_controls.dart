@@ -287,6 +287,7 @@ class AdaptiveSettingsTextField extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.useOwnLayer = true,
+    this.iosSettings,
   });
 
   final TextEditingController? controller;
@@ -303,6 +304,7 @@ class AdaptiveSettingsTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final bool useOwnLayer;
+  final LiquidGlassSettings? iosSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -345,10 +347,11 @@ class AdaptiveSettingsTextField extends StatelessWidget {
       textStyle: style,
       useOwnLayer: useOwnLayer,
       quality: GlassQuality.standard,
-      settings: iosLiquidGlassSettings(
-        context,
-        useClearEffect: useClearEffect,
-      ),
+      settings: iosSettings ??
+          iosLiquidGlassSettings(
+            context,
+            useClearEffect: useClearEffect,
+          ),
     );
   }
 }

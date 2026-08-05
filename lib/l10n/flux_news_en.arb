@@ -152,6 +152,7 @@
     "headerValue": "Header Value:",
     "delete": "Delete",
     "headers": "Headers",
+    "optional": "Optional",
     "scrolloverAppBar": "The app bar is collapsible on scroll",
     "syncNews": "Sync News",
     "floatingButtonAction": "Select the action for the extra button",

@@ -980,6 +980,12 @@ abstract class AppLocalizations {
   /// **'Headers'**
   String get headers;
 
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
   /// No description provided for @scrolloverAppBar.
   ///
   /// In en, this message translates to:

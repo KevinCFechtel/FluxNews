@@ -100,5 +100,6 @@
     "androidAutoBackupFoundTitle": "Backup found",
     "androidAutoBackupFoundMessage": "An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.",
     "checkAndroidAutoBackup": "Check Android backup",
-    "noAndroidAutoBackupFound": "No Android backup was found."
+    "noAndroidAutoBackupFound": "No Android backup was found.",
+    "optional": "Optioneel"
 }

@@ -19,6 +19,8 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _headerKeyController = TextEditingController();
@@ -28,6 +30,7 @@ class _LoginState extends State<Login> {
   bool _isLoading = false;
   String? _errorText;
   bool _initialized = false;
+  bool _headersExpanded = false;
 
   @override
   void didChangeDependencies() {
@@ -45,6 +48,7 @@ class _LoginState extends State<Login> {
     }
     if (appState.customHeaders.isNotEmpty) {
       _headers = Map<String, String>.from(appState.customHeaders);
+      _headersExpanded = true;
     }
 
     _initialized = true;
@@ -52,6 +56,7 @@ class _LoginState extends State<Login> {
 
   @override
   void dispose() {
+    _largeTitleController.dispose();
     _urlController.dispose();
     _apiKeyController.dispose();
     _headerKeyController.dispose();
@@ -225,7 +230,7 @@ class _LoginState extends State<Login> {
             textInputAction: TextInputAction.next,
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            settings: iosLiquidGlassSettings(
+            settings: iosLiquidGlassInputSettings(
               context,
               useClearEffect: appState.iosClearLiquidGlass,
             ),
@@ -243,6 +248,190 @@ class _LoginState extends State<Login> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeaderEditor(
+      BuildContext context, AppLocalizations localization) {
+    final appState = context.read<FluxNewsState>();
+    final inputSettings = iosLiquidGlassInputSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (Platform.isIOS) ...[
+          AdaptiveSettingsTextField(
+            controller: _headerKeyController,
+            decoration: InputDecoration(hintText: localization.headerKey),
+            textInputAction: TextInputAction.next,
+            iosSettings: inputSettings,
+          ),
+          const SizedBox(height: 10),
+          AdaptiveSettingsTextField(
+            controller: _headerValueController,
+            decoration: InputDecoration(hintText: localization.headerValue),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addHeader(),
+            iosSettings: inputSettings,
+          ),
+        ] else ...[
+          Wrap(
+            children: [
+              Text(localization.headerKey),
+              TextField(controller: _headerKeyController),
+            ],
+          ),
+          Wrap(
+            children: [
+              Text(localization.headerValue),
+              TextField(controller: _headerValueController),
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: AdaptiveSettingsButton(
+            onPressed: _addHeader,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (Platform.isIOS) ...[
+                  const Icon(CupertinoIcons.add, size: 18),
+                  const SizedBox(width: 7),
+                ],
+                Text(localization.saveHeader),
+              ],
+            ),
+          ),
+        ),
+        if (_headers.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          const Divider(),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: [
+                DataColumn(label: Text(localization.headerKey)),
+                DataColumn(label: Text(localization.headerValue)),
+                const DataColumn(label: Text('')),
+              ],
+              rows: _headers.entries
+                  .map(
+                    (entry) => DataRow(cells: [
+                      DataCell(Text(entry.key)),
+                      DataCell(Text(entry.value)),
+                      DataCell(Platform.isIOS
+                          ? CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                setState(() {
+                                  _headers.remove(entry.key);
+                                });
+                              },
+                              child: Text(localization.delete),
+                            )
+                          : TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _headers.remove(entry.key);
+                                });
+                              },
+                              child: Text(localization.delete),
+                            )),
+                    ]),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHeadersSection(
+      BuildContext context, AppLocalizations localization) {
+    if (!Platform.isIOS) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            localization.headers,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          _buildHeaderEditor(context, localization),
+        ],
+      );
+    }
+
+    final theme = Theme.of(context);
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          button: true,
+          expanded: _headersExpanded,
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(44, 44),
+            onPressed: () {
+              setState(() => _headersExpanded = !_headersExpanded);
+            },
+            child: Row(
+              children: [
+                Text(
+                  localization.headers,
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color:
+                        CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    localization.optional,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: secondaryLabel,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                AnimatedRotation(
+                  turns: _headersExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  child: Icon(
+                    CupertinoIcons.chevron_down,
+                    size: 16,
+                    color: secondaryLabel,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: _headersExpanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: _buildHeaderEditor(context, localization),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
     );
   }
 
@@ -291,96 +480,8 @@ class _LoginState extends State<Login> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
-          Text(
-            localization.headers,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          if (Platform.isIOS) ...[
-            AdaptiveSettingsTextField(
-              controller: _headerKeyController,
-              decoration: InputDecoration(hintText: localization.headerKey),
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 10),
-            AdaptiveSettingsTextField(
-              controller: _headerValueController,
-              decoration: InputDecoration(hintText: localization.headerValue),
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _addHeader(),
-            ),
-          ] else ...[
-            Wrap(
-              children: [
-                Text(localization.headerKey),
-                TextField(controller: _headerKeyController),
-              ],
-            ),
-            Wrap(
-              children: [
-                Text(localization.headerValue),
-                TextField(controller: _headerValueController),
-              ],
-            ),
-          ],
-          const SizedBox(height: 8),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: AdaptiveSettingsButton(
-              onPressed: _addHeader,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (Platform.isIOS) ...[
-                    const Icon(CupertinoIcons.add, size: 18),
-                    const SizedBox(width: 7),
-                  ],
-                  Text(localization.saveHeader),
-                ],
-              ),
-            ),
-          ),
-          if (_headers.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const Divider(),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: [
-                  DataColumn(label: Text(localization.headerKey)),
-                  DataColumn(label: Text(localization.headerValue)),
-                  const DataColumn(label: Text('')),
-                ],
-                rows: _headers.entries
-                    .map(
-                      (entry) => DataRow(cells: [
-                        DataCell(Text(entry.key)),
-                        DataCell(Text(entry.value)),
-                        DataCell(Platform.isIOS
-                            ? CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  setState(() {
-                                    _headers.remove(entry.key);
-                                  });
-                                },
-                                child: Text(localization.delete),
-                              )
-                            : TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _headers.remove(entry.key);
-                                  });
-                                },
-                                child: Text(localization.delete),
-                              )),
-                      ]),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
+          const SizedBox(height: 12),
+          _buildHeadersSection(context, localization),
           if (_errorText != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -503,6 +604,7 @@ class _LoginState extends State<Login> {
         extendBodyBehindAppBar: true,
         appBar: GlassAppBar(
           centerTitle: false,
+          largeTitleController: _largeTitleController,
           buttonSettings: glassSettings,
           leading: Navigator.canPop(context)
               ? GlassIconButton(
@@ -538,11 +640,20 @@ class _LoginState extends State<Login> {
             ),
           ),
         ),
-        body: Padding(
-          padding: EdgeInsets.only(
-            top: MediaQuery.paddingOf(context).top + 52,
-          ),
-          child: SafeArea(
+        body: NestedScrollView(
+          controller: _largeTitleController.scrollController,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.paddingOf(context).top + 44,
+              ),
+            ),
+            GlassLargeTitle(
+              text: localization.minifluxServer,
+              controller: _largeTitleController,
+            ),
+          ],
+          body: SafeArea(
             top: false,
             child: appState.isTablet
                 ? _buildTabletLayout(context, localization)

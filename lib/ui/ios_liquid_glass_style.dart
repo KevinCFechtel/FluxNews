@@ -124,6 +124,30 @@ LiquidGlassSettings iosLiquidGlassMenuSettings(
       : _darkClearMenuGlassSettings;
 }
 
+/// A quieter recipe for form fields. Inputs remain translucent, but do not
+/// visually compete with the floating navigation and primary actions.
+LiquidGlassSettings iosLiquidGlassInputSettings(
+  BuildContext context, {
+  required bool useClearEffect,
+}) {
+  final isLight = Theme.of(context).brightness == Brightness.light;
+  return iosLiquidGlassSettings(
+    context,
+    useClearEffect: useClearEffect,
+  ).copyWith(
+    thickness: 12,
+    chromaticAberration: 0.008,
+    lightIntensity: isLight ? 0.32 : 0.28,
+    ambientStrength: 0.06,
+    ambientRim: 0.12,
+    fresnelStrength: 0.55,
+    glowIntensity: 0.25,
+    shadowElevation: 0,
+    backerColor: isLight ? const Color(0x24FFFFFF) : const Color(0x20000000),
+    whitenStrength: isLight ? 0.03 : 0,
+  );
+}
+
 GlassQuality iosLiquidGlassQuality({required bool useClearEffect}) =>
     useClearEffect ? GlassQuality.premium : GlassQuality.standard;
 

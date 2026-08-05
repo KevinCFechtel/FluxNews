@@ -21,7 +21,15 @@ class RestoreSettingsPage extends StatefulWidget {
 }
 
 class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
   bool _restoring = false;
+
+  @override
+  void dispose() {
+    _largeTitleController.dispose();
+    super.dispose();
+  }
 
   Future<bool> _confirmRestore(ParsedSettingsBackup preview) async {
     final previewContent = SingleChildScrollView(
@@ -264,6 +272,7 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
         extendBodyBehindAppBar: true,
         appBar: GlassAppBar(
           centerTitle: false,
+          largeTitleController: _largeTitleController,
           buttonSettings: glassSettings,
           leading: Navigator.canPop(context)
               ? GlassIconButton(
@@ -299,48 +308,57 @@ class _RestoreSettingsPageState extends State<RestoreSettingsPage> {
             ),
           ),
         ),
-        body: Padding(
-          padding: EdgeInsets.only(
-            top: MediaQuery.paddingOf(context).top + 52,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: GlassContainer(
-                  useOwnLayer: true,
-                  quality: GlassQuality.standard,
-                  settings: glassSettings,
-                  shape: const LiquidRoundedSuperellipse(borderRadius: 26),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _restoring
-                          ? CupertinoActivityIndicator(
-                              radius: 16,
-                              color: foreground,
-                            )
-                          : Icon(
-                              CupertinoIcons.folder_open,
-                              size: 36,
-                              color: foreground,
-                            ),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.selectZipBackupFile,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: foreground,
-                            ),
-                      ),
-                    ],
+        body: CustomScrollView(
+          controller: _largeTitleController.scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.paddingOf(context).top + 44,
+              ),
+            ),
+            GlassLargeTitle(
+              text: title,
+              controller: _largeTitleController,
+            ),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _restoring
+                            ? CupertinoActivityIndicator(
+                                radius: 16,
+                                color: foreground,
+                              )
+                            : Icon(
+                                CupertinoIcons.folder_open,
+                                size: 38,
+                                color: CupertinoColors.secondaryLabel
+                                    .resolveFrom(context),
+                              ),
+                        const SizedBox(height: 16),
+                        Text(
+                          AppLocalizations.of(context)!.selectZipBackupFile,
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: CupertinoColors.secondaryLabel
+                                        .resolveFrom(context),
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
         bottomNavigationBar: SafeArea(
           top: false,

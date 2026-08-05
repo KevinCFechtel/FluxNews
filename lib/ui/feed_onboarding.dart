@@ -18,8 +18,16 @@ class FeedOnboarding extends StatefulWidget {
 }
 
 class _FeedOnboardingState extends State<FeedOnboarding> {
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
   final Set<String> _selectedFeedUrls = <String>{};
   bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _largeTitleController.dispose();
+    super.dispose();
+  }
 
   // scraperRules can be maintained per suggested feed directly in code.
   late final List<_SuggestedCategory> _categories = <_SuggestedCategory>[
@@ -408,12 +416,14 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
                         size: 88,
                         color: theme.colorScheme.primary,
                       ),
-                      const SizedBox(height: 20),
-                      Text(
-                        localization.feedSelection,
-                        style: theme.textTheme.headlineMedium
-                            ?.copyWith(fontSize: 36),
-                      ),
+                      if (!Platform.isIOS) ...[
+                        const SizedBox(height: 20),
+                        Text(
+                          localization.feedSelection,
+                          style: theme.textTheme.headlineMedium
+                              ?.copyWith(fontSize: 36),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       Text(
                         localization.feedCreationDescription,
@@ -425,9 +435,11 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
               ),
               Expanded(
                 flex: 6,
-                child: Card(
-                  child: _buildSelectionList(context, localization),
-                ),
+                child: Platform.isIOS
+                    ? _buildSelectionList(context, localization)
+                    : Card(
+                        child: _buildSelectionList(context, localization),
+                      ),
               ),
             ],
           ),
@@ -454,6 +466,7 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         extendBodyBehindAppBar: true,
         appBar: GlassAppBar(
           centerTitle: false,
+          largeTitleController: _largeTitleController,
           buttonSettings: glassSettings,
           leading: Navigator.canPop(context)
               ? GlassIconButton(
@@ -506,11 +519,20 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
                   ),
           ),
         ),
-        body: Padding(
-          padding: EdgeInsets.only(
-            top: MediaQuery.paddingOf(context).top + 52,
-          ),
-          child: appState.isTablet
+        body: NestedScrollView(
+          controller: _largeTitleController.scrollController,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.paddingOf(context).top + 44,
+              ),
+            ),
+            GlassLargeTitle(
+              text: localization.feedSelection,
+              controller: _largeTitleController,
+            ),
+          ],
+          body: appState.isTablet
               ? _buildTabletLayout(context, localization)
               : _buildPhoneLayout(context, localization),
         ),
@@ -545,24 +567,89 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
   }
 
   Widget _buildCategoryCard(_SuggestedCategory category) {
+    final isIOS = Platform.isIOS;
+    final theme = Theme.of(context);
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        leading: Icon(category.icon),
-        title: Text(category.title),
+      elevation: isIOS ? 0 : null,
+      shadowColor: isIOS ? Colors.transparent : null,
+      surfaceTintColor: isIOS ? Colors.transparent : null,
+      color: isIOS
+          ? CupertinoColors.secondarySystemGroupedBackground
+              .resolveFrom(context)
+          : null,
+      clipBehavior: isIOS ? Clip.antiAlias : Clip.none,
+      shape: isIOS
+          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))
+          : null,
+      child: Theme(
+        data: isIOS
+            ? theme.copyWith(
+                dividerColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+              )
+            : theme,
+        child: ExpansionTile(
+          iconColor: isIOS ? secondaryLabel : null,
+          collapsedIconColor: isIOS ? secondaryLabel : null,
+          leading: Icon(
+            category.icon,
+            color: isIOS ? secondaryLabel : null,
+          ),
+          title: Text(category.title),
+          subtitle: Text(
+              '${category.feeds.where((feed) => _selectedFeedUrls.contains(feed.feedUrl)).length}/${category.feeds.length}'),
+          children: category.feeds
+              .map(
+                (feed) => isIOS
+                    ? _buildIOSFeedSelectionRow(feed)
+                    : CheckboxListTile(
+                        value: _selectedFeedUrls.contains(feed.feedUrl),
+                        onChanged: (selected) =>
+                            _toggleFeed(feed, selected ?? false),
+                        title: Text(feed.title),
+                        subtitle: Text(feed.siteUrl),
+                        secondary: _buildFeedSuggestionIcon(feed.iconAssetPath),
+                      ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIOSFeedSelectionRow(_SuggestedFeed feed) {
+    final selected = _selectedFeedUrls.contains(feed.feedUrl);
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
+    return Semantics(
+      checked: selected,
+      child: CupertinoListTile(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 14, 8),
+        leadingSize: 28,
+        leadingToTitle: 12,
+        leading: _buildFeedSuggestionIcon(feed.iconAssetPath),
+        title: Text(feed.title),
         subtitle: Text(
-            '${category.feeds.where((feed) => _selectedFeedUrls.contains(feed.feedUrl)).length}/${category.feeds.length}'),
-        children: category.feeds
-            .map(
-              (feed) => CheckboxListTile(
-                value: _selectedFeedUrls.contains(feed.feedUrl),
-                onChanged: (selected) => _toggleFeed(feed, selected ?? false),
-                title: Text(feed.title),
-                subtitle: Text(feed.siteUrl),
-                secondary: _buildFeedSuggestionIcon(feed.iconAssetPath),
-              ),
-            )
-            .toList(),
+          feed.siteUrl,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 160),
+          child: Icon(
+            selected
+                ? CupertinoIcons.check_mark_circled_solid
+                : CupertinoIcons.circle,
+            key: ValueKey(selected),
+            size: 24,
+            color: selected
+                ? CupertinoColors.activeBlue.resolveFrom(context)
+                : secondaryLabel,
+          ),
+        ),
+        onTap: () => _toggleFeed(feed, !selected),
       ),
     );
   }

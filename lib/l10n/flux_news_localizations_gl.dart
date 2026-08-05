@@ -498,6 +498,9 @@ class AppLocalizationsGl extends AppLocalizations {
   String get headers => 'Cabeceiras';
 
   @override
+  String get optional => 'Opcional';
+
+  @override
   String get scrolloverAppBar => 'A barra da app é pregable ao desprazarse';
 
   @override
