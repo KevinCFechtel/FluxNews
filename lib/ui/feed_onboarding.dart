@@ -1,7 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class FeedOnboarding extends StatefulWidget {
@@ -329,18 +335,43 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: <Widget>[
-            OutlinedButton.icon(
-              onPressed: _selectAll,
-              icon: const Icon(Icons.done_all),
-              label: Text(localization.feedSelectionSelectAll),
-            ),
-            OutlinedButton.icon(
-              onPressed: _clearSelection,
-              icon: const Icon(Icons.deselect),
-              label: Text(localization.feedSelectionDeleteSelection),
-            ),
-          ],
+          children: Platform.isIOS
+              ? <Widget>[
+                  AdaptiveSettingsButton(
+                    onPressed: _selectAll,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(CupertinoIcons.check_mark_circled, size: 18),
+                        const SizedBox(width: 7),
+                        Text(localization.feedSelectionSelectAll),
+                      ],
+                    ),
+                  ),
+                  AdaptiveSettingsButton(
+                    onPressed: _clearSelection,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(CupertinoIcons.clear_circled, size: 18),
+                        const SizedBox(width: 7),
+                        Text(localization.feedSelectionDeleteSelection),
+                      ],
+                    ),
+                  ),
+                ]
+              : <Widget>[
+                  OutlinedButton.icon(
+                    onPressed: _selectAll,
+                    icon: const Icon(Icons.done_all),
+                    label: Text(localization.feedSelectionSelectAll),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _clearSelection,
+                    icon: const Icon(Icons.deselect),
+                    label: Text(localization.feedSelectionDeleteSelection),
+                  ),
+                ],
         ),
         const SizedBox(height: 12),
         ..._categories.map(_buildCategoryCard),
@@ -409,6 +440,82 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     FluxNewsState appState = context.watch<FluxNewsState>();
+
+    if (Platform.isIOS) {
+      final glassSettings = iosLiquidGlassSettings(
+        context,
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final glassQuality = iosLiquidGlassQuality(
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final foreground = iosLiquidGlassForeground(context);
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: GlassAppBar(
+          centerTitle: false,
+          buttonSettings: glassSettings,
+          leading: Navigator.canPop(context)
+              ? GlassIconButton(
+                  useOwnLayer: true,
+                  quality: glassQuality,
+                  settings: glassSettings,
+                  semanticLabel:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: Icon(CupertinoIcons.back, color: foreground),
+                )
+              : null,
+          title: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: glassQuality,
+                settings: glassSettings,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Text(
+                  localization.feedSelection,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: AdaptiveSettingsButton(
+            onPressed: _isSubmitting ? null : _createFeeds,
+            child: _isSubmitting
+                ? const CupertinoActivityIndicator()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(CupertinoIcons.cloud_upload, size: 19),
+                      const SizedBox(width: 8),
+                      Text('${localization.save} ($_selectedCount)'),
+                    ],
+                  ),
+          ),
+        ),
+        body: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.paddingOf(context).top + 52,
+          ),
+          child: appState.isTablet
+              ? _buildTabletLayout(context, localization)
+              : _buildPhoneLayout(context, localization),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

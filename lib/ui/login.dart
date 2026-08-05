@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class Login extends StatefulWidget {
@@ -177,6 +180,72 @@ class _LoginState extends State<Login> {
           );
   }
 
+  Widget _buildCredentialField({
+    required BuildContext context,
+    required TextEditingController controller,
+    required String label,
+    required FormFieldValidator<String> validator,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? prefixIcon,
+  }) {
+    if (!Platform.isIOS) {
+      return TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: keyboardType,
+        autofillHints: obscureText
+            ? const [AutofillHints.password]
+            : const [AutofillHints.url],
+        obscureText: obscureText,
+        validator: validator,
+      );
+    }
+
+    final appState = context.read<FluxNewsState>();
+    return FormField<String>(
+      initialValue: controller.text,
+      validator: validator,
+      builder: (fieldState) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 7),
+            child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+          ),
+          GlassTextField(
+            controller: controller,
+            placeholder: label,
+            prefixIcon: prefixIcon,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            textInputAction: TextInputAction.next,
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            settings: iosLiquidGlassSettings(
+              context,
+              useClearEffect: appState.iosClearLiquidGlass,
+            ),
+            onChanged: fieldState.didChange,
+          ),
+          if (fieldState.hasError)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8, top: 6),
+              child: Text(
+                fieldState.errorText!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFormContent(
       BuildContext context, AppLocalizations localization) {
     return Form(
@@ -189,14 +258,12 @@ class _LoginState extends State<Login> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 20),
-          TextFormField(
+          _buildCredentialField(
+            context: context,
             controller: _urlController,
-            decoration: InputDecoration(
-              labelText: localization.apiUrl,
-              border: const OutlineInputBorder(),
-            ),
+            label: localization.apiUrl,
             keyboardType: TextInputType.url,
-            autofillHints: const [AutofillHints.url],
+            prefixIcon: const Icon(CupertinoIcons.link),
             validator: (value) {
               final url = value?.trim() ?? '';
               if (url.isEmpty) {
@@ -211,13 +278,11 @@ class _LoginState extends State<Login> {
             },
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          _buildCredentialField(
+            context: context,
             controller: _apiKeyController,
-            decoration: InputDecoration(
-              labelText: localization.apiKey,
-              border: const OutlineInputBorder(),
-            ),
-            autofillHints: const [AutofillHints.password],
+            label: localization.apiKey,
+            prefixIcon: const Icon(CupertinoIcons.lock),
             obscureText: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -232,26 +297,49 @@ class _LoginState extends State<Login> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          Wrap(
-            children: [
-              Text(localization.headerKey),
-              TextField(
-                controller: _headerKeyController,
-              ),
-            ],
-          ),
-          Wrap(
-            children: [
-              Text(localization.headerValue),
-              TextField(
-                controller: _headerValueController,
-              ),
-            ],
-          ),
+          if (Platform.isIOS) ...[
+            AdaptiveSettingsTextField(
+              controller: _headerKeyController,
+              decoration: InputDecoration(hintText: localization.headerKey),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 10),
+            AdaptiveSettingsTextField(
+              controller: _headerValueController,
+              decoration: InputDecoration(hintText: localization.headerValue),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _addHeader(),
+            ),
+          ] else ...[
+            Wrap(
+              children: [
+                Text(localization.headerKey),
+                TextField(controller: _headerKeyController),
+              ],
+            ),
+            Wrap(
+              children: [
+                Text(localization.headerValue),
+                TextField(controller: _headerValueController),
+              ],
+            ),
+          ],
           const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: _addHeader,
-            child: Text(localization.saveHeader),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: AdaptiveSettingsButton(
+              onPressed: _addHeader,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (Platform.isIOS) ...[
+                    const Icon(CupertinoIcons.add, size: 18),
+                    const SizedBox(width: 7),
+                  ],
+                  Text(localization.saveHeader),
+                ],
+              ),
+            ),
           ),
           if (_headers.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -269,14 +357,24 @@ class _LoginState extends State<Login> {
                       (entry) => DataRow(cells: [
                         DataCell(Text(entry.key)),
                         DataCell(Text(entry.value)),
-                        DataCell(TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _headers.remove(entry.key);
-                            });
-                          },
-                          child: Text(localization.delete),
-                        )),
+                        DataCell(Platform.isIOS
+                            ? CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  setState(() {
+                                    _headers.remove(entry.key);
+                                  });
+                                },
+                                child: Text(localization.delete),
+                              )
+                            : TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _headers.remove(entry.key);
+                                  });
+                                },
+                                child: Text(localization.delete),
+                              )),
                       ]),
                     )
                     .toList(),
@@ -292,16 +390,18 @@ class _LoginState extends State<Login> {
           ],
           const SizedBox(height: 20),
           Platform.isIOS
-              ? CupertinoButton.filled(
+              ? AdaptiveSettingsButton(
                   onPressed: _isLoading ? null : () => _submit(context),
                   child: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator.adaptive(
-                              strokeWidth: 2),
-                        )
-                      : Text(localization.save),
+                      ? const CupertinoActivityIndicator()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(CupertinoIcons.check_mark, size: 18),
+                            const SizedBox(width: 8),
+                            Text(localization.save),
+                          ],
+                        ),
                 )
               : ElevatedButton(
                   onPressed: _isLoading ? null : () => _submit(context),
@@ -389,6 +489,68 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     FluxNewsState appState = context.watch<FluxNewsState>();
+
+    if (Platform.isIOS) {
+      final glassSettings = iosLiquidGlassSettings(
+        context,
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final glassQuality = iosLiquidGlassQuality(
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final foreground = iosLiquidGlassForeground(context);
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: GlassAppBar(
+          centerTitle: false,
+          buttonSettings: glassSettings,
+          leading: Navigator.canPop(context)
+              ? GlassIconButton(
+                  useOwnLayer: true,
+                  quality: glassQuality,
+                  settings: glassSettings,
+                  semanticLabel:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: Icon(CupertinoIcons.back, color: foreground),
+                )
+              : null,
+          title: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: glassQuality,
+                settings: glassSettings,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Text(
+                  localization.minifluxServer,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        body: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.paddingOf(context).top + 52,
+          ),
+          child: SafeArea(
+            top: false,
+            child: appState.isTablet
+                ? _buildTabletLayout(context, localization)
+                : _buildPhoneLayout(context, localization),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

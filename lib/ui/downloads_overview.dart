@@ -12,6 +12,7 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/adaptive_glass_dialog.dart';
 import 'package:flux_news/ui/audioplayer.dart';
 import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -259,16 +260,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     FluxNewsState appState = context.watch<FluxNewsState>();
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings,
-            style: theme.textTheme.titleLarge),
-      ),
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.audioDownloadsSettings,
+      useLargeTitle: true,
       body: _initialLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

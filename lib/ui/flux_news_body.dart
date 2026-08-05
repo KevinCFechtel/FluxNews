@@ -2022,12 +2022,52 @@ class PersistentDownloadBanner extends StatelessWidget {
         final downloads = snapshot.data ?? const [];
         if (downloads.isEmpty) return const SizedBox.shrink();
 
-        final colorScheme = Theme.of(context).colorScheme;
-        final bg = colorScheme.tertiaryContainer;
-        final fg = colorScheme.onTertiaryContainer;
         final screenWidth = MediaQuery.sizeOf(context).width;
         final shortestSide = MediaQuery.sizeOf(context).shortestSide;
         final isTablet = screenWidth >= 900 || shortestSide >= 600;
+
+        if (Platform.isIOS) {
+          final glassForeground = iosLiquidGlassForeground(context);
+          return SafeArea(
+            top: false,
+            bottom: respectBottomSafeArea,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                isTablet ? 20 : 16,
+                4,
+                isTablet ? 20 : 16,
+                6,
+              ),
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: GlassQuality.standard,
+                settings: iosLiquidGlassSettings(
+                  context,
+                  useClearEffect: appState.iosClearLiquidGlass,
+                ),
+                shape: const LiquidRoundedSuperellipse(borderRadius: 22),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 12 : 10,
+                  vertical: isTablet ? 8 : 7,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: downloads
+                      .map((download) => _DownloadRow(
+                            progress: download,
+                            foreground: glassForeground,
+                            isTablet: isTablet,
+                          ))
+                      .toList(),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final colorScheme = Theme.of(context).colorScheme;
+        final bg = colorScheme.tertiaryContainer;
+        final fg = colorScheme.onTertiaryContainer;
 
         return SafeArea(
           top: false,
