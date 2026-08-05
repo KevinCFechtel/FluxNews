@@ -29,43 +29,7 @@ import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
-
-const _lightFloatingGlassSettings = LiquidGlassSettings(
-  glassColor: Color(0x3DFFFFFF),
-  thickness: 25,
-  blur: 16,
-  chromaticAberration: 0.02,
-  lightIntensity: 0.8,
-  ambientStrength: 0.2,
-  ambientRim: 0.35,
-  fresnelStrength: 1.4,
-  saturation: 1.0,
-  backerColor: Color(0x80FFFFFF),
-  whitenStrength: 0.15,
-  shadowElevation: 2,
-);
-
-const _darkFloatingGlassSettings = LiquidGlassSettings(
-  glassColor: Color(0x26FFFFFF),
-  thickness: 25,
-  blur: 16,
-  chromaticAberration: 0.02,
-  lightIntensity: 0.55,
-  ambientStrength: 0.12,
-  saturation: 1.1,
-  backerColor: Color(0x59000000),
-  shadowElevation: 1.5,
-);
-
-LiquidGlassSettings _floatingGlassSettings(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.light
-        ? _lightFloatingGlassSettings
-        : _darkFloatingGlassSettings;
-
-Color _floatingGlassForeground(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.light
-        ? CupertinoColors.black
-        : CupertinoColors.white;
+import 'ios_liquid_glass_style.dart';
 
 class FluxNewsBody extends StatelessWidget {
   const FluxNewsBody({super.key});
@@ -1233,6 +1197,8 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       GlassMenuItem(
         title: strings.search,
         icon: const Icon(Icons.search),
+        height: 56,
+        maxLines: 2,
         onTap: () =>
             Navigator.pushNamed(context, FluxNewsState.searchRouteString),
       ),
@@ -1243,6 +1209,8 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
         icon: Icon(appState.newsStatus == FluxNewsState.unreadNewsStatus
             ? Icons.checklist
             : Icons.fiber_new),
+        height: 56,
+        maxLines: 2,
         onTap: () => unawaited(_toggleReadFilter(appState)),
       ),
       GlassMenuItem(
@@ -1250,12 +1218,16 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
             ? strings.oldestFirst
             : strings.newestFirst,
         icon: const Icon(Icons.sort),
+        height: 56,
+        maxLines: 2,
         onTap: () => unawaited(_toggleSortOrder(appState)),
       ),
       const GlassMenuDivider(),
       GlassMenuItem(
         title: _markScopeLabel(context, appState),
         icon: const Icon(Icons.check_circle_outline),
+        height: 56,
+        maxLines: 2,
         onTap: () => showDeleteAllDialog(
           context,
           appState,
@@ -1265,12 +1237,16 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       GlassMenuItem(
         title: strings.markAsReadAndNext,
         icon: const Icon(Icons.skip_next),
+        height: 56,
+        maxLines: 2,
         onTap: () => unawaited(_markAsReadAndAdvance(appState)),
       ),
       const GlassMenuDivider(),
       GlassMenuItem(
         title: strings.audioDownloadsSettings,
         icon: const Icon(Icons.podcasts),
+        height: 56,
+        maxLines: 2,
         onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
           builder: (context) => const DownloadsOverview(),
         )),
@@ -1278,6 +1254,8 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       GlassMenuItem(
         title: strings.settings,
         icon: const Icon(Icons.settings),
+        height: 56,
+        maxLines: 2,
         onTap: () =>
             Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
       ),
@@ -1286,8 +1264,18 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
 
   Widget _bottomChrome(FluxNewsState appState) {
     final strings = AppLocalizations.of(context)!;
-    final glassSettings = _floatingGlassSettings(context);
-    final glassForeground = _floatingGlassForeground(context);
+    final glassSettings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassQuality = iosLiquidGlassQuality(
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final menuGlassSettings = iosLiquidGlassMenuSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassForeground = iosLiquidGlassForeground(context);
     final contentChrome = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1296,7 +1284,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
           respectBottomSafeArea: false,
         ),
         AdaptiveLiquidGlassLayer(
-          quality: GlassQuality.standard,
+          quality: glassQuality,
           settings: glassSettings,
           child: SafeArea(
             top: false,
@@ -1310,7 +1298,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: GlassIconButton(
-                          quality: GlassQuality.standard,
+                          quality: glassQuality,
                           semanticLabel: appState.syncProcess
                               ? strings.cancel
                               : strings.syncNews,
@@ -1334,7 +1322,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                       child: Center(
                         child: appState.iosMarkAsReadQuickAction
                             ? GlassIconButton(
-                                quality: GlassQuality.standard,
+                                quality: glassQuality,
                                 semanticLabel:
                                     _markScopeLabel(context, appState),
                                 onPressed: () => showDeleteAllDialog(
@@ -1353,14 +1341,28 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
-                        child: GlassPullDownButton(
-                          quality: GlassQuality.standard,
-                          semanticLabel: strings.moreActions,
-                          icon: Icon(
-                            CupertinoIcons.ellipsis_circle,
-                            color: glassForeground,
-                          ),
+                        child: GlassMenu(
+                          quality: glassQuality,
+                          settings: menuGlassSettings,
                           items: _menuItems(appState),
+                          menuWidth: (MediaQuery.sizeOf(context).width - 32)
+                              .clamp(
+                                280.0,
+                                340.0,
+                              )
+                              .toDouble(),
+                          autoAdjustToScreen: true,
+                          menuPadding: const EdgeInsets.all(12),
+                          triggerBuilder: (context, toggleMenu) =>
+                              GlassIconButton(
+                            quality: glassQuality,
+                            semanticLabel: strings.moreActions,
+                            onPressed: toggleMenu,
+                            icon: Icon(
+                              CupertinoIcons.ellipsis_circle,
+                              color: glassForeground,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -1394,11 +1396,17 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     final title = appState.appBarText.isEmpty
         ? AppLocalizations.of(context)!.fluxNews
         : appState.appBarText;
-    final glassSettings = _floatingGlassSettings(context);
-    final glassForeground = _floatingGlassForeground(context);
+    final glassSettings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassQuality = iosLiquidGlassQuality(
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassForeground = iosLiquidGlassForeground(context);
     final compactTitle = GlassContainer(
       useOwnLayer: true,
-      quality: GlassQuality.standard,
+      quality: glassQuality,
       settings: glassSettings,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
@@ -1465,7 +1473,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
             ? null
             : Builder(builder: (context) {
                 return GlassIconButton(
-                  quality: GlassQuality.standard,
+                  quality: glassQuality,
                   useOwnLayer: true,
                   settings: glassSettings,
                   semanticLabel:

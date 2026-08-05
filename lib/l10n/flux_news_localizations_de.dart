@@ -34,6 +34,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Als gelesen markieren in der unteren Leiste anzeigen';
 
   @override
+  String get iosClearLiquidGlass => 'Klares Liquid Glass verwenden';
+
+  @override
   String get markAsReadAndNext => 'Als gelesen markieren und nächste öffnen';
 
   @override
@@ -158,6 +161,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get itemCount => 'Anzahl';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Nachrichten',
+      one: '1 Nachricht',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get multilineAppBarTextSetting =>

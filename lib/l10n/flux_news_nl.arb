@@ -7,6 +7,7 @@
     "addBookmark": "Bladwijzer toevoegen",
     "markAsRead": "Markeer als gelezen",
     "iosMarkAsReadQuickAction": "Toon Markeer als gelezen in de onderste werkbalk",
+    "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
     "markAsReadAndNext": "Markeer als gelezen en open volgende",
     "moreActions": "Meer acties",
     "markAsUnread": "Markeer als ongelezen",
@@ -46,6 +47,14 @@
     "syncOnStart": "Synchroniseer nieuws bij het opstarten",
     "bookmarked": "Bladwijzers",
     "itemCount": "Aantal",
+    "largeTitleNewsCount": "{count, plural, =1{1 bericht} other{{count} berichten}}",
+    "@largeTitleNewsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "multilineAppBarTextSetting": "Toon het aantal nieuw in de appbalk",
     "showFeedIconsTextSettings": "Toon de icons van de feeds",
     "descriptionMinifluxApp": "Dit is een eenvoudige nieuwslezer die werkt met de miniflux server.\nGa voor meer informatie over het miniflux-project naar de projectpagina:",

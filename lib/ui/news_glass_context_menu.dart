@@ -12,10 +12,12 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'ios_liquid_glass_style.dart';
+
 /// iOS-only replacement for the former [CupertinoContextMenu].
 ///
-/// The most common actions stay in the morphing menu. Less common actions are
-/// grouped in a glass action sheet so the menu remains compact and reachable.
+/// All applicable actions stay in one morphing menu so the selected card
+/// remains visible and the user never has to switch to a second action sheet.
 class NewsGlassContextMenu extends StatefulWidget {
   const NewsGlassContextMenu({
     super.key,
@@ -96,55 +98,6 @@ class _NewsGlassContextMenuState extends State<NewsGlassContextMenu> {
     ));
   }
 
-  void _showMoreActions(FluxNewsState appState) {
-    final strings = AppLocalizations.of(context)!;
-    final actions = <GlassActionSheetAction>[
-      GlassActionSheetAction(
-        label: strings.openMinifluxShort,
-        icon: const Icon(Icons.open_in_browser),
-        onPressed: () {
-          Navigator.of(context).pop();
-          _openNews(appState, inMiniflux: true);
-        },
-      ),
-      if (_canSaveToThirdParty(appState))
-        GlassActionSheetAction(
-          label: strings.contextSaveButton,
-          icon: const Icon(Icons.save),
-          onPressed: () {
-            Navigator.of(context).pop();
-            saveToThirdPartyAction(widget.news, appState, context);
-          },
-        ),
-      if (widget.news.getAudioAttachments().isNotEmpty)
-        GlassActionSheetAction(
-          label: strings.downloadAudio,
-          icon: const Icon(Icons.download),
-          onPressed: () {
-            Navigator.of(context).pop();
-            unawaited(downloadAudioAction(widget.news, appState, context));
-          },
-        ),
-      if (widget.news.commentsUrl.isNotEmpty)
-        GlassActionSheetAction(
-          label: strings.openComments,
-          icon: const Icon(Icons.comment),
-          onPressed: () {
-            Navigator.of(context).pop();
-            openNewsCommentsAction(widget.news, context);
-          },
-        ),
-    ];
-
-    showGlassActionSheet<void>(
-      context: context,
-      title: strings.moreActions,
-      cancelLabel: strings.cancel,
-      quality: GlassQuality.standard,
-      actions: actions,
-    );
-  }
-
   List<Widget> _items(FluxNewsState appState) {
     final strings = AppLocalizations.of(context)!;
     return <Widget>[
@@ -152,6 +105,8 @@ class _NewsGlassContextMenuState extends State<NewsGlassContextMenu> {
         title:
             widget.news.starred ? strings.deleteBookmark : strings.addBookmark,
         icon: Icon(widget.news.starred ? Icons.star_outline : Icons.star),
+        height: 56,
+        maxLines: 2,
         onTap: () => _afterMenuCloses(
           () =>
               bookmarkAction(widget.news, appState, context, widget.searchView),
@@ -164,11 +119,15 @@ class _NewsGlassContextMenuState extends State<NewsGlassContextMenu> {
         icon: Icon(widget.news.status == FluxNewsState.readNewsStatus
             ? Icons.fiber_new
             : Icons.check),
+        height: 56,
+        maxLines: 2,
         onTap: () => _afterMenuCloses(() => _toggleReadStatus(appState)),
       ),
       GlassMenuItem(
         title: strings.open,
         icon: const Icon(Icons.open_in_new),
+        height: 56,
+        maxLines: 2,
         onTap: () => _afterMenuCloses(
           () => _openNews(appState, inMiniflux: false),
         ),
@@ -176,14 +135,53 @@ class _NewsGlassContextMenuState extends State<NewsGlassContextMenu> {
       GlassMenuItem(
         title: strings.share,
         icon: const Icon(Icons.share),
+        height: 56,
+        maxLines: 2,
         onTap: () => _afterMenuCloses(_share),
       ),
-      const GlassMenuDivider(),
       GlassMenuItem(
-        title: strings.moreActions,
-        icon: const Icon(Icons.more_horiz),
-        onTap: () => _afterMenuCloses(() => _showMoreActions(appState)),
+        title: strings.openMinifluxShort,
+        icon: const Icon(Icons.open_in_browser),
+        height: 56,
+        maxLines: 2,
+        onTap: () => _afterMenuCloses(
+          () => _openNews(appState, inMiniflux: true),
+        ),
       ),
+      if (_canSaveToThirdParty(appState))
+        GlassMenuItem(
+          title: strings.contextSaveButton,
+          icon: const Icon(Icons.save),
+          height: 56,
+          maxLines: 2,
+          onTap: () => _afterMenuCloses(
+            () => saveToThirdPartyAction(
+              widget.news,
+              appState,
+              context,
+            ),
+          ),
+        ),
+      if (widget.news.getAudioAttachments().isNotEmpty)
+        GlassMenuItem(
+          title: strings.downloadAudio,
+          icon: const Icon(Icons.download),
+          height: 56,
+          maxLines: 2,
+          onTap: () => _afterMenuCloses(
+            () => downloadAudioAction(widget.news, appState, context),
+          ),
+        ),
+      if (widget.news.commentsUrl.isNotEmpty)
+        GlassMenuItem(
+          title: strings.openComments,
+          icon: const Icon(Icons.comment),
+          height: 56,
+          maxLines: 2,
+          onTap: () => _afterMenuCloses(
+            () => openNewsCommentsAction(widget.news, context),
+          ),
+        ),
     ];
   }
 
@@ -191,25 +189,41 @@ class _NewsGlassContextMenuState extends State<NewsGlassContextMenu> {
   Widget build(BuildContext context) {
     final appState = context.watch<FluxNewsState>();
     final menuLabel = AppLocalizations.of(context)!.menu;
+    final glassSettings = iosLiquidGlassMenuSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassQuality = iosLiquidGlassQuality(
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
     return Semantics(
       onLongPress: _openMenu,
       customSemanticsActions: <CustomSemanticsAction, VoidCallback>{
         CustomSemanticsAction(label: menuLabel): _openMenu,
       },
-      child: GlassMenu(
-        controller: _menuController,
-        quality: GlassQuality.standard,
-        autoAdjustToScreen: true,
-        menuPadding: const EdgeInsets.all(12),
-        menuWidth: 280,
-        menuHeight: 330,
-        morphFromZero: true,
-        items: _items(appState),
-        triggerBuilder: (context, toggleMenu) => GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onLongPress: _openMenu,
-          child: widget.child,
-        ),
+      child: Stack(
+        children: [
+          widget.child,
+          Positioned.fill(
+            child: GlassMenu(
+              controller: _menuController,
+              quality: glassQuality,
+              settings: glassSettings,
+              autoAdjustToScreen: true,
+              menuPadding: const EdgeInsets.all(12),
+              menuWidth: (MediaQuery.sizeOf(context).width - 32)
+                  .clamp(280.0, 340.0)
+                  .toDouble(),
+              morphFromZero: true,
+              items: _items(appState),
+              triggerBuilder: (context, toggleMenu) => GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onLongPress: _openMenu,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

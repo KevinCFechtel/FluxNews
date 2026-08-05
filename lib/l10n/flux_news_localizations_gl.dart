@@ -34,6 +34,9 @@ class AppLocalizationsGl extends AppLocalizations {
       'Mostrar Marcar como lido na barra inferior';
 
   @override
+  String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
+
+  @override
   String get markAsReadAndNext => 'Marcar como lido e abrir a seguinte';
 
   @override
@@ -156,6 +159,17 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get itemCount => 'Número';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count noticias',
+      one: '1 noticia',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get multilineAppBarTextSetting => 'Mostrar número de novas na Appbar';

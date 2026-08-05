@@ -7,6 +7,7 @@
     "addBookmark": "Engadir marcador",
     "markAsRead": "Marcar como lido",
     "iosMarkAsReadQuickAction": "Mostrar Marcar como lido na barra inferior",
+    "iosClearLiquidGlass": "Usar Liquid Glass transparente",
     "markAsReadAndNext": "Marcar como lido e abrir a seguinte",
     "moreActions": "Máis accións",
     "markAsUnread": "Marcar como non lido",
@@ -53,6 +54,14 @@
     "syncOnStart": "Sincronizar as novas ao inicio",
     "bookmarked": "Nos marcadores",
     "itemCount": "Número",
+    "largeTitleNewsCount": "{count, plural, =1{1 noticia} other{{count} noticias}}",
+    "@largeTitleNewsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "multilineAppBarTextSetting": "Mostrar número de novas na Appbar",
     "showFeedIconsTextSettings": "Mostrar iconas das canles",
     "descriptionMoreInformation": "Visita a páxina do proxecto para saber máis sobre esta app:",

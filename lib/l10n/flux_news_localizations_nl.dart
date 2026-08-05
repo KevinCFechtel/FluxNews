@@ -34,6 +34,9 @@ class AppLocalizationsNl extends AppLocalizations {
       'Toon Markeer als gelezen in de onderste werkbalk';
 
   @override
+  String get iosClearLiquidGlass => 'Helder Liquid Glass gebruiken';
+
+  @override
   String get markAsReadAndNext => 'Markeer als gelezen en open volgende';
 
   @override
@@ -157,6 +160,17 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get itemCount => 'Aantal';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count berichten',
+      one: '1 bericht',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get multilineAppBarTextSetting =>

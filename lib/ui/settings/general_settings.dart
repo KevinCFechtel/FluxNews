@@ -326,6 +326,40 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       FluxNewsState.brightnessModeLightString
                   ? const Divider()
                   : SizedBox.shrink(),
+              if (Platform.isIOS)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
+                      child: Icon(Icons.water_drop_outlined),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.iosClearLiquidGlass,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: appState.iosClearLiquidGlass,
+                      onChanged: (bool value) {
+                        final storedValue = value
+                            ? FluxNewsState.secureStorageTrueString
+                            : FluxNewsState.secureStorageFalseString;
+                        appState.iosClearLiquidGlass = value;
+                        appState.storageValues[FluxNewsState
+                            .secureStorageIOSClearLiquidGlassKey] = storedValue;
+                        appState.storage.write(
+                          key:
+                              FluxNewsState.secureStorageIOSClearLiquidGlassKey,
+                          value: storedValue,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (Platform.isIOS) const Divider(),
               // this row contains the selection of the mark as read on scroll over
               // if it is turned on, a news is marked as read if it is scrolled over
               Row(

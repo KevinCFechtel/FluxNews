@@ -155,6 +155,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
   static const String secureStorageIOSMarkAsReadQuickActionKey =
       'iosMarkAsReadQuickAction';
+  static const String secureStorageIOSClearLiquidGlassKey =
+      'iosClearLiquidGlass';
   static const String secureStorageNetworkImageCacheMigratedKey =
       'networkImageCacheMigrated';
   static const String secureStorageImageCacheDurationDaysKey =
@@ -418,6 +420,7 @@ class FluxNewsState extends ChangeNotifier {
       : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
   bool iosMarkAsReadQuickAction = false;
+  bool iosClearLiquidGlass = false;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
 
@@ -2479,6 +2482,10 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey) {
         iosMarkAsReadQuickAction =
             value == FluxNewsState.secureStorageTrueString;
+      }
+
+      if (key == FluxNewsState.secureStorageIOSClearLiquidGlassKey) {
+        iosClearLiquidGlass = value == FluxNewsState.secureStorageTrueString;
       }
 
       // assign the Tab Action selection from persistent saved config

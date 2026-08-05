@@ -37,31 +37,50 @@ class BodyNewsList extends StatelessWidget {
     bool searchView = false;
     Widget listHeader({required bool emptyBody}) {
       if (largeTitleController != null) {
+        final showCount = appState.multilineAppBarText;
         final largeTitle = GlassLargeTitle(
           text: appState.appBarText.isEmpty
               ? AppLocalizations.of(context)!.fluxNews
               : appState.appBarText,
           controller: largeTitleController!,
-          trailing: appState.multilineAppBarText
-              ? Semantics(
-                  label:
-                      '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
-                  child: Text(
-                    '${appCounterState.appBarNewsCount}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: CupertinoColors.label.resolveFrom(context),
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                )
-              : null,
+          padding: EdgeInsetsDirectional.fromSTEB(24, 0, 24, showCount ? 2 : 8),
         );
-        if (topContentInset <= 0) return largeTitle;
-        return SliverMainAxisGroup(
-          slivers: [
+        final count = appCounterState.appBarNewsCount;
+        final slivers = <Widget>[
+          if (topContentInset > 0)
             SliverToBoxAdapter(child: SizedBox(height: topContentInset)),
-            largeTitle,
-          ],
+          largeTitle,
+          if (showCount)
+            SliverToBoxAdapter(
+              child: AnimatedBuilder(
+                animation: largeTitleController!,
+                builder: (context, child) {
+                  final opacity = Curves.easeIn.transform(
+                    (1 - largeTitleController!.collapseProgress)
+                        .clamp(0.0, 1.0),
+                  );
+                  return Opacity(opacity: opacity, child: child);
+                },
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 10),
+                  child: Semantics(
+                    label: '${AppLocalizations.of(context)!.itemCount}: $count',
+                    child: Text(
+                      AppLocalizations.of(context)!.largeTitleNewsCount(count),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: CupertinoColors.secondaryLabel
+                                .resolveFrom(context),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ];
+        if (slivers.length == 1) return largeTitle;
+        return SliverMainAxisGroup(
+          slivers: slivers,
         );
       }
       return !appState.isTablet

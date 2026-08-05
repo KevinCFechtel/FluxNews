@@ -34,6 +34,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster';
 
   @override
+  String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
+
+  @override
   String get markAsReadAndNext => 'Okundu olarak işaretle ve sonrakini aç';
 
   @override
@@ -156,6 +159,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemCount => 'Miktar';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    return '$count haber';
+  }
 
   @override
   String get multilineAppBarTextSetting => 'Appbar\'da haber sayısını göster';

@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'Show Mark as read in the bottom toolbar'**
   String get iosMarkAsReadQuickAction;
 
+  /// No description provided for @iosClearLiquidGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Clear Liquid Glass'**
+  String get iosClearLiquidGlass;
+
   /// No description provided for @markAsReadAndNext.
   ///
   /// In en, this message translates to:
@@ -391,6 +397,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Count'**
   String get itemCount;
+
+  /// No description provided for @largeTitleNewsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 article} other{{count} articles}}'**
+  String largeTitleNewsCount(int count);
 
   /// No description provided for @multilineAppBarTextSetting.
   ///
