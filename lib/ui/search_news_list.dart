@@ -11,7 +11,10 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 class SearchNewsList extends StatelessWidget {
   const SearchNewsList({
     super.key,
+    this.topContentInset = 0,
   });
+
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -30,23 +33,30 @@ class SearchNewsList extends StatelessWidget {
             } else {
               return snapshot.data == null
                   // show empty dialog if list is null
-                  ? Center(
-                      child: Text(
-                      AppLocalizations.of(context)!.emptySearch,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ))
-                  // show empty dialog if list is empty
-                  : snapshot.data!.isEmpty
-                      ? Center(
-                          child: Text(
+                  ? _withTopInset(
+                      Center(
+                        child: Text(
                           AppLocalizations.of(context)!.emptySearch,
                           style: Theme.of(context).textTheme.headlineSmall,
-                        ))
+                        ),
+                      ),
+                    )
+                  // show empty dialog if list is empty
+                  : snapshot.data!.isEmpty
+                      ? _withTopInset(
+                          Center(
+                            child: Text(
+                              AppLocalizations.of(context)!.emptySearch,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                          ),
+                        )
                       // otherwise create list view with the news of the search result
                       : Stack(children: [
                           SuperListView.builder(
                               key: const PageStorageKey<String>(
                                   'NewsSearchList'),
+                              padding: EdgeInsets.only(top: topContentInset),
                               itemCount: snapshot.data!.length,
                               itemBuilder: (context, i) {
                                 return appState.orientation ==
@@ -72,5 +82,13 @@ class SearchNewsList extends StatelessWidget {
       },
     );
     return getData;
+  }
+
+  Widget _withTopInset(Widget child) {
+    if (topContentInset == 0) return child;
+    return Padding(
+      padding: EdgeInsets.only(top: topContentInset),
+      child: child,
+    );
   }
 }
