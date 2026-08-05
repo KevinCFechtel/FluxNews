@@ -126,6 +126,12 @@ Future<void> syncNews(
       void resetListPosition() {
         if (reconciliationSucceeded && onSuccessfulListReset != null) {
           onSuccessfulListReset();
+        } else if (reconciliationSucceeded) {
+          // Startup and onboarding syncs do not originate from the iOS home
+          // widget and therefore cannot pass its Large Title callback. Wait
+          // for the replacement list to attach, then reveal the title on iOS
+          // while retaining the existing first-item reset everywhere else.
+          appState.resetListToStart(revealIOSLargeTitle: true);
         } else {
           appState.jumpToItem(0);
         }

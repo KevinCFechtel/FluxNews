@@ -2850,6 +2850,33 @@ class FluxNewsState extends ChangeNotifier {
     unawaited(_jumpToItemWhenReady(index));
   }
 
+  void resetListToStart({bool revealIOSLargeTitle = false}) {
+    unawaited(_resetListToStartWhenReady(
+      revealIOSLargeTitle: revealIOSLargeTitle,
+    ));
+  }
+
+  Future<void> _resetListToStartWhenReady({
+    required bool revealIOSLargeTitle,
+  }) async {
+    final listReady = await waitUntilNewsListBuild();
+    if (!listReady) {
+      logThis(
+          'resetListToStart',
+          'Skipped list reset because the list controllers did not attach in time',
+          LogLevel.WARNING);
+      return;
+    }
+
+    if (Platform.isIOS && revealIOSLargeTitle) {
+      scrollController.jumpTo(scrollController.position.minScrollExtent);
+      return;
+    }
+
+    listController.jumpToItem(
+        index: 0, scrollController: scrollController, alignment: 0.0);
+  }
+
   Future<void> _jumpToItemWhenReady(int index) async {
     final listReady = await waitUntilNewsListBuild();
     if (!listReady) {

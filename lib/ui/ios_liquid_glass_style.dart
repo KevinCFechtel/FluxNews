@@ -148,6 +148,29 @@ LiquidGlassSettings iosLiquidGlassInputSettings(
   );
 }
 
+/// Stable, legible glass for the large iPad navigation surface. The sidebar
+/// deliberately stays frosted even when compact controls use Clear Glass;
+/// its dense labels should not inherit a highly refractive recipe.
+LiquidGlassSettings iosLiquidGlassSidebarSettings(BuildContext context) {
+  final isLight = Theme.of(context).brightness == Brightness.light;
+  return iosLiquidGlassSettings(
+    context,
+    useClearEffect: false,
+  ).copyWith(
+    thickness: 18,
+    blur: 18,
+    chromaticAberration: 0.008,
+    lightIntensity: isLight ? 0.5 : 0.4,
+    ambientStrength: 0.1,
+    ambientRim: 0.22,
+    fresnelStrength: 0.85,
+    glowIntensity: 0.35,
+    backerColor: isLight ? const Color(0x70FFFFFF) : const Color(0x66000000),
+    whitenStrength: isLight ? 0.08 : 0,
+    shadowElevation: 1.5,
+  );
+}
+
 GlassQuality iosLiquidGlassQuality({required bool useClearEffect}) =>
     useClearEffect ? GlassQuality.premium : GlassQuality.standard;
 
