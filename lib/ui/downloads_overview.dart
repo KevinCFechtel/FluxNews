@@ -516,7 +516,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
         ),
       ),
       child: Card(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).platform == TargetPlatform.iOS
+            ? theme.colorScheme.surfaceContainerHigh
+            : theme.colorScheme.surfaceContainerHighest,
         shadowColor: Colors.black,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),

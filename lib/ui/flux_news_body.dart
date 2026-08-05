@@ -1715,6 +1715,154 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
             final buttonSize = isTablet ? 60.0 : 52.0;
             final textFontSize = isTablet ? 14.0 : 12.0;
 
+            final totalMs = media.duration?.inMilliseconds ?? 0;
+            final currentMs = totalMs <= 0
+                ? 0
+                : playback.updatePosition.inMilliseconds.clamp(0, totalMs);
+            final progress = totalMs <= 0 ? null : currentMs / totalMs;
+
+            if (Platform.isIOS) {
+              final useClearEffect = widget.appState.iosClearLiquidGlass;
+              final glassSettings = iosLiquidGlassSettings(
+                context,
+                useClearEffect: useClearEffect,
+              );
+              final glassQuality = iosLiquidGlassQuality(
+                useClearEffect: useClearEffect,
+              );
+              final glassForeground = iosLiquidGlassForeground(context);
+              final artist = media.artist?.trim() ?? '';
+
+              return SafeArea(
+                top: false,
+                bottom: widget.respectBottomSafeArea,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isTablet ? 20 : 16,
+                    4,
+                    isTablet ? 20 : 16,
+                    6,
+                  ),
+                  child: GlassContainer(
+                    useOwnLayer: true,
+                    quality: glassQuality,
+                    settings: glassSettings,
+                    shape: const LiquidRoundedSuperellipse(borderRadius: 24),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 8, 6),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _openFullPlayer,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color:
+                                      glassForeground.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.headphones,
+                                  size: 21,
+                                  color: glassForeground,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      media.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: glassForeground,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    if (artist.isNotEmpty)
+                                      Text(
+                                        artist,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: glassForeground.withValues(
+                                                alpha: 0.65,
+                                              ),
+                                            ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: '-30s',
+                                onPressed: () => _audioHandler!.rewind(),
+                                icon: const Icon(Icons.replay_30, size: 24),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: playback.playing
+                                    ? AppLocalizations.of(context)!.pause
+                                    : AppLocalizations.of(context)!.play,
+                                onPressed: () => playback.playing
+                                    ? _audioHandler!.pause()
+                                    : _audioHandler!.play(),
+                                icon: Icon(
+                                  playback.playing
+                                      ? CupertinoIcons.pause_fill
+                                      : CupertinoIcons.play_fill,
+                                ),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: '+30s',
+                                onPressed: () => _audioHandler!.fastForward(),
+                                icon: const Icon(Icons.forward_30, size: 24),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: AppLocalizations.of(context)!.stop,
+                                onPressed: _stopMiniPlayer,
+                                icon: const Icon(
+                                  CupertinoIcons.xmark_circle_fill,
+                                  size: 21,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 3,
+                              backgroundColor:
+                                  glassForeground.withValues(alpha: 0.16),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                glassForeground.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
             return SafeArea(
               top: false,
               bottom: widget.respectBottomSafeArea,
@@ -1807,14 +1955,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                         ),
                         SizedBox(height: isTablet ? 6 : 4),
                         LinearProgressIndicator(
-                          value: (() {
-                            final totalMs = media.duration?.inMilliseconds ?? 0;
-                            if (totalMs <= 0) return null;
-                            final currentMs = playback
-                                .updatePosition.inMilliseconds
-                                .clamp(0, totalMs);
-                            return currentMs / totalMs;
-                          })(),
+                          value: progress,
                           minHeight: isTablet ? 4 : 3,
                           backgroundColor:
                               miniPlayerForeground.withValues(alpha: 0.25),
