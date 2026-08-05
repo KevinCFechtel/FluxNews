@@ -108,7 +108,7 @@ class AdaptiveSettingsSwitch extends StatelessWidget {
   }
 }
 
-/// A Material dropdown on Android and a Liquid Glass selection sheet on iOS.
+/// A Material dropdown on Android and an anchored Liquid Glass menu on iOS.
 class AdaptiveSettingsDropdown<T> extends StatelessWidget {
   const AdaptiveSettingsDropdown({
     super.key,
@@ -158,7 +158,7 @@ class AdaptiveSettingsDropdown<T> extends StatelessWidget {
       );
     }
 
-    final options = items ?? const <DropdownMenuItem<Never>>[];
+    final options = items ?? <DropdownMenuItem<T>>[];
     final selectedIndex = options.indexWhere((item) => item.value == value);
     final selectedWidgets = selectedItemBuilder?.call(context);
     final selectedChild = selectedIndex >= 0
@@ -173,126 +173,144 @@ class AdaptiveSettingsDropdown<T> extends StatelessWidget {
     );
     final foreground = iosLiquidGlassForeground(context);
     final enabled = onChanged != null && options.isNotEmpty;
+    final optionLabels = options.map(_optionLabel).toList(growable: false);
+    var longestLabelLength = 0;
+    for (final label in optionLabels) {
+      if (label.length > longestLabelLength) {
+        longestLabelLength = label.length;
+      }
+    }
+    final maximumMenuWidth =
+        (MediaQuery.sizeOf(context).width - 32).clamp(180.0, 300.0);
+    final menuWidth =
+        (80.0 + longestLabelLength * 8.2).clamp(180.0, maximumMenuWidth);
+    final menuItemHeights = optionLabels
+        .map((label) => label.length > 28 ? 56.0 : 44.0)
+        .toList(growable: false);
+    final naturalMenuHeight = menuItemHeights.fold<double>(
+          24,
+          (height, itemHeight) => height + itemHeight,
+        ) +
+        (options.isEmpty ? 0 : (options.length - 1) * 2);
+    final mediaQuery = MediaQuery.of(context);
+    final maximumMenuHeight =
+        mediaQuery.size.height - mediaQuery.padding.vertical - 44;
+    final resolvedMenuHeight =
+        menuMaxHeight ?? naturalMenuHeight.clamp(68.0, maximumMenuHeight);
+    T? pendingSelection;
+    var hasPendingSelection = false;
 
     return Semantics(
       button: true,
       enabled: enabled,
       child: Opacity(
         opacity: enabled ? 1 : 0.45,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: enabled
-              ? () => _showSelectionSheet(
-                    context,
-                    options.cast<DropdownMenuItem<T>>(),
-                    useClearEffect,
-                  )
-              : null,
-          child: GlassContainer(
-            useOwnLayer: true,
-            quality: GlassQuality.standard,
-            settings: iosLiquidGlassSettings(
-              context,
-              useClearEffect: useClearEffect,
-            ),
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 10, 8),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: isExpanded ? 0 : 76,
-                minHeight: 28,
-                maxWidth: isExpanded ? double.infinity : 230,
+        child: GlassMenu(
+          autoAdjustToScreen: true,
+          menuPadding: const EdgeInsets.all(12),
+          menuWidth: menuWidth,
+          // A non-null height selects GlassMenu's regular GestureDetector tap
+          // path. Its natural-height slide-to-select path can miss rows after
+          // auto-positioning the overlay near a screen edge.
+          menuHeight: resolvedMenuHeight,
+          menuBorderRadius: 24,
+          itemBorderRadius: 16,
+          quality: GlassQuality.standard,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: useClearEffect,
+          ),
+          onClose: () {
+            if (!hasPendingSelection) return;
+            final selection = pendingSelection;
+            hasPendingSelection = false;
+            pendingSelection = null;
+            onChanged?.call(selection);
+          },
+          triggerBuilder: (context, toggleMenu) => GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: enabled ? toggleMenu : null,
+            child: GlassContainer(
+              useOwnLayer: true,
+              quality: GlassQuality.standard,
+              settings: iosLiquidGlassSettings(
+                context,
+                useClearEffect: useClearEffect,
               ),
-              child: Row(
-                mainAxisSize: isExpanded ? MainAxisSize.max : MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: DefaultTextStyle.merge(
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: foreground),
-                      child: selectedChild,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  icon ??
-                      Icon(
-                        CupertinoIcons.chevron_down,
-                        size: 14,
-                        color: foreground,
+              padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 10, 8),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: isExpanded ? 0 : 76,
+                  minHeight: 28,
+                  maxWidth: isExpanded ? double.infinity : 230,
+                ),
+                child: Row(
+                  mainAxisSize:
+                      isExpanded ? MainAxisSize.max : MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: DefaultTextStyle.merge(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: foreground),
+                        child: selectedChild,
                       ),
-                ],
+                    ),
+                    const SizedBox(width: 8),
+                    icon ??
+                        Icon(
+                          CupertinoIcons.chevron_down,
+                          size: 14,
+                          color: foreground,
+                        ),
+                  ],
+                ),
               ),
             ),
           ),
+          items: options.asMap().entries.map((entry) {
+            final option = entry.value;
+            final label = optionLabels[entry.key];
+            final isSelected = option.value == value;
+            return GlassMenuItem(
+              title: label,
+              enabled: option.enabled,
+              height: menuItemHeights[entry.key],
+              maxLines: 2,
+              titleStyle: TextStyle(
+                inherit: false,
+                color: foreground,
+                fontSize: 17,
+                fontWeight: FontWeight.w400,
+                decoration: TextDecoration.none,
+              ),
+              trailing: isSelected
+                  ? Icon(
+                      CupertinoIcons.check_mark,
+                      color: CupertinoColors.activeBlue.resolveFrom(context),
+                    )
+                  : null,
+              onTap: () {
+                if (option.value != value) {
+                  pendingSelection = option.value;
+                  hasPendingSelection = true;
+                }
+              },
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  Future<void> _showSelectionSheet(
-    BuildContext context,
-    List<DropdownMenuItem<T>> options,
-    bool useClearEffect,
-  ) async {
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final visibleOptionCount = options.length.clamp(1, 8);
-    const sheetChromeHeight = 64.0;
-    const optionRowHeight = 44.0;
-    final desiredHeight =
-        sheetChromeHeight + visibleOptionCount * optionRowHeight;
-    final initialHeightFraction =
-        (desiredHeight / screenHeight).clamp(0.28, 0.62);
-
-    final selection = await GlassModalSheet.show<T>(
-      context: context,
-      settings: iosLiquidGlassMenuSettings(
-        context,
-        useClearEffect: useClearEffect,
-      ),
-      quality: GlassQuality.standard,
-      expandedColor: CupertinoColors.systemBackground.resolveFrom(context),
-      halfSize: initialHeightFraction,
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-          itemCount: options.length,
-          itemBuilder: (context, index) {
-            final option = options[index];
-            final isSelected = option.value == value;
-            return CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              onPressed: option.enabled
-                  ? () => Navigator.of(sheetContext).pop(option.value)
-                  : null,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: DefaultTextStyle.merge(
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: CupertinoColors.label.resolveFrom(context),
-                      ),
-                      child: option.child,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  if (isSelected)
-                    Icon(
-                      CupertinoIcons.check_mark,
-                      color: CupertinoColors.activeBlue.resolveFrom(context),
-                    ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-    if (selection != null && selection != value) {
-      onChanged?.call(selection);
+  String _optionLabel(DropdownMenuItem<T> option) {
+    final optionValue = option.value;
+    if (optionValue is KeyValueRecordType) return optionValue.value;
+    if (option.child is Text) {
+      final text = option.child as Text;
+      return text.data ?? text.textSpan?.toPlainText() ?? '$optionValue';
     }
+    return '$optionValue';
   }
 }
 

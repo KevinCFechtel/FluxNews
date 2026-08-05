@@ -17,12 +17,14 @@ class AdaptiveSettingsScaffold extends StatefulWidget {
     this.useLargeTitle = false,
     this.iosLargeTitleBody,
     this.actions,
+    this.iosScrollPhysics,
   });
 
   final String title;
   final Widget body;
   final bool useLargeTitle;
   final List<Widget>? actions;
+  final ScrollPhysics? iosScrollPhysics;
 
   /// Non-scrollable content placed below [GlassLargeTitle] on the iOS root
   /// settings page. Android always renders [body].
@@ -116,6 +118,7 @@ class _AdaptiveSettingsScaffoldState extends State<AdaptiveSettingsScaffold> {
           appBar: appBar,
           body: NestedScrollView(
             controller: _largeTitleController.scrollController,
+            physics: widget.iosScrollPhysics,
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               SliverToBoxAdapter(child: SizedBox(height: topContentInset)),
               GlassLargeTitle(
@@ -132,7 +135,8 @@ class _AdaptiveSettingsScaffoldState extends State<AdaptiveSettingsScaffold> {
         appBar: appBar,
         body: CustomScrollView(
           controller: _largeTitleController.scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics:
+              widget.iosScrollPhysics ?? const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: SizedBox(height: topContentInset)),
             GlassLargeTitle(

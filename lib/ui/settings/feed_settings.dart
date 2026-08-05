@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
@@ -70,66 +71,73 @@ class _FluxNewsFeedSettingsBodyState extends State<FluxNewsFeedSettingsBody> {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    // return the body of the feed settings
-    return Column(children: [
-      Padding(
-        padding: EdgeInsets.only(left: 10, right: 10),
-        child: AdaptiveSettingsTextField(
-          controller: _searchController,
-          style: Theme.of(context).textTheme.bodyLarge,
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.searchHint,
-            hintStyle: Theme.of(context).textTheme.bodyLarge,
-            border:
-                UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
-            suffixIcon: IconButton(
-              onPressed: () {
-                _searchController.clear();
-                appState.feedSettingsList =
-                    queryFeedsFromDB(appState, context, '');
-                appState.refreshView();
-              },
-              icon: const Icon(Icons.clear),
-            ),
-          ),
-
-          // on change of the search text field, fetch the news list
-          onChanged: (value) async {
-            if (value != '') {
-              // fetch the news list from the backend with the search text
-              Future<List<Feed>> searchFeedListResult =
-                  queryFeedsFromDB(appState, context, value)
-                      .onError((error, stackTrace) {
-                logThis(
-                    'fetchSearchedNews',
-                    'Caught an error in fetchSearchedNews function! : ${error.toString()}',
-                    LogLevel.ERROR);
-                if (context.mounted) {
-                  if (appState.errorString !=
-                      AppLocalizations.of(context)!
-                          .communicateionMinifluxError) {
-                    appState.errorString = AppLocalizations.of(context)!
-                        .communicateionMinifluxError;
-                    appState.newError = true;
-                    appState.refreshView();
-                  }
-                }
-                return [];
-              });
-              // set the state with the fetched news list
-              appState.feedSettingsList = searchFeedListResult;
-              appState.refreshView();
-            } else {
-              // if search text is empty, set the state with an empty list
+    final searchField = Padding(
+      padding: const EdgeInsets.only(left: 10, right: 10),
+      child: AdaptiveSettingsTextField(
+        controller: _searchController,
+        style: Theme.of(context).textTheme.bodyLarge,
+        decoration: InputDecoration(
+          hintText: AppLocalizations.of(context)!.searchHint,
+          hintStyle: Theme.of(context).textTheme.bodyLarge,
+          border: UnderlineInputBorder(borderRadius: BorderRadius.circular(2)),
+          suffixIcon: IconButton(
+            onPressed: () {
+              _searchController.clear();
               appState.feedSettingsList =
                   queryFeedsFromDB(appState, context, '');
               appState.refreshView();
-            }
-          },
+            },
+            icon: const Icon(Icons.clear),
+          ),
         ),
+
+        // on change of the search text field, fetch the news list
+        onChanged: (value) async {
+          if (value != '') {
+            // fetch the news list from the backend with the search text
+            Future<List<Feed>> searchFeedListResult =
+                queryFeedsFromDB(appState, context, value)
+                    .onError((error, stackTrace) {
+              logThis(
+                  'fetchSearchedNews',
+                  'Caught an error in fetchSearchedNews function! : ${error.toString()}',
+                  LogLevel.ERROR);
+              if (context.mounted) {
+                if (appState.errorString !=
+                    AppLocalizations.of(context)!.communicateionMinifluxError) {
+                  appState.errorString =
+                      AppLocalizations.of(context)!.communicateionMinifluxError;
+                  appState.newError = true;
+                  appState.refreshView();
+                }
+              }
+              return [];
+            });
+            // set the state with the fetched news list
+            appState.feedSettingsList = searchFeedListResult;
+            appState.refreshView();
+          } else {
+            // if search text is empty, set the state with an empty list
+            appState.feedSettingsList = queryFeedsFromDB(appState, context, '');
+            appState.refreshView();
+          }
+        },
       ),
-      Expanded(child: const FeedSettingsList())
-    ]);
+    );
+
+    // On iOS the search field must participate in the same scroll view as the
+    // feeds so it can disappear beneath the collapsing navigation bar.
+    if (Platform.isIOS) {
+      return FeedSettingsList(header: searchField);
+    }
+
+    // Keep the existing fixed search field on Android.
+    return Column(
+      children: [
+        searchField,
+        const Expanded(child: FeedSettingsList()),
+      ],
+    );
   }
 }
 

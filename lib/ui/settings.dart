@@ -1449,7 +1449,7 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
                       ),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(18),
-                        child: ColoredBox(
+                        child: Material(
                           color: sectionColor,
                           child: DividerTheme(
                             data: DividerThemeData(
