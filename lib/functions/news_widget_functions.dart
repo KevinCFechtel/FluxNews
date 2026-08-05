@@ -12,7 +12,10 @@ import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/adaptive_glass_dialog.dart';
 import 'package:flux_news/ui/audioplayer.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -746,79 +749,103 @@ Future<bool> openUrlAction(String url, BuildContext context) async {
 
 void showDeleteAllDialog(BuildContext context, FluxNewsState appState,
     FluxNewsCounterState appCounterState) {
+  Future<void> confirmMarkAllAsRead() async {
+    // capture context-dependent values before async gap
+    final messenger = appState.syncReadStatusImmediately
+        ? ScaffoldMessenger.of(context)
+        : null;
+    final errorMsg = appState.syncReadStatusImmediately
+        ? AppLocalizations.of(context)!.communicateionMinifluxError
+        : '';
+    // collect IDs before marking so we can push to server
+    final List<int> idsToSync = appState.syncReadStatusImmediately
+        ? await queryUnreadNewsIDsForCurrentView(appState)
+        : <int>[];
+    // mark news as read
+    await markNewsAsReadInDB(appState);
+    unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+    if (appState.syncReadStatusImmediately && idsToSync.isNotEmpty) {
+      unawaited(pushNewsStatusToServer(
+        idsToSync,
+        FluxNewsState.readNewsStatus,
+        appState,
+        messenger,
+        errorMsg,
+      ));
+    }
+    if (!context.mounted) return;
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.categoryElementType) {
+      await queryNextCategoryFromDB(appState, context).then((value) {
+        if (context.mounted) {
+          setNextCategory(value, appState, context);
+        }
+      });
+    } else if (appState.selectedCategoryElementType ==
+        FluxNewsState.feedElementType) {
+      await queryNextFeedFromDB(appState, context).then((value) {
+        if (context.mounted) {
+          setNextFeed(value, appState, context);
+        }
+      });
+    } else {
+      // refresh news list with the all news state
+      appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+        appState.jumpToItem(0);
+      });
+
+      // notify the categories to update the news count
+      appCounterState.listUpdated = true;
+      appCounterState.refreshView();
+      appState.refreshView();
+    }
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  if (Platform.isIOS) {
+    showAdaptiveGlassDialog<void>(
+      context: context,
+      title: AppLocalizations.of(context)!.markAsRead,
+      message: '${AppLocalizations.of(context)!.markAllAsRead}?',
+      settings: iosLiquidGlassMenuSettings(
+        context,
+        useClearEffect: appState.iosClearLiquidGlass,
+      ),
+      quality: GlassQuality.standard,
+      maxWidth: 340,
+      actions: [
+        GlassDialogAction(
+          label: AppLocalizations.of(context)!.cancel,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        GlassDialogAction(
+          label: AppLocalizations.of(context)!.ok,
+          isPrimary: true,
+          onPressed: confirmMarkAllAsRead,
+        ),
+      ],
+    );
+    return;
+  }
+
   showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) => AlertDialog.adaptive(
             title: Text(AppLocalizations.of(context)!.markAsRead),
             content: Text('${AppLocalizations.of(context)!.markAllAsRead}?'),
             actions: <Widget>[
               TextButton(
+                onPressed: confirmMarkAllAsRead,
                 child: Text(AppLocalizations.of(context)!.ok),
-                onPressed: () async {
-                  // capture context-dependent values before async gap
-                  final messenger = appState.syncReadStatusImmediately
-                      ? ScaffoldMessenger.of(context)
-                      : null;
-                  final errorMsg = appState.syncReadStatusImmediately
-                      ? AppLocalizations.of(context)!
-                          .communicateionMinifluxError
-                      : '';
-                  // collect IDs before marking so we can push to server
-                  final List<int> idsToSync = appState.syncReadStatusImmediately
-                      ? await queryUnreadNewsIDsForCurrentView(appState)
-                      : <int>[];
-                  // mark news as read
-                  await markNewsAsReadInDB(appState);
-                  unawaited(
-                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
-                  if (appState.syncReadStatusImmediately &&
-                      idsToSync.isNotEmpty) {
-                    unawaited(pushNewsStatusToServer(
-                      idsToSync,
-                      FluxNewsState.readNewsStatus,
-                      appState,
-                      messenger,
-                      errorMsg,
-                    ));
-                  }
-                  if (!context.mounted) return;
-                  if (appState.selectedCategoryElementType ==
-                      FluxNewsState.categoryElementType) {
-                    await queryNextCategoryFromDB(appState, context)
-                        .then((value) {
-                      if (context.mounted) {
-                        setNextCategory(value, appState, context);
-                      }
-                    });
-                  } else if (appState.selectedCategoryElementType ==
-                      FluxNewsState.feedElementType) {
-                    await queryNextFeedFromDB(appState, context).then((value) {
-                      if (context.mounted) {
-                        setNextFeed(value, appState, context);
-                      }
-                    });
-                  } else {
-                    // refresh news list with the all news state
-                    appState.newsList =
-                        queryNewsFromDB(appState).whenComplete(() {
-                      appState.jumpToItem(0);
-                    });
-
-                    // notify the categories to update the news count
-                    appCounterState.listUpdated = true;
-                    appCounterState.refreshView();
-                    appState.refreshView();
-                  }
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                },
               ),
               TextButton(
-                child: Text(AppLocalizations.of(context)!.cancel),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
+                child: Text(AppLocalizations.of(context)!.cancel),
               ),
             ],
           ));

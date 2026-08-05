@@ -7,52 +7,7 @@ import 'package:flux_news/ui/ios_liquid_glass_style.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
-/// Shows the package dialog with the text and icon defaults normally supplied
-/// by a Cupertino page. Without this wrapper a Material app's navigator overlay
-/// can expose Flutter's red/yellow debug fallback text style.
-Future<T?> showAdaptiveSettingsGlassDialog<T>({
-  required BuildContext context,
-  required List<GlassDialogAction> actions,
-  String? title,
-  String? message,
-  Widget? content,
-  LiquidGlassSettings? settings,
-  GlassQuality quality = GlassQuality.standard,
-  bool barrierDismissible = false,
-  Color? barrierColor,
-  double maxWidth = 280,
-}) {
-  return showCupertinoDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    barrierColor: barrierColor,
-    builder: (dialogContext) {
-      final foreground = CupertinoColors.label.resolveFrom(dialogContext);
-      final textStyle =
-          CupertinoTheme.of(dialogContext).textTheme.textStyle.copyWith(
-                color: foreground,
-                fontSize: 17,
-                decoration: TextDecoration.none,
-                decorationColor: const Color(0x00000000),
-              );
-      return DefaultTextStyle(
-        style: textStyle,
-        child: IconTheme(
-          data: IconThemeData(color: foreground, size: 22),
-          child: GlassDialog(
-            title: title,
-            message: message,
-            content: content,
-            actions: actions,
-            settings: settings,
-            quality: quality,
-            maxWidth: maxWidth,
-          ),
-        ),
-      );
-    },
-  );
-}
+export '../adaptive_glass_dialog.dart';
 
 /// A Material switch on Android and a Liquid Glass switch on iOS.
 class AdaptiveSettingsSwitch extends StatelessWidget {

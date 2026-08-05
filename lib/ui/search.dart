@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/functions/logging.dart';
+import 'package:flux_news/ui/adaptive_glass_dialog.dart';
 import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:flux_news/ui/ios_liquid_glass_style.dart';
 import 'package:flux_news/ui/search_news_list.dart';
@@ -246,7 +247,31 @@ class TooManyNewsWidget extends StatelessWidget {
   Future showTooManyNewsWidget(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.tooManyNews) {
-      showDialog(
+      if (Platform.isIOS) {
+        await showAdaptiveGlassDialog<void>(
+          context: context,
+          title: AppLocalizations.of(context)!.error,
+          message: AppLocalizations.of(context)!.tooManyNews,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: appState.iosClearLiquidGlass,
+          ),
+          quality: GlassQuality.standard,
+          maxWidth: 340,
+          actions: [
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.ok,
+              isPrimary: true,
+              onPressed: () => Navigator.pop(
+                context,
+                FluxNewsState.cancelContextString,
+              ),
+            ),
+          ],
+        );
+        return;
+      }
+      await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(

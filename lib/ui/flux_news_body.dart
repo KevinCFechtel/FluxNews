@@ -27,6 +27,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
+import 'adaptive_glass_dialog.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
 import 'ios_liquid_glass_style.dart';
@@ -1121,11 +1122,11 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     await syncNews(
       appState,
       context,
-      onSuccessfulListReset: _revealExpandedTitleAfterSync,
+      onSuccessfulListReset: _revealExpandedTitleAfterListChange,
     );
   }
 
-  void _revealExpandedTitleAfterSync() {
+  void _revealExpandedTitleAfterListChange() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final scrollController = _largeTitleController.scrollController;
@@ -1137,7 +1138,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
   Future<void> _refreshList(FluxNewsState appState) async {
     final appCounterState = context.read<FluxNewsCounterState>();
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _revealExpandedTitleAfterListChange();
     });
     appCounterState.listUpdated = true;
     appCounterState.refreshView();
@@ -2223,7 +2224,31 @@ class ErrorWidget extends StatelessWidget {
   Future showErrorDialog(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.newError) {
-      showDialog(
+      if (Platform.isIOS) {
+        await showAdaptiveGlassDialog<void>(
+          context: context,
+          title: AppLocalizations.of(context)!.error,
+          message: appState.errorString,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: appState.iosClearLiquidGlass,
+          ),
+          quality: GlassQuality.standard,
+          maxWidth: 340,
+          actions: [
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.ok,
+              isPrimary: true,
+              onPressed: () => Navigator.pop(
+                context,
+                FluxNewsState.cancelContextString,
+              ),
+            ),
+          ],
+        );
+        return;
+      }
+      await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(
@@ -2278,7 +2303,40 @@ class LongSyncWidget extends StatelessWidget {
   Future showLongSyncDialog(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.longSync) {
-      showDialog(
+      if (Platform.isIOS) {
+        await showAdaptiveGlassDialog<void>(
+          context: context,
+          title: AppLocalizations.of(context)!.longSyncHeader,
+          message: AppLocalizations.of(context)!.longSyncWarning,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: appState.iosClearLiquidGlass,
+          ),
+          quality: GlassQuality.standard,
+          maxWidth: 360,
+          actions: [
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.cancel,
+              isDestructive: true,
+              onPressed: () {
+                appState.longSyncAborted = true;
+                appState.refreshView();
+                Navigator.pop(context, FluxNewsState.cancelContextString);
+              },
+            ),
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.ok,
+              isPrimary: true,
+              onPressed: () => Navigator.pop(
+                context,
+                FluxNewsState.cancelContextString,
+              ),
+            ),
+          ],
+        );
+        return;
+      }
+      await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(
@@ -2343,7 +2401,31 @@ class TooManyNewsWidget extends StatelessWidget {
   Future showTooManyNewsWidget(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.tooManyNews) {
-      showDialog(
+      if (Platform.isIOS) {
+        await showAdaptiveGlassDialog<void>(
+          context: context,
+          title: AppLocalizations.of(context)!.error,
+          message: AppLocalizations.of(context)!.tooManyNews,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: appState.iosClearLiquidGlass,
+          ),
+          quality: GlassQuality.standard,
+          maxWidth: 340,
+          actions: [
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.ok,
+              isPrimary: true,
+              onPressed: () => Navigator.pop(
+                context,
+                FluxNewsState.cancelContextString,
+              ),
+            ),
+          ],
+        );
+        return;
+      }
+      await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(
