@@ -26,6 +26,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
+import '../state_management/flux_news_theme_state.dart';
 import '../models/news_model.dart';
 import 'adaptive_glass_dialog.dart';
 import 'audioplayer.dart';
@@ -431,9 +432,21 @@ class FluxNewsBody extends StatelessWidget {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final hasNewsConfiguration = appState.minifluxURL != null &&
+          appState.minifluxAPIKey != null &&
+          !appState.errorOnMinifluxAuth;
       // set the scroll position to the persistent saved scroll position on normal startup
       // if sync on startup is enabled, the scroll position is set to the top of the list
       if (!skipSavedScrollRestore &&
+          Platform.isIOS &&
+          appState.isTablet &&
+          hasNewsConfiguration) {
+        // A list-index jump, including index 0, aligns the first card with the
+        // top edge and therefore collapses the Liquid Glass large title. iPad
+        // starts at the scroll view's true minimum extent instead so the title
+        // is fully expanded in both orientations.
+        appState.resetListToStart(revealIOSLargeTitle: true);
+      } else if (!skipSavedScrollRestore &&
           !appState.syncOnStart &&
           !appState.markAsReadOnScrollOver) {
         appState.jumpToItem(appState.savedScrollPosition);
@@ -1381,7 +1394,13 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
   }
 
   Widget _wideTabletSidebar({required double width}) {
-    final settings = iosLiquidGlassSidebarSettings(context);
+    final themeState = context.watch<FluxNewsThemeState>();
+    final useTrueBlack = themeState.useBlackMode &&
+        Theme.of(context).brightness == Brightness.dark;
+    final settings = iosLiquidGlassSidebarSettings(
+      context,
+      useTrueBlack: useTrueBlack,
+    );
     final foreground = iosLiquidGlassForeground(context);
     return SizedBox(
       width: width,
@@ -2863,6 +2882,9 @@ class CategoryList extends StatelessWidget {
         child: ListTile(
           dense: iosSidebar,
           minTileHeight: iosSidebar ? 44 : null,
+          contentPadding: iosSidebar
+              ? const EdgeInsetsDirectional.only(start: 8, end: 16)
+              : null,
           shape: iosSidebar
               ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
               : null,
@@ -2879,16 +2901,41 @@ class CategoryList extends StatelessWidget {
           ),
           trailing: count == null
               ? null
-              : Text(
-                  '$count',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: iosSidebar && selected ? accent : null,
-                      ),
+              : _buildCountLabel(
+                  context: context,
+                  count: count,
+                  selected: selected,
                 ),
           onTap: onTap,
         ),
       ),
     );
+  }
+
+  Widget _buildCountLabel({
+    required BuildContext context,
+    required int count,
+    required bool selected,
+    VoidCallback? onTap,
+  }) {
+    final accent = CupertinoColors.activeBlue.resolveFrom(context);
+    Widget label = Text(
+      '$count',
+      textAlign: TextAlign.end,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: iosSidebar && selected ? accent : null,
+          ),
+    );
+    if (iosSidebar) {
+      label = SizedBox(
+        width: 32,
+        child: Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: label,
+        ),
+      );
+    }
+    return onTap == null ? label : InkWell(onTap: onTap, child: label);
   }
 
   // here we style the category ExpansionTile
@@ -2950,13 +2997,10 @@ class CategoryList extends StatelessWidget {
               },
             ),
             // show the news count of this category
-            trailing: InkWell(
-              child: Text(
-                '${category.newsCount}',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: iosSidebar && selected ? accent : null,
-                    ),
-              ),
+            trailing: _buildCountLabel(
+              context: context,
+              count: category.newsCount,
+              selected: selected,
               onTap: () {
                 categoryOnClick(category, appState, categories, context);
               },
