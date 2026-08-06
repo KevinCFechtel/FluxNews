@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'Show Mark as read in the bottom toolbar'**
   String get iosMarkAsReadQuickAction;
 
+  /// No description provided for @iosSyncQuickAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Sync in the bottom toolbar'**
+  String get iosSyncQuickAction;
+
   /// No description provided for @iosClearLiquidGlass.
   ///
   /// In en, this message translates to:

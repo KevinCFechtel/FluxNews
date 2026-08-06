@@ -7,6 +7,7 @@
     "addBookmark": "Bladwijzer toevoegen",
     "markAsRead": "Markeer als gelezen",
     "iosMarkAsReadQuickAction": "Toon Markeer als gelezen in de onderste werkbalk",
+    "iosSyncQuickAction": "Toon synchronisatie in de onderste werkbalk",
     "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
     "markAsReadAndNext": "Markeer als gelezen en open volgende",
     "moreActions": "Meer acties",

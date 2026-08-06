@@ -34,6 +34,9 @@ class AppLocalizationsGl extends AppLocalizations {
       'Mostrar Marcar como lido na barra inferior';
 
   @override
+  String get iosSyncQuickAction => 'Mostrar Sincronizar na barra inferior';
+
+  @override
   String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
 
   @override

@@ -34,6 +34,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Als gelesen markieren in der unteren Leiste anzeigen';
 
   @override
+  String get iosSyncQuickAction => 'Sync in der unteren Leiste anzeigen';
+
+  @override
   String get iosClearLiquidGlass => 'Klares Liquid Glass verwenden';
 
   @override

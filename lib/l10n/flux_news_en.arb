@@ -7,6 +7,7 @@
     "addBookmark": "Add Bookmark",
     "markAsRead": "Mark as read",
     "iosMarkAsReadQuickAction": "Show Mark as read in the bottom toolbar",
+    "iosSyncQuickAction": "Show Sync in the bottom toolbar",
     "iosClearLiquidGlass": "Use Clear Liquid Glass",
     "markAsReadAndNext": "Mark as read and open next",
     "moreActions": "More actions",

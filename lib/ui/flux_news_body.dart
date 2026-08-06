@@ -1332,6 +1332,54 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     ];
   }
 
+  List<Widget> _compactTopActions(
+    FluxNewsState appState, {
+    required LiquidGlassSettings settings,
+    required GlassQuality quality,
+    required Color foreground,
+  }) {
+    final strings = AppLocalizations.of(context)!;
+    final menuSettings = iosLiquidGlassMenuSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    return [
+      Padding(
+        padding: const EdgeInsetsDirectional.only(end: 8),
+        child: GlassMenu(
+          quality: GlassQuality.standard,
+          settings: menuSettings,
+          items: _menuItems(appState),
+          menuWidth: (MediaQuery.sizeOf(context).width - 32)
+              .clamp(280.0, 340.0)
+              .toDouble(),
+          autoAdjustToScreen: true,
+          menuPadding: const EdgeInsets.all(12),
+          triggerBuilder: (context, toggleMenu) => GlassButtonGroup.icons(
+            useOwnLayer: true,
+            quality: quality,
+            settings: settings,
+            itemPadding: const EdgeInsets.all(10),
+            items: [
+              GlassButtonGroupItem(
+                label: appState.syncProcess ? strings.cancel : strings.syncNews,
+                onTap: () => unawaited(_sync(appState)),
+                icon: appState.syncProcess
+                    ? CupertinoActivityIndicator(radius: 9, color: foreground)
+                    : Icon(Icons.refresh, color: foreground),
+              ),
+              GlassButtonGroupItem(
+                label: strings.moreActions,
+                onTap: toggleMenu,
+                icon: Icon(CupertinoIcons.ellipsis, color: foreground),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
   Widget _wideTabletSidebar({required double width}) {
     final settings = iosLiquidGlassSidebarSettings(context);
     final foreground = iosLiquidGlassForeground(context);
@@ -1410,16 +1458,16 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       );
     }
 
+    if (!appState.iosMarkAsReadQuickAction && !appState.iosSyncQuickAction) {
+      return _BottomBanners(appState: appState);
+    }
+
     final strings = AppLocalizations.of(context)!;
     final glassSettings = iosLiquidGlassSettings(
       context,
       useClearEffect: appState.iosClearLiquidGlass,
     );
     final glassQuality = iosLiquidGlassQuality(
-      useClearEffect: appState.iosClearLiquidGlass,
-    );
-    final menuGlassSettings = iosLiquidGlassMenuSettings(
-      context,
       useClearEffect: appState.iosClearLiquidGlass,
     );
     final glassForeground = iosLiquidGlassForeground(context);
@@ -1444,29 +1492,6 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: GlassIconButton(
-                          quality: glassQuality,
-                          semanticLabel: appState.syncProcess
-                              ? strings.cancel
-                              : strings.syncNews,
-                          onPressed: () => unawaited(_sync(appState)),
-                          icon: appState.syncProcess
-                              ? SizedBox.square(
-                                  dimension: 18,
-                                  child: CupertinoActivityIndicator(
-                                    radius: 9,
-                                    color: glassForeground,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.refresh,
-                                  color: glassForeground,
-                                ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
                         child: appState.iosMarkAsReadQuickAction
                             ? GlassIconButton(
                                 quality: glassQuality,
@@ -1485,32 +1510,31 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                             : const SizedBox.shrink(),
                       ),
                     ),
+                    const Expanded(child: SizedBox.shrink()),
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
-                        child: GlassMenu(
-                          quality: glassQuality,
-                          settings: menuGlassSettings,
-                          items: _menuItems(appState),
-                          menuWidth: (MediaQuery.sizeOf(context).width - 32)
-                              .clamp(
-                                280.0,
-                                340.0,
+                        child: appState.iosSyncQuickAction
+                            ? GlassIconButton(
+                                quality: glassQuality,
+                                semanticLabel: appState.syncProcess
+                                    ? strings.cancel
+                                    : strings.syncNews,
+                                onPressed: () => unawaited(_sync(appState)),
+                                icon: appState.syncProcess
+                                    ? SizedBox.square(
+                                        dimension: 18,
+                                        child: CupertinoActivityIndicator(
+                                          radius: 9,
+                                          color: glassForeground,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.refresh,
+                                        color: glassForeground,
+                                      ),
                               )
-                              .toDouble(),
-                          autoAdjustToScreen: true,
-                          menuPadding: const EdgeInsets.all(12),
-                          triggerBuilder: (context, toggleMenu) =>
-                              GlassIconButton(
-                            quality: glassQuality,
-                            semanticLabel: strings.moreActions,
-                            onPressed: toggleMenu,
-                            icon: Icon(
-                              CupertinoIcons.ellipsis_circle,
-                              color: glassForeground,
-                            ),
-                          ),
-                        ),
+                            : const SizedBox.shrink(),
                       ),
                     ),
                   ],
@@ -1646,7 +1670,12 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                     quality: glassQuality,
                     foreground: glassForeground,
                   )
-                : const [],
+                : _compactTopActions(
+                    appState,
+                    settings: glassSettings,
+                    quality: glassQuality,
+                    foreground: glassForeground,
+                  ),
           ),
           drawer: usesWideSidebar ? null : widget.drawer,
           body: list,

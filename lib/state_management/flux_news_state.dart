@@ -155,6 +155,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
   static const String secureStorageIOSMarkAsReadQuickActionKey =
       'iosMarkAsReadQuickAction';
+  static const String secureStorageIOSSyncQuickActionKey = 'iosSyncQuickAction';
   static const String secureStorageIOSClearLiquidGlassKey =
       'iosClearLiquidGlass';
   static const String secureStorageNetworkImageCacheMigratedKey =
@@ -420,6 +421,7 @@ class FluxNewsState extends ChangeNotifier {
       : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
   bool iosMarkAsReadQuickAction = false;
+  bool iosSyncQuickAction = false;
   bool iosClearLiquidGlass = false;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
@@ -2482,6 +2484,10 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey) {
         iosMarkAsReadQuickAction =
             value == FluxNewsState.secureStorageTrueString;
+      }
+
+      if (key == FluxNewsState.secureStorageIOSSyncQuickActionKey) {
+        iosSyncQuickAction = value == FluxNewsState.secureStorageTrueString;
       }
 
       if (key == FluxNewsState.secureStorageIOSClearLiquidGlassKey) {

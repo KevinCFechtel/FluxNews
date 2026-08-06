@@ -34,6 +34,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show Mark as read in the bottom toolbar';
 
   @override
+  String get iosSyncQuickAction => 'Show Sync in the bottom toolbar';
+
+  @override
   String get iosClearLiquidGlass => 'Use Clear Liquid Glass';
 
   @override

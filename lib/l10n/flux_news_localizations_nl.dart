@@ -34,6 +34,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Toon Markeer als gelezen in de onderste werkbalk';
 
   @override
+  String get iosSyncQuickAction =>
+      'Toon synchronisatie in de onderste werkbalk';
+
+  @override
   String get iosClearLiquidGlass => 'Helder Liquid Glass gebruiken';
 
   @override

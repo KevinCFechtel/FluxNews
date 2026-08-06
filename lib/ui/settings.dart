@@ -13,6 +13,7 @@ import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
+import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -1417,8 +1418,12 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
     }
     finishSection();
 
-    final sectionColor =
-        CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
+    final themeState = context.watch<FluxNewsThemeState>();
+    final useTrueBlackSections = themeState.useBlackMode &&
+        Theme.of(context).brightness == Brightness.dark;
+    final sectionColor = useTrueBlackSections
+        ? Colors.black
+        : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
     final dividerColor = CupertinoColors.separator.resolveFrom(context);
     return Align(
       alignment: Alignment.topCenter,

@@ -638,6 +638,36 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   ],
                 ),
               if (Platform.isIOS) const Divider(),
+              if (Platform.isIOS)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
+                      child: Icon(Icons.refresh),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.iosSyncQuickAction,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.iosSyncQuickAction,
+                      onChanged: (bool value) {
+                        appState.iosSyncQuickAction = value;
+                        appState.storage.write(
+                          key: FluxNewsState.secureStorageIOSSyncQuickActionKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (Platform.isIOS) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
               if (!Platform.isIOS)
                 Row(
