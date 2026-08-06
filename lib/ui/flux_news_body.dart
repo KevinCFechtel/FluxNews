@@ -1630,9 +1630,15 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
         final sidebarWidth = usesWideSidebar
             ? (constraints.maxWidth * 0.25).clamp(260.0, 340.0).toDouble()
             : 0.0;
-        Widget list = FluxNewsBodyList(
-          largeTitleController: titleController,
-          topContentInset: topContentInset,
+        Widget list = GlassScrollEdgeEffect(
+          topFadeHeight: topContentInset + 20,
+          fadeBottom: false,
+          style: GlassScrollEdgeStyle.soft,
+          fadeColor: Theme.of(context).scaffoldBackgroundColor,
+          child: FluxNewsBodyList(
+            largeTitleController: titleController,
+            topContentInset: topContentInset,
+          ),
         );
         if (usesWideSidebar) {
           list = Row(
