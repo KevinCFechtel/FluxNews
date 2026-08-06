@@ -44,8 +44,11 @@ Future<void> syncNews(
     // (needed for the processing cycle and the positioning of the list view)
     appState.syncProcess = true;
     appState.refreshView();
-    // also resetting the error string for new errors occurring within this sync
+    // Reset the complete foreground error state together. Leaving newError set
+    // while clearing only its message can race with the asynchronously opened
+    // error dialog and produce an empty popup.
     appState.errorString = '';
+    appState.newError = false;
 
     // remove the native splash after updating the list view
     FlutterNativeSplash.remove();

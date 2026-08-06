@@ -354,71 +354,71 @@ class _LoginState extends State<Login> {
 
   Widget _buildHeadersSection(
       BuildContext context, AppLocalizations localization) {
-    if (!Platform.isIOS) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            localization.headers,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          _buildHeaderEditor(context, localization),
-        ],
-      );
-    }
-
     final theme = Theme.of(context);
-    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
+    final secondaryLabel = Platform.isIOS
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : theme.colorScheme.onSurfaceVariant;
+    final toggleContent = Row(
+      children: [
+        Text(
+          localization.headers,
+          style: theme.textTheme.titleSmall,
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: Platform.isIOS
+                ? CupertinoColors.tertiarySystemFill.resolveFrom(context)
+                : theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            localization.optional,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: secondaryLabel,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const Spacer(),
+        AnimatedRotation(
+          turns: _headersExpanded ? 0.5 : 0,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: Icon(
+            Platform.isIOS ? CupertinoIcons.chevron_down : Icons.expand_more,
+            size: Platform.isIOS ? 16 : 24,
+            color: secondaryLabel,
+          ),
+        ),
+      ],
+    );
+    final toggle = Platform.isIOS
+        ? CupertinoButton(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(44, 44),
+            onPressed: _toggleHeaders,
+            child: toggleContent,
+          )
+        : Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: _toggleHeaders,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: toggleContent,
+              ),
+            ),
+          );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
           button: true,
           expanded: _headersExpanded,
-          child: CupertinoButton(
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(44, 44),
-            onPressed: () {
-              setState(() => _headersExpanded = !_headersExpanded);
-            },
-            child: Row(
-              children: [
-                Text(
-                  localization.headers,
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color:
-                        CupertinoColors.tertiarySystemFill.resolveFrom(context),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    localization.optional,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: secondaryLabel,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                AnimatedRotation(
-                  turns: _headersExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  child: Icon(
-                    CupertinoIcons.chevron_down,
-                    size: 16,
-                    color: secondaryLabel,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          child: toggle,
         ),
         AnimatedSize(
           duration: const Duration(milliseconds: 220),
@@ -433,6 +433,10 @@ class _LoginState extends State<Login> {
         ),
       ],
     );
+  }
+
+  void _toggleHeaders() {
+    setState(() => _headersExpanded = !_headersExpanded);
   }
 
   Widget _buildFormContent(

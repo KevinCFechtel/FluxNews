@@ -145,8 +145,7 @@ class SliverGlassAppBar extends StatelessWidget {
       );
     } else if (appState.scrolloverAppBar) {
       return SliverAppBar(
-        backgroundColor:
-            Colors.transparent, //Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         floating: true,

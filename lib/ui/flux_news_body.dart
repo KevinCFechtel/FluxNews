@@ -483,7 +483,7 @@ class FluxNewsBody extends StatelessWidget {
       } else {
         useSliverAppBar = false;
       }
-    } else if (appState.errorString != '' && appState.newError) {
+    } else if (appState.errorString.trim().isNotEmpty && appState.newError) {
       useSliverAppBar = false;
     } else if (appState.longSync) {
       useSliverAppBar = false;
@@ -2399,7 +2399,7 @@ class FluxNewsBodyList extends StatelessWidget {
         padding: EdgeInsets.only(top: topContentInset),
         child: const NoSettings(),
       );
-    } else if (appState.errorString != '' && appState.newError) {
+    } else if (appState.errorString.trim().isNotEmpty && appState.newError) {
       return ErrorWidget(
         largeTitleController: largeTitleController,
         topContentInset: topContentInset,
@@ -2438,12 +2438,33 @@ class ErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    Timer.run(() {
-      showErrorDialog(context).then((value) {
-        appState.newError = false;
-        appState.refreshView();
+    if (!appState.errorDialogVisible && appState.newError) {
+      final currentMessage = appState.errorString.trim();
+      final message = currentMessage.isEmpty
+          ? AppLocalizations.of(context)!.communicateionMinifluxError
+          : currentMessage;
+
+      // Consume this exact error before scheduling the dialog. A later error
+      // can set newError again and will be displayed after the current dialog
+      // closes instead of being cleared by its completion callback.
+      appState.newError = false;
+      appState.errorDialogVisible = true;
+      Timer.run(() async {
+        try {
+          if (context.mounted) {
+            await showErrorDialog(context, message);
+          }
+        } finally {
+          appState.errorDialogVisible = false;
+          if (!appState.newError && appState.errorString.trim() == message) {
+            appState.errorString = '';
+          }
+          if (context.mounted) {
+            appState.refreshView();
+          }
+        }
       });
-    });
+    }
     return BodyNewsList(
       largeTitleController: largeTitleController,
       topContentInset: topContentInset,
@@ -2454,50 +2475,49 @@ class ErrorWidget extends StatelessWidget {
   // to prevent the multi pop up (f.e. if the internet connection ist lost
   // not every function which require the connection should raise a pop up)
   // we check if the error which is shown is a new error.
-  Future showErrorDialog(BuildContext context) async {
+  Future<void> showErrorDialog(BuildContext context, String message) async {
     FluxNewsState appState = context.read<FluxNewsState>();
-    if (appState.newError) {
-      if (Platform.isIOS) {
-        await showAdaptiveGlassDialog<void>(
-          context: context,
-          title: AppLocalizations.of(context)!.error,
-          message: appState.errorString,
-          settings: iosLiquidGlassMenuSettings(
-            context,
-            useClearEffect: appState.iosClearLiquidGlass,
+    if (Platform.isIOS) {
+      await showAdaptiveGlassDialog<void>(
+        context: context,
+        title: AppLocalizations.of(context)!.error,
+        message: message,
+        settings: iosLiquidGlassMenuSettings(
+          context,
+          useClearEffect: appState.iosClearLiquidGlass,
+        ),
+        quality: GlassQuality.standard,
+        maxWidth: 340,
+        actions: [
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.ok,
+            isPrimary: true,
+            onPressed: () => Navigator.pop(
+              context,
+              FluxNewsState.cancelContextString,
+            ),
           ),
-          quality: GlassQuality.standard,
-          maxWidth: 340,
-          actions: [
-            GlassDialogAction(
-              label: AppLocalizations.of(context)!.ok,
-              isPrimary: true,
-              onPressed: () => Navigator.pop(
-                context,
-                FluxNewsState.cancelContextString,
-              ),
+        ],
+      );
+      return;
+    }
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog.adaptive(
+          title: Text(AppLocalizations.of(context)!.error),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, FluxNewsState.cancelContextString);
+              },
+              child: Text(AppLocalizations.of(context)!.ok),
             ),
           ],
         );
-        return;
-      }
-      await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog.adaptive(
-              title: Text(AppLocalizations.of(context)!.error),
-              content: Text(appState.errorString),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, FluxNewsState.cancelContextString);
-                  },
-                  child: Text(AppLocalizations.of(context)!.ok),
-                ),
-              ],
-            );
-          });
-    }
+      },
+    );
   }
 }
 
@@ -2869,15 +2889,11 @@ class CategoryList extends StatelessWidget {
     int? count,
     VoidCallback? onTap,
   }) {
-    final accent = CupertinoColors.activeBlue.resolveFrom(context);
+    final accent = _navigationSelectionAccent(context);
     return Padding(
-      padding: iosSidebar
-          ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2)
-          : EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
-        color: iosSidebar && selected
-            ? accent.withValues(alpha: 0.14)
-            : Colors.transparent,
+        color: selected ? accent.withValues(alpha: 0.14) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: ListTile(
           dense: iosSidebar,
@@ -2885,10 +2901,9 @@ class CategoryList extends StatelessWidget {
           contentPadding: iosSidebar
               ? const EdgeInsetsDirectional.only(start: 8, end: 16)
               : null,
-          shape: iosSidebar
-              ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
-              : null,
-          selected: iosSidebar && selected,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          selected: selected,
           selectedColor: accent,
           leading: leading,
           title: Text(
@@ -2896,7 +2911,7 @@ class CategoryList extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: iosSidebar && selected ? accent : null,
+                  color: selected ? accent : null,
                 ),
           ),
           trailing: count == null
@@ -2918,12 +2933,12 @@ class CategoryList extends StatelessWidget {
     required bool selected,
     VoidCallback? onTap,
   }) {
-    final accent = CupertinoColors.activeBlue.resolveFrom(context);
+    final accent = _navigationSelectionAccent(context);
     Widget label = Text(
       '$count',
       textAlign: TextAlign.end,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: iosSidebar && selected ? accent : null,
+            color: selected ? accent : null,
           ),
     );
     if (iosSidebar) {
@@ -2947,19 +2962,17 @@ class CategoryList extends StatelessWidget {
     final selected = appState.selectedCategoryElementType ==
             FluxNewsState.categoryElementType &&
         appState.selectedID == category.categoryID;
-    final accent = CupertinoColors.activeBlue.resolveFrom(context);
+    final accent = _navigationSelectionAccent(context);
     return Padding(
-      padding: iosSidebar
-          ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2)
-          : EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Stack(
         children: [
-          if (iosSidebar && selected)
+          if (selected)
             PositionedDirectional(
               top: 0,
               start: 0,
               end: 0,
-              height: 44,
+              height: iosSidebar ? 44 : 56,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.14),
@@ -2976,8 +2989,8 @@ class CategoryList extends StatelessWidget {
             childrenPadding: iosSidebar
                 ? const EdgeInsetsDirectional.only(start: 12, bottom: 4)
                 : EdgeInsets.zero,
-            iconColor: iosSidebar && selected ? accent : null,
-            collapsedIconColor: iosSidebar && selected ? accent : null,
+            iconColor: selected ? accent : null,
+            collapsedIconColor: selected ? accent : null,
             shape: const Border(),
             collapsedShape: const Border(),
             // we want the expansion arrow at the beginning,
@@ -2988,7 +3001,7 @@ class CategoryList extends StatelessWidget {
               child: Text(
                 category.title,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: iosSidebar && selected ? accent : null,
+                      color: selected ? accent : null,
                     ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -3134,23 +3147,18 @@ class FeedTile extends StatelessWidget {
     final selected =
         appState.selectedCategoryElementType == FluxNewsState.feedElementType &&
             appState.selectedID == feed.feedID;
-    final accent = CupertinoColors.activeBlue.resolveFrom(context);
+    final accent = _navigationSelectionAccent(context);
     return Padding(
-      padding: iosSidebar
-          ? const EdgeInsetsDirectional.fromSTEB(4, 1, 8, 1)
-          : EdgeInsets.zero,
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 1, 8, 1),
       child: Material(
-        color: iosSidebar && selected
-            ? accent.withValues(alpha: 0.14)
-            : Colors.transparent,
+        color: selected ? accent.withValues(alpha: 0.14) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: ListTile(
           dense: iosSidebar,
           minTileHeight: iosSidebar ? 40 : null,
-          shape: iosSidebar
-              ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
-              : null,
-          selected: iosSidebar && selected,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          selected: selected,
           selectedColor: accent,
           title: Padding(
             padding: EdgeInsetsDirectional.only(start: iosSidebar ? 0 : 8),
@@ -3161,7 +3169,7 @@ class FeedTile extends StatelessWidget {
                 child: Text(
                   feed.title,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: iosSidebar && selected ? accent : null,
+                        color: selected ? accent : null,
                       ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3171,7 +3179,7 @@ class FeedTile extends StatelessWidget {
           trailing: Text(
             '${feed.newsCount}',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: iosSidebar && selected ? accent : null,
+                  color: selected ? accent : null,
                 ),
           ),
           onTap: () {
@@ -3195,6 +3203,13 @@ class FeedTile extends StatelessWidget {
       ),
     );
   }
+}
+
+Color _navigationSelectionAccent(BuildContext context) {
+  if (Platform.isIOS) {
+    return CupertinoColors.activeBlue.resolveFrom(context);
+  }
+  return Theme.of(context).colorScheme.primary;
 }
 
 void _closeNavigationDrawerAfterSelection(

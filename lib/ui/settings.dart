@@ -160,7 +160,6 @@ class Settings extends StatelessWidget {
             const Divider(),
             _SettingsSectionHeader(
               title: AppLocalizations.of(context)!.settings,
-              showOnAndroid: false,
             ),
             // this list tile contains general settings
             // it is clickable and opens the general settings
@@ -437,7 +436,6 @@ class Settings extends StatelessWidget {
             const Divider(),
             _SettingsSectionHeader(
               title: AppLocalizations.of(context)!.backupSettings,
-              showOnAndroid: false,
             ),
             ListTile(
               leading: const Icon(
@@ -1350,16 +1348,13 @@ class _SettingsSectionHeader extends StatelessWidget {
   const _SettingsSectionHeader({
     required this.title,
     this.topPadding = 0,
-    this.showOnAndroid = true,
   });
 
   final String title;
   final double topPadding;
-  final bool showOnAndroid;
 
   @override
   Widget build(BuildContext context) {
-    if (!showOnAndroid) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(top: topPadding),
       child: Row(
@@ -1385,13 +1380,6 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isIOS) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      );
-    }
-
     final sections = <({String title, List<Widget> children})>[];
     String? currentTitle;
     var currentChildren = <Widget>[];
@@ -1418,13 +1406,23 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
     }
     finishSection();
 
+    final theme = Theme.of(context);
     final themeState = context.watch<FluxNewsThemeState>();
-    final useTrueBlackSections = themeState.useBlackMode &&
-        Theme.of(context).brightness == Brightness.dark;
+    final useTrueBlackSections =
+        themeState.useBlackMode && theme.brightness == Brightness.dark;
     final sectionColor = useTrueBlackSections
         ? Colors.black
-        : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
-    final dividerColor = CupertinoColors.separator.resolveFrom(context);
+        : Platform.isIOS
+            ? CupertinoColors.secondarySystemGroupedBackground
+                .resolveFrom(context)
+            : theme.colorScheme.surfaceContainerLow;
+    final dividerColor = Platform.isIOS
+        ? CupertinoColors.separator.resolveFrom(context)
+        : theme.colorScheme.outlineVariant;
+    final secondaryLabel = Platform.isIOS
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : theme.colorScheme.onSurfaceVariant;
+    final sectionRadius = Platform.isIOS ? 18.0 : 16.0;
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -1445,15 +1443,15 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
                             const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 6),
                         child: Text(
                           section.title,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: CupertinoColors.secondaryLabel
-                                        .resolveFrom(context),
-                                  ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: secondaryLabel,
+                            fontWeight:
+                                Platform.isAndroid ? FontWeight.w600 : null,
+                          ),
                         ),
                       ),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(sectionRadius),
                         child: Material(
                           color: sectionColor,
                           child: DividerTheme(
