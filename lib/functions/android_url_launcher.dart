@@ -13,11 +13,23 @@ class AndroidUrlLauncher {
   static const urlLauncher = MethodChannel('UrlLauncher');
   // create a method to launch a given url via the urlLauncher
   static Future<void> launchUrl(BuildContext context, String url) async {
+    return launchUrlWithToolbarColor(
+      url,
+      Theme.of(context).primaryColor.toARGB32(),
+    );
+  }
+
+  /// Launches an URL without retaining a widget [BuildContext].
+  ///
+  /// This is used when the originating list item can be rebuilt while its
+  /// read status is persisted.
+  static Future<void> launchUrlWithToolbarColor(
+      String url, int toolbarColor) async {
     // define the arguments for the urlLauncher
     Map<String, Object?> arguments = {
       'url': url,
       'preferredPackageName': null,
-      'toolbarColor': Theme.of(context).primaryColor.toARGB32(),
+      'toolbarColor': toolbarColor,
       'showPageTitle': true,
       'enableUrlBarHiding': false,
       'enableDefaultShare': true,

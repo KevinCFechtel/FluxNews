@@ -85,7 +85,7 @@ class _NewsGlassContextMenuState extends State<NewsGlassContextMenu> {
 
   void _openNews(FluxNewsState appState, {required bool inMiniflux}) {
     final wasUnread = widget.news.status == FluxNewsState.unreadNewsStatus;
-    openNewsAction(widget.news, appState, context, inMiniflux);
+    unawaited(openNewsAction(widget.news, appState, context, inMiniflux));
     if (wasUnread) _removeReadItemIfNeeded(appState);
   }
 

@@ -348,7 +348,7 @@ class AdaptiveSettingsTextField extends StatelessWidget {
       useOwnLayer: useOwnLayer,
       quality: GlassQuality.standard,
       settings: iosSettings ??
-          iosLiquidGlassSettings(
+          iosLiquidGlassInputSettings(
             context,
             useClearEffect: useClearEffect,
           ),

@@ -220,8 +220,8 @@ class FluxNewsState extends ChangeNotifier {
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
   static const String apiVersionPath = "v1/";
-  static const String minifluxEntryPathPrefix = "unread/feed/";
-  static const String minifluxEntryPathSuffix = "/entry/";
+  static const String minifluxEntryPathPrefix = "unread/";
+  static const String minifluxEntryPathSuffix = "entry/";
   static const String audioProgressKeyPrefix = "audio_progress_";
   static const String androidNotificationChannelId =
       'de.kevincfechtel.flux_news.audio';

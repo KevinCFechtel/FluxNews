@@ -2962,6 +2962,12 @@ class CategoryList extends StatelessWidget {
     final selected = appState.selectedCategoryElementType ==
             FluxNewsState.categoryElementType &&
         appState.selectedID == category.categoryID;
+    final selectedFeedId =
+        appState.selectedCategoryElementType == FluxNewsState.feedElementType
+            ? appState.selectedID
+            : null;
+    final containsSelectedFeed = selectedFeedId != null &&
+        category.feeds.any((feed) => feed.feedID == selectedFeedId);
     final accent = _navigationSelectionAccent(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -2980,54 +2986,60 @@ class CategoryList extends StatelessWidget {
                 ),
               ),
             ),
-          ExpansionTile(
-            dense: iosSidebar,
-            minTileHeight: iosSidebar ? 44 : null,
-            tilePadding: iosSidebar
-                ? const EdgeInsetsDirectional.only(start: 8, end: 16)
-                : null,
-            childrenPadding: iosSidebar
-                ? const EdgeInsetsDirectional.only(start: 12, bottom: 4)
-                : EdgeInsets.zero,
-            iconColor: selected ? accent : null,
-            collapsedIconColor: selected ? accent : null,
-            shape: const Border(),
-            collapsedShape: const Border(),
-            // we want the expansion arrow at the beginning,
-            // because we want to show the news count at the end of this row.
-            controlAffinity: ListTileControlAffinity.leading,
-            // make the title clickable to select this category as the news view
-            title: InkWell(
-              child: Text(
-                category.title,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: selected ? accent : null,
-                    ),
-                overflow: TextOverflow.ellipsis,
+          _AutoExpandingCategory(
+            key: ValueKey<int>(category.categoryID),
+            selectedFeedId: selectedFeedId,
+            containsSelectedFeed: containsSelectedFeed,
+            builder: (context, controller) => ExpansionTile(
+              controller: controller,
+              dense: iosSidebar,
+              minTileHeight: iosSidebar ? 44 : null,
+              tilePadding: iosSidebar
+                  ? const EdgeInsetsDirectional.only(start: 8, end: 16)
+                  : null,
+              childrenPadding: iosSidebar
+                  ? const EdgeInsetsDirectional.only(start: 12, bottom: 4)
+                  : EdgeInsets.zero,
+              iconColor: selected ? accent : null,
+              collapsedIconColor: selected ? accent : null,
+              shape: const Border(),
+              collapsedShape: const Border(),
+              // we want the expansion arrow at the beginning,
+              // because we want to show the news count at the end of this row.
+              controlAffinity: ListTileControlAffinity.leading,
+              // make the title clickable to select this category as the news view
+              title: InkWell(
+                child: Text(
+                  category.title,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: selected ? accent : null,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {
+                  categoryOnClick(category, appState, categories, context);
+                },
               ),
-              onTap: () {
-                categoryOnClick(category, appState, categories, context);
-              },
+              // show the news count of this category
+              trailing: _buildCountLabel(
+                context: context,
+                count: category.newsCount,
+                selected: selected,
+                onTap: () {
+                  categoryOnClick(category, appState, categories, context);
+                },
+              ),
+              // iterate over the according feeds of the category
+              children: [
+                for (Feed feed in category.feeds)
+                  FeedTile(
+                    feed: feed,
+                    categories: categories,
+                    iosSidebar: iosSidebar,
+                    closeDrawerOnSelection: closeDrawerOnSelection,
+                  )
+              ],
             ),
-            // show the news count of this category
-            trailing: _buildCountLabel(
-              context: context,
-              count: category.newsCount,
-              selected: selected,
-              onTap: () {
-                categoryOnClick(category, appState, categories, context);
-              },
-            ),
-            // iterate over the according feeds of the category
-            children: [
-              for (Feed feed in category.feeds)
-                FeedTile(
-                  feed: feed,
-                  categories: categories,
-                  iosSidebar: iosSidebar,
-                  closeDrawerOnSelection: closeDrawerOnSelection,
-                )
-            ],
           ),
         ],
       ),
@@ -3121,6 +3133,58 @@ class CategoryList extends StatelessWidget {
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
+}
+
+class _AutoExpandingCategory extends StatefulWidget {
+  const _AutoExpandingCategory({
+    super.key,
+    required this.selectedFeedId,
+    required this.containsSelectedFeed,
+    required this.builder,
+  });
+
+  final int? selectedFeedId;
+  final bool containsSelectedFeed;
+  final Widget Function(BuildContext, ExpansibleController) builder;
+
+  @override
+  State<_AutoExpandingCategory> createState() => _AutoExpandingCategoryState();
+}
+
+class _AutoExpandingCategoryState extends State<_AutoExpandingCategory> {
+  late final ExpansibleController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ExpansibleController();
+    if (widget.containsSelectedFeed) {
+      _controller.expand();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AutoExpandingCategory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.containsSelectedFeed &&
+        widget.selectedFeedId != oldWidget.selectedFeedId &&
+        !_controller.isExpanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_controller.isExpanded) {
+          _controller.expand();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _controller);
 }
 
 class FeedTile extends StatelessWidget {

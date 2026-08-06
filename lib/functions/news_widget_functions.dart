@@ -625,6 +625,27 @@ Future<void> markNewsAsUnreadAction(
 
 Future<void> openNewsAction(News news, FluxNewsState appState,
     BuildContext context, bool overwriteOpenInMiniflux) async {
+  // Capture everything supplied by the card context before the first await.
+  // Updating the read status refreshes the list and may replace that card even
+  // when read articles remain visible.
+  final strings = AppLocalizations.of(context)!;
+  final scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
+  final appCounterState = context.read<FluxNewsCounterState>();
+  final androidToolbarColor = Theme.of(context).primaryColor.toARGB32();
+
+  String url = news.url;
+  if (overwriteOpenInMiniflux && appState.minifluxURL != null) {
+    String minifluxBaseURL = appState.minifluxURL!;
+    if (minifluxBaseURL.endsWith('/v1/')) {
+      minifluxBaseURL =
+          minifluxBaseURL.substring(0, minifluxBaseURL.length - 3);
+    }
+    url = minifluxBaseURL +
+        FluxNewsState.minifluxEntryPathPrefix +
+        FluxNewsState.minifluxEntryPathSuffix +
+        news.newsID.toString();
+  }
+
   // on tab we update the status of the news to read and open the news
   try {
     await updateNewsStatusInDB(
@@ -635,58 +656,40 @@ Future<void> openNewsAction(News news, FluxNewsState appState,
         'Caught an error in updateNewsStatusInDB function! : ${e.toString()}',
         LogLevel.ERROR);
 
-    if (context.mounted) {
-      if (appState.errorString != AppLocalizations.of(context)!.databaseError) {
-        appState.errorString = AppLocalizations.of(context)!.databaseError;
-        appState.newError = true;
-        appState.refreshView();
-      }
+    if (appState.errorString != strings.databaseError) {
+      appState.errorString = strings.databaseError;
+      appState.newError = true;
+      appState.refreshView();
     }
   }
-  if (!context.mounted) return;
-  if (appState.syncReadStatusImmediately && context.mounted) {
+  if (appState.syncReadStatusImmediately) {
     unawaited(pushNewsStatusToServer(
       [news.newsID],
       FluxNewsState.readNewsStatus,
       appState,
-      ScaffoldMessenger.of(context),
-      AppLocalizations.of(context)!.communicateionMinifluxError,
+      scaffoldMessenger,
+      strings.communicateionMinifluxError,
     ));
   }
   // update the status to read on the news list and notify the categories
   // to recalculate the news count
   news.status = FluxNewsState.readNewsStatus;
-  context.read<FluxNewsCounterState>().listUpdated = true;
-  context.read<FluxNewsCounterState>().refreshView();
+  appCounterState.listUpdated = true;
+  appCounterState.refreshView();
   appState.refreshView();
-  if (Platform.isIOS) {
-    await FluxNewsWidgetService.updateWidgetSnapshot(appState);
-  } else {
-    unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
-  }
-  if (!context.mounted) return;
-
-  // there are difference on launching the news url between the platforms
-  // on android and ios it's preferred to check first if the link can be opened
-  // by an installed app, if not then the link is opened in a web-view within the app.
-  String url = news.url;
-  if (overwriteOpenInMiniflux) {
-    if (appState.minifluxURL != null) {
-      String minifluxBaseURL = appState.minifluxURL!;
-      if (minifluxBaseURL.endsWith('/v1/')) {
-        minifluxBaseURL =
-            minifluxBaseURL.substring(0, minifluxBaseURL.length - 3);
-      }
-      url = minifluxBaseURL +
-          FluxNewsState.minifluxEntryPathPrefix +
-          news.feedID.toString() +
-          FluxNewsState.minifluxEntryPathSuffix +
-          news.newsID.toString();
+  // The widget is secondary to the requested navigation. Its platform channel
+  // must neither delay nor cancel opening the article.
+  unawaited(() async {
+    try {
+      await FluxNewsWidgetService.updateWidgetSnapshot(appState);
+    } catch (_) {
+      // WidgetService already records the platform error.
     }
-  }
+  }());
 
   if (Platform.isAndroid) {
-    AndroidUrlLauncher.launchUrl(context, url);
+    await AndroidUrlLauncher.launchUrlWithToolbarColor(
+        url, androidToolbarColor);
   } else {
     // catch exception if no app is installed to handle the url
     final bool nativeAppLaunchSucceeded = await launchUrl(
