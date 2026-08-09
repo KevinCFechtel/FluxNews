@@ -158,6 +158,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageIOSSyncQuickActionKey = 'iosSyncQuickAction';
   static const String secureStorageIOSClearLiquidGlassKey =
       'iosClearLiquidGlass';
+  static const String secureStorageAndroidFloatingToolbarShortcutsKey =
+      'androidFloatingToolbarShortcuts';
   static const String secureStorageNetworkImageCacheMigratedKey =
       'networkImageCacheMigrated';
   static const String secureStorageImageCacheDurationDaysKey =
@@ -211,6 +213,7 @@ class FluxNewsState extends ChangeNotifier {
   static const String appBarNormalType = 'normal';
   static const String appBarCollapsedType = 'collapsed';
   static const String appBarGlassType = 'glass';
+  static const String appBarFloatingType = 'floating';
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -424,6 +427,7 @@ class FluxNewsState extends ChangeNotifier {
   bool iosMarkAsReadQuickAction = false;
   bool iosSyncQuickAction = false;
   bool iosClearLiquidGlass = false;
+  bool androidFloatingToolbarShortcuts = false;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
 
@@ -1986,6 +1990,9 @@ class FluxNewsState extends ChangeNotifier {
           KeyValueRecordType(
               key: FluxNewsState.appBarGlassType,
               value: AppLocalizations.of(context)!.glass),
+          KeyValueRecordType(
+              key: FluxNewsState.appBarFloatingType,
+              value: AppLocalizations.of(context)!.floating),
         ];
       } else {
         recordTypesAmountOfSyncedNews = <KeyValueRecordType>[];
@@ -2495,6 +2502,12 @@ class FluxNewsState extends ChangeNotifier {
         iosClearLiquidGlass = value == FluxNewsState.secureStorageTrueString;
       }
 
+      if (key ==
+          FluxNewsState.secureStorageAndroidFloatingToolbarShortcutsKey) {
+        androidFloatingToolbarShortcuts =
+            value == FluxNewsState.secureStorageTrueString;
+      }
+
       // assign the Tab Action selection from persistent saved config
       if (key == FluxNewsState.secureStorageTabActionKey) {
         if (value != '') {
@@ -2875,7 +2888,8 @@ class FluxNewsState extends ChangeNotifier {
       return;
     }
 
-    if (Platform.isIOS && revealIOSLargeTitle) {
+    if ((Platform.isIOS && revealIOSLargeTitle) ||
+        (Platform.isAndroid && appBarType == appBarFloatingType)) {
       scrollController.jumpTo(scrollController.position.minScrollExtent);
       return;
     }
@@ -2891,6 +2905,10 @@ class FluxNewsState extends ChangeNotifier {
           'jumpToItem',
           'Skipped jump to item $index because the list controllers did not attach in time',
           LogLevel.WARNING);
+      return;
+    }
+    if (Platform.isAndroid && appBarType == appBarFloatingType && index == 0) {
+      scrollController.jumpTo(scrollController.position.minScrollExtent);
       return;
     }
     listController.jumpToItem(

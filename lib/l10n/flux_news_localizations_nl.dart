@@ -41,6 +41,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get iosClearLiquidGlass => 'Helder Liquid Glass gebruiken';
 
   @override
+  String get androidFloatingToolbarShortcuts =>
+      'Extra acties in de zwevende werkbalk tonen';
+
+  @override
   String get markAsReadAndNext => 'Markeer als gelezen en open volgende';
 
   @override
@@ -523,6 +527,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get glass => 'Glass Effect';
+
+  @override
+  String get floating => 'Zwevend';
 
   @override
   String get appBarType => 'Select the App Bar Type';

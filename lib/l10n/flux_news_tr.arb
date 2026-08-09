@@ -9,6 +9,7 @@
     "iosMarkAsReadQuickAction": "Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster",
     "iosSyncQuickAction": "Alt araç çubuğunda senkronizasyonu göster",
     "iosClearLiquidGlass": "Şeffaf Liquid Glass kullan",
+    "androidFloatingToolbarShortcuts": "Yüzen araç çubuğunda ek işlemleri göster",
     "markAsReadAndNext": "Okundu olarak işaretle ve sonrakini aç",
     "moreActions": "Daha fazla işlem",
     "markAsUnread": "Okunmadı olarak işaretle",
@@ -112,5 +113,6 @@
     "androidAutoBackupFoundTitle": "Backup found",
     "androidAutoBackupFoundMessage": "An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.",
     "checkAndroidAutoBackup": "Check Android backup",
-    "noAndroidAutoBackupFound": "No Android backup was found."
+    "noAndroidAutoBackupFound": "No Android backup was found.",
+    "floating": "Yüzen"
 }

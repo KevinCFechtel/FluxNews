@@ -40,6 +40,10 @@ class AppLocalizationsGl extends AppLocalizations {
   String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
 
   @override
+  String get androidFloatingToolbarShortcuts =>
+      'Mostrar accións adicionais na barra flotante';
+
+  @override
   String get markAsReadAndNext => 'Marcar como lido e abrir a seguinte';
 
   @override
@@ -526,6 +530,9 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get glass => 'Efecto vidro';
+
+  @override
+  String get floating => 'Flotante';
 
   @override
   String get appBarType => 'Elixe o tipo de barra da app';

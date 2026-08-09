@@ -40,6 +40,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
 
   @override
+  String get androidFloatingToolbarShortcuts =>
+      'Yüzen araç çubuğunda ek işlemleri göster';
+
+  @override
   String get markAsReadAndNext => 'Okundu olarak işaretle ve sonrakini aç';
 
   @override
@@ -514,6 +518,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get glass => 'Glass Effect';
+
+  @override
+  String get floating => 'Yüzen';
 
   @override
   String get appBarType => 'Select the App Bar Type';

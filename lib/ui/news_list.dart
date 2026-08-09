@@ -34,8 +34,15 @@ class BodyNewsList extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsCounterState appCounterState =
         context.watch<FluxNewsCounterState>();
+    final useAndroidFloatingChrome =
+        appState.appBarType == FluxNewsState.appBarFloatingType;
     bool searchView = false;
     Widget listHeader({required bool emptyBody}) {
+      if (useAndroidFloatingChrome) {
+        return SliverToBoxAdapter(
+          child: SizedBox(height: topContentInset),
+        );
+      }
       if (largeTitleController != null) {
         final showCount = appState.multilineAppBarText;
         final largeTitle = GlassLargeTitle(
@@ -156,7 +163,8 @@ class BodyNewsList extends StatelessWidget {
                           child: largeTitleController != null ||
                                   !appState.isTablet
                               ? largeTitleController != null ||
-                                      appState.useSliverAppBar
+                                      appState.useSliverAppBar ||
+                                      useAndroidFloatingChrome
                                   ? CustomScrollView(
                                       controller: appState.scrollController,
                                       physics: AlwaysScrollableScrollPhysics(),
@@ -186,6 +194,14 @@ class BodyNewsList extends StatelessWidget {
                                                         newsList: snapshot.data,
                                                       );
                                               }),
+                                          if (useAndroidFloatingChrome)
+                                            SliverToBoxAdapter(
+                                              child: SizedBox(
+                                                height: MediaQuery.paddingOf(
+                                                        context)
+                                                    .bottom,
+                                              ),
+                                            ),
                                         ])
                                   : SuperListView.builder(
                                       key: const PageStorageKey<String>(

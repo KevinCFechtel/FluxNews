@@ -64,6 +64,8 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
+    final showAndroidFabSettings = !Platform.isIOS &&
+        appState.appBarType != FluxNewsState.appBarFloatingType;
     // return the body of the feed settings
     return SingleChildScrollView(
         child: Container(
@@ -669,7 +671,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 ),
               if (Platform.isIOS) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
-              if (!Platform.isIOS)
+              if (showAndroidFabSettings)
                 Row(
                   children: [
                     Padding(
@@ -704,9 +706,9 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     ),
                   ],
                 ),
-              if (!Platform.isIOS) const Divider(),
+              if (showAndroidFabSettings) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? Row(
                       children: [
                         Padding(
@@ -743,12 +745,12 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       ],
                     )
                   : SizedBox.shrink(),
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? const Divider()
                   : SizedBox.shrink(),
               // this row contains the selection of the function of the action button
               // there are the choices of sync news and mark news as read
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? Row(
                       children: [
                         Padding(
@@ -796,11 +798,11 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       ],
                     )
                   : SizedBox.shrink(),
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? const Divider()
                   : SizedBox.shrink(),
               // this row contains the selection of the style of the abb bar
-              // there are the choices of normal, overscrollable and glass effect
+              // choices: normal, collapsible, glass, or floating chrome
               if (!Platform.isIOS)
                 Row(
                   children: [
@@ -865,6 +867,22 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                                 key: FluxNewsState
                                     .secureStorageUseSliverAppBarKey,
                                 value: FluxNewsState.secureStorageTrueString);
+                          } else if (value.key ==
+                              FluxNewsState.appBarFloatingType) {
+                            appState.scrolloverAppBar = false;
+                            appState.glassAppBar = false;
+                            appState.useSliverAppBar = true;
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageScrolloverAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState.secureStorageGlassAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageUseSliverAppBarKey,
+                                value: FluxNewsState.secureStorageTrueString);
                           } else {
                             appState.scrolloverAppBar = false;
                             appState.glassAppBar = false;
@@ -895,6 +913,41 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   ],
                 ),
               if (!Platform.isIOS) const Divider(),
+              if (!Platform.isIOS &&
+                  appState.appBarType == FluxNewsState.appBarFloatingType)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 30.0),
+                      child: Icon(Icons.dashboard_customize_outlined),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!
+                            .androidFloatingToolbarShortcuts,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.androidFloatingToolbarShortcuts,
+                      onChanged: (bool value) {
+                        appState.androidFloatingToolbarShortcuts = value;
+                        appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageAndroidFloatingToolbarShortcutsKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (!Platform.isIOS &&
+                  appState.appBarType == FluxNewsState.appBarFloatingType)
+                const Divider(),
               // this row contains the selection of the image cache duration in days
               Row(
                 children: [

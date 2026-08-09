@@ -40,6 +40,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iosClearLiquidGlass => 'Use Clear Liquid Glass';
 
   @override
+  String get androidFloatingToolbarShortcuts =>
+      'Show additional actions in the floating toolbar';
+
+  @override
   String get markAsReadAndNext => 'Mark as read and open next';
 
   @override
@@ -520,6 +524,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get glass => 'Glass Effect';
+
+  @override
+  String get floating => 'Floating';
 
   @override
   String get appBarType => 'Select the App Bar Type';

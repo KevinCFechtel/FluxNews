@@ -9,6 +9,7 @@
     "iosMarkAsReadQuickAction": "Toon Markeer als gelezen in de onderste werkbalk",
     "iosSyncQuickAction": "Toon synchronisatie in de onderste werkbalk",
     "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
+    "androidFloatingToolbarShortcuts": "Extra acties in de zwevende werkbalk tonen",
     "markAsReadAndNext": "Markeer als gelezen en open volgende",
     "moreActions": "Meer acties",
     "markAsUnread": "Markeer als ongelezen",
@@ -102,5 +103,6 @@
     "androidAutoBackupFoundMessage": "An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.",
     "checkAndroidAutoBackup": "Check Android backup",
     "noAndroidAutoBackupFound": "No Android backup was found.",
-    "optional": "Optioneel"
+    "optional": "Optioneel",
+    "floating": "Zwevend"
 }

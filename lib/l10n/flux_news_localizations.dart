@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Use Clear Liquid Glass'**
   String get iosClearLiquidGlass;
 
+  /// No description provided for @androidFloatingToolbarShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Show additional actions in the floating toolbar'**
+  String get androidFloatingToolbarShortcuts;
+
   /// No description provided for @markAsReadAndNext.
   ///
   /// In en, this message translates to:
@@ -1039,6 +1045,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Glass Effect'**
   String get glass;
+
+  /// No description provided for @floating.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating'**
+  String get floating;
 
   /// No description provided for @appBarType.
   ///
