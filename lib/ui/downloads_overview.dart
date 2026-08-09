@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/database/database_backend.dart';
@@ -8,7 +9,11 @@ import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/adaptive_glass_dialog.dart';
 import 'package:flux_news/ui/audioplayer.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class DownloadsOverview extends StatefulWidget {
@@ -255,16 +260,10 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     FluxNewsState appState = context.watch<FluxNewsState>();
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(AppLocalizations.of(context)!.audioDownloadsSettings,
-            style: theme.textTheme.titleLarge),
-      ),
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.audioDownloadsSettings,
+      useLargeTitle: true,
       body: _initialLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -294,6 +293,33 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
   }
 
   Future<bool> _confirmDeleteItem(BuildContext context) async {
+    if (Platform.isIOS) {
+      final appState = context.read<FluxNewsState>();
+      return await showAdaptiveGlassDialog<bool>(
+            context: context,
+            title: AppLocalizations.of(context)!.downloadsManagerDeleteTitle,
+            message:
+                AppLocalizations.of(context)!.downloadsManagerDeleteMessage,
+            settings: iosLiquidGlassMenuSettings(
+              context,
+              useClearEffect: appState.iosClearLiquidGlass,
+            ),
+            quality: GlassQuality.standard,
+            maxWidth: 340,
+            actions: [
+              GlassDialogAction(
+                label: AppLocalizations.of(context)!.cancel,
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              GlassDialogAction(
+                label: AppLocalizations.of(context)!.delete,
+                isDestructive: true,
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
+          ) ??
+          false;
+    }
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -516,7 +542,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
         ),
       ),
       child: Card(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).platform == TargetPlatform.iOS
+            ? theme.colorScheme.surfaceContainerHigh
+            : theme.colorScheme.surfaceContainerHighest,
         shadowColor: Colors.black,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),

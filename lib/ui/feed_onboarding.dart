@@ -1,7 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class FeedOnboarding extends StatefulWidget {
@@ -12,8 +18,16 @@ class FeedOnboarding extends StatefulWidget {
 }
 
 class _FeedOnboardingState extends State<FeedOnboarding> {
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
   final Set<String> _selectedFeedUrls = <String>{};
   bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _largeTitleController.dispose();
+    super.dispose();
+  }
 
   // scraperRules can be maintained per suggested feed directly in code.
   late final List<_SuggestedCategory> _categories = <_SuggestedCategory>[
@@ -329,18 +343,43 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: <Widget>[
-            OutlinedButton.icon(
-              onPressed: _selectAll,
-              icon: const Icon(Icons.done_all),
-              label: Text(localization.feedSelectionSelectAll),
-            ),
-            OutlinedButton.icon(
-              onPressed: _clearSelection,
-              icon: const Icon(Icons.deselect),
-              label: Text(localization.feedSelectionDeleteSelection),
-            ),
-          ],
+          children: Platform.isIOS
+              ? <Widget>[
+                  AdaptiveSettingsButton(
+                    onPressed: _selectAll,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(CupertinoIcons.check_mark_circled, size: 18),
+                        const SizedBox(width: 7),
+                        Text(localization.feedSelectionSelectAll),
+                      ],
+                    ),
+                  ),
+                  AdaptiveSettingsButton(
+                    onPressed: _clearSelection,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(CupertinoIcons.clear_circled, size: 18),
+                        const SizedBox(width: 7),
+                        Text(localization.feedSelectionDeleteSelection),
+                      ],
+                    ),
+                  ),
+                ]
+              : <Widget>[
+                  OutlinedButton.icon(
+                    onPressed: _selectAll,
+                    icon: const Icon(Icons.done_all),
+                    label: Text(localization.feedSelectionSelectAll),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _clearSelection,
+                    icon: const Icon(Icons.deselect),
+                    label: Text(localization.feedSelectionDeleteSelection),
+                  ),
+                ],
         ),
         const SizedBox(height: 12),
         ..._categories.map(_buildCategoryCard),
@@ -377,12 +416,14 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
                         size: 88,
                         color: theme.colorScheme.primary,
                       ),
-                      const SizedBox(height: 20),
-                      Text(
-                        localization.feedSelection,
-                        style: theme.textTheme.headlineMedium
-                            ?.copyWith(fontSize: 36),
-                      ),
+                      if (!Platform.isIOS) ...[
+                        const SizedBox(height: 20),
+                        Text(
+                          localization.feedSelection,
+                          style: theme.textTheme.headlineMedium
+                              ?.copyWith(fontSize: 36),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       Text(
                         localization.feedCreationDescription,
@@ -394,9 +435,11 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
               ),
               Expanded(
                 flex: 6,
-                child: Card(
-                  child: _buildSelectionList(context, localization),
-                ),
+                child: Platform.isIOS
+                    ? _buildSelectionList(context, localization)
+                    : Card(
+                        child: _buildSelectionList(context, localization),
+                      ),
               ),
             ],
           ),
@@ -409,6 +452,92 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     FluxNewsState appState = context.watch<FluxNewsState>();
+
+    if (Platform.isIOS) {
+      final glassSettings = iosLiquidGlassSettings(
+        context,
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final glassQuality = iosLiquidGlassQuality(
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final foreground = iosLiquidGlassForeground(context);
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: GlassAppBar(
+          centerTitle: false,
+          largeTitleController: _largeTitleController,
+          buttonSettings: glassSettings,
+          leading: Navigator.canPop(context)
+              ? GlassIconButton(
+                  useOwnLayer: true,
+                  quality: glassQuality,
+                  settings: glassSettings,
+                  semanticLabel:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: Icon(CupertinoIcons.back, color: foreground),
+                )
+              : null,
+          title: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: glassQuality,
+                settings: glassSettings,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Text(
+                  localization.feedSelection,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: AdaptiveSettingsButton(
+            onPressed: _isSubmitting ? null : _createFeeds,
+            child: _isSubmitting
+                ? const CupertinoActivityIndicator()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(CupertinoIcons.cloud_upload, size: 19),
+                      const SizedBox(width: 8),
+                      Text('${localization.save} ($_selectedCount)'),
+                    ],
+                  ),
+          ),
+        ),
+        body: NestedScrollView(
+          controller: _largeTitleController.scrollController,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.paddingOf(context).top + 44,
+              ),
+            ),
+            GlassLargeTitle(
+              text: localization.feedSelection,
+              controller: _largeTitleController,
+            ),
+          ],
+          body: appState.isTablet
+              ? _buildTabletLayout(context, localization)
+              : _buildPhoneLayout(context, localization),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -438,24 +567,89 @@ class _FeedOnboardingState extends State<FeedOnboarding> {
   }
 
   Widget _buildCategoryCard(_SuggestedCategory category) {
+    final isIOS = Platform.isIOS;
+    final theme = Theme.of(context);
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        leading: Icon(category.icon),
-        title: Text(category.title),
+      elevation: isIOS ? 0 : null,
+      shadowColor: isIOS ? Colors.transparent : null,
+      surfaceTintColor: isIOS ? Colors.transparent : null,
+      color: isIOS
+          ? CupertinoColors.secondarySystemGroupedBackground
+              .resolveFrom(context)
+          : null,
+      clipBehavior: isIOS ? Clip.antiAlias : Clip.none,
+      shape: isIOS
+          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))
+          : null,
+      child: Theme(
+        data: isIOS
+            ? theme.copyWith(
+                dividerColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+              )
+            : theme,
+        child: ExpansionTile(
+          iconColor: isIOS ? secondaryLabel : null,
+          collapsedIconColor: isIOS ? secondaryLabel : null,
+          leading: Icon(
+            category.icon,
+            color: isIOS ? secondaryLabel : null,
+          ),
+          title: Text(category.title),
+          subtitle: Text(
+              '${category.feeds.where((feed) => _selectedFeedUrls.contains(feed.feedUrl)).length}/${category.feeds.length}'),
+          children: category.feeds
+              .map(
+                (feed) => isIOS
+                    ? _buildIOSFeedSelectionRow(feed)
+                    : CheckboxListTile(
+                        value: _selectedFeedUrls.contains(feed.feedUrl),
+                        onChanged: (selected) =>
+                            _toggleFeed(feed, selected ?? false),
+                        title: Text(feed.title),
+                        subtitle: Text(feed.siteUrl),
+                        secondary: _buildFeedSuggestionIcon(feed.iconAssetPath),
+                      ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIOSFeedSelectionRow(_SuggestedFeed feed) {
+    final selected = _selectedFeedUrls.contains(feed.feedUrl);
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
+    return Semantics(
+      checked: selected,
+      child: CupertinoListTile(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 14, 8),
+        leadingSize: 28,
+        leadingToTitle: 12,
+        leading: _buildFeedSuggestionIcon(feed.iconAssetPath),
+        title: Text(feed.title),
         subtitle: Text(
-            '${category.feeds.where((feed) => _selectedFeedUrls.contains(feed.feedUrl)).length}/${category.feeds.length}'),
-        children: category.feeds
-            .map(
-              (feed) => CheckboxListTile(
-                value: _selectedFeedUrls.contains(feed.feedUrl),
-                onChanged: (selected) => _toggleFeed(feed, selected ?? false),
-                title: Text(feed.title),
-                subtitle: Text(feed.siteUrl),
-                secondary: _buildFeedSuggestionIcon(feed.iconAssetPath),
-              ),
-            )
-            .toList(),
+          feed.siteUrl,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 160),
+          child: Icon(
+            selected
+                ? CupertinoIcons.check_mark_circled_solid
+                : CupertinoIcons.circle,
+            key: ValueKey(selected),
+            size: 24,
+            color: selected
+                ? CupertinoColors.activeBlue.resolveFrom(context)
+                : secondaryLabel,
+          ),
+        ),
+        onTap: () => _toggleFeed(feed, !selected),
       ),
     );
   }

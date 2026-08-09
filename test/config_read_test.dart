@@ -44,4 +44,32 @@ void main() {
     expect(appState.storageValues, isEmpty);
     expect(appState.configValuesReadSuccessfully, isTrue);
   });
+
+  test('legacy mark-as-read FAB migrates to the iOS quick action', () {
+    expect(
+      FluxNewsState.legacyFloatingButtonEnablesIOSMarkAsReadQuickAction({
+        FluxNewsState.secureStorageFloatingButtonVisibleKey:
+            FluxNewsState.secureStorageTrueString,
+        FluxNewsState.secureStorageFloatingButtonKey:
+            FluxNewsState.floatingButtonMarkAsReadAction,
+      }),
+      isTrue,
+    );
+  });
+
+  test('legacy sync or hidden FAB does not enable the iOS quick action', () {
+    expect(
+      FluxNewsState.legacyFloatingButtonEnablesIOSMarkAsReadQuickAction({
+        FluxNewsState.secureStorageFloatingButtonVisibleKey:
+            FluxNewsState.secureStorageTrueString,
+        FluxNewsState.secureStorageFloatingButtonKey:
+            FluxNewsState.floatingButtonSyncAction,
+      }),
+      isFalse,
+    );
+    expect(
+      FluxNewsState.legacyFloatingButtonEnablesIOSMarkAsReadQuickAction({}),
+      isFalse,
+    );
+  });
 }

@@ -341,15 +341,26 @@ class News {
   // the text is first searched in the raw text
   // if no text is found the empty string is returned
   // if there is no raw text the text is searched in the p tags
-  Widget getFullTextWidget(FluxNewsState appState) {
+  Widget getFullTextWidget(FluxNewsState appState, BuildContext context) {
     var markdown = html2md.convert(content, ignore: ['img']);
     if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
       markdown = truncateText(markdown, expandedFulltextLimit!);
     }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return MarkdownBlock(
       data: markdown,
       selectable: false,
       config: MarkdownConfig(configs: [
+        isDark ? PreConfig.darkConfig : const PreConfig(),
+        isDark
+            ? const CodeConfig(
+                style: TextStyle(
+                  color: Color(0xffabb2bf),
+                  backgroundColor: Color(0xff282c34),
+                ),
+              )
+            : const CodeConfig(),
         LinkConfig(
           style: TextStyle(), // empty style to use default
           onTap: (url) {
@@ -369,10 +380,21 @@ class News {
     if (expandedFulltextLimit != null && expandedFulltextLimit! > 0) {
       markdown = truncateText(markdown, expandedFulltextLimit!);
     }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return MarkdownBlock(
       data: markdown,
       selectable: false,
       config: MarkdownConfig(configs: [
+        isDark ? PreConfig.darkConfig : const PreConfig(),
+        isDark
+            ? const CodeConfig(
+                style: TextStyle(
+                  color: Color(0xffabb2bf),
+                  backgroundColor: Color(0xff282c34),
+                ),
+              )
+            : const CodeConfig(),
         LinkConfig(
           onTap: (url) async {
             if (Platform.isAndroid) {

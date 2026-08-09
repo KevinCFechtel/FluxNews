@@ -22,12 +22,16 @@ import 'package:flux_news/functions/sync_news.dart';
 import 'package:flux_news/functions/widget_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../database/database_backend.dart';
 import '../state_management/flux_news_state.dart';
+import '../state_management/flux_news_theme_state.dart';
 import '../models/news_model.dart';
+import 'adaptive_glass_dialog.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
+import 'ios_liquid_glass_style.dart';
 
 class FluxNewsBody extends StatelessWidget {
   const FluxNewsBody({super.key});
@@ -428,9 +432,21 @@ class FluxNewsBody extends StatelessWidget {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final hasNewsConfiguration = appState.minifluxURL != null &&
+          appState.minifluxAPIKey != null &&
+          !appState.errorOnMinifluxAuth;
       // set the scroll position to the persistent saved scroll position on normal startup
       // if sync on startup is enabled, the scroll position is set to the top of the list
       if (!skipSavedScrollRestore &&
+          Platform.isIOS &&
+          appState.isTablet &&
+          hasNewsConfiguration) {
+        // A list-index jump, including index 0, aligns the first card with the
+        // top edge and therefore collapses the Liquid Glass large title. iPad
+        // starts at the scroll view's true minimum extent instead so the title
+        // is fully expanded in both orientations.
+        appState.resetListToStart(revealIOSLargeTitle: true);
+      } else if (!skipSavedScrollRestore &&
           !appState.syncOnStart &&
           !appState.markAsReadOnScrollOver) {
         appState.jumpToItem(appState.savedScrollPosition);
@@ -451,7 +467,12 @@ class FluxNewsBody extends StatelessWidget {
     });
   }
 
-  Scaffold smartphoneLayout(BuildContext context, FluxNewsState appState) {
+  Widget smartphoneLayout(BuildContext context, FluxNewsState appState) {
+    if (Platform.isIOS) {
+      return _IOSLiquidGlassHome(
+        drawer: getDrawer(context, appState),
+      );
+    }
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     bool useSliverAppBar = appState.useSliverAppBar;
     if (appState.minifluxURL == null ||
@@ -462,7 +483,7 @@ class FluxNewsBody extends StatelessWidget {
       } else {
         useSliverAppBar = false;
       }
-    } else if (appState.errorString != '' && appState.newError) {
+    } else if (appState.errorString.trim().isNotEmpty && appState.newError) {
       useSliverAppBar = false;
     } else if (appState.longSync) {
       useSliverAppBar = false;
@@ -622,6 +643,12 @@ class FluxNewsBody extends StatelessWidget {
   }
 
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
+    if (Platform.isIOS) {
+      return _IOSLiquidGlassHome(
+        isTablet: true,
+        drawer: getDrawer(context, appState),
+      );
+    }
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     return Scaffold(
@@ -749,7 +776,7 @@ class FluxNewsBody extends StatelessWidget {
                             style: Theme.of(context).textTheme.headlineMedium,
                           ))
                     ])),
-                const CategoryList(),
+                const CategoryList(closeDrawerOnSelection: true),
               ],
             )));
   }
@@ -1056,10 +1083,647 @@ class FluxNewsBody extends StatelessWidget {
   }
 }
 
+class _IOSLiquidGlassHome extends StatefulWidget {
+  const _IOSLiquidGlassHome({this.drawer, this.isTablet = false});
+
+  final Drawer? drawer;
+  final bool isTablet;
+
+  @override
+  State<_IOSLiquidGlassHome> createState() => _IOSLiquidGlassHomeState();
+}
+
+class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
+  FluxNewsState? _attachedAppState;
+  ScrollController? _previousScrollController;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appState = context.read<FluxNewsState>();
+    if (identical(_attachedAppState, appState)) return;
+    _restoreScrollController();
+    _attachedAppState = appState;
+    _previousScrollController = appState.scrollController;
+    appState.scrollController = _largeTitleController.scrollController;
+  }
+
+  @override
+  void dispose() {
+    _restoreScrollController();
+    _largeTitleController.dispose();
+    super.dispose();
+  }
+
+  void _restoreScrollController() {
+    final appState = _attachedAppState;
+    if (appState != null &&
+        identical(appState.scrollController,
+            _largeTitleController.scrollController) &&
+        _previousScrollController != null) {
+      appState.scrollController = _previousScrollController!;
+    }
+    _attachedAppState = null;
+    _previousScrollController = null;
+  }
+
+  Future<void> _sync(FluxNewsState appState) async {
+    if (appState.syncProcess) {
+      appState.longSyncAborted = true;
+      appState.refreshView();
+      return;
+    }
+    await syncNews(
+      appState,
+      context,
+      onSuccessfulListReset: _revealExpandedTitleAfterListChange,
+    );
+  }
+
+  void _revealExpandedTitleAfterListChange() {
+    final appState = _attachedAppState;
+    if (!mounted || appState == null) return;
+    appState.resetListToStart(revealIOSLargeTitle: true);
+  }
+
+  Future<void> _refreshList(FluxNewsState appState) async {
+    final appCounterState = context.read<FluxNewsCounterState>();
+    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+      _revealExpandedTitleAfterListChange();
+    });
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+    appState.refreshView();
+  }
+
+  Future<void> _toggleReadFilter(FluxNewsState appState) async {
+    appState.newsStatus = appState.newsStatus == FluxNewsState.unreadNewsStatus
+        ? FluxNewsState.allNewsString
+        : FluxNewsState.unreadNewsStatus;
+    await appState.storage.write(
+      key: FluxNewsState.secureStorageNewsStatusKey,
+      value: appState.newsStatus,
+    );
+    await _refreshList(appState);
+  }
+
+  Future<void> _toggleSortOrder(FluxNewsState appState) async {
+    appState.sortOrder =
+        appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+            ? FluxNewsState.sortOrderOldestFirstString
+            : FluxNewsState.sortOrderNewestFirstString;
+    await appState.storage.write(
+      key: FluxNewsState.secureStorageSortOrderKey,
+      value: appState.sortOrder,
+    );
+    await _refreshList(appState);
+  }
+
+  Future<void> _markAsReadAndAdvance(FluxNewsState appState) async {
+    final appCounterState = context.read<FluxNewsCounterState>();
+    await markNewsAsReadInDB(appState);
+    unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+    if (!mounted) return;
+
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.categoryElementType) {
+      final next = await queryNextCategoryFromDB(appState, context);
+      if (mounted) setNextCategory(next, appState, context);
+    } else if (appState.selectedCategoryElementType ==
+        FluxNewsState.feedElementType) {
+      final next = await queryNextFeedFromDB(appState, context);
+      if (mounted) setNextFeed(next, appState, context);
+    } else {
+      await _refreshList(appState);
+    }
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+  }
+
+  String _markScopeLabel(BuildContext context, FluxNewsState appState) {
+    final strings = AppLocalizations.of(context)!;
+    if (appState.selectedCategoryElementType == FluxNewsState.feedElementType) {
+      return strings.markFeedAsRead;
+    }
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.categoryElementType) {
+      return strings.markCategoryAsRead;
+    }
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.bookmarkedNewsElementType) {
+      return strings.markBookmarkedAsRead;
+    }
+    return strings.markAllAsRead;
+  }
+
+  List<Widget> _menuItems(FluxNewsState appState) {
+    final strings = AppLocalizations.of(context)!;
+    return <Widget>[
+      GlassMenuItem(
+        title: strings.search,
+        icon: const Icon(Icons.search),
+        height: 56,
+        maxLines: 2,
+        onTap: () =>
+            Navigator.pushNamed(context, FluxNewsState.searchRouteString),
+      ),
+      GlassMenuItem(
+        title: appState.newsStatus == FluxNewsState.unreadNewsStatus
+            ? strings.showRead
+            : strings.showUnread,
+        icon: Icon(appState.newsStatus == FluxNewsState.unreadNewsStatus
+            ? Icons.checklist
+            : Icons.fiber_new),
+        height: 56,
+        maxLines: 2,
+        onTap: () => unawaited(_toggleReadFilter(appState)),
+      ),
+      GlassMenuItem(
+        title: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+            ? strings.oldestFirst
+            : strings.newestFirst,
+        icon: const Icon(Icons.sort),
+        height: 56,
+        maxLines: 2,
+        onTap: () => unawaited(_toggleSortOrder(appState)),
+      ),
+      const GlassMenuDivider(),
+      GlassMenuItem(
+        title: _markScopeLabel(context, appState),
+        icon: const Icon(Icons.check_circle_outline),
+        height: 56,
+        maxLines: 2,
+        onTap: () => showDeleteAllDialog(
+          context,
+          appState,
+          context.read<FluxNewsCounterState>(),
+        ),
+      ),
+      GlassMenuItem(
+        title: strings.markAsReadAndNext,
+        icon: const Icon(Icons.skip_next),
+        height: 56,
+        maxLines: 2,
+        onTap: () => unawaited(_markAsReadAndAdvance(appState)),
+      ),
+      const GlassMenuDivider(),
+      GlassMenuItem(
+        title: strings.audioDownloadsSettings,
+        icon: const Icon(Icons.podcasts),
+        height: 56,
+        maxLines: 2,
+        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (context) => const DownloadsOverview(),
+        )),
+      ),
+      GlassMenuItem(
+        title: strings.settings,
+        icon: const Icon(Icons.settings),
+        height: 56,
+        maxLines: 2,
+        onTap: () =>
+            Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
+      ),
+    ];
+  }
+
+  List<Widget> _wideTabletActions(
+    FluxNewsState appState, {
+    required LiquidGlassSettings settings,
+    required GlassQuality quality,
+    required Color foreground,
+  }) {
+    final strings = AppLocalizations.of(context)!;
+    final menuSettings = iosLiquidGlassMenuSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    return [
+      Padding(
+        padding: const EdgeInsetsDirectional.only(end: 12),
+        child: GlassMenu(
+          quality: GlassQuality.standard,
+          settings: menuSettings,
+          items: _menuItems(appState),
+          menuWidth: 320,
+          autoAdjustToScreen: true,
+          menuPadding: const EdgeInsets.all(12),
+          triggerBuilder: (context, toggleMenu) => GlassButtonGroup.icons(
+            useOwnLayer: true,
+            quality: quality,
+            settings: settings,
+            itemPadding: const EdgeInsets.all(10),
+            items: [
+              GlassButtonGroupItem(
+                label: appState.syncProcess ? strings.cancel : strings.syncNews,
+                onTap: () => unawaited(_sync(appState)),
+                icon: appState.syncProcess
+                    ? CupertinoActivityIndicator(radius: 9, color: foreground)
+                    : Icon(Icons.refresh, color: foreground),
+              ),
+              if (appState.iosMarkAsReadQuickAction)
+                GlassButtonGroupItem(
+                  label: _markScopeLabel(context, appState),
+                  onTap: () => showDeleteAllDialog(
+                    context,
+                    appState,
+                    context.read<FluxNewsCounterState>(),
+                  ),
+                  icon: Icon(Icons.check_circle_outline, color: foreground),
+                ),
+              GlassButtonGroupItem(
+                label: strings.moreActions,
+                onTap: toggleMenu,
+                icon: Icon(CupertinoIcons.ellipsis, color: foreground),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _compactTopActions(
+    FluxNewsState appState, {
+    required LiquidGlassSettings settings,
+    required GlassQuality quality,
+    required Color foreground,
+  }) {
+    final strings = AppLocalizations.of(context)!;
+    final menuSettings = iosLiquidGlassMenuSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    return [
+      Padding(
+        padding: const EdgeInsetsDirectional.only(end: 8),
+        child: GlassMenu(
+          quality: GlassQuality.standard,
+          settings: menuSettings,
+          items: _menuItems(appState),
+          menuWidth: (MediaQuery.sizeOf(context).width - 32)
+              .clamp(280.0, 340.0)
+              .toDouble(),
+          autoAdjustToScreen: true,
+          menuPadding: const EdgeInsets.all(12),
+          triggerBuilder: (context, toggleMenu) => GlassButtonGroup.icons(
+            useOwnLayer: true,
+            quality: quality,
+            settings: settings,
+            itemPadding: const EdgeInsets.all(10),
+            items: [
+              GlassButtonGroupItem(
+                label: appState.syncProcess ? strings.cancel : strings.syncNews,
+                onTap: () => unawaited(_sync(appState)),
+                icon: appState.syncProcess
+                    ? CupertinoActivityIndicator(radius: 9, color: foreground)
+                    : Icon(Icons.refresh, color: foreground),
+              ),
+              GlassButtonGroupItem(
+                label: strings.moreActions,
+                onTap: toggleMenu,
+                icon: Icon(CupertinoIcons.ellipsis, color: foreground),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Widget _wideTabletSidebar({required double width}) {
+    final themeState = context.watch<FluxNewsThemeState>();
+    final useTrueBlack = themeState.useBlackMode &&
+        Theme.of(context).brightness == Brightness.dark;
+    final settings = iosLiquidGlassSidebarSettings(
+      context,
+      useTrueBlack: useTrueBlack,
+    );
+    final foreground = iosLiquidGlassForeground(context);
+    return SizedBox(
+      width: width,
+      child: SafeArea(
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 8, 12),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            settings: settings,
+            shape: const LiquidRoundedSuperellipse(borderRadius: 28),
+            padding: EdgeInsets.zero,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsetsDirectional.fromSTEB(18, 18, 18, 8),
+                    child: Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.bookOpen,
+                          size: 18,
+                          color: foreground,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.fluxNews,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: foreground,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: CategoryList(iosSidebar: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomChrome(
+    FluxNewsState appState, {
+    required bool usesWideSidebar,
+    required double sidebarWidth,
+  }) {
+    if (usesWideSidebar) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          SizedBox(width: sidebarWidth),
+          Expanded(child: _BottomBanners(appState: appState)),
+        ],
+      );
+    }
+
+    if (!appState.iosMarkAsReadQuickAction && !appState.iosSyncQuickAction) {
+      return _BottomBanners(appState: appState);
+    }
+
+    final strings = AppLocalizations.of(context)!;
+    final glassSettings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassQuality = iosLiquidGlassQuality(
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassForeground = iosLiquidGlassForeground(context);
+    final contentChrome = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _BottomBanners(
+          appState: appState,
+          respectBottomSafeArea: false,
+        ),
+        AdaptiveLiquidGlassLayer(
+          quality: glassQuality,
+          settings: glassSettings,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: appState.iosMarkAsReadQuickAction
+                            ? GlassIconButton(
+                                quality: glassQuality,
+                                semanticLabel:
+                                    _markScopeLabel(context, appState),
+                                onPressed: () => showDeleteAllDialog(
+                                  context,
+                                  appState,
+                                  context.read<FluxNewsCounterState>(),
+                                ),
+                                icon: Icon(
+                                  Icons.check_circle_outline,
+                                  color: glassForeground,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                    const Expanded(child: SizedBox.shrink()),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: appState.iosSyncQuickAction
+                            ? GlassIconButton(
+                                quality: glassQuality,
+                                semanticLabel: appState.syncProcess
+                                    ? strings.cancel
+                                    : strings.syncNews,
+                                onPressed: () => unawaited(_sync(appState)),
+                                icon: appState.syncProcess
+                                    ? SizedBox.square(
+                                        dimension: 18,
+                                        child: CupertinoActivityIndicator(
+                                          radius: 9,
+                                          color: glassForeground,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.refresh,
+                                        color: glassForeground,
+                                      ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    return contentChrome;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<FluxNewsState>();
+    final appCounterState = context.watch<FluxNewsCounterState>();
+    final hasNewsConfiguration = appState.startUp ||
+        (appState.minifluxURL != null &&
+            appState.minifluxAPIKey != null &&
+            !appState.errorOnMinifluxAuth);
+    final titleController = hasNewsConfiguration ? _largeTitleController : null;
+    final title = appState.appBarText.isEmpty
+        ? AppLocalizations.of(context)!.fluxNews
+        : appState.appBarText;
+    final glassSettings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassQuality = iosLiquidGlassQuality(
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final glassForeground = iosLiquidGlassForeground(context);
+    final compactTitle = GlassContainer(
+      useOwnLayer: true,
+      quality: glassQuality,
+      settings: glassSettings,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: glassForeground,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          if (appState.multilineAppBarText) ...[
+            const SizedBox(width: 6),
+            Semantics(
+              label:
+                  '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
+              child: Text(
+                '${appCounterState.appBarNewsCount}',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: glassForeground,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+    final topContentInset = MediaQuery.paddingOf(context).top + 44;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final usesWideSidebar = widget.isTablet && constraints.maxWidth >= 900;
+        final sidebarWidth = usesWideSidebar
+            ? (constraints.maxWidth * 0.25).clamp(260.0, 340.0).toDouble()
+            : 0.0;
+        Widget list = GlassScrollEdgeEffect(
+          topFadeHeight: topContentInset + 20,
+          fadeBottom: false,
+          style: GlassScrollEdgeStyle.soft,
+          fadeColor: Theme.of(context).scaffoldBackgroundColor,
+          child: FluxNewsBodyList(
+            largeTitleController: titleController,
+            topContentInset: topContentInset,
+          ),
+        );
+        if (usesWideSidebar) {
+          list = Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _wideTabletSidebar(width: sidebarWidth),
+              Expanded(child: list),
+            ],
+          );
+        }
+
+        final appBarTitle = usesWideSidebar
+            ? Row(
+                children: [
+                  SizedBox(width: sidebarWidth),
+                  Flexible(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: compactTitle,
+                    ),
+                  ),
+                ],
+              )
+            : compactTitle;
+
+        return Scaffold(
+          extendBody: true,
+          extendBodyBehindAppBar: true,
+          appBar: GlassAppBar(
+            centerTitle: false,
+            largeTitleController: titleController,
+            leading: usesWideSidebar
+                ? null
+                : Builder(builder: (context) {
+                    return GlassIconButton(
+                      quality: glassQuality,
+                      useOwnLayer: true,
+                      settings: glassSettings,
+                      semanticLabel: MaterialLocalizations.of(context)
+                          .openAppDrawerTooltip,
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      icon: FaIcon(
+                        FontAwesomeIcons.bookOpen,
+                        size: 18,
+                        color: glassForeground,
+                      ),
+                    );
+                  }),
+            title: appBarTitle,
+            actions: usesWideSidebar
+                ? _wideTabletActions(
+                    appState,
+                    settings: glassSettings,
+                    quality: glassQuality,
+                    foreground: glassForeground,
+                  )
+                : _compactTopActions(
+                    appState,
+                    settings: glassSettings,
+                    quality: glassQuality,
+                    foreground: glassForeground,
+                  ),
+          ),
+          drawer: usesWideSidebar ? null : widget.drawer,
+          body: list,
+          bottomNavigationBar: _bottomChrome(
+            appState,
+            usesWideSidebar: usesWideSidebar,
+            sidebarWidth: sidebarWidth,
+          ),
+        );
+      },
+    );
+  }
+}
+
 class PersistentAudioMiniPlayer extends StatefulWidget {
-  const PersistentAudioMiniPlayer({super.key, required this.appState});
+  const PersistentAudioMiniPlayer({
+    super.key,
+    required this.appState,
+    this.respectBottomSafeArea = true,
+  });
 
   final FluxNewsState appState;
+  final bool respectBottomSafeArea;
 
   @override
   State<PersistentAudioMiniPlayer> createState() =>
@@ -1251,8 +1915,157 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
             final buttonSize = isTablet ? 60.0 : 52.0;
             final textFontSize = isTablet ? 14.0 : 12.0;
 
+            final totalMs = media.duration?.inMilliseconds ?? 0;
+            final currentMs = totalMs <= 0
+                ? 0
+                : playback.updatePosition.inMilliseconds.clamp(0, totalMs);
+            final progress = totalMs <= 0 ? null : currentMs / totalMs;
+
+            if (Platform.isIOS) {
+              final useClearEffect = widget.appState.iosClearLiquidGlass;
+              final glassSettings = iosLiquidGlassSettings(
+                context,
+                useClearEffect: useClearEffect,
+              );
+              final glassQuality = iosLiquidGlassQuality(
+                useClearEffect: useClearEffect,
+              );
+              final glassForeground = iosLiquidGlassForeground(context);
+              final artist = media.artist?.trim() ?? '';
+
+              return SafeArea(
+                top: false,
+                bottom: widget.respectBottomSafeArea,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isTablet ? 20 : 16,
+                    4,
+                    isTablet ? 20 : 16,
+                    6,
+                  ),
+                  child: GlassContainer(
+                    useOwnLayer: true,
+                    quality: glassQuality,
+                    settings: glassSettings,
+                    shape: const LiquidRoundedSuperellipse(borderRadius: 24),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 8, 6),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _openFullPlayer,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color:
+                                      glassForeground.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.headphones,
+                                  size: 21,
+                                  color: glassForeground,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      media.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: glassForeground,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    if (artist.isNotEmpty)
+                                      Text(
+                                        artist,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: glassForeground.withValues(
+                                                alpha: 0.65,
+                                              ),
+                                            ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: '-30s',
+                                onPressed: () => _audioHandler!.rewind(),
+                                icon: const Icon(Icons.replay_30, size: 24),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: playback.playing
+                                    ? AppLocalizations.of(context)!.pause
+                                    : AppLocalizations.of(context)!.play,
+                                onPressed: () => playback.playing
+                                    ? _audioHandler!.pause()
+                                    : _audioHandler!.play(),
+                                icon: Icon(
+                                  playback.playing
+                                      ? CupertinoIcons.pause_fill
+                                      : CupertinoIcons.play_fill,
+                                ),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: '+30s',
+                                onPressed: () => _audioHandler!.fastForward(),
+                                icon: const Icon(Icons.forward_30, size: 24),
+                              ),
+                              IconButton(
+                                color: glassForeground,
+                                tooltip: AppLocalizations.of(context)!.stop,
+                                onPressed: _stopMiniPlayer,
+                                icon: const Icon(
+                                  CupertinoIcons.xmark_circle_fill,
+                                  size: 21,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 3,
+                              backgroundColor:
+                                  glassForeground.withValues(alpha: 0.16),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                glassForeground.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
             return SafeArea(
               top: false,
+              bottom: widget.respectBottomSafeArea,
               child: Material(
                 elevation: 8,
                 color: miniPlayerBackground,
@@ -1342,14 +2155,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
                         ),
                         SizedBox(height: isTablet ? 6 : 4),
                         LinearProgressIndicator(
-                          value: (() {
-                            final totalMs = media.duration?.inMilliseconds ?? 0;
-                            if (totalMs <= 0) return null;
-                            final currentMs = playback
-                                .updatePosition.inMilliseconds
-                                .clamp(0, totalMs);
-                            return currentMs / totalMs;
-                          })(),
+                          value: progress,
                           minHeight: isTablet ? 4 : 3,
                           backgroundColor:
                               miniPlayerForeground.withValues(alpha: 0.25),
@@ -1372,24 +2178,39 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
 // ── Bottom banners: download progress + mini player stacked ─────────────────
 
 class _BottomBanners extends StatelessWidget {
-  const _BottomBanners({required this.appState});
+  const _BottomBanners({
+    required this.appState,
+    this.respectBottomSafeArea = true,
+  });
   final FluxNewsState appState;
+  final bool respectBottomSafeArea;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        PersistentDownloadBanner(appState: appState),
-        PersistentAudioMiniPlayer(appState: appState),
+        PersistentDownloadBanner(
+          appState: appState,
+          respectBottomSafeArea: respectBottomSafeArea,
+        ),
+        PersistentAudioMiniPlayer(
+          appState: appState,
+          respectBottomSafeArea: respectBottomSafeArea,
+        ),
       ],
     );
   }
 }
 
 class PersistentDownloadBanner extends StatelessWidget {
-  const PersistentDownloadBanner({super.key, required this.appState});
+  const PersistentDownloadBanner({
+    super.key,
+    required this.appState,
+    this.respectBottomSafeArea = true,
+  });
   final FluxNewsState appState;
+  final bool respectBottomSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -1400,15 +2221,56 @@ class PersistentDownloadBanner extends StatelessWidget {
         final downloads = snapshot.data ?? const [];
         if (downloads.isEmpty) return const SizedBox.shrink();
 
-        final colorScheme = Theme.of(context).colorScheme;
-        final bg = colorScheme.tertiaryContainer;
-        final fg = colorScheme.onTertiaryContainer;
         final screenWidth = MediaQuery.sizeOf(context).width;
         final shortestSide = MediaQuery.sizeOf(context).shortestSide;
         final isTablet = screenWidth >= 900 || shortestSide >= 600;
 
+        if (Platform.isIOS) {
+          final glassForeground = iosLiquidGlassForeground(context);
+          return SafeArea(
+            top: false,
+            bottom: respectBottomSafeArea,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                isTablet ? 20 : 16,
+                4,
+                isTablet ? 20 : 16,
+                6,
+              ),
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: GlassQuality.standard,
+                settings: iosLiquidGlassSettings(
+                  context,
+                  useClearEffect: appState.iosClearLiquidGlass,
+                ),
+                shape: const LiquidRoundedSuperellipse(borderRadius: 22),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 12 : 10,
+                  vertical: isTablet ? 8 : 7,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: downloads
+                      .map((download) => _DownloadRow(
+                            progress: download,
+                            foreground: glassForeground,
+                            isTablet: isTablet,
+                          ))
+                      .toList(),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final colorScheme = Theme.of(context).colorScheme;
+        final bg = colorScheme.tertiaryContainer;
+        final fg = colorScheme.onTertiaryContainer;
+
         return SafeArea(
           top: false,
+          bottom: respectBottomSafeArea,
           child: Material(
             elevation: 8,
             color: bg,
@@ -1521,7 +2383,12 @@ class _DownloadRow extends StatelessWidget {
 class FluxNewsBodyList extends StatelessWidget {
   const FluxNewsBodyList({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1534,15 +2401,30 @@ class FluxNewsBodyList extends StatelessWidget {
             appState.minifluxAPIKey == null ||
             appState.errorOnMinifluxAuth == true) &&
         !appState.startUp) {
-      return const NoSettings();
-    } else if (appState.errorString != '' && appState.newError) {
-      return const ErrorWidget();
+      return Padding(
+        padding: EdgeInsets.only(top: topContentInset),
+        child: const NoSettings(),
+      );
+    } else if (appState.errorString.trim().isNotEmpty && appState.newError) {
+      return ErrorWidget(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     } else if (appState.longSync) {
-      return const LongSyncWidget();
+      return LongSyncWidget(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     } else if (appState.tooManyNews) {
-      return const TooManyNewsWidget();
+      return TooManyNewsWidget(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     } else {
-      return const BodyNewsList();
+      return BodyNewsList(
+        largeTitleController: largeTitleController,
+        topContentInset: topContentInset,
+      );
     }
   }
 }
@@ -1552,44 +2434,96 @@ class FluxNewsBodyList extends StatelessWidget {
 class ErrorWidget extends StatelessWidget {
   const ErrorWidget({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    Timer.run(() {
-      showErrorDialog(context).then((value) {
-        appState.newError = false;
-        appState.refreshView();
+    if (!appState.errorDialogVisible && appState.newError) {
+      final currentMessage = appState.errorString.trim();
+      final message = currentMessage.isEmpty
+          ? AppLocalizations.of(context)!.communicateionMinifluxError
+          : currentMessage;
+
+      // Consume this exact error before scheduling the dialog. A later error
+      // can set newError again and will be displayed after the current dialog
+      // closes instead of being cleared by its completion callback.
+      appState.newError = false;
+      appState.errorDialogVisible = true;
+      Timer.run(() async {
+        try {
+          if (context.mounted) {
+            await showErrorDialog(context, message);
+          }
+        } finally {
+          appState.errorDialogVisible = false;
+          if (!appState.newError && appState.errorString.trim() == message) {
+            appState.errorString = '';
+          }
+          if (context.mounted) {
+            appState.refreshView();
+          }
+        }
       });
-    });
-    return const BodyNewsList();
+    }
+    return BodyNewsList(
+      largeTitleController: largeTitleController,
+      topContentInset: topContentInset,
+    );
   }
 
   // this is the error dialog which is shown, if a error occurs.
   // to prevent the multi pop up (f.e. if the internet connection ist lost
   // not every function which require the connection should raise a pop up)
   // we check if the error which is shown is a new error.
-  Future showErrorDialog(BuildContext context) async {
+  Future<void> showErrorDialog(BuildContext context, String message) async {
     FluxNewsState appState = context.read<FluxNewsState>();
-    if (appState.newError) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog.adaptive(
-              title: Text(AppLocalizations.of(context)!.error),
-              content: Text(appState.errorString),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, FluxNewsState.cancelContextString);
-                  },
-                  child: Text(AppLocalizations.of(context)!.ok),
-                ),
-              ],
-            );
-          });
+    if (Platform.isIOS) {
+      await showAdaptiveGlassDialog<void>(
+        context: context,
+        title: AppLocalizations.of(context)!.error,
+        message: message,
+        settings: iosLiquidGlassMenuSettings(
+          context,
+          useClearEffect: appState.iosClearLiquidGlass,
+        ),
+        quality: GlassQuality.standard,
+        maxWidth: 340,
+        actions: [
+          GlassDialogAction(
+            label: AppLocalizations.of(context)!.ok,
+            isPrimary: true,
+            onPressed: () => Navigator.pop(
+              context,
+              FluxNewsState.cancelContextString,
+            ),
+          ),
+        ],
+      );
+      return;
     }
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog.adaptive(
+          title: Text(AppLocalizations.of(context)!.error),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, FluxNewsState.cancelContextString);
+              },
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -1598,7 +2532,12 @@ class ErrorWidget extends StatelessWidget {
 class LongSyncWidget extends StatelessWidget {
   const LongSyncWidget({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1610,7 +2549,10 @@ class LongSyncWidget extends StatelessWidget {
         appState.refreshView();
       });
     });
-    return const BodyNewsList();
+    return BodyNewsList(
+      largeTitleController: largeTitleController,
+      topContentInset: topContentInset,
+    );
   }
 
   // this is the error dialog which is shown, if a error occurs.
@@ -1620,7 +2562,40 @@ class LongSyncWidget extends StatelessWidget {
   Future showLongSyncDialog(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.longSync) {
-      showDialog(
+      if (Platform.isIOS) {
+        await showAdaptiveGlassDialog<void>(
+          context: context,
+          title: AppLocalizations.of(context)!.longSyncHeader,
+          message: AppLocalizations.of(context)!.longSyncWarning,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: appState.iosClearLiquidGlass,
+          ),
+          quality: GlassQuality.standard,
+          maxWidth: 360,
+          actions: [
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.cancel,
+              isDestructive: true,
+              onPressed: () {
+                appState.longSyncAborted = true;
+                appState.refreshView();
+                Navigator.pop(context, FluxNewsState.cancelContextString);
+              },
+            ),
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.ok,
+              isPrimary: true,
+              onPressed: () => Navigator.pop(
+                context,
+                FluxNewsState.cancelContextString,
+              ),
+            ),
+          ],
+        );
+        return;
+      }
+      await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(
@@ -1656,7 +2631,12 @@ class LongSyncWidget extends StatelessWidget {
 class TooManyNewsWidget extends StatelessWidget {
   const TooManyNewsWidget({
     super.key,
+    this.largeTitleController,
+    this.topContentInset = 0,
   });
+
+  final GlassLargeTitleController? largeTitleController;
+  final double topContentInset;
 
   @override
   Widget build(BuildContext context) {
@@ -1667,7 +2647,10 @@ class TooManyNewsWidget extends StatelessWidget {
         appState.refreshView();
       });
     });
-    return const BodyNewsList();
+    return BodyNewsList(
+      largeTitleController: largeTitleController,
+      topContentInset: topContentInset,
+    );
   }
 
   // this is the error dialog which is shown, if a error occurs.
@@ -1677,7 +2660,31 @@ class TooManyNewsWidget extends StatelessWidget {
   Future showTooManyNewsWidget(BuildContext context) async {
     FluxNewsState appState = context.read<FluxNewsState>();
     if (appState.tooManyNews) {
-      showDialog(
+      if (Platform.isIOS) {
+        await showAdaptiveGlassDialog<void>(
+          context: context,
+          title: AppLocalizations.of(context)!.error,
+          message: AppLocalizations.of(context)!.tooManyNews,
+          settings: iosLiquidGlassMenuSettings(
+            context,
+            useClearEffect: appState.iosClearLiquidGlass,
+          ),
+          quality: GlassQuality.standard,
+          maxWidth: 340,
+          actions: [
+            GlassDialogAction(
+              label: AppLocalizations.of(context)!.ok,
+              isPrimary: true,
+              onPressed: () => Navigator.pop(
+                context,
+                FluxNewsState.cancelContextString,
+              ),
+            ),
+          ],
+        );
+        return;
+      }
+      await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog.adaptive(
@@ -1793,7 +2800,12 @@ class AppBarTitle extends StatelessWidget {
 class CategoryList extends StatelessWidget {
   const CategoryList({
     super.key,
+    this.iosSidebar = false,
+    this.closeDrawerOnSelection = false,
   });
+
+  final bool iosSidebar;
+  final bool closeDrawerOnSelection;
 
   @override
   Widget build(BuildContext context) {
@@ -1813,14 +2825,11 @@ class CategoryList extends StatelessWidget {
             case ConnectionState.waiting:
               // we add a static category of "All News" to the list of categories
               // while waiting on the news list from the miniflux server
-              return ListTile(
-                leading: const Icon(
-                  Icons.home,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.allNews,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
+              return _buildNavigationTile(
+                context: context,
+                leading: const Icon(Icons.home),
+                title: AppLocalizations.of(context)!.allNews,
+                selected: false,
               );
             default:
               if (snapshot.hasError) {
@@ -1834,35 +2843,29 @@ class CategoryList extends StatelessWidget {
                         // and not empty, we show the category list
                         : Column(children: [
                             // we add a static category of "All News" to the list of categories
-                            ListTile(
+                            _buildNavigationTile(
+                              context: context,
                               leading: const Icon(
                                 Icons.home,
                               ),
-                              title: Text(
-                                AppLocalizations.of(context)!.allNews,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              trailing: Text(
-                                '${appCounterState.allNewsCount}',
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
+                              title: AppLocalizations.of(context)!.allNews,
+                              count: appCounterState.allNewsCount,
+                              selected: appState.selectedCategoryElementType ==
+                                  FluxNewsState.allNewsElementType,
                               onTap: () {
                                 allNewsOnClick(appState, context);
                               },
                             ),
                             // we add a static category of "Bookmarked" to the list of categories
-                            ListTile(
+                            _buildNavigationTile(
+                              context: context,
                               leading: const Icon(
                                 Icons.star,
                               ),
-                              title: Text(
-                                AppLocalizations.of(context)!.bookmarked,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              trailing: Text(
-                                '${appCounterState.starredCount}',
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
+                              title: AppLocalizations.of(context)!.bookmarked,
+                              count: appCounterState.starredCount,
+                              selected: appState.selectedCategoryElementType ==
+                                  FluxNewsState.bookmarkedNewsElementType,
                               onTap: () {
                                 bookmarkedOnClick(appState, context);
                               },
@@ -1884,42 +2887,168 @@ class CategoryList extends StatelessWidget {
     return getData;
   }
 
+  Widget _buildNavigationTile({
+    required BuildContext context,
+    required Widget leading,
+    required String title,
+    required bool selected,
+    int? count,
+    VoidCallback? onTap,
+  }) {
+    final accent = _navigationSelectionAccent(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Material(
+        color: selected ? accent.withValues(alpha: 0.14) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
+          dense: iosSidebar,
+          minTileHeight: iosSidebar ? 44 : null,
+          contentPadding: iosSidebar
+              ? const EdgeInsetsDirectional.only(start: 8, end: 16)
+              : null,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          selected: selected,
+          selectedColor: accent,
+          leading: leading,
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? accent : null,
+                ),
+          ),
+          trailing: count == null
+              ? null
+              : _buildCountLabel(
+                  context: context,
+                  count: count,
+                  selected: selected,
+                ),
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCountLabel({
+    required BuildContext context,
+    required int count,
+    required bool selected,
+    VoidCallback? onTap,
+  }) {
+    final accent = _navigationSelectionAccent(context);
+    Widget label = Text(
+      '$count',
+      textAlign: TextAlign.end,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: selected ? accent : null,
+          ),
+    );
+    if (iosSidebar) {
+      label = SizedBox(
+        width: 32,
+        child: Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: label,
+        ),
+      );
+    }
+    return onTap == null ? label : InkWell(onTap: onTap, child: label);
+  }
+
   // here we style the category ExpansionTile
   // we use a ExpansionTile because we want to show the according feeds
   // of this category in the expanded state.
   Widget showCategory(
       Category category, Categories categories, BuildContext context) {
     FluxNewsState appState = context.read<FluxNewsState>();
-    return ExpansionTile(
-      // we want the expansion arrow at the beginning,
-      // because we want to show the news count at the end of this row.
-      controlAffinity: ListTileControlAffinity.leading,
-      // make the title clickable to select this category as the news view
-      title: InkWell(
-        child: Text(
-          category.title,
-          style: Theme.of(context).textTheme.labelLarge,
-          overflow: TextOverflow.ellipsis,
-        ),
-        onTap: () {
-          categoryOnClick(category, appState, categories, context);
-        },
+    final selected = appState.selectedCategoryElementType ==
+            FluxNewsState.categoryElementType &&
+        appState.selectedID == category.categoryID;
+    final selectedFeedId =
+        appState.selectedCategoryElementType == FluxNewsState.feedElementType
+            ? appState.selectedID
+            : null;
+    final containsSelectedFeed = selectedFeedId != null &&
+        category.feeds.any((feed) => feed.feedID == selectedFeedId);
+    final accent = _navigationSelectionAccent(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Stack(
+        children: [
+          if (selected)
+            PositionedDirectional(
+              top: 0,
+              start: 0,
+              end: 0,
+              height: iosSidebar ? 44 : 56,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          _AutoExpandingCategory(
+            key: ValueKey<int>(category.categoryID),
+            selectedFeedId: selectedFeedId,
+            containsSelectedFeed: containsSelectedFeed,
+            builder: (context, controller) => ExpansionTile(
+              controller: controller,
+              dense: iosSidebar,
+              minTileHeight: iosSidebar ? 44 : null,
+              tilePadding: iosSidebar
+                  ? const EdgeInsetsDirectional.only(start: 8, end: 16)
+                  : null,
+              childrenPadding: iosSidebar
+                  ? const EdgeInsetsDirectional.only(start: 12, bottom: 4)
+                  : EdgeInsets.zero,
+              iconColor: selected ? accent : null,
+              collapsedIconColor: selected ? accent : null,
+              shape: const Border(),
+              collapsedShape: const Border(),
+              // we want the expansion arrow at the beginning,
+              // because we want to show the news count at the end of this row.
+              controlAffinity: ListTileControlAffinity.leading,
+              // make the title clickable to select this category as the news view
+              title: InkWell(
+                child: Text(
+                  category.title,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: selected ? accent : null,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {
+                  categoryOnClick(category, appState, categories, context);
+                },
+              ),
+              // show the news count of this category
+              trailing: _buildCountLabel(
+                context: context,
+                count: category.newsCount,
+                selected: selected,
+                onTap: () {
+                  categoryOnClick(category, appState, categories, context);
+                },
+              ),
+              // iterate over the according feeds of the category
+              children: [
+                for (Feed feed in category.feeds)
+                  FeedTile(
+                    feed: feed,
+                    categories: categories,
+                    iosSidebar: iosSidebar,
+                    closeDrawerOnSelection: closeDrawerOnSelection,
+                  )
+              ],
+            ),
+          ),
+        ],
       ),
-      // show the news count of this category
-      trailing: InkWell(
-        child: Text(
-          '${category.newsCount}',
-          style: Theme.of(context).textTheme.labelLarge,
-        ),
-        onTap: () {
-          categoryOnClick(category, appState, categories, context);
-        },
-      ),
-      // iterate over the according feeds of the category
-      children: [
-        for (Feed feed in category.feeds)
-          FeedTile(feed: feed, categories: categories)
-      ],
     );
   }
 
@@ -1932,7 +3061,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.categoryElementType;
     // reload the news list with the new filter
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _resetListAfterNavigationSelection(appState);
     });
     // set the category title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -1942,11 +3071,11 @@ class CategoryList extends StatelessWidget {
     // update the view after changing the values
     appState.refreshView();
 
-    // if the device is a smartphone, close the drawer after selecting a category or feed
-    // if the device is a tablet, no drawer is used.
-    if (!appState.isTablet) {
-      Navigator.pop(context);
-    }
+    _closeNavigationDrawerAfterSelection(
+      context,
+      appState,
+      force: closeDrawerOnSelection,
+    );
   }
 
   // if the "All News" ListTile is clicked,
@@ -1958,7 +3087,7 @@ class CategoryList extends StatelessWidget {
     appState.selectedCategoryElementType = FluxNewsState.allNewsElementType;
     // reload the news list with the new filter (empty)
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _resetListAfterNavigationSelection(appState);
     });
     // set the "All News" title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -1970,11 +3099,11 @@ class CategoryList extends StatelessWidget {
     // update the view after changing the values
     appState.refreshView();
 
-    // if the device is a smartphone, close the drawer after selecting a category or feed
-    // if the device is a tablet, no drawer is used.
-    if (!appState.isTablet) {
-      Navigator.pop(context);
-    }
+    _closeNavigationDrawerAfterSelection(
+      context,
+      appState,
+      force: closeDrawerOnSelection,
+    );
   }
 
   // if the "Bookmarked" ListTile is clicked,
@@ -1990,7 +3119,7 @@ class CategoryList extends StatelessWidget {
         FluxNewsState.bookmarkedNewsElementType;
     // reload the news list with the new filter (-1 only bookmarked news)
     appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-      appState.jumpToItem(0);
+      _resetListAfterNavigationSelection(appState);
     });
     // set the "Bookmarked" title as app bar title
     // and update the news count in the app bar, if the function is activated.
@@ -2002,14 +3131,66 @@ class CategoryList extends StatelessWidget {
     // update the view after changing the values
     appState.refreshView();
 
-    // if the device is a smartphone, close the drawer after selecting a category or feed
-    // if the device is a tablet, no drawer is used.
-    if (!appState.isTablet) {
-      Navigator.pop(context);
-    }
+    _closeNavigationDrawerAfterSelection(
+      context,
+      appState,
+      force: closeDrawerOnSelection,
+    );
   }
 
   // here we style the ListTile of the feeds which are subordinate to the categories
+}
+
+class _AutoExpandingCategory extends StatefulWidget {
+  const _AutoExpandingCategory({
+    super.key,
+    required this.selectedFeedId,
+    required this.containsSelectedFeed,
+    required this.builder,
+  });
+
+  final int? selectedFeedId;
+  final bool containsSelectedFeed;
+  final Widget Function(BuildContext, ExpansibleController) builder;
+
+  @override
+  State<_AutoExpandingCategory> createState() => _AutoExpandingCategoryState();
+}
+
+class _AutoExpandingCategoryState extends State<_AutoExpandingCategory> {
+  late final ExpansibleController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ExpansibleController();
+    if (widget.containsSelectedFeed) {
+      _controller.expand();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AutoExpandingCategory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.containsSelectedFeed &&
+        widget.selectedFeedId != oldWidget.selectedFeedId &&
+        !_controller.isExpanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_controller.isExpanded) {
+          _controller.expand();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _controller);
 }
 
 class FeedTile extends StatelessWidget {
@@ -2017,117 +3198,107 @@ class FeedTile extends StatelessWidget {
     super.key,
     required this.feed,
     required this.categories,
+    this.iosSidebar = false,
+    this.closeDrawerOnSelection = false,
   });
 
   final Feed feed;
   final Categories categories;
+  final bool iosSidebar;
+  final bool closeDrawerOnSelection;
 
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    return appState.showOnlyFeedCategoriesWithNewNews
-        ? feed.newsCount > 0
-            ? ListTile(
-                title: Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Row(children: [
-                    // if the option is enabled, show the feed icon
-                    appState.showFeedIcons
-                        ? feed.getFeedIcon(16.0, context)
-                        : const SizedBox.shrink(),
-                    Expanded(
-                        child: Padding(
-                      padding: const EdgeInsets.only(left: 10.0),
-                      child: Text(
-                        feed.title,
-                        style: Theme.of(context).textTheme.labelLarge,
-                        overflow: TextOverflow.ellipsis,
+    if (appState.showOnlyFeedCategoriesWithNewNews && feed.newsCount <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final selected =
+        appState.selectedCategoryElementType == FluxNewsState.feedElementType &&
+            appState.selectedID == feed.feedID;
+    final accent = _navigationSelectionAccent(context);
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 1, 8, 1),
+      child: Material(
+        color: selected ? accent.withValues(alpha: 0.14) : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: ListTile(
+          dense: iosSidebar,
+          minTileHeight: iosSidebar ? 40 : null,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          selected: selected,
+          selectedColor: accent,
+          title: Padding(
+            padding: EdgeInsetsDirectional.only(start: iosSidebar ? 0 : 8),
+            child: Row(children: [
+              if (appState.showFeedIcons) feed.getFeedIcon(16.0, context),
+              if (appState.showFeedIcons) const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  feed.title,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: selected ? accent : null,
                       ),
-                    ))
-                  ]),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                // show the news count of this feed
-                trailing: Text(
-                  '${feed.newsCount}',
-                  style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ]),
+          ),
+          trailing: Text(
+            '${feed.newsCount}',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? accent : null,
                 ),
-                onTap: () {
-                  // on tab we want to show only the news of this feed in the news list.
-                  // set the feed id of the selected feed in the feedIDs filter
-                  appState.feedIDs = [feed.feedID];
-                  appState.selectedCategoryElementType =
-                      FluxNewsState.feedElementType;
-                  // reload the news list with the new filter
-                  appState.newsList =
-                      queryNewsFromDB(appState).whenComplete(() {
-                    appState.jumpToItem(0);
-                  });
-                  // set the feed title as app bar title
-                  // and update the news count in the app bar, if the function is activated.
-                  appState.appBarText = feed.title;
-                  appState.selectedID = feed.feedID;
-                  categories.renewNewsCount(appState, context);
-                  // update the view after changing the values
-                  appState.refreshView();
-
-                  // if the device is a smartphone, close the drawer after selecting a category or feed
-                  // if the device is a tablet, no drawer is used.
-                  if (!appState.isTablet) {
-                    Navigator.pop(context);
-                  }
-                },
-              )
-            : const SizedBox.shrink()
-        : ListTile(
-            title: Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Row(children: [
-                // if the option is enabled, show the feed icon
-                appState.showFeedIcons
-                    ? feed.getFeedIcon(16.0, context)
-                    : const SizedBox.shrink(),
-                Expanded(
-                    child: Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: Text(
-                    feed.title,
-                    style: Theme.of(context).textTheme.labelLarge,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ))
-              ]),
-            ),
-            // show the news count of this feed
-            trailing: Text(
-              '${feed.newsCount}',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            onTap: () {
-              // on tab we want to show only the news of this feed in the news list.
-              // set the feed id of the selected feed in the feedIDs filter
-              appState.feedIDs = [feed.feedID];
-              appState.selectedCategoryElementType =
-                  FluxNewsState.feedElementType;
-              // reload the news list with the new filter
-              appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                appState.jumpToItem(0);
-              });
-              // set the feed title as app bar title
-              // and update the news count in the app bar, if the function is activated.
-              appState.appBarText = feed.title;
-              appState.selectedID = feed.feedID;
-              categories.renewNewsCount(appState, context);
-              // update the view after changing the values
-              appState.refreshView();
-
-              // if the device is a smartphone, close the drawer after selecting a category or feed
-              // if the device is a tablet, no drawer is used.
-              if (!appState.isTablet) {
-                Navigator.pop(context);
-              }
-            },
-          );
+          ),
+          onTap: () {
+            appState.feedIDs = [feed.feedID];
+            appState.selectedCategoryElementType =
+                FluxNewsState.feedElementType;
+            appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+              _resetListAfterNavigationSelection(appState);
+            });
+            appState.appBarText = feed.title;
+            appState.selectedID = feed.feedID;
+            categories.renewNewsCount(appState, context);
+            appState.refreshView();
+            _closeNavigationDrawerAfterSelection(
+              context,
+              appState,
+              force: closeDrawerOnSelection,
+            );
+          },
+        ),
+      ),
+    );
   }
+}
+
+Color _navigationSelectionAccent(BuildContext context) {
+  if (Platform.isIOS) {
+    return CupertinoColors.activeBlue.resolveFrom(context);
+  }
+  return Theme.of(context).colorScheme.primary;
+}
+
+void _closeNavigationDrawerAfterSelection(
+  BuildContext context,
+  FluxNewsState appState, {
+  bool force = false,
+}) {
+  if (force || !appState.isTablet) {
+    Navigator.maybePop(context);
+  }
+}
+
+void _resetListAfterNavigationSelection(FluxNewsState appState) {
+  if (!Platform.isIOS) {
+    appState.jumpToItem(0);
+    return;
+  }
+
+  appState.resetListToStart(revealIOSLargeTitle: true);
 }
 
 class FluxNewsBodyStatefulWrapper extends StatefulWidget {

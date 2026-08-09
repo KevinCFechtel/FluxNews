@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class Login extends StatefulWidget {
@@ -16,6 +19,8 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlassLargeTitleController _largeTitleController =
+      GlassLargeTitleController();
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _headerKeyController = TextEditingController();
@@ -25,6 +30,7 @@ class _LoginState extends State<Login> {
   bool _isLoading = false;
   String? _errorText;
   bool _initialized = false;
+  bool _headersExpanded = false;
 
   @override
   void didChangeDependencies() {
@@ -42,6 +48,7 @@ class _LoginState extends State<Login> {
     }
     if (appState.customHeaders.isNotEmpty) {
       _headers = Map<String, String>.from(appState.customHeaders);
+      _headersExpanded = true;
     }
 
     _initialized = true;
@@ -49,6 +56,7 @@ class _LoginState extends State<Login> {
 
   @override
   void dispose() {
+    _largeTitleController.dispose();
     _urlController.dispose();
     _apiKeyController.dispose();
     _headerKeyController.dispose();
@@ -177,6 +185,260 @@ class _LoginState extends State<Login> {
           );
   }
 
+  Widget _buildCredentialField({
+    required BuildContext context,
+    required TextEditingController controller,
+    required String label,
+    required FormFieldValidator<String> validator,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? prefixIcon,
+  }) {
+    if (!Platform.isIOS) {
+      return TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: keyboardType,
+        autofillHints: obscureText
+            ? const [AutofillHints.password]
+            : const [AutofillHints.url],
+        obscureText: obscureText,
+        validator: validator,
+      );
+    }
+
+    final appState = context.read<FluxNewsState>();
+    return FormField<String>(
+      initialValue: controller.text,
+      validator: validator,
+      builder: (fieldState) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 7),
+            child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+          ),
+          GlassTextField(
+            controller: controller,
+            placeholder: label,
+            prefixIcon: prefixIcon,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            textInputAction: TextInputAction.next,
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            settings: iosLiquidGlassInputSettings(
+              context,
+              useClearEffect: appState.iosClearLiquidGlass,
+            ),
+            onChanged: fieldState.didChange,
+          ),
+          if (fieldState.hasError)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8, top: 6),
+              child: Text(
+                fieldState.errorText!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderEditor(
+      BuildContext context, AppLocalizations localization) {
+    final appState = context.read<FluxNewsState>();
+    final inputSettings = iosLiquidGlassInputSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (Platform.isIOS) ...[
+          AdaptiveSettingsTextField(
+            controller: _headerKeyController,
+            decoration: InputDecoration(hintText: localization.headerKey),
+            textInputAction: TextInputAction.next,
+            iosSettings: inputSettings,
+          ),
+          const SizedBox(height: 10),
+          AdaptiveSettingsTextField(
+            controller: _headerValueController,
+            decoration: InputDecoration(hintText: localization.headerValue),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addHeader(),
+            iosSettings: inputSettings,
+          ),
+        ] else ...[
+          Wrap(
+            children: [
+              Text(localization.headerKey),
+              TextField(controller: _headerKeyController),
+            ],
+          ),
+          Wrap(
+            children: [
+              Text(localization.headerValue),
+              TextField(controller: _headerValueController),
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: AdaptiveSettingsButton(
+            onPressed: _addHeader,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (Platform.isIOS) ...[
+                  const Icon(CupertinoIcons.add, size: 18),
+                  const SizedBox(width: 7),
+                ],
+                Text(localization.saveHeader),
+              ],
+            ),
+          ),
+        ),
+        if (_headers.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          const Divider(),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: [
+                DataColumn(label: Text(localization.headerKey)),
+                DataColumn(label: Text(localization.headerValue)),
+                const DataColumn(label: Text('')),
+              ],
+              rows: _headers.entries
+                  .map(
+                    (entry) => DataRow(cells: [
+                      DataCell(Text(entry.key)),
+                      DataCell(Text(entry.value)),
+                      DataCell(Platform.isIOS
+                          ? CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                setState(() {
+                                  _headers.remove(entry.key);
+                                });
+                              },
+                              child: Text(localization.delete),
+                            )
+                          : TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _headers.remove(entry.key);
+                                });
+                              },
+                              child: Text(localization.delete),
+                            )),
+                    ]),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHeadersSection(
+      BuildContext context, AppLocalizations localization) {
+    final theme = Theme.of(context);
+    final secondaryLabel = Platform.isIOS
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : theme.colorScheme.onSurfaceVariant;
+    final toggleContent = Row(
+      children: [
+        Text(
+          localization.headers,
+          style: theme.textTheme.titleSmall,
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: Platform.isIOS
+                ? CupertinoColors.tertiarySystemFill.resolveFrom(context)
+                : theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            localization.optional,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: secondaryLabel,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const Spacer(),
+        AnimatedRotation(
+          turns: _headersExpanded ? 0.5 : 0,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: Icon(
+            Platform.isIOS ? CupertinoIcons.chevron_down : Icons.expand_more,
+            size: Platform.isIOS ? 16 : 24,
+            color: secondaryLabel,
+          ),
+        ),
+      ],
+    );
+    final toggle = Platform.isIOS
+        ? CupertinoButton(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(44, 44),
+            onPressed: _toggleHeaders,
+            child: toggleContent,
+          )
+        : Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: _toggleHeaders,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: toggleContent,
+              ),
+            ),
+          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          button: true,
+          expanded: _headersExpanded,
+          child: toggle,
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: _headersExpanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: _buildHeaderEditor(context, localization),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+
+  void _toggleHeaders() {
+    setState(() => _headersExpanded = !_headersExpanded);
+  }
+
   Widget _buildFormContent(
       BuildContext context, AppLocalizations localization) {
     return Form(
@@ -189,14 +451,12 @@ class _LoginState extends State<Login> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 20),
-          TextFormField(
+          _buildCredentialField(
+            context: context,
             controller: _urlController,
-            decoration: InputDecoration(
-              labelText: localization.apiUrl,
-              border: const OutlineInputBorder(),
-            ),
+            label: localization.apiUrl,
             keyboardType: TextInputType.url,
-            autofillHints: const [AutofillHints.url],
+            prefixIcon: const Icon(CupertinoIcons.link),
             validator: (value) {
               final url = value?.trim() ?? '';
               if (url.isEmpty) {
@@ -211,13 +471,11 @@ class _LoginState extends State<Login> {
             },
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          _buildCredentialField(
+            context: context,
             controller: _apiKeyController,
-            decoration: InputDecoration(
-              labelText: localization.apiKey,
-              border: const OutlineInputBorder(),
-            ),
-            autofillHints: const [AutofillHints.password],
+            label: localization.apiKey,
+            prefixIcon: const Icon(CupertinoIcons.lock),
             obscureText: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -226,63 +484,8 @@ class _LoginState extends State<Login> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
-          Text(
-            localization.headers,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            children: [
-              Text(localization.headerKey),
-              TextField(
-                controller: _headerKeyController,
-              ),
-            ],
-          ),
-          Wrap(
-            children: [
-              Text(localization.headerValue),
-              TextField(
-                controller: _headerValueController,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: _addHeader,
-            child: Text(localization.saveHeader),
-          ),
-          if (_headers.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const Divider(),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: [
-                  DataColumn(label: Text(localization.headerKey)),
-                  DataColumn(label: Text(localization.headerValue)),
-                  const DataColumn(label: Text('')),
-                ],
-                rows: _headers.entries
-                    .map(
-                      (entry) => DataRow(cells: [
-                        DataCell(Text(entry.key)),
-                        DataCell(Text(entry.value)),
-                        DataCell(TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _headers.remove(entry.key);
-                            });
-                          },
-                          child: Text(localization.delete),
-                        )),
-                      ]),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
+          const SizedBox(height: 12),
+          _buildHeadersSection(context, localization),
           if (_errorText != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -292,16 +495,18 @@ class _LoginState extends State<Login> {
           ],
           const SizedBox(height: 20),
           Platform.isIOS
-              ? CupertinoButton.filled(
+              ? AdaptiveSettingsButton(
                   onPressed: _isLoading ? null : () => _submit(context),
                   child: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator.adaptive(
-                              strokeWidth: 2),
-                        )
-                      : Text(localization.save),
+                      ? const CupertinoActivityIndicator()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(CupertinoIcons.check_mark, size: 18),
+                            const SizedBox(width: 8),
+                            Text(localization.save),
+                          ],
+                        ),
                 )
               : ElevatedButton(
                   onPressed: _isLoading ? null : () => _submit(context),
@@ -389,6 +594,78 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     FluxNewsState appState = context.watch<FluxNewsState>();
+
+    if (Platform.isIOS) {
+      final glassSettings = iosLiquidGlassSettings(
+        context,
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final glassQuality = iosLiquidGlassQuality(
+        useClearEffect: appState.iosClearLiquidGlass,
+      );
+      final foreground = iosLiquidGlassForeground(context);
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: GlassAppBar(
+          centerTitle: false,
+          largeTitleController: _largeTitleController,
+          buttonSettings: glassSettings,
+          leading: Navigator.canPop(context)
+              ? GlassIconButton(
+                  useOwnLayer: true,
+                  quality: glassQuality,
+                  settings: glassSettings,
+                  semanticLabel:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: Icon(CupertinoIcons.back, color: foreground),
+                )
+              : null,
+          title: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: glassQuality,
+                settings: glassSettings,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Text(
+                  localization.minifluxServer,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        body: NestedScrollView(
+          controller: _largeTitleController.scrollController,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.paddingOf(context).top + 44,
+              ),
+            ),
+            GlassLargeTitle(
+              text: localization.minifluxServer,
+              controller: _largeTitleController,
+            ),
+          ],
+          body: SafeArea(
+            top: false,
+            child: appState.isTablet
+                ? _buildTabletLayout(context, localization)
+                : _buildPhoneLayout(context, localization),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

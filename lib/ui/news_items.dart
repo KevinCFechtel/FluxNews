@@ -148,7 +148,7 @@ class NewsContent extends StatelessWidget {
     final Widget textContent = news.expanded
         ? news.expandedWithFulltext != null
             ? news.expandedWithFulltext!
-                ? news.getFullTextWidget(appState)
+                ? news.getFullTextWidget(appState, context)
                 : news.getFullRenderedWidget(appState, context)
             : news.getFullRenderedWidget(appState, context)
         : Text(

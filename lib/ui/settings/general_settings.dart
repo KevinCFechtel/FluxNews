@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -34,18 +36,12 @@ class GeneralSettings extends StatelessWidget {
     }
   }
 
-  Scaffold generalSettingsLayout(BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.generalSettings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsGeneralSettingsBody());
+  Widget generalSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.generalSettings,
+      useLargeTitle: true,
+      body: const FluxNewsGeneralSettingsBody(),
+    );
   }
 }
 
@@ -105,27 +101,27 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     }
                   },
                   child: Column(children: [
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!.startupCategorieAll,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: 0,
                     ),
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!
                               .startupCategorieBookmarks,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: 1,
                     ),
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!
                               .startupCategorieCategorie,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: 2,
                     ),
-                    RadioListTile<int>(
+                    RadioListTile<int>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!.startupCategorieFeed,
                           style: Theme.of(context).textTheme.titleMedium),
@@ -254,7 +250,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<KeyValueRecordType>(
+                  AdaptiveSettingsDropdown<KeyValueRecordType>(
                     value: appState.brightnessModeSelection,
                     elevation: 16,
                     underline: Container(
@@ -302,7 +298,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        Switch.adaptive(
+                        AdaptiveSettingsSwitch(
                           value: themeState.useBlackMode,
                           onChanged: (bool value) {
                             String stringValue =
@@ -326,6 +322,40 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       FluxNewsState.brightnessModeLightString
                   ? const Divider()
                   : SizedBox.shrink(),
+              if (Platform.isIOS)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
+                      child: Icon(Icons.water_drop_outlined),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.iosClearLiquidGlass,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.iosClearLiquidGlass,
+                      onChanged: (bool value) {
+                        final storedValue = value
+                            ? FluxNewsState.secureStorageTrueString
+                            : FluxNewsState.secureStorageFalseString;
+                        appState.iosClearLiquidGlass = value;
+                        appState.storageValues[FluxNewsState
+                            .secureStorageIOSClearLiquidGlassKey] = storedValue;
+                        appState.storage.write(
+                          key:
+                              FluxNewsState.secureStorageIOSClearLiquidGlassKey,
+                          value: storedValue,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (Platform.isIOS) const Divider(),
               // this row contains the selection of the mark as read on scroll over
               // if it is turned on, a news is marked as read if it is scrolled over
               Row(
@@ -344,7 +374,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.markAsReadOnScrollOver,
                     onChanged: (bool value) {
                       String stringValue =
@@ -379,7 +409,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.openAudioItemsInPlayer,
                     onChanged: (bool value) {
                       String stringValue =
@@ -415,7 +445,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.syncOnStart,
                     onChanged: (bool value) {
                       String stringValue =
@@ -451,7 +481,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.showOnlyFeedCategoriesWithNewNews,
                     onChanged: (bool value) {
                       String stringValue =
@@ -488,7 +518,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.multilineAppBarText,
                     onChanged: (bool value) {
                       String stringValue =
@@ -524,7 +554,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.showFeedIcons,
                     onChanged: (bool value) {
                       String stringValue =
@@ -559,7 +589,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.showHeadlineOnTop,
                     onChanged: (bool value) {
                       String stringValue =
@@ -577,44 +607,106 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
-              // this row contains the selection if the button to mark as read is turned on
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                    child: const Icon(
-                      Icons.smart_button,
+              if (Platform.isIOS)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
+                      child: Icon(Icons.check_circle_outline),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.floatingActionButton,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.visible,
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.iosMarkAsReadQuickAction,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                  ),
-                  Switch.adaptive(
-                    value: appState.floatingButtonVisible,
-                    onChanged: (bool value) {
-                      String stringValue =
-                          FluxNewsState.secureStorageFalseString;
-                      if (value == true) {
-                        stringValue = FluxNewsState.secureStorageTrueString;
-                      }
-                      appState.floatingButtonVisible = value;
-                      appState.storage.write(
+                    AdaptiveSettingsSwitch(
+                      value: appState.iosMarkAsReadQuickAction,
+                      onChanged: (bool value) {
+                        appState.iosMarkAsReadQuickAction = value;
+                        appState.storage.write(
                           key: FluxNewsState
-                              .secureStorageFloatingButtonVisibleKey,
-                          value: stringValue);
-                      appState.refreshView();
-                    },
-                  ),
-                ],
-              ),
-              const Divider(),
+                              .secureStorageIOSMarkAsReadQuickActionKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (Platform.isIOS) const Divider(),
+              if (Platform.isIOS)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
+                      child: Icon(Icons.refresh),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.iosSyncQuickAction,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.iosSyncQuickAction,
+                      onChanged: (bool value) {
+                        appState.iosSyncQuickAction = value;
+                        appState.storage.write(
+                          key: FluxNewsState.secureStorageIOSSyncQuickActionKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (Platform.isIOS) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
-              appState.floatingButtonVisible
+              if (!Platform.isIOS)
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.smart_button,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.floatingActionButton,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.floatingButtonVisible,
+                      onChanged: (bool value) {
+                        String stringValue =
+                            FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.floatingButtonVisible = value;
+                        appState.storage.write(
+                            key: FluxNewsState
+                                .secureStorageFloatingButtonVisibleKey,
+                            value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (!Platform.isIOS) const Divider(),
+              // this row contains the selection if the button to mark as read is turned on
+              !Platform.isIOS && appState.floatingButtonVisible
                   ? Row(
                       children: [
                         Padding(
@@ -631,7 +723,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        Switch.adaptive(
+                        AdaptiveSettingsSwitch(
                           value: appState.glassActionButton,
                           onChanged: (bool value) {
                             String stringValue =
@@ -651,12 +743,12 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       ],
                     )
                   : SizedBox.shrink(),
-              appState.floatingButtonVisible
+              !Platform.isIOS && appState.floatingButtonVisible
                   ? const Divider()
                   : SizedBox.shrink(),
               // this row contains the selection of the function of the action button
               // there are the choices of sync news and mark news as read
-              appState.floatingButtonVisible
+              !Platform.isIOS && appState.floatingButtonVisible
                   ? Row(
                       children: [
                         Padding(
@@ -675,7 +767,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.floatingButtonActionSelection,
                           elevation: 16,
                           underline: Container(
@@ -704,104 +796,105 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       ],
                     )
                   : SizedBox.shrink(),
-              appState.floatingButtonVisible
+              !Platform.isIOS && appState.floatingButtonVisible
                   ? const Divider()
                   : SizedBox.shrink(),
               // this row contains the selection of the style of the abb bar
               // there are the choices of normal, overscrollable and glass effect
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 17.0,
-                        right: Platform.isIOS ? 15.0 : 30.0,
-                        top: 10),
-                    child: const Icon(
-                      Icons.app_shortcut,
+              if (!Platform.isIOS)
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: 17.0,
+                          right: Platform.isIOS ? 15.0 : 30.0,
+                          top: 10),
+                      child: const Icon(
+                        Icons.app_shortcut,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.appBarType,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.visible,
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.appBarType,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                  ),
-                  DropdownButton<KeyValueRecordType>(
-                    value: appState.appBarTypeSelection,
-                    elevation: 16,
-                    underline: Container(
-                      height: 2,
-                    ),
-                    alignment: AlignmentDirectional.centerEnd,
-                    onChanged: (KeyValueRecordType? value) {
-                      if (value != null) {
-                        appState.appBarType = value.key;
-                        appState.appBarTypeSelection = value;
-                        appState.storage.write(
-                            key: FluxNewsState.secureStorageAppBarTypeKey,
-                            value: value.key);
-                        if (value.key == FluxNewsState.appBarGlassType) {
-                          appState.scrolloverAppBar = false;
-                          appState.glassAppBar = true;
-                          appState.useSliverAppBar = true;
+                    AdaptiveSettingsDropdown<KeyValueRecordType>(
+                      value: appState.appBarTypeSelection,
+                      elevation: 16,
+                      underline: Container(
+                        height: 2,
+                      ),
+                      alignment: AlignmentDirectional.centerEnd,
+                      onChanged: (KeyValueRecordType? value) {
+                        if (value != null) {
+                          appState.appBarType = value.key;
+                          appState.appBarTypeSelection = value;
                           appState.storage.write(
-                              key: FluxNewsState
-                                  .secureStorageScrolloverAppBarKey,
-                              value: FluxNewsState.secureStorageFalseString);
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageGlassAppBarKey,
-                              value: FluxNewsState.secureStorageTrueString);
-                          appState.storage.write(
-                              key:
-                                  FluxNewsState.secureStorageUseSliverAppBarKey,
-                              value: FluxNewsState.secureStorageTrueString);
-                        } else if (value.key ==
-                            FluxNewsState.appBarCollapsedType) {
-                          appState.scrolloverAppBar = true;
-                          appState.glassAppBar = false;
-                          appState.useSliverAppBar = true;
-                          appState.storage.write(
-                              key: FluxNewsState
-                                  .secureStorageScrolloverAppBarKey,
-                              value: FluxNewsState.secureStorageTrueString);
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageGlassAppBarKey,
-                              value: FluxNewsState.secureStorageFalseString);
-                          appState.storage.write(
-                              key:
-                                  FluxNewsState.secureStorageUseSliverAppBarKey,
-                              value: FluxNewsState.secureStorageTrueString);
-                        } else {
-                          appState.scrolloverAppBar = false;
-                          appState.glassAppBar = false;
-                          appState.useSliverAppBar = false;
-                          appState.storage.write(
-                              key: FluxNewsState
-                                  .secureStorageScrolloverAppBarKey,
-                              value: FluxNewsState.secureStorageFalseString);
-                          appState.storage.write(
-                              key: FluxNewsState.secureStorageGlassAppBarKey,
-                              value: FluxNewsState.secureStorageFalseString);
-                          appState.storage.write(
-                              key:
-                                  FluxNewsState.secureStorageUseSliverAppBarKey,
-                              value: FluxNewsState.secureStorageFalseString);
+                              key: FluxNewsState.secureStorageAppBarTypeKey,
+                              value: value.key);
+                          if (value.key == FluxNewsState.appBarGlassType) {
+                            appState.scrolloverAppBar = false;
+                            appState.glassAppBar = true;
+                            appState.useSliverAppBar = true;
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageScrolloverAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState.secureStorageGlassAppBarKey,
+                                value: FluxNewsState.secureStorageTrueString);
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageUseSliverAppBarKey,
+                                value: FluxNewsState.secureStorageTrueString);
+                          } else if (value.key ==
+                              FluxNewsState.appBarCollapsedType) {
+                            appState.scrolloverAppBar = true;
+                            appState.glassAppBar = false;
+                            appState.useSliverAppBar = true;
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageScrolloverAppBarKey,
+                                value: FluxNewsState.secureStorageTrueString);
+                            appState.storage.write(
+                                key: FluxNewsState.secureStorageGlassAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageUseSliverAppBarKey,
+                                value: FluxNewsState.secureStorageTrueString);
+                          } else {
+                            appState.scrolloverAppBar = false;
+                            appState.glassAppBar = false;
+                            appState.useSliverAppBar = false;
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageScrolloverAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState.secureStorageGlassAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageUseSliverAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                          }
+                          appState.refreshView();
                         }
-                        appState.refreshView();
-                      }
-                    },
-                    items: appState.recordTypesAppBarType!
-                        .map<DropdownMenuItem<KeyValueRecordType>>(
-                            (recordType) =>
-                                DropdownMenuItem<KeyValueRecordType>(
-                                    value: recordType,
-                                    child: Text(recordType.value)))
-                        .toList(),
-                  ),
-                ],
-              ),
-              const Divider(),
+                      },
+                      items: appState.recordTypesAppBarType!
+                          .map<DropdownMenuItem<KeyValueRecordType>>(
+                              (recordType) =>
+                                  DropdownMenuItem<KeyValueRecordType>(
+                                      value: recordType,
+                                      child: Text(recordType.value)))
+                          .toList(),
+                    ),
+                  ],
+                ),
+              if (!Platform.isIOS) const Divider(),
               // this row contains the selection of the image cache duration in days
               Row(
                 children: [
@@ -821,7 +914,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<int>(
+                  AdaptiveSettingsDropdown<int>(
                     value: appState.imageCacheDurationDays,
                     elevation: 16,
                     underline: Container(
@@ -878,7 +971,7 @@ class _ConstrainedDropdown<T> extends StatelessWidget {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
-      child: DropdownButton<T>(
+      child: AdaptiveSettingsDropdown<T>(
         value: value,
         elevation: 16,
         underline: Container(height: 2),

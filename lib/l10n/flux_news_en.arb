@@ -6,6 +6,11 @@
     "deleteBookmark": "Delete Bookmark",
     "addBookmark": "Add Bookmark",
     "markAsRead": "Mark as read",
+    "iosMarkAsReadQuickAction": "Show Mark as read in the bottom toolbar",
+    "iosSyncQuickAction": "Show Sync in the bottom toolbar",
+    "iosClearLiquidGlass": "Use Clear Liquid Glass",
+    "markAsReadAndNext": "Mark as read and open next",
+    "moreActions": "More actions",
     "markAsUnread": "Mark as unread",
     "showUnread": "Show unread news",
     "showRead": "Show all news",
@@ -44,6 +49,14 @@
     "syncOnStart": "Sync News on startup",
     "bookmarked": "Bookmarked",
     "itemCount": "Count",
+    "largeTitleNewsCount": "{count, plural, =1{1 article} other{{count} articles}}",
+    "@largeTitleNewsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "multilineAppBarTextSetting": "Show newscount in Appbar",
     "showFeedIconsTextSettings": "Show feed icons",
     "descriptionMinifluxApp": "This is a simple Newsreader to work with miniflux.\nFor more information about miniflux, visit the projekt page:",
@@ -140,6 +153,7 @@
     "headerValue": "Header Value:",
     "delete": "Delete",
     "headers": "Headers",
+    "optional": "Optional",
     "scrolloverAppBar": "The app bar is collapsible on scroll",
     "syncNews": "Sync News",
     "floatingButtonAction": "Select the action for the extra button",

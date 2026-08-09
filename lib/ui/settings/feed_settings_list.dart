@@ -7,11 +7,15 @@ import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:provider/provider.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 
 class FeedSettingsList extends StatelessWidget {
   const FeedSettingsList({
     super.key,
+    this.header,
   });
+
+  final Widget? header;
 
   @override
   Widget build(BuildContext context) {
@@ -22,27 +26,28 @@ class FeedSettingsList extends StatelessWidget {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
           case ConnectionState.waiting:
-            return const Center(child: CircularProgressIndicator.adaptive());
+            return _buildPlaceholder(
+              const CircularProgressIndicator.adaptive(),
+            );
           default:
             if (snapshot.hasError) {
-              return const SizedBox.shrink();
+              return _buildPlaceholder(const SizedBox.shrink());
             } else {
               return snapshot.data == null
                   // show empty dialog if list is null
-                  ? Center(
-                      child: Text(
+                  ? _buildPlaceholder(Text(
                       AppLocalizations.of(context)!.emptyFeedList,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ))
                   // show empty dialog if list is empty
                   : snapshot.data!.isEmpty
-                      ? Center(
-                          child: Text(
+                      ? _buildPlaceholder(Text(
                           AppLocalizations.of(context)!.emptyFeedList,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ))
                       // otherwise create list view with the news of the search result
                       : ListView(children: [
+                          if (header case final header?) header,
                           for (Feed feed in snapshot.data!)
                             showFeed(feed, context),
                         ]);
@@ -51,6 +56,22 @@ class FeedSettingsList extends StatelessWidget {
       },
     );
     return getData;
+  }
+
+  Widget _buildPlaceholder(Widget child) {
+    if (header == null) {
+      return Center(child: child);
+    }
+
+    return ListView(
+      children: [
+        header!,
+        Padding(
+          padding: const EdgeInsets.only(top: 48),
+          child: Center(child: child),
+        ),
+      ],
+    );
   }
 
   // here we style the category ExpansionTile
@@ -85,7 +106,7 @@ class FeedSettingsList extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: feed.manualTruncate == null
                         ? false
                         : feed.manualTruncate!,
@@ -121,7 +142,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value:
                   feed.preferParagraph == null ? false : feed.preferParagraph!,
               onChanged: (bool value) async {
@@ -154,7 +175,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.preferAttachmentImage == null
                   ? false
                   : feed.preferAttachmentImage!,
@@ -188,7 +209,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.manualAdaptLightModeToIcon == null
                   ? false
                   : feed.manualAdaptLightModeToIcon!,
@@ -227,7 +248,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.manualAdaptDarkModeToIcon == null
                   ? false
                   : feed.manualAdaptDarkModeToIcon!,
@@ -266,7 +287,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.openMinifluxEntry == null
                   ? false
                   : feed.openMinifluxEntry!,
@@ -301,7 +322,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            Switch.adaptive(
+            AdaptiveSettingsSwitch(
               value: feed.expandedWithFulltext == null
                   ? false
                   : feed.expandedWithFulltext!,
@@ -339,7 +360,7 @@ class FeedSettingsList extends StatelessWidget {
                 overflow: TextOverflow.visible,
               ),
             ),
-            DropdownButton<KeyValueRecordType>(
+            AdaptiveSettingsDropdown<KeyValueRecordType>(
               value:
                   feed.getAmountOfCharactersToTruncateExpandSelection(context),
               elevation: 16,

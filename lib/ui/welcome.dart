@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/functions/settings_backup_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class Welcome extends StatelessWidget {
@@ -55,6 +57,54 @@ class Welcome extends StatelessWidget {
     );
   }
 
+  Widget _buildIOSActionButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onPressed,
+    required bool primary,
+  }) {
+    final appState = context.read<FluxNewsState>();
+    final baseSettings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: appState.iosClearLiquidGlass,
+    );
+    final accent = CupertinoColors.activeBlue.resolveFrom(context);
+    final foreground =
+        primary ? CupertinoColors.white : iosLiquidGlassForeground(context);
+    final settings = primary
+        ? baseSettings.copyWith(
+            glassColor: accent.withValues(alpha: 0.42),
+            backerColor: accent.withValues(alpha: 0.32),
+            whitenStrength: 0,
+            shadowElevation: 1.2,
+          )
+        : baseSettings;
+
+    return SizedBox(
+      width: double.infinity,
+      child: GlassButton.custom(
+        label: label,
+        onTap: onPressed,
+        height: 52,
+        useOwnLayer: true,
+        quality: iosLiquidGlassQuality(
+          useClearEffect: appState.iosClearLiquidGlass,
+        ),
+        settings: settings,
+        style: primary ? GlassButtonStyle.prominent : GlassButtonStyle.filled,
+        shape: const LiquidRoundedSuperellipse(borderRadius: 18),
+        glowColor: primary ? accent.withValues(alpha: 0.28) : null,
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPhoneLayout(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -81,8 +131,10 @@ class Welcome extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: Platform.isIOS
-                ? CupertinoButton.filled(
-                    child: Text(AppLocalizations.of(context)!.login),
+                ? _buildIOSActionButton(
+                    context,
+                    label: AppLocalizations.of(context)!.login,
+                    primary: true,
                     onPressed: () {
                       Navigator.pushNamed(
                           context, FluxNewsState.loginRouteString);
@@ -105,8 +157,10 @@ class Welcome extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: Platform.isIOS
-                ? CupertinoButton(
-                    child: Text(AppLocalizations.of(context)!.restoreSettings),
+                ? _buildIOSActionButton(
+                    context,
+                    label: AppLocalizations.of(context)!.restoreSettings,
+                    primary: false,
                     onPressed: () {
                       Navigator.pushNamed(
                           context, FluxNewsState.restoreSettingsRouteString);
@@ -163,29 +217,50 @@ class Welcome extends StatelessWidget {
               ),
               Expanded(
                 flex: 5,
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(28.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          FluxNewsState.applicationName,
-                          style: theme.textTheme.headlineSmall,
-                          textAlign: TextAlign.center,
+                child: Platform.isIOS
+                    ? Padding(
+                        padding: const EdgeInsets.all(28),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildIOSActionButton(
+                              context,
+                              label: AppLocalizations.of(context)!.login,
+                              primary: true,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, FluxNewsState.loginRouteString);
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _buildIOSActionButton(
+                              context,
+                              label:
+                                  AppLocalizations.of(context)!.restoreSettings,
+                              primary: false,
+                              onPressed: () {
+                                Navigator.pushNamed(context,
+                                    FluxNewsState.restoreSettingsRouteString);
+                              },
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 24),
-                        Platform.isIOS
-                            ? CupertinoButton.filled(
-                                child:
-                                    Text(AppLocalizations.of(context)!.login),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                      context, FluxNewsState.loginRouteString);
-                                },
-                              )
-                            : ElevatedButton(
+                      )
+                    : Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(28.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                FluxNewsState.applicationName,
+                                style: theme.textTheme.headlineSmall,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton(
                                 onPressed: () {
                                   Navigator.pushNamed(
                                       context, FluxNewsState.loginRouteString);
@@ -200,17 +275,8 @@ class Welcome extends StatelessWidget {
                                             .colorScheme
                                             .onPrimary)),
                               ),
-                        const SizedBox(height: 12),
-                        Platform.isIOS
-                            ? CupertinoButton(
-                                child: Text(AppLocalizations.of(context)!
-                                    .restoreSettings),
-                                onPressed: () {
-                                  Navigator.pushNamed(context,
-                                      FluxNewsState.restoreSettingsRouteString);
-                                },
-                              )
-                            : OutlinedButton(
+                              const SizedBox(height: 12),
+                              OutlinedButton(
                                 onPressed: () {
                                   Navigator.pushNamed(context,
                                       FluxNewsState.restoreSettingsRouteString);
@@ -218,11 +284,11 @@ class Welcome extends StatelessWidget {
                                 child: Text(AppLocalizations.of(context)!
                                     .restoreSettings),
                               ),
-                        _buildAndroidAutoBackupRestoreButton(context),
-                      ],
-                    ),
-                  ),
-                ),
+                              _buildAndroidAutoBackupRestoreButton(context),
+                            ],
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),

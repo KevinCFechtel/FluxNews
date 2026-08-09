@@ -6,6 +6,11 @@
     "deleteBookmark": "Yer İşaretini Sil",
     "addBookmark": "Yer İşareti Ekle",
     "markAsRead": "Okundu olarak işaretle",
+    "iosMarkAsReadQuickAction": "Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster",
+    "iosSyncQuickAction": "Alt araç çubuğunda senkronizasyonu göster",
+    "iosClearLiquidGlass": "Şeffaf Liquid Glass kullan",
+    "markAsReadAndNext": "Okundu olarak işaretle ve sonrakini aç",
+    "moreActions": "Daha fazla işlem",
     "markAsUnread": "Okunmadı olarak işaretle",
     "showUnread": "Okunmamış haberleri göster",
     "showRead": "Tüm haberleri göster",
@@ -44,6 +49,14 @@
     "syncOnStart": "Başlangıçta Haberleri Senkronize Et",
     "bookmarked": "Yer işaretlerine eklendi",
     "itemCount": "Miktar",
+    "largeTitleNewsCount": "{count} haber",
+    "@largeTitleNewsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "multilineAppBarTextSetting": "Appbar'da haber sayısını göster",
     "showFeedIconsTextSettings": "Besleme simgelerini göster",
     "descriptionMinifluxApp": "Bu, miniflux ile çalışmak için basit bir Haber okuyucusudur.\nMiniflux hakkında daha fazla bilgi için proje sayfasını ziyaret edin:",

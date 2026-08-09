@@ -54,3 +54,4 @@ app.*.map.json
 /android/app/release
 /android/build/
 /android/.kotlin/
+/debug/

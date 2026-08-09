@@ -30,6 +30,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAsRead => 'Mark as read';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Show Mark as read in the bottom toolbar';
+
+  @override
+  String get iosSyncQuickAction => 'Show Sync in the bottom toolbar';
+
+  @override
+  String get iosClearLiquidGlass => 'Use Clear Liquid Glass';
+
+  @override
+  String get markAsReadAndNext => 'Mark as read and open next';
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
   String get markAsUnread => 'Mark as unread';
 
   @override
@@ -145,6 +161,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemCount => 'Count';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get multilineAppBarTextSetting => 'Show newscount in Appbar';
@@ -466,6 +493,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get headers => 'Headers';
+
+  @override
+  String get optional => 'Optional';
 
   @override
   String get scrolloverAppBar => 'The app bar is collapsible on scroll';

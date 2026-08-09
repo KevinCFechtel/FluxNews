@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -33,19 +35,12 @@ class TruncateSettings extends StatelessWidget {
     }
   }
 
-  Scaffold truncateSettingsLayout(
-      BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.truncateSettings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsTruncateSettingsBody());
+  Widget truncateSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.truncateSettings,
+      useLargeTitle: true,
+      body: const FluxNewsTruncateSettingsBody(),
+    );
   }
 }
 
@@ -96,7 +91,7 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.activateTruncate,
                     onChanged: (bool value) {
                       String stringValue =
@@ -142,19 +137,19 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                         }
                       },
                       child: Column(children: [
-                        RadioListTile<int>(
+                        RadioListTile<int>.adaptive(
                           title: Text(
                               AppLocalizations.of(context)!.truncateModeAll,
                               style: Theme.of(context).textTheme.titleMedium),
                           value: 0,
                         ),
-                        RadioListTile<int>(
+                        RadioListTile<int>.adaptive(
                           title: Text(
                               AppLocalizations.of(context)!.truncateModeScraper,
                               style: Theme.of(context).textTheme.titleMedium),
                           value: 1,
                         ),
-                        RadioListTile<int>(
+                        RadioListTile<int>.adaptive(
                           title: Text(
                               AppLocalizations.of(context)!.truncateModeManual,
                               style: Theme.of(context).textTheme.titleMedium),
@@ -183,7 +178,7 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<int>(
+                        AdaptiveSettingsDropdown<int>(
                           value: appState.charactersToTruncate,
                           elevation: 16,
                           underline: Container(
@@ -232,7 +227,7 @@ class FluxNewsTruncateSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState
                               .amountOfCharactersToTruncateLimitSelection,
                           elevation: 16,

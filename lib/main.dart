@@ -23,6 +23,7 @@ import 'package:flux_news/ui/settings/sync_settings.dart';
 import 'package:flux_news/ui/settings/truncate_settings.dart';
 import 'package:flux_news/ui/settings/widget_settings.dart';
 import 'package:intl/intl.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -100,10 +101,26 @@ Future<void> main() async {
   if (Platform.isIOS) {
     _startupLogInfo('main', 'Initializing CarPlay service');
     initFluxNewsCarPlayService(audioHandlerFuture);
+    try {
+      await LiquidGlassWidgets.initialize(
+        enablePerformanceMonitor: false,
+        warmUpImpellerPipeline: false,
+      );
+    } catch (error) {
+      _startupLogError('main', 'Liquid Glass initialization fell back: $error');
+    }
   }
 
   _startupLogInfo('main', 'Calling runApp()');
-  runApp(const SDTFScope(child: FluxNews()));
+  const app = SDTFScope(child: FluxNews());
+  runApp(Platform.isIOS
+      ? LiquidGlassWidgets.wrap(
+          child: app,
+          brightnessResolver: Theme.maybeBrightnessOf,
+          adaptiveQuality: false,
+          respectSystemAccessibility: true,
+        )
+      : app);
 }
 
 void _startupLogInfo(String subTag, String message) {

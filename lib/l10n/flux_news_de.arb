@@ -6,6 +6,11 @@
     "deleteBookmark": "Lesezeichen löschen",
     "addBookmark": "Lesezeichen hinzufügen",
     "markAsRead": "Als gelesen markieren",
+    "iosMarkAsReadQuickAction": "Als gelesen markieren in der unteren Leiste anzeigen",
+    "iosSyncQuickAction": "Sync in der unteren Leiste anzeigen",
+    "iosClearLiquidGlass": "Klares Liquid Glass verwenden",
+    "markAsReadAndNext": "Als gelesen markieren und nächste öffnen",
+    "moreActions": "Weitere Aktionen",
     "markAsUnread": "Als ungelesen markieren",
     "showUnread": "Nur Ungelesene Nachrichten anzeigen",
     "showRead": "Alle Nachrichten anzeigen",
@@ -44,6 +49,14 @@
     "syncOnStart": "Synchronisiere Nachrichten beim Start",
     "bookmarked": "Lesezeichen",
     "itemCount": "Anzahl",
+    "largeTitleNewsCount": "{count, plural, =1{1 Nachricht} other{{count} Nachrichten}}",
+    "@largeTitleNewsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "multilineAppBarTextSetting": "Zeige die Anzahl der Nachrichten in der Appbar",
     "showFeedIconsTextSettings": "Zeige die Icons der Feeds an",
     "descriptionMinifluxApp": "Dies ist ein simpler Newsreader, der mit dem miniflux Server zusammenarbeitet\nFür mehr Informationen über das miniflux Projekt besuchen Sie bitte die Projektseite:",
@@ -140,6 +153,7 @@
     "headerValue": "Header Inhalt:",
     "delete": "Löschen",
     "headers": "Headers",
+    "optional": "Optional",
     "scrolloverAppBar": "Die Appbar verschwindet beim überscrollen",
     "syncNews": "Sync News",
     "floatingButtonAction": "Wähle die Aktion für den extra Button",

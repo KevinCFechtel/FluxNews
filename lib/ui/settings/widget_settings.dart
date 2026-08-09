@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 
@@ -132,14 +134,9 @@ class _WidgetSettingsState extends State<WidgetSettings> {
           key: FluxNewsState.sortOrderOldestFirstString,
           value: AppLocalizations.of(context)!.oldestFirst),
     ];
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(AppLocalizations.of(context)!.widgetSettings,
-            style: Theme.of(context).textTheme.titleLarge),
-      ),
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.widgetSettings,
+      useLargeTitle: true,
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -161,7 +158,7 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.widgetUnreadOnly,
                     onChanged: (value) {
                       appState.widgetUnreadOnly = value;
@@ -190,23 +187,23 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                 },
                 child: Column(
                   children: [
-                    RadioListTile<String>(
+                    RadioListTile<String>.adaptive(
                       title: Text(AppLocalizations.of(context)!.allNews,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: FluxNewsState.widgetFilterAllString,
                     ),
-                    RadioListTile<String>(
+                    RadioListTile<String>.adaptive(
                       title: Text(AppLocalizations.of(context)!.bookmarkShort,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: FluxNewsState.widgetFilterBookmarkedString,
                     ),
-                    RadioListTile<String>(
+                    RadioListTile<String>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!.widgetFilterCategory,
                           style: Theme.of(context).textTheme.titleMedium),
                       value: FluxNewsState.widgetFilterCategoryString,
                     ),
-                    RadioListTile<String>(
+                    RadioListTile<String>.adaptive(
                       title: Text(
                           AppLocalizations.of(context)!.widgetFilterFeed,
                           style: Theme.of(context).textTheme.titleMedium),
@@ -294,7 +291,7 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.widgetOpenMiniflux,
                     onChanged: (value) {
                       appState.widgetOpenMiniflux = value;
@@ -324,7 +321,7 @@ class _WidgetSettingsState extends State<WidgetSettings> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                    Switch.adaptive(
+                    AdaptiveSettingsSwitch(
                       value: appState.widgetTranslucentBackground,
                       onChanged: (value) {
                         appState.widgetTranslucentBackground = value;
@@ -390,7 +387,7 @@ class _DropdownRow<T> extends StatelessWidget {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.sizeOf(context).width * 0.42,
           ),
-          child: DropdownButton<T>(
+          child: AdaptiveSettingsDropdown<T>(
             value: value,
             elevation: 16,
             underline: Container(height: 2),

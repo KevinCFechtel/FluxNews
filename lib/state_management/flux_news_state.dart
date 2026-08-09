@@ -153,6 +153,11 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageFloatingButtonKey = 'floatingButtonAction';
   static const String secureStorageAppBarTypeKey = 'appBarType';
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
+  static const String secureStorageIOSMarkAsReadQuickActionKey =
+      'iosMarkAsReadQuickAction';
+  static const String secureStorageIOSSyncQuickActionKey = 'iosSyncQuickAction';
+  static const String secureStorageIOSClearLiquidGlassKey =
+      'iosClearLiquidGlass';
   static const String secureStorageNetworkImageCacheMigratedKey =
       'networkImageCacheMigrated';
   static const String secureStorageImageCacheDurationDaysKey =
@@ -215,8 +220,8 @@ class FluxNewsState extends ChangeNotifier {
   static const int amountForTooManyNews = 10000;
   static const int amountForLongNewsSync = 2000;
   static const String apiVersionPath = "v1/";
-  static const String minifluxEntryPathPrefix = "unread/feed/";
-  static const String minifluxEntryPathSuffix = "/entry/";
+  static const String minifluxEntryPathPrefix = "unread/";
+  static const String minifluxEntryPathSuffix = "entry/";
   static const String audioProgressKeyPrefix = "audio_progress_";
   static const String androidNotificationChannelId =
       'de.kevincfechtel.flux_news.audio';
@@ -261,6 +266,15 @@ class FluxNewsState extends ChangeNotifier {
   static const String widgetFilterFeedString = feedElementType;
   static const int defaultWidgetItemLimit = 5;
 
+  static bool legacyFloatingButtonEnablesIOSMarkAsReadQuickAction(
+      Map<String, String> values) {
+    return values[secureStorageFloatingButtonVisibleKey] ==
+            secureStorageTrueString &&
+        (values[secureStorageFloatingButtonKey] ??
+                floatingButtonMarkAsReadAction) ==
+            floatingButtonMarkAsReadAction;
+  }
+
   // vars for lists of main view
   late Future<List<News>> newsList;
   late Future<Categories> categoryList;
@@ -274,7 +288,7 @@ class FluxNewsState extends ChangeNotifier {
   bool syncProcess = false;
   late Offset tapPosition;
   int scrollPosition = 0;
-  final ScrollController scrollController = ScrollController();
+  ScrollController scrollController = ScrollController();
   final ListController listController = ListController();
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
@@ -293,6 +307,7 @@ class FluxNewsState extends ChangeNotifier {
   // vars for error handling
   String errorString = '';
   bool newError = false;
+  bool errorDialogVisible = false;
   bool errorOnMinifluxAuth = false;
   bool tooManyNews = false;
   bool longSync = false;
@@ -406,6 +421,9 @@ class FluxNewsState extends ChangeNotifier {
       ? FluxNewsState.appBarGlassType
       : FluxNewsState.appBarNormalType;
   bool glassActionButton = Platform.isIOS ? true : false;
+  bool iosMarkAsReadQuickAction = false;
+  bool iosSyncQuickAction = false;
+  bool iosClearLiquidGlass = false;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
 
@@ -1610,6 +1628,26 @@ class FluxNewsState extends ChangeNotifier {
       }
     }
 
+    // Preserve the intent of the former iOS FAB once, then let the new bottom
+    // toolbar setting evolve independently. The presence of the new key is the
+    // migration marker, so this remains idempotent.
+    if (Platform.isIOS &&
+        !storageValues.containsKey(
+            FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey)) {
+      final usedMarkAsReadFab =
+          FluxNewsState.legacyFloatingButtonEnablesIOSMarkAsReadQuickAction(
+              storageValues);
+      final migratedValue = usedMarkAsReadFab
+          ? FluxNewsState.secureStorageTrueString
+          : FluxNewsState.secureStorageFalseString;
+      iosMarkAsReadQuickAction = usedMarkAsReadFab;
+      await storage.write(
+          key: FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey,
+          value: migratedValue);
+      storageValues[FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey] =
+          migratedValue;
+    }
+
     logThis('readConfigValues', 'Finished read config values', LogLevel.INFO);
 
     return true;
@@ -2444,6 +2482,19 @@ class FluxNewsState extends ChangeNotifier {
         }
       }
 
+      if (key == FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey) {
+        iosMarkAsReadQuickAction =
+            value == FluxNewsState.secureStorageTrueString;
+      }
+
+      if (key == FluxNewsState.secureStorageIOSSyncQuickActionKey) {
+        iosSyncQuickAction = value == FluxNewsState.secureStorageTrueString;
+      }
+
+      if (key == FluxNewsState.secureStorageIOSClearLiquidGlassKey) {
+        iosClearLiquidGlass = value == FluxNewsState.secureStorageTrueString;
+      }
+
       // assign the Tab Action selection from persistent saved config
       if (key == FluxNewsState.secureStorageTabActionKey) {
         if (value != '') {
@@ -2803,32 +2854,69 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   void jumpToItem(int index) {
-    waitUntilNewsListBuild().whenComplete(
-      () {
-        listController.jumpToItem(
-            index: index, scrollController: scrollController, alignment: 0.0);
-      },
-    );
+    unawaited(_jumpToItemWhenReady(index));
+  }
+
+  void resetListToStart({bool revealIOSLargeTitle = false}) {
+    unawaited(_resetListToStartWhenReady(
+      revealIOSLargeTitle: revealIOSLargeTitle,
+    ));
+  }
+
+  Future<void> _resetListToStartWhenReady({
+    required bool revealIOSLargeTitle,
+  }) async {
+    final listReady = await waitUntilNewsListBuild();
+    if (!listReady) {
+      logThis(
+          'resetListToStart',
+          'Skipped list reset because the list controllers did not attach in time',
+          LogLevel.WARNING);
+      return;
+    }
+
+    if (Platform.isIOS && revealIOSLargeTitle) {
+      scrollController.jumpTo(scrollController.position.minScrollExtent);
+      return;
+    }
+
+    listController.jumpToItem(
+        index: 0, scrollController: scrollController, alignment: 0.0);
+  }
+
+  Future<void> _jumpToItemWhenReady(int index) async {
+    final listReady = await waitUntilNewsListBuild();
+    if (!listReady) {
+      logThis(
+          'jumpToItem',
+          'Skipped jump to item $index because the list controllers did not attach in time',
+          LogLevel.WARNING);
+      return;
+    }
+    listController.jumpToItem(
+        index: index, scrollController: scrollController, alignment: 0.0);
   }
 
   // this function is needed because after the news are fetched from the database,
   // the list of news need some time to be generated.
   // only after the list is generated, we can set the scroll position of the list
-  // we can check that the list is generated if the scroll controller is attached to the list.
-  // so the function checks the scroll controller and if it's not attached it waits 1 millisecond
-  // and check then again if the scroll controller is attached.
+  // We can check that the list is generated only when both the scroll
+  // controller and SuperSliverList's list controller are attached. The iOS
+  // large-title sliver can attach the scroll controller one frame before the
+  // list itself, so checking only the former causes a startup race.
   // With calling this function as await, we can wait with the further processing
   // on finishing with the list build.
-  Future<void> waitUntilNewsListBuild() async {
-    final completer = Completer();
-    if (scrollController.positions.isNotEmpty) {
-      completer.complete();
-    } else {
-      await Future.delayed(const Duration(milliseconds: 1));
-      return waitUntilNewsListBuild();
+  Future<bool> waitUntilNewsListBuild({
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      if (scrollController.positions.isNotEmpty && listController.isAttached) {
+        return true;
+      }
+      await Future.delayed(const Duration(milliseconds: 16));
     }
-
-    return completer.future;
+    return false;
   }
 
   void saveCustomHeadersToStorage() {

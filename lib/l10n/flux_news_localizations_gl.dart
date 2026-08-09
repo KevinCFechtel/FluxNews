@@ -30,6 +30,22 @@ class AppLocalizationsGl extends AppLocalizations {
   String get markAsRead => 'Marcar como lido';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Mostrar Marcar como lido na barra inferior';
+
+  @override
+  String get iosSyncQuickAction => 'Mostrar Sincronizar na barra inferior';
+
+  @override
+  String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
+
+  @override
+  String get markAsReadAndNext => 'Marcar como lido e abrir a seguinte';
+
+  @override
+  String get moreActions => 'Máis accións';
+
+  @override
   String get markAsUnread => 'Marcar como non lido';
 
   @override
@@ -146,6 +162,17 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get itemCount => 'Número';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count noticias',
+      one: '1 noticia',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get multilineAppBarTextSetting => 'Mostrar número de novas na Appbar';
@@ -472,6 +499,9 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get headers => 'Cabeceiras';
+
+  @override
+  String get optional => 'Opcional';
 
   @override
   String get scrolloverAppBar => 'A barra da app é pregable ao desprazarse';

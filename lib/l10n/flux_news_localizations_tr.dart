@@ -30,6 +30,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get markAsRead => 'Okundu olarak işaretle';
 
   @override
+  String get iosMarkAsReadQuickAction =>
+      'Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster';
+
+  @override
+  String get iosSyncQuickAction => 'Alt araç çubuğunda senkronizasyonu göster';
+
+  @override
+  String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
+
+  @override
+  String get markAsReadAndNext => 'Okundu olarak işaretle ve sonrakini aç';
+
+  @override
+  String get moreActions => 'Daha fazla işlem';
+
+  @override
   String get markAsUnread => 'Okunmadı olarak işaretle';
 
   @override
@@ -146,6 +162,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemCount => 'Miktar';
+
+  @override
+  String largeTitleNewsCount(int count) {
+    return '$count haber';
+  }
 
   @override
   String get multilineAppBarTextSetting => 'Appbar\'da haber sayısını göster';
@@ -466,6 +487,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get headers => 'Headers';
+
+  @override
+  String get optional => 'Optional';
 
   @override
   String get scrolloverAppBar => 'The app bar is collapsible on scroll';

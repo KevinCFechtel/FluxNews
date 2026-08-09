@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -33,19 +35,12 @@ class NewsItemSettings extends StatelessWidget {
     }
   }
 
-  Scaffold newsItemSettingsLayout(
-      BuildContext context, FluxNewsState appState) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          // set the title of the search page to search text field
-          title: Text(AppLocalizations.of(context)!.newsItemSettings,
-              style: Theme.of(context).textTheme.titleLarge),
-        ),
-        // show the news list
-        body: const FluxNewsNewsItemSettingsBody());
+  Widget newsItemSettingsLayout(BuildContext context, FluxNewsState appState) {
+    return AdaptiveSettingsScaffold(
+      title: AppLocalizations.of(context)!.newsItemSettings,
+      useLargeTitle: true,
+      body: const FluxNewsNewsItemSettingsBody(),
+    );
   }
 }
 
@@ -96,7 +91,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                           : SizedBox.shrink(),
                     ]),
                   ),
-                  DropdownButton<KeyValueRecordType>(
+                  AdaptiveSettingsDropdown<KeyValueRecordType>(
                     value: appState.tabActionSelection,
                     elevation: 16,
                     underline: Container(
@@ -141,7 +136,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  DropdownButton<KeyValueRecordType>(
+                  AdaptiveSettingsDropdown<KeyValueRecordType>(
                     value: appState.longPressActionSelection,
                     elevation: 16,
                     underline: Container(
@@ -186,7 +181,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.removeNewsFromListWhenRead,
                     onChanged: (bool value) {
                       String stringValue =
@@ -222,7 +217,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  Switch.adaptive(
+                  AdaptiveSettingsSwitch(
                     value: appState.activateSwipeGestures,
                     onChanged: (bool value) {
                       String stringValue =
@@ -261,7 +256,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.leftSwipeActionSelection,
                           elevation: 16,
                           underline: Container(
@@ -313,7 +308,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.secondLeftSwipeActionSelection,
                           elevation: 16,
                           underline: Container(
@@ -365,7 +360,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.rightSwipeActionSelection,
                           elevation: 16,
                           underline: Container(
@@ -417,7 +412,7 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
                             overflow: TextOverflow.visible,
                           ),
                         ),
-                        DropdownButton<KeyValueRecordType>(
+                        AdaptiveSettingsDropdown<KeyValueRecordType>(
                           value: appState.secondRightSwipeActionSelection,
                           elevation: 16,
                           underline: Container(

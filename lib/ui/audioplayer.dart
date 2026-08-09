@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/audio_download_service.dart';
@@ -12,7 +14,10 @@ import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 class NewsAudioPlayerScreen extends StatefulWidget {
@@ -49,6 +54,15 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final shortestSide = MediaQuery.sizeOf(context).shortestSide;
     final useTabletLayout = screenWidth >= 900 || shortestSide >= 600;
+    final useClearEffect = appState.iosClearLiquidGlass;
+    final glassSettings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: useClearEffect,
+    );
+    final glassQuality = iosLiquidGlassQuality(
+      useClearEffect: useClearEffect,
+    );
+    final glassForeground = iosLiquidGlassForeground(context);
 
     Widget newsHeader = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,23 +133,67 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
       ],
     );
 
+    final PreferredSizeWidget appBar = Platform.isIOS
+        ? GlassAppBar(
+            centerTitle: false,
+            buttonSettings: glassSettings,
+            leading: GlassIconButton(
+              useOwnLayer: true,
+              quality: glassQuality,
+              settings: glassSettings,
+              semanticLabel:
+                  MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: () => Navigator.maybePop(context),
+              icon: Icon(CupertinoIcons.back, color: glassForeground),
+            ),
+            title: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: GlassContainer(
+                  useOwnLayer: true,
+                  quality: glassQuality,
+                  settings: glassSettings,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Text(
+                    widget.news.feedTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: glassForeground,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        : AppBar(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            title: Text(
+              widget.news.feedTitle,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          );
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          widget.news.feedTitle,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-      ),
+      extendBodyBehindAppBar: Platform.isIOS,
+      appBar: appBar,
       body: audioAttachments.isEmpty
           ? Center(
               child: Text(AppLocalizations.of(context)!.noAudioFileAvailable),
             )
           : Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                Platform.isIOS ? MediaQuery.paddingOf(context).top + 52 : 0,
+                16,
+                16,
+              ),
               child: useTabletLayout ? tabletLayout : mobileLayout,
             ),
     );
@@ -984,6 +1042,188 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
     );
   }
 
+  Widget _buildAdaptiveSlider({
+    required double value,
+    required double max,
+    required ValueChanged<double>? onChanged,
+    double min = 0,
+    int? divisions,
+    String? label,
+  }) {
+    if (!Platform.isIOS) {
+      return Slider(
+        value: value,
+        min: min,
+        max: max,
+        divisions: divisions,
+        label: label,
+        onChanged: onChanged,
+      );
+    }
+
+    final useClearEffect = widget.appState.iosClearLiquidGlass;
+    final foreground = iosLiquidGlassForeground(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: GlassSlider(
+        value: value,
+        min: min,
+        max: max,
+        divisions: divisions,
+        label: label,
+        onChanged: onChanged,
+        useOwnLayer: true,
+        quality: iosLiquidGlassQuality(useClearEffect: useClearEffect),
+        settings: iosLiquidGlassSettings(
+          context,
+          useClearEffect: useClearEffect,
+        ),
+        activeColor: CupertinoColors.activeBlue.resolveFrom(context),
+        inactiveColor: foreground.withValues(alpha: 0.18),
+        thumbColor: CupertinoColors.white,
+      ),
+    );
+  }
+
+  Widget _buildPlaybackControls({
+    required Attachment attachment,
+    required bool isActive,
+    required bool isPlaying,
+    required bool isPaused,
+    required bool isStopped,
+    required AppLocalizations localizations,
+  }) {
+    if (!Platform.isIOS) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            tooltip: '-30s',
+            onPressed:
+                isActive ? () => _seek(const Duration(seconds: -30)) : null,
+            icon: const Icon(Icons.replay_30),
+            iconSize: 32,
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 72,
+            height: 72,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (_isLoading && isActive)
+                  SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                IconButton(
+                  tooltip: isPlaying
+                      ? localizations.pause
+                      : isPaused
+                          ? localizations.resume
+                          : localizations.play,
+                  onPressed: () => _play(attachment),
+                  icon: Icon(
+                    isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_fill,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  iconSize: 56,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: localizations.stop,
+            onPressed: isActive && !isStopped ? () => _stop() : null,
+            icon: const Icon(Icons.stop_circle_outlined),
+            iconSize: 32,
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: '+30s',
+            onPressed:
+                isActive ? () => _seek(const Duration(seconds: 30)) : null,
+            icon: const Icon(Icons.forward_30),
+            iconSize: 32,
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: localizations.resetPlayback,
+            onPressed: isActive || isPaused ? () => _reset() : null,
+            icon: const Icon(Icons.eject),
+            iconSize: 32,
+          ),
+        ],
+      );
+    }
+
+    final useClearEffect = widget.appState.iosClearLiquidGlass;
+    final settings = iosLiquidGlassSettings(
+      context,
+      useClearEffect: useClearEffect,
+    );
+    final quality = iosLiquidGlassQuality(useClearEffect: useClearEffect);
+    final foreground = iosLiquidGlassForeground(context);
+
+    return Center(
+      child: GlassButtonGroup.icons(
+        useOwnLayer: true,
+        quality: quality,
+        settings: settings,
+        iconSize: 26,
+        itemPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+        items: [
+          GlassButtonGroupItem(
+            label: '-30s',
+            enabled: isActive,
+            onTap: () => unawaited(_seek(const Duration(seconds: -30))),
+            icon: const Icon(Icons.replay_30),
+          ),
+          GlassButtonGroupItem(
+            label: isPlaying
+                ? localizations.pause
+                : isPaused
+                    ? localizations.resume
+                    : localizations.play,
+            onTap: () => unawaited(_play(attachment)),
+            icon: _isLoading && isActive
+                ? CupertinoActivityIndicator(color: foreground)
+                : Icon(
+                    isPlaying
+                        ? CupertinoIcons.pause_fill
+                        : CupertinoIcons.play_fill,
+                  ),
+          ),
+          GlassButtonGroupItem(
+            label: localizations.stop,
+            enabled: isActive && !isStopped,
+            onTap: () => unawaited(_stop()),
+            icon: const Icon(CupertinoIcons.stop_fill),
+          ),
+          GlassButtonGroupItem(
+            label: '+30s',
+            enabled: isActive,
+            onTap: () => unawaited(_seek(const Duration(seconds: 30))),
+            icon: const Icon(Icons.forward_30),
+          ),
+          GlassButtonGroupItem(
+            label: localizations.resetPlayback,
+            enabled: isActive || isPaused,
+            onTap: () => unawaited(_reset()),
+            icon: const Icon(CupertinoIcons.eject_fill),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_audioAttachments.isEmpty) return const SizedBox.shrink();
@@ -1003,29 +1243,55 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
       children: [
         Align(
           alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: () {
-              setState(() {
-                _showPlayerDetails = !_showPlayerDetails;
-              });
-            },
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: const Size(0, 32),
-            ),
-            icon: Icon(
-              _showPlayerDetails ? Icons.unfold_less : Icons.unfold_more,
-              size: 18,
-            ),
-            label: Text(
-              _showPlayerDetails
-                  ? localizations.hidePlayerDetails
-                  : localizations.showPlayerDetails,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
+          child: Platform.isIOS
+              ? AdaptiveSettingsButton(
+                  onPressed: () {
+                    setState(() {
+                      _showPlayerDetails = !_showPlayerDetails;
+                    });
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _showPlayerDetails
+                            ? Icons.unfold_less
+                            : Icons.unfold_more,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _showPlayerDetails
+                            ? localizations.hidePlayerDetails
+                            : localizations.showPlayerDetails,
+                      ),
+                    ],
+                  ),
+                )
+              : TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showPlayerDetails = !_showPlayerDetails;
+                    });
+                  },
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: const Size(0, 32),
+                  ),
+                  icon: Icon(
+                    _showPlayerDetails ? Icons.unfold_less : Icons.unfold_more,
+                    size: 18,
+                  ),
+                  label: Text(
+                    _showPlayerDetails
+                        ? localizations.hidePlayerDetails
+                        : localizations.showPlayerDetails,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
         ),
         ..._audioAttachments.map((attachment) {
           final isActive = _activeAttachmentID == attachment.attachmentID;
@@ -1070,6 +1336,44 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
           // Show saved position in time label before playback starts
           final displayPosition =
               isActive ? _position : (_savedPosition ?? Duration.zero);
+          final downloadTooltip = isDownloading
+              ? localizations.cancel
+              : isDownloaded
+                  ? localizations.downloaded
+                  : localizations.downloadAudio;
+          final VoidCallback? downloadAction = isDownloaded
+              ? null
+              : isDownloading
+                  ? () => AudioDownloadService.cancelDownload(
+                        storageAttachmentID,
+                      )
+                  : () => _downloadAudio(attachment, widget.news);
+          final downloadIcon = isDownloading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: downloadProgressValue,
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      Icon(
+                        Icons.close,
+                        size: 12,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                )
+              : Icon(
+                  isDownloaded ? Icons.download_done : Icons.download,
+                  color: Theme.of(context).colorScheme.primary,
+                );
 
           return Card(
             margin: const EdgeInsets.only(top: 12),
@@ -1093,56 +1397,35 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
-                      IconButton(
-                        color: Theme.of(context).colorScheme.primary,
-                        tooltip: isDownloading
-                            ? AppLocalizations.of(context)!.cancel
-                            : isDownloaded
-                                ? AppLocalizations.of(context)!.downloaded
-                                : AppLocalizations.of(context)!.downloadAudio,
-                        onPressed: isDownloaded
-                            ? null
-                            : isDownloading
-                                ? () => AudioDownloadService.cancelDownload(
-                                    storageAttachmentID)
-                                : () => _downloadAudio(attachment, widget.news),
-                        icon: isDownloading
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    CircularProgressIndicator(
-                                      value: downloadProgressValue,
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primary),
-                                    ),
-                                    Icon(Icons.close,
-                                        size: 12,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ],
-                                ),
-                              )
-                            : Icon(
-                                isDownloaded
-                                    ? Icons.download_done
-                                    : Icons.download,
-                                color: Theme.of(context).colorScheme.primary,
+                      Platform.isIOS
+                          ? GlassIconButton(
+                              useOwnLayer: true,
+                              quality: iosLiquidGlassQuality(
+                                useClearEffect:
+                                    widget.appState.iosClearLiquidGlass,
                               ),
-                        iconSize: 20,
-                      ),
+                              settings: iosLiquidGlassSettings(
+                                context,
+                                useClearEffect:
+                                    widget.appState.iosClearLiquidGlass,
+                              ),
+                              semanticLabel: downloadTooltip,
+                              onPressed: downloadAction,
+                              icon: downloadIcon,
+                            )
+                          : IconButton(
+                              color: Theme.of(context).colorScheme.primary,
+                              tooltip: downloadTooltip,
+                              onPressed: downloadAction,
+                              icon: downloadIcon,
+                              iconSize: 20,
+                            ),
                     ],
                   ),
                   const SizedBox(height: 12),
 
                   // Progress slider
-                  Slider(
+                  _buildAdaptiveSlider(
                     value: currentMs,
                     max: maxMs,
                     onChanged: isActive
@@ -1347,7 +1630,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                             ),
                           ],
                         ),
-                        Slider(
+                        _buildAdaptiveSlider(
                           value: (_playbackSpeed - 1.0).clamp(-0.5, 2.0),
                           min: -0.5,
                           max: 2.0,
@@ -1368,7 +1651,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
-                            Switch.adaptive(
+                            AdaptiveSettingsSwitch(
                               value: _audioHandler?.sleepTimerEnabled ?? false,
                               onChanged: (value) {
                                 _toggleSleepTimer(value);
@@ -1385,7 +1668,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
-                            DropdownButton<int>(
+                            AdaptiveSettingsDropdown<int>(
                               value: _audioHandler?.sleepTimerMinutes ?? 30,
                               onChanged: (value) {
                                 if (value != null) {
@@ -1407,90 +1690,13 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                     ),
                   ],
 
-                  // Control buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Rewind 30s
-                      IconButton(
-                        tooltip: '-30s',
-                        onPressed: isActive
-                            ? () => _seek(const Duration(seconds: -30))
-                            : null,
-                        icon: const Icon(Icons.replay_30),
-                        iconSize: 32,
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Play / Pause / Resume
-                      SizedBox(
-                        width: 72,
-                        height: 72,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            if (_isLoading && isActive)
-                              SizedBox(
-                                width: 64,
-                                height: 64,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            IconButton(
-                              tooltip: isPlaying
-                                  ? AppLocalizations.of(context)!.pause
-                                  : isPaused
-                                      ? AppLocalizations.of(context)!.resume
-                                      : AppLocalizations.of(context)!.play,
-                              onPressed: () => _play(attachment),
-                              icon: Icon(
-                                isPlaying
-                                    ? Icons.pause_circle_filled
-                                    : Icons.play_circle_fill,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              iconSize: 56,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Stop
-                      IconButton(
-                        tooltip: AppLocalizations.of(context)!.stop,
-                        onPressed:
-                            isActive && !isStopped ? () => _stop() : null,
-                        icon: const Icon(Icons.stop_circle_outlined),
-                        iconSize: 32,
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Forward 30s
-                      IconButton(
-                        tooltip: '+30s',
-                        onPressed: isActive
-                            ? () => _seek(const Duration(seconds: 30))
-                            : null,
-                        icon: const Icon(Icons.forward_30),
-                        iconSize: 32,
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Reset
-                      IconButton(
-                        tooltip: AppLocalizations.of(context)!.resetPlayback,
-                        onPressed: isActive || isPaused ? () => _reset() : null,
-                        icon: const Icon(Icons.eject),
-                        iconSize: 32,
-                      ),
-                    ],
+                  _buildPlaybackControls(
+                    attachment: attachment,
+                    isActive: isActive,
+                    isPlaying: isPlaying,
+                    isPaused: isPaused,
+                    isStopped: isStopped,
+                    localizations: localizations,
                   ),
                 ],
               ),

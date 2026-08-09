@@ -6,6 +6,11 @@
     "deleteBookmark": "Eliminar marcador",
     "addBookmark": "Engadir marcador",
     "markAsRead": "Marcar como lido",
+    "iosMarkAsReadQuickAction": "Mostrar Marcar como lido na barra inferior",
+    "iosSyncQuickAction": "Mostrar Sincronizar na barra inferior",
+    "iosClearLiquidGlass": "Usar Liquid Glass transparente",
+    "markAsReadAndNext": "Marcar como lido e abrir a seguinte",
+    "moreActions": "Máis accións",
     "markAsUnread": "Marcar como non lido",
     "showUnread": "Mostrar as novas non lidas",
     "showRead": "Mostrar todas as novas",
@@ -50,6 +55,14 @@
     "syncOnStart": "Sincronizar as novas ao inicio",
     "bookmarked": "Nos marcadores",
     "itemCount": "Número",
+    "largeTitleNewsCount": "{count, plural, =1{1 noticia} other{{count} noticias}}",
+    "@largeTitleNewsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "multilineAppBarTextSetting": "Mostrar número de novas na Appbar",
     "showFeedIconsTextSettings": "Mostrar iconas das canles",
     "descriptionMoreInformation": "Visita a páxina do proxecto para saber máis sobre esta app:",
@@ -141,6 +154,7 @@
     "headerValue": "Valor da cabeceira:",
     "delete": "Eliminar",
     "headers": "Cabeceiras",
+    "optional": "Opcional",
     "scrolloverAppBar": "A barra da app é pregable ao desprazarse",
     "syncNews": "Sincronizar novas",
     "floatingButtonAction": "Elixe a acción para o botón extra",
