@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+const EdgeInsetsDirectional iosLiquidGlassSidebarHeaderPadding =
+    EdgeInsetsDirectional.fromSTEB(20, 24, 20, 16);
+
 const _lightHighContrastGlassSettings = LiquidGlassSettings(
   glassColor: Color(0x3DFFFFFF),
   thickness: 25,

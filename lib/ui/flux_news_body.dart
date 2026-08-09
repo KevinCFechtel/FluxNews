@@ -1030,7 +1030,6 @@ class FluxNewsBody extends StatelessWidget {
             AndroidTabletSidebarHeader(
               title: AppLocalizations.of(context)!.fluxNews,
             ),
-            const Divider(height: 1),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.only(top: 4, bottom: 12),
@@ -1050,9 +1049,7 @@ class FluxNewsBody extends StatelessWidget {
     return Row(
       children: [
         sidebarPane,
-        if (verticalFeature == null)
-          const VerticalDivider(width: 1, thickness: 1)
-        else
+        if (verticalFeature != null)
           SizedBox(
               width:
                   (featureRight! - featureLeft!).clamp(0.0, double.infinity)),
@@ -1903,15 +1900,14 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(18, 18, 18, 8),
+                    padding: iosLiquidGlassSidebarHeaderPadding,
                     child: Row(
                       children: [
                         const FaIcon(
                           FontAwesomeIcons.bookOpen,
                           size: 18,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Text(
                             AppLocalizations.of(context)!.fluxNews,
@@ -2110,7 +2106,10 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     final topContentInset = MediaQuery.paddingOf(context).top + 44;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final usesWideSidebar = widget.isTablet && constraints.maxWidth >= 900;
+        final usesWideSidebar = useIOSPermanentSidebar(
+          isTablet: widget.isTablet,
+          availableWidth: constraints.maxWidth,
+        );
         final sidebarWidth = usesWideSidebar
             ? (constraints.maxWidth * 0.25).clamp(260.0, 340.0).toDouble()
             : 0.0;

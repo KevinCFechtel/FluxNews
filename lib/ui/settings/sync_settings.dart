@@ -85,12 +85,9 @@ class FluxNewsSyncSettingsBody extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     // return the body of the feed settings
     return SingleChildScrollView(
-        child: Container(
+        child: Padding(
             padding: const EdgeInsets.all(12),
-            alignment: Alignment.center,
-            // this is the main column of the settings page
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: AdaptiveSettingsGroup(children: [
               const Divider(),
               // this row contains the selection of the amount of saved news
               // if the news exceeds the amount, the oldest news were deleted

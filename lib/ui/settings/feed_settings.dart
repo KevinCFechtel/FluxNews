@@ -134,7 +134,10 @@ class _FluxNewsFeedSettingsBodyState extends State<FluxNewsFeedSettingsBody> {
     // Keep the existing fixed search field on Android.
     return Column(
       children: [
-        searchField,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: AdaptiveSettingsGroup(children: [searchField]),
+        ),
         const Expanded(child: FeedSettingsList()),
       ],
     );

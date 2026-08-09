@@ -54,12 +54,9 @@ class FluxNewsNewsItemSettingsBody extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     // return the body of the feed settings
     return SingleChildScrollView(
-        child: Container(
+        child: Padding(
             padding: const EdgeInsets.all(12),
-            alignment: Alignment.center,
-            // this is the main column of the settings page
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: AdaptiveSettingsGroup(children: [
               const Divider(),
               // this row contains the selection of the tab action
               Row(

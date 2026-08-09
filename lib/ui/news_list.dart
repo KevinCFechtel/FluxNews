@@ -13,6 +13,7 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/ui/news_card.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/ui/news_row.dart';
+import 'package:flux_news/ui/adaptive_layout.dart';
 import 'package:flux_news/ui/sliver_glass_app_bar.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
@@ -45,7 +46,11 @@ class BodyNewsList extends StatelessWidget {
           child: SizedBox(height: topContentInset),
         );
       }
-      if (appState.isTablet && topContentInset > 0) {
+      if (useStandaloneTabletListHeaderInset(
+        isTablet: appState.isTablet,
+        topContentInset: topContentInset,
+        hasLargeTitleController: largeTitleController != null,
+      )) {
         return SliverToBoxAdapter(
           child: SizedBox(height: topContentInset),
         );

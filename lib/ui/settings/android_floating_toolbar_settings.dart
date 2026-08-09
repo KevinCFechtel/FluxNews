@@ -129,63 +129,70 @@ class _AndroidFloatingToolbarSettingsState
                         ),
                   ),
                 ),
-                const Divider(height: 1),
                 Expanded(
-                  child: ReorderableListView.builder(
-                    padding: EdgeInsets.only(
-                      top: 8,
-                      bottom: MediaQuery.paddingOf(context).bottom + 16,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      0,
+                      12,
+                      MediaQuery.paddingOf(context).bottom + 16,
                     ),
-                    buildDefaultDragHandles: false,
-                    itemCount: _orderedActions.length,
-                    onReorderItem: (oldIndex, newIndex) {
-                      setState(() {
-                        final action = _orderedActions.removeAt(oldIndex);
-                        _orderedActions.insert(newIndex, action);
-                      });
-                      _persistActions();
-                    },
-                    itemBuilder: (context, index) {
-                      final action = _orderedActions[index];
-                      final selected = _selectedActions.contains(action);
-                      return Card(
-                        key: ValueKey(action),
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: ListTile(
-                          contentPadding: const EdgeInsetsDirectional.only(
-                            start: 16,
-                            end: 4,
-                          ),
-                          minVerticalPadding: 12,
-                          leading: Icon(_actionIcon(action)),
-                          title: Text(
-                            _actionLabel(strings, action),
-                          ),
-                          onTap: () => _setSelected(action, !selected),
-                          trailing: Row(
+                    child: AdaptiveSettingsGroupSurface(
+                      child: ReorderableListView.builder(
+                        padding: EdgeInsets.zero,
+                        buildDefaultDragHandles: false,
+                        itemCount: _orderedActions.length,
+                        onReorderItem: (oldIndex, newIndex) {
+                          setState(() {
+                            final action = _orderedActions.removeAt(oldIndex);
+                            _orderedActions.insert(newIndex, action);
+                          });
+                          _persistActions();
+                        },
+                        itemBuilder: (context, index) {
+                          final action = _orderedActions[index];
+                          final selected = _selectedActions.contains(action);
+                          return Column(
+                            key: ValueKey(action),
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Checkbox.adaptive(
-                                value: selected,
-                                onChanged: (value) =>
-                                    _setSelected(action, value ?? false),
-                              ),
-                              ReorderableDragStartListener(
-                                index: index,
-                                child: const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(Icons.drag_handle),
+                              ListTile(
+                                contentPadding:
+                                    const EdgeInsetsDirectional.only(
+                                  start: 16,
+                                  end: 4,
+                                ),
+                                minVerticalPadding: 12,
+                                leading: Icon(_actionIcon(action)),
+                                title: Text(
+                                  _actionLabel(strings, action),
+                                ),
+                                onTap: () => _setSelected(action, !selected),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox.adaptive(
+                                      value: selected,
+                                      onChanged: (value) =>
+                                          _setSelected(action, value ?? false),
+                                    ),
+                                    ReorderableDragStartListener(
+                                      index: index,
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: Icon(Icons.drag_handle),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              if (index < _orderedActions.length - 1)
+                                const Divider(),
                             ],
-                          ),
-                        ),
-                      );
-                    },
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],

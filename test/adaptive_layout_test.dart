@@ -18,6 +18,40 @@ void main() {
     expect(adaptiveSidebarWidth(2000), maximumSidebarWidth);
   });
 
+  test('full-width portrait iPads keep the permanent sidebar', () {
+    expect(
+      useIOSPermanentSidebar(isTablet: true, availableWidth: 834),
+      isTrue,
+    );
+    expect(
+      useIOSPermanentSidebar(isTablet: true, availableWidth: 799),
+      isFalse,
+    );
+    expect(
+      useIOSPermanentSidebar(isTablet: false, availableWidth: 834),
+      isFalse,
+    );
+  });
+
+  test('iPad large title takes precedence over the tablet top spacer', () {
+    expect(
+      useStandaloneTabletListHeaderInset(
+        isTablet: true,
+        topContentInset: 64,
+        hasLargeTitleController: true,
+      ),
+      isFalse,
+    );
+    expect(
+      useStandaloneTabletListHeaderInset(
+        isTablet: true,
+        topContentInset: 64,
+        hasLargeTitleController: false,
+      ),
+      isTrue,
+    );
+  });
+
   test('separating display features are classified by direction', () {
     const size = Size(1000, 800);
     const verticalHinge = Rect.fromLTWH(495, 0, 10, 800);

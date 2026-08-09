@@ -13,7 +13,6 @@ import 'package:flux_news/functions/widget_service.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
-import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -1279,23 +1278,6 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
     }
     finishSection();
 
-    final theme = Theme.of(context);
-    final themeState = context.watch<FluxNewsThemeState>();
-    final useTrueBlackSections =
-        themeState.useBlackMode && theme.brightness == Brightness.dark;
-    final sectionColor = useTrueBlackSections
-        ? Colors.black
-        : Platform.isIOS
-            ? CupertinoColors.secondarySystemGroupedBackground
-                .resolveFrom(context)
-            : theme.colorScheme.surfaceContainerLow;
-    final dividerColor = Platform.isIOS
-        ? CupertinoColors.separator.resolveFrom(context)
-        : theme.colorScheme.outlineVariant;
-    final secondaryLabel = Platform.isIOS
-        ? CupertinoColors.secondaryLabel.resolveFrom(context)
-        : theme.colorScheme.onSurfaceVariant;
-    final sectionRadius = Platform.isIOS ? 18.0 : 16.0;
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -1306,40 +1288,9 @@ class _AdaptiveSettingsOverviewContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final section in sections)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 6),
-                        child: Text(
-                          section.title,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: secondaryLabel,
-                            fontWeight:
-                                Platform.isAndroid ? FontWeight.w600 : null,
-                          ),
-                        ),
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(sectionRadius),
-                        child: Material(
-                          color: sectionColor,
-                          child: DividerTheme(
-                            data: DividerThemeData(
-                              color: dividerColor,
-                              space: 1,
-                              thickness: 0.5,
-                              indent: 56,
-                            ),
-                            child: Column(children: section.children),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                AdaptiveSettingsGroup(
+                  title: section.title,
+                  children: section.children,
                 ),
             ],
           ),

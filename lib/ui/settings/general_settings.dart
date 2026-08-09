@@ -76,12 +76,9 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 appState.appBarType == FluxNewsState.appBarFloatingType));
     // return the body of the feed settings
     return SingleChildScrollView(
-        child: Container(
+        child: Padding(
             padding: const EdgeInsets.all(12),
-            alignment: Alignment.center,
-            // this is the main column of the settings page
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: AdaptiveSettingsGroup(children: [
               const Divider(),
               Padding(
                 padding: const EdgeInsets.only(top: 12.0),

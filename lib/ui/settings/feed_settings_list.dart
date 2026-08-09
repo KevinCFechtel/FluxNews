@@ -46,11 +46,18 @@ class FeedSettingsList extends StatelessWidget {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ))
                       // otherwise create list view with the news of the search result
-                      : ListView(children: [
-                          if (header case final header?) header,
-                          for (Feed feed in snapshot.data!)
-                            showFeed(feed, context),
-                        ]);
+                      : ListView(
+                          padding: const EdgeInsets.all(12),
+                          children: [
+                            AdaptiveSettingsGroup(
+                              children: [
+                                if (header case final header?) header,
+                                for (Feed feed in snapshot.data!)
+                                  showFeed(feed, context),
+                              ],
+                            ),
+                          ],
+                        );
             }
         }
       },

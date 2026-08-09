@@ -65,7 +65,15 @@ void main() {
 
     expect(find.byType(AndroidFloatingToolbarSettings), findsOneWidget);
     expect(find.byType(ReorderableListView), findsOneWidget);
-    expect(find.byType(Card), findsNWidgets(7));
+    expect(find.byType(AdaptiveSettingsGroupSurface), findsOneWidget);
+    expect(find.byType(ListTile), findsNWidgets(7));
+    final dividerTheme = tester.widget<DividerTheme>(
+      find.descendant(
+        of: find.byType(AdaptiveSettingsGroupSurface),
+        matching: find.byType(DividerTheme),
+      ),
+    );
+    expect(dividerTheme.data.indent, 16);
     expect(find.byIcon(Icons.drag_handle), findsNWidgets(7));
     expect(find.text('Toggle all/unread news'), findsOneWidget);
     expect(find.text('Change sort order'), findsOneWidget);
@@ -115,7 +123,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byType(Card), findsNWidgets(7));
+    expect(find.byType(AdaptiveSettingsGroupSurface), findsOneWidget);
+    expect(find.byType(ListTile), findsNWidgets(7));
     expect(find.text('Mark as read and open next'), findsOneWidget);
 
     await tester.tap(find.text('Mark as read and open next'));
@@ -175,6 +184,7 @@ void main() {
       ..brightnessModeSelection = brightnessMode;
     await tester.pumpWidget(_generalSettingsTestApp(appState));
 
+    expect(find.byType(AdaptiveSettingsGroup), findsOneWidget);
     expect(find.text('Configure floating toolbar actions'), findsOneWidget);
     expect(find.text('Show newscount in Appbar'), findsNothing);
     expect(find.text('Select the App Bar Type'), findsNothing);

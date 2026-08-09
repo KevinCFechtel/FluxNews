@@ -61,15 +61,14 @@ class IOSOverlayDrawer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(18, 18, 18, 8),
+                    padding: iosLiquidGlassSidebarHeaderPadding,
                     child: Row(
                       children: [
                         const FaIcon(
                           FontAwesomeIcons.bookOpen,
                           size: 18,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Text(
                             AppLocalizations.of(context)!.fluxNews,

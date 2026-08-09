@@ -2,12 +2,31 @@ import 'dart:ui';
 
 const double compactWindowHeightBreakpoint = 480;
 const double mediumWindowWidthBreakpoint = 600;
+const double iosPermanentSidebarWidthBreakpoint = 800;
 const double minimumSidebarWidth = 260;
 const double maximumSidebarWidth = 360;
 
 bool useTwoPaneLayout(Size size) {
   return size.width >= mediumWindowWidthBreakpoint &&
       size.height >= compactWindowHeightBreakpoint;
+}
+
+bool useIOSPermanentSidebar({
+  required bool isTablet,
+  required double availableWidth,
+}) {
+  return isTablet && availableWidth >= iosPermanentSidebarWidthBreakpoint;
+}
+
+/// A tablet list needs a standalone top spacer only when no collapsing large
+/// title owns that space. This keeps Android tablet chrome offset while iPad
+/// can build and animate its actual large title.
+bool useStandaloneTabletListHeaderInset({
+  required bool isTablet,
+  required double topContentInset,
+  required bool hasLargeTitleController,
+}) {
+  return isTablet && topContentInset > 0 && !hasLargeTitleController;
 }
 
 double adaptiveSidebarWidth(double availableWidth) {
