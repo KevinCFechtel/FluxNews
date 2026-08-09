@@ -11,6 +11,7 @@
     "iosClearLiquidGlass": "Usar Liquid Glass transparente",
     "androidFloatingToolbarActions": "Configurar as accións da barra flotante",
     "androidFloatingToolbarFixedActionsHint": "As accións fixas móstranse sempre. Selecciona e ordena as accións adicionais.",
+    "iosToolbarActionsHint": "A sincronización permanece fixa. As accións seleccionadas móstranse directamente cando hai espazo; as adicionais permanecen en Máis.",
     "androidFloatingActionToggleNewsStatus": "Alternar entre todas as novas e as non lidas",
     "androidFloatingActionToggleSortOrder": "Cambiar a orde",
     "androidFloatingAccentTint": "Usar a cor de acento nos elementos flotantes",

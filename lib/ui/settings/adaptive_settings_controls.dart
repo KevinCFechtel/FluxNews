@@ -63,6 +63,88 @@ class AdaptiveSettingsSwitch extends StatelessWidget {
   }
 }
 
+/// A full-width settings row that opens another settings page.
+class AdaptiveSettingsNavigationRow extends StatelessWidget {
+  const AdaptiveSettingsNavigationRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final secondaryColor = Platform.isIOS
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : theme.colorScheme.onSurfaceVariant;
+    final hasSubtitle = subtitle != null && subtitle!.isNotEmpty;
+
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: Platform.isIOS ? 44 : 48),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: hasSubtitle ? 8 : 0),
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: 17,
+                    end: Platform.isIOS ? 15 : 30,
+                  ),
+                  child: Icon(icon),
+                ),
+                Expanded(
+                  child: hasSubtitle
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: theme.textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: secondaryColor,
+                              ),
+                              overflow: TextOverflow.visible,
+                            ),
+                          ],
+                        )
+                      : Text(
+                          title,
+                          style: theme.textTheme.titleMedium,
+                          overflow: TextOverflow.visible,
+                        ),
+                ),
+                const Padding(
+                  padding: EdgeInsetsDirectional.only(start: 12, end: 12),
+                  child: ExcludeSemantics(
+                    child: Icon(Icons.chevron_right),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A Material dropdown on Android and an anchored Liquid Glass menu on iOS.
 class AdaptiveSettingsDropdown<T> extends StatelessWidget {
   const AdaptiveSettingsDropdown({

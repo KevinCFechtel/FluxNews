@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/adaptive_layout.dart';
+import 'package:flux_news/ui/ios_toolbar_layout.dart';
 
 void main() {
   test('two-pane layout uses shared width and height breakpoints', () {
@@ -32,6 +34,50 @@ void main() {
     expect(
       verticalSeparatingDisplayFeature(size, const [horizontalHinge]),
       isNull,
+    );
+  });
+
+  test('iPad toolbar keeps selected order and overflows on narrow panes', () {
+    final visibleActions = iosTabletVisibleToolbarActions(
+      selectedActions: FluxNewsState.iosToolbarAvailableActions,
+      availableActions: FluxNewsState.iosToolbarAvailableActions,
+      newsPaneWidth: 640,
+    );
+
+    expect(
+      visibleActions,
+      FluxNewsState.iosToolbarAvailableActions.take(5),
+    );
+  });
+
+  test('iPad toolbar can omit More when every action fits', () {
+    expect(
+      iosTabletVisibleToolbarActions(
+        selectedActions: FluxNewsState.iosToolbarAvailableActions,
+        availableActions: FluxNewsState.iosToolbarAvailableActions,
+        newsPaneWidth: 764,
+      ),
+      FluxNewsState.iosToolbarAvailableActions,
+    );
+  });
+
+  test('iPhone toolbar keeps the first three selected actions', () {
+    expect(
+      iosPhoneVisibleToolbarActions(
+        selectedActions: const <String>[
+          FluxNewsState.androidFloatingActionSettings,
+          'unsupported',
+          FluxNewsState.androidFloatingActionSearch,
+          FluxNewsState.androidFloatingActionSettings,
+          FluxNewsState.androidFloatingActionPodcasts,
+        ],
+        availableActions: FluxNewsState.iosToolbarAvailableActions,
+      ),
+      const <String>[
+        FluxNewsState.androidFloatingActionSettings,
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionPodcasts,
+      ],
     );
   });
 }

@@ -159,6 +159,9 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageIOSSyncQuickActionKey = 'iosSyncQuickAction';
   static const String secureStorageIOSClearLiquidGlassKey =
       'iosClearLiquidGlass';
+  static const String secureStorageIOSToolbarActionsKey = 'iosToolbarActions';
+  static const String secureStorageIOSToolbarActionOrderKey =
+      'iosToolbarActionOrder';
   static const String secureStorageAndroidFloatingToolbarActionsKey =
       'androidFloatingToolbarActions';
   static const String secureStorageAndroidFloatingToolbarActionOrderKey =
@@ -223,6 +226,8 @@ class FluxNewsState extends ChangeNotifier {
   static const String androidFloatingActionNewsStatus = 'newsStatus';
   static const String androidFloatingActionSortOrder = 'sortOrder';
   static const String androidFloatingActionMarkAsRead = 'markAsRead';
+  static const String floatingToolbarActionMarkAsReadAndNext =
+      'markAsReadAndNext';
   static const String androidFloatingActionPodcasts = 'podcasts';
   static const String androidFloatingActionSettings = 'settings';
   static const List<String> androidFloatingToolbarAvailableActions = <String>[
@@ -230,16 +235,20 @@ class FluxNewsState extends ChangeNotifier {
     androidFloatingActionNewsStatus,
     androidFloatingActionSortOrder,
     androidFloatingActionMarkAsRead,
+    floatingToolbarActionMarkAsReadAndNext,
     androidFloatingActionPodcasts,
     androidFloatingActionSettings,
   ];
+  static const List<String> iosToolbarAvailableActions =
+      androidFloatingToolbarAvailableActions;
 
-  static List<String> normalizeAndroidFloatingToolbarActions(
+  static List<String> _normalizeToolbarActions(
     Iterable<String> actions,
+    List<String> availableActions,
   ) {
     final normalizedActions = <String>[];
     for (final action in actions) {
-      if (androidFloatingToolbarAvailableActions.contains(action) &&
+      if (availableActions.contains(action) &&
           !normalizedActions.contains(action)) {
         normalizedActions.add(action);
       }
@@ -247,12 +256,37 @@ class FluxNewsState extends ChangeNotifier {
     return normalizedActions;
   }
 
+  static List<String> normalizeAndroidFloatingToolbarActions(
+    Iterable<String> actions,
+  ) =>
+      _normalizeToolbarActions(
+        actions,
+        androidFloatingToolbarAvailableActions,
+      );
+
   static List<String> normalizeAndroidFloatingToolbarActionOrder(
     Iterable<String> actions,
   ) {
     final normalizedActions = normalizeAndroidFloatingToolbarActions(actions);
     normalizedActions.addAll(
       androidFloatingToolbarAvailableActions.where(
+        (action) => !normalizedActions.contains(action),
+      ),
+    );
+    return normalizedActions;
+  }
+
+  static List<String> normalizeIOSToolbarActions(
+    Iterable<String> actions,
+  ) =>
+      _normalizeToolbarActions(actions, iosToolbarAvailableActions);
+
+  static List<String> normalizeIOSToolbarActionOrder(
+    Iterable<String> actions,
+  ) {
+    final normalizedActions = normalizeIOSToolbarActions(actions);
+    normalizedActions.addAll(
+      iosToolbarAvailableActions.where(
         (action) => !normalizedActions.contains(action),
       ),
     );
@@ -321,6 +355,27 @@ class FluxNewsState extends ChangeNotifier {
         (values[secureStorageFloatingButtonKey] ??
                 floatingButtonMarkAsReadAction) ==
             floatingButtonMarkAsReadAction;
+  }
+
+  static List<String> initialIOSToolbarActionsForLegacyValues(
+      Map<String, String> values) {
+    final legacyQuickAction = values[secureStorageIOSMarkAsReadQuickActionKey];
+    if (legacyQuickAction != null) {
+      return legacyQuickAction == secureStorageTrueString
+          ? <String>[androidFloatingActionMarkAsRead]
+          : <String>[];
+    }
+
+    final hasLegacyFloatingButtonPreference =
+        values.containsKey(secureStorageFloatingButtonVisibleKey) ||
+            values.containsKey(secureStorageFloatingButtonKey);
+    if (hasLegacyFloatingButtonPreference) {
+      return legacyFloatingButtonEnablesIOSMarkAsReadQuickAction(values)
+          ? <String>[androidFloatingActionMarkAsRead]
+          : <String>[];
+    }
+
+    return <String>[androidFloatingActionMarkAsRead];
   }
 
   // vars for lists of main view
@@ -467,11 +522,17 @@ class FluxNewsState extends ChangeNotifier {
   bool useSliverAppBar = Platform.isIOS ? true : false;
   String appBarType = Platform.isIOS
       ? FluxNewsState.appBarGlassType
-      : FluxNewsState.appBarNormalType;
+      : FluxNewsState.appBarFloatingType;
   bool glassActionButton = Platform.isIOS ? true : false;
   bool iosMarkAsReadQuickAction = false;
   bool iosSyncQuickAction = false;
   bool iosClearLiquidGlass = false;
+  List<String> iosToolbarActions = <String>[
+    FluxNewsState.androidFloatingActionMarkAsRead,
+  ];
+  List<String> iosToolbarActionOrder = List<String>.of(
+    FluxNewsState.iosToolbarAvailableActions,
+  );
   List<String> androidFloatingToolbarActions = <String>[];
   List<String> androidFloatingToolbarActionOrder = List<String>.of(
     FluxNewsState.androidFloatingToolbarAvailableActions,
@@ -1681,24 +1742,31 @@ class FluxNewsState extends ChangeNotifier {
       }
     }
 
-    // Preserve the intent of the former iOS FAB once, then let the new bottom
-    // toolbar setting evolve independently. The presence of the new key is the
-    // migration marker, so this remains idempotent.
+    // Seed the shared Apple toolbar configuration once. Existing iOS quick
+    // action/FAB preferences keep their intent, while fresh installs start
+    // with Mark as Read as the single configured direct action.
     if (Platform.isIOS &&
-        !storageValues.containsKey(
-            FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey)) {
-      final usedMarkAsReadFab =
-          FluxNewsState.legacyFloatingButtonEnablesIOSMarkAsReadQuickAction(
-              storageValues);
-      final migratedValue = usedMarkAsReadFab
-          ? FluxNewsState.secureStorageTrueString
-          : FluxNewsState.secureStorageFalseString;
-      iosMarkAsReadQuickAction = usedMarkAsReadFab;
+        !storageValues
+            .containsKey(FluxNewsState.secureStorageIOSToolbarActionsKey)) {
+      final migratedActions =
+          FluxNewsState.initialIOSToolbarActionsForLegacyValues(storageValues);
+      final migratedOrder = FluxNewsState.normalizeIOSToolbarActionOrder(
+        migratedActions,
+      );
+      final encodedActions = jsonEncode(migratedActions);
+      final encodedOrder = jsonEncode(migratedOrder);
       await storage.write(
-          key: FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey,
-          value: migratedValue);
-      storageValues[FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey] =
-          migratedValue;
+        key: FluxNewsState.secureStorageIOSToolbarActionsKey,
+        value: encodedActions,
+      );
+      await storage.write(
+        key: FluxNewsState.secureStorageIOSToolbarActionOrderKey,
+        value: encodedOrder,
+      );
+      storageValues[FluxNewsState.secureStorageIOSToolbarActionsKey] =
+          encodedActions;
+      storageValues[FluxNewsState.secureStorageIOSToolbarActionOrderKey] =
+          encodedOrder;
     }
 
     logThis('readConfigValues', 'Finished read config values', LogLevel.INFO);
@@ -2173,7 +2241,7 @@ class FluxNewsState extends ChangeNotifier {
         if (Platform.isIOS) {
           appBarTypeSelection = recordTypesAppBarType![2];
         } else {
-          appBarTypeSelection = recordTypesAppBarType![0];
+          appBarTypeSelection = recordTypesAppBarType![3];
         }
       }
     }
@@ -2551,6 +2619,48 @@ class FluxNewsState extends ChangeNotifier {
         iosClearLiquidGlass = value == FluxNewsState.secureStorageTrueString;
       }
 
+      if (key == FluxNewsState.secureStorageIOSToolbarActionsKey) {
+        try {
+          final decodedActions = jsonDecode(value);
+          if (decodedActions is List) {
+            iosToolbarActions = FluxNewsState.normalizeIOSToolbarActions(
+              decodedActions.whereType<String>(),
+            );
+            if (!storageValues.containsKey(
+                FluxNewsState.secureStorageIOSToolbarActionOrderKey)) {
+              iosToolbarActionOrder =
+                  FluxNewsState.normalizeIOSToolbarActionOrder(
+                iosToolbarActions,
+              );
+            }
+          } else {
+            iosToolbarActions = <String>[];
+          }
+        } on FormatException {
+          iosToolbarActions = <String>[];
+        }
+      }
+
+      if (key == FluxNewsState.secureStorageIOSToolbarActionOrderKey) {
+        try {
+          final decodedActions = jsonDecode(value);
+          if (decodedActions is List) {
+            iosToolbarActionOrder =
+                FluxNewsState.normalizeIOSToolbarActionOrder(
+              decodedActions.whereType<String>(),
+            );
+          } else {
+            iosToolbarActionOrder = List<String>.of(
+              FluxNewsState.iosToolbarAvailableActions,
+            );
+          }
+        } on FormatException {
+          iosToolbarActionOrder = List<String>.of(
+            FluxNewsState.iosToolbarAvailableActions,
+          );
+        }
+      }
+
       if (key == FluxNewsState.secureStorageAndroidFloatingToolbarActionsKey) {
         try {
           final decodedActions = jsonDecode(value);
@@ -2851,6 +2961,15 @@ class FluxNewsState extends ChangeNotifier {
       }
     });
 
+    if (!storageValues
+        .containsKey(FluxNewsState.secureStorageIOSToolbarActionsKey)) {
+      iosToolbarActions =
+          FluxNewsState.initialIOSToolbarActionsForLegacyValues(storageValues);
+      iosToolbarActionOrder = FluxNewsState.normalizeIOSToolbarActionOrder(
+        iosToolbarActions,
+      );
+    }
+
     // iterate through all persistent saved values to assign the saved headers
     var headerCounter = 0;
     var headerFound = true;
@@ -3103,6 +3222,26 @@ class FluxNewsState extends ChangeNotifier {
     ));
     unawaited(storage.write(
       key: FluxNewsState.secureStorageAndroidFloatingToolbarActionOrderKey,
+      value: jsonEncode(normalizedOrder),
+    ));
+    refreshView();
+  }
+
+  void updateIOSToolbarActions(
+    List<String> actions, {
+    required List<String> orderedActions,
+  }) {
+    final normalizedActions = FluxNewsState.normalizeIOSToolbarActions(actions);
+    final normalizedOrder =
+        FluxNewsState.normalizeIOSToolbarActionOrder(orderedActions);
+    iosToolbarActions = normalizedActions;
+    iosToolbarActionOrder = normalizedOrder;
+    unawaited(storage.write(
+      key: FluxNewsState.secureStorageIOSToolbarActionsKey,
+      value: jsonEncode(normalizedActions),
+    ));
+    unawaited(storage.write(
+      key: FluxNewsState.secureStorageIOSToolbarActionOrderKey,
       value: jsonEncode(normalizedOrder),
     ));
     refreshView();

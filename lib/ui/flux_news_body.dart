@@ -35,6 +35,7 @@ import 'android_floating_chrome.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
 import 'ios_liquid_glass_style.dart';
+import 'ios_toolbar_layout.dart';
 
 class FluxNewsBody extends StatelessWidget {
   const FluxNewsBody({super.key});
@@ -821,6 +822,19 @@ class FluxNewsBody extends StatelessWidget {
             context.read<FluxNewsCounterState>(),
           ),
         ));
+      } else if (action ==
+          FluxNewsState.floatingToolbarActionMarkAsReadAndNext) {
+        buttons.add(IconButton(
+          icon: const Icon(Icons.skip_next),
+          tooltip: strings.markAsReadAndNext,
+          onPressed: () => unawaited(
+            _markAndroidAsReadAndAdvance(
+              context,
+              appState,
+              context.read<FluxNewsCounterState>(),
+            ),
+          ),
+        ));
       } else if (action == FluxNewsState.androidFloatingActionPodcasts) {
         buttons.add(IconButton(
           icon: const Icon(Icons.podcasts),
@@ -923,6 +937,30 @@ class FluxNewsBody extends StatelessWidget {
     appState.refreshView();
   }
 
+  Future<void> _markAndroidAsReadAndAdvance(
+    BuildContext context,
+    FluxNewsState appState,
+    FluxNewsCounterState appCounterState,
+  ) async {
+    await markNewsAsReadInDB(appState);
+    unawaited(FluxNewsWidgetService.updateWidgetSnapshot(appState));
+    if (!context.mounted) return;
+
+    if (appState.selectedCategoryElementType ==
+        FluxNewsState.categoryElementType) {
+      final next = await queryNextCategoryFromDB(appState, context);
+      if (context.mounted) setNextCategory(next, appState, context);
+    } else if (appState.selectedCategoryElementType ==
+        FluxNewsState.feedElementType) {
+      final next = await queryNextFeedFromDB(appState, context);
+      if (context.mounted) setNextFeed(next, appState, context);
+    } else {
+      _reloadAndroidNewsList(appState, appCounterState);
+    }
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+  }
+
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     if (Platform.isIOS) {
       return _IOSLiquidGlassHome(
@@ -979,8 +1017,20 @@ class FluxNewsBody extends StatelessWidget {
       child: SizedBox(
         width: sidebarWidth,
         height: availableSize.height,
-        child: ListView(
-          children: const [CategoryList()],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AndroidTabletSidebarHeader(
+              title: AppLocalizations.of(context)!.fluxNews,
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(top: 4, bottom: 12),
+                children: const [CategoryList()],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1238,10 +1288,29 @@ class FluxNewsBody extends StatelessWidget {
                       ],
                     ),
                   ),
+                if (!floatingToolbarActions.contains(
+                    FluxNewsState.floatingToolbarActionMarkAsReadAndNext))
+                  PopupMenuItem<int>(
+                    value: 4,
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(Icons.skip_next),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.markAsReadAndNext,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (!floatingToolbarActions
                     .contains(FluxNewsState.androidFloatingActionPodcasts))
                   PopupMenuItem<int>(
-                    value: 4,
+                    value: 5,
                     child: Row(
                       children: [
                         const Padding(
@@ -1264,7 +1333,7 @@ class FluxNewsBody extends StatelessWidget {
                 if (!floatingToolbarActions
                     .contains(FluxNewsState.androidFloatingActionSettings))
                   PopupMenuItem<int>(
-                    value: 5,
+                    value: 6,
                     child: Row(
                       children: [
                         const Padding(
@@ -1295,12 +1364,20 @@ class FluxNewsBody extends StatelessWidget {
               } else if (value == 3) {
                 showDeleteAllDialog(context, appState, appCounterState);
               } else if (value == 4) {
+                unawaited(
+                  _markAndroidAsReadAndAdvance(
+                    context,
+                    appState,
+                    appCounterState,
+                  ),
+                );
+              } else if (value == 5) {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (context) => const DownloadsOverview(),
                   ),
                 );
-              } else if (value == 5) {
+              } else if (value == 6) {
                 // navigate to the settings page
                 Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
               }
@@ -1444,75 +1521,103 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     return strings.markAllAsRead;
   }
 
-  List<Widget> _menuItems(FluxNewsState appState) {
+  List<Widget> _menuItems(
+    FluxNewsState appState, {
+    Set<String> excludedActions = const <String>{},
+  }) {
     final strings = AppLocalizations.of(context)!;
-    return <Widget>[
-      GlassMenuItem(
-        title: strings.search,
-        icon: const Icon(Icons.search),
-        height: 56,
-        maxLines: 2,
-        onTap: () =>
-            Navigator.pushNamed(context, FluxNewsState.searchRouteString),
-      ),
-      GlassMenuItem(
-        title: appState.newsStatus == FluxNewsState.unreadNewsStatus
-            ? strings.showRead
-            : strings.showUnread,
-        icon: Icon(appState.newsStatus == FluxNewsState.unreadNewsStatus
-            ? Icons.checklist
-            : Icons.fiber_new),
-        height: 56,
-        maxLines: 2,
-        onTap: () => unawaited(_toggleReadFilter(appState)),
-      ),
-      GlassMenuItem(
-        title: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
-            ? strings.oldestFirst
-            : strings.newestFirst,
-        icon: const Icon(Icons.sort),
-        height: 56,
-        maxLines: 2,
-        onTap: () => unawaited(_toggleSortOrder(appState)),
-      ),
-      const GlassMenuDivider(),
-      GlassMenuItem(
-        title: _markScopeLabel(context, appState),
-        icon: const Icon(Icons.check_circle_outline),
-        height: 56,
-        maxLines: 2,
-        onTap: () => showDeleteAllDialog(
-          context,
-          appState,
-          context.read<FluxNewsCounterState>(),
-        ),
-      ),
-      GlassMenuItem(
-        title: strings.markAsReadAndNext,
-        icon: const Icon(Icons.skip_next),
-        height: 56,
-        maxLines: 2,
-        onTap: () => unawaited(_markAsReadAndAdvance(appState)),
-      ),
-      const GlassMenuDivider(),
-      GlassMenuItem(
-        title: strings.audioDownloadsSettings,
-        icon: const Icon(Icons.podcasts),
-        height: 56,
-        maxLines: 2,
-        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (context) => const DownloadsOverview(),
-        )),
-      ),
-      GlassMenuItem(
-        title: strings.settings,
-        icon: const Icon(Icons.settings),
-        height: 56,
-        maxLines: 2,
-        onTap: () =>
-            Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
-      ),
+    final groups = <List<Widget>>[
+      <Widget>[
+        if (!excludedActions
+            .contains(FluxNewsState.androidFloatingActionSearch))
+          GlassMenuItem(
+            title: strings.search,
+            icon: const Icon(Icons.search),
+            height: 56,
+            maxLines: 2,
+            onTap: () =>
+                Navigator.pushNamed(context, FluxNewsState.searchRouteString),
+          ),
+        if (!excludedActions
+            .contains(FluxNewsState.androidFloatingActionNewsStatus))
+          GlassMenuItem(
+            title: appState.newsStatus == FluxNewsState.unreadNewsStatus
+                ? strings.showRead
+                : strings.showUnread,
+            icon: Icon(appState.newsStatus == FluxNewsState.unreadNewsStatus
+                ? Icons.checklist
+                : Icons.fiber_new),
+            height: 56,
+            maxLines: 2,
+            onTap: () => unawaited(_toggleReadFilter(appState)),
+          ),
+        if (!excludedActions
+            .contains(FluxNewsState.androidFloatingActionSortOrder))
+          GlassMenuItem(
+            title:
+                appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+                    ? strings.oldestFirst
+                    : strings.newestFirst,
+            icon: const Icon(Icons.sort),
+            height: 56,
+            maxLines: 2,
+            onTap: () => unawaited(_toggleSortOrder(appState)),
+          ),
+      ],
+      <Widget>[
+        if (!excludedActions
+            .contains(FluxNewsState.androidFloatingActionMarkAsRead))
+          GlassMenuItem(
+            title: _markScopeLabel(context, appState),
+            icon: const Icon(Icons.check_circle_outline),
+            height: 56,
+            maxLines: 2,
+            onTap: () => showDeleteAllDialog(
+              context,
+              appState,
+              context.read<FluxNewsCounterState>(),
+            ),
+          ),
+        if (!excludedActions
+            .contains(FluxNewsState.floatingToolbarActionMarkAsReadAndNext))
+          GlassMenuItem(
+            title: strings.markAsReadAndNext,
+            icon: const Icon(Icons.skip_next),
+            height: 56,
+            maxLines: 2,
+            onTap: () => unawaited(_markAsReadAndAdvance(appState)),
+          ),
+      ],
+      <Widget>[
+        if (!excludedActions
+            .contains(FluxNewsState.androidFloatingActionPodcasts))
+          GlassMenuItem(
+            title: strings.audioDownloadsSettings,
+            icon: const Icon(Icons.podcasts),
+            height: 56,
+            maxLines: 2,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (context) => const DownloadsOverview(),
+            )),
+          ),
+        if (!excludedActions
+            .contains(FluxNewsState.androidFloatingActionSettings))
+          GlassMenuItem(
+            title: strings.settings,
+            icon: const Icon(Icons.settings),
+            height: 56,
+            maxLines: 2,
+            onTap: () =>
+                Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
+          ),
+      ],
     ];
+    final items = <Widget>[];
+    for (final group in groups.where((group) => group.isNotEmpty)) {
+      if (items.isNotEmpty) items.add(const GlassMenuDivider());
+      items.addAll(group);
+    }
+    return items;
   }
 
   List<Widget> _wideTabletActions(
@@ -1520,55 +1625,144 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     required LiquidGlassSettings settings,
     required GlassQuality quality,
     required Color foreground,
+    required double newsPaneWidth,
   }) {
     final strings = AppLocalizations.of(context)!;
     final menuSettings = iosLiquidGlassMenuSettings(
       context,
       useClearEffect: appState.iosClearLiquidGlass,
     );
+    final visibleActions = iosTabletVisibleToolbarActions(
+      selectedActions: appState.iosToolbarActions,
+      availableActions: FluxNewsState.iosToolbarAvailableActions,
+      newsPaneWidth: newsPaneWidth,
+    );
+    final directActionSet = visibleActions.toSet();
+    final menuItems = _menuItems(
+      appState,
+      excludedActions: directActionSet,
+    );
+
+    Widget buildButtonGroup(VoidCallback? toggleMenu) {
+      return GlassButtonGroup.icons(
+        useOwnLayer: true,
+        quality: quality,
+        settings: settings,
+        itemPadding: const EdgeInsets.all(10),
+        items: [
+          for (final action in visibleActions)
+            _iosDirectAction(
+              action,
+              appState,
+              foreground: foreground,
+            ),
+          GlassButtonGroupItem(
+            label: appState.syncProcess ? strings.cancel : strings.syncNews,
+            onTap: () => unawaited(_sync(appState)),
+            icon: appState.syncProcess
+                ? CupertinoActivityIndicator(radius: 9, color: foreground)
+                : Icon(Icons.refresh, color: foreground),
+          ),
+          if (toggleMenu != null)
+            GlassButtonGroupItem(
+              label: strings.moreActions,
+              onTap: toggleMenu,
+              icon: Icon(CupertinoIcons.ellipsis, color: foreground),
+            ),
+        ],
+      );
+    }
+
+    final Widget toolbar = menuItems.isEmpty
+        ? buildButtonGroup(null)
+        : GlassMenu(
+            quality: GlassQuality.standard,
+            settings: menuSettings,
+            items: menuItems,
+            menuWidth: 320,
+            autoAdjustToScreen: true,
+            menuPadding: const EdgeInsets.all(12),
+            triggerBuilder: (context, toggleMenu) =>
+                buildButtonGroup(toggleMenu),
+          );
     return [
       Padding(
         padding: const EdgeInsetsDirectional.only(end: 12),
-        child: GlassMenu(
-          quality: GlassQuality.standard,
-          settings: menuSettings,
-          items: _menuItems(appState),
-          menuWidth: 320,
-          autoAdjustToScreen: true,
-          menuPadding: const EdgeInsets.all(12),
-          triggerBuilder: (context, toggleMenu) => GlassButtonGroup.icons(
-            useOwnLayer: true,
-            quality: quality,
-            settings: settings,
-            itemPadding: const EdgeInsets.all(10),
-            items: [
-              GlassButtonGroupItem(
-                label: appState.syncProcess ? strings.cancel : strings.syncNews,
-                onTap: () => unawaited(_sync(appState)),
-                icon: appState.syncProcess
-                    ? CupertinoActivityIndicator(radius: 9, color: foreground)
-                    : Icon(Icons.refresh, color: foreground),
-              ),
-              if (appState.iosMarkAsReadQuickAction)
-                GlassButtonGroupItem(
-                  label: _markScopeLabel(context, appState),
-                  onTap: () => showDeleteAllDialog(
-                    context,
-                    appState,
-                    context.read<FluxNewsCounterState>(),
-                  ),
-                  icon: Icon(Icons.check_circle_outline, color: foreground),
-                ),
-              GlassButtonGroupItem(
-                label: strings.moreActions,
-                onTap: toggleMenu,
-                icon: Icon(CupertinoIcons.ellipsis, color: foreground),
-              ),
-            ],
-          ),
-        ),
+        child: toolbar,
       ),
     ];
+  }
+
+  GlassButtonGroupItem _iosDirectAction(
+    String action,
+    FluxNewsState appState, {
+    required Color foreground,
+  }) {
+    final strings = AppLocalizations.of(context)!;
+    if (action == FluxNewsState.androidFloatingActionSearch) {
+      return GlassButtonGroupItem(
+        label: strings.search,
+        onTap: () =>
+            Navigator.pushNamed(context, FluxNewsState.searchRouteString),
+        icon: Icon(Icons.search, color: foreground),
+      );
+    }
+    if (action == FluxNewsState.androidFloatingActionNewsStatus) {
+      return GlassButtonGroupItem(
+        label: appState.newsStatus == FluxNewsState.unreadNewsStatus
+            ? strings.showRead
+            : strings.showUnread,
+        onTap: () => unawaited(_toggleReadFilter(appState)),
+        icon: Icon(
+          appState.newsStatus == FluxNewsState.unreadNewsStatus
+              ? Icons.checklist
+              : Icons.fiber_new,
+          color: foreground,
+        ),
+      );
+    }
+    if (action == FluxNewsState.androidFloatingActionSortOrder) {
+      return GlassButtonGroupItem(
+        label: appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+            ? strings.oldestFirst
+            : strings.newestFirst,
+        onTap: () => unawaited(_toggleSortOrder(appState)),
+        icon: Icon(Icons.sort, color: foreground),
+      );
+    }
+    if (action == FluxNewsState.androidFloatingActionMarkAsRead) {
+      return GlassButtonGroupItem(
+        label: _markScopeLabel(context, appState),
+        onTap: () => showDeleteAllDialog(
+          context,
+          appState,
+          context.read<FluxNewsCounterState>(),
+        ),
+        icon: Icon(Icons.check_circle_outline, color: foreground),
+      );
+    }
+    if (action == FluxNewsState.floatingToolbarActionMarkAsReadAndNext) {
+      return GlassButtonGroupItem(
+        label: strings.markAsReadAndNext,
+        onTap: () => unawaited(_markAsReadAndAdvance(appState)),
+        icon: Icon(Icons.skip_next, color: foreground),
+      );
+    }
+    if (action == FluxNewsState.androidFloatingActionPodcasts) {
+      return GlassButtonGroupItem(
+        label: strings.audioDownloadsSettings,
+        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (context) => const DownloadsOverview(),
+        )),
+        icon: Icon(Icons.podcasts, color: foreground),
+      );
+    }
+    return GlassButtonGroupItem(
+      label: strings.settings,
+      onTap: () =>
+          Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
+      icon: Icon(Icons.settings, color: foreground),
+    );
   }
 
   List<Widget> _compactTopActions(
@@ -1627,7 +1821,6 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       context,
       useTrueBlack: useTrueBlack,
     );
-    final foreground = iosLiquidGlassForeground(context);
     return SizedBox(
       width: width,
       child: SafeArea(
@@ -1650,10 +1843,9 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                         const EdgeInsetsDirectional.fromSTEB(18, 18, 18, 8),
                     child: Row(
                       children: [
-                        FaIcon(
+                        const FaIcon(
                           FontAwesomeIcons.bookOpen,
                           size: 18,
-                          color: foreground,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1665,7 +1857,6 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                                 .textTheme
                                 .titleMedium
                                 ?.copyWith(
-                                  color: foreground,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
@@ -1703,7 +1894,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       );
     }
 
-    if (!appState.iosMarkAsReadQuickAction && !appState.iosSyncQuickAction) {
+    if (widget.isTablet) {
       return _BottomBanners(appState: appState);
     }
 
@@ -1716,6 +1907,47 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       useClearEffect: appState.iosClearLiquidGlass,
     );
     final glassForeground = iosLiquidGlassForeground(context);
+    final visibleActions = iosPhoneVisibleToolbarActions(
+      selectedActions: appState.iosToolbarActions,
+      availableActions: FluxNewsState.iosToolbarAvailableActions,
+    );
+    final menuItems = _menuItems(
+      appState,
+      excludedActions: visibleActions.toSet(),
+    );
+
+    Widget buildButtonGroup(VoidCallback toggleMenu) {
+      return GlassButtonGroup.icons(
+        useOwnLayer: true,
+        quality: glassQuality,
+        settings: glassSettings,
+        itemPadding: const EdgeInsets.all(10),
+        items: [
+          GlassButtonGroupItem(
+            label: appState.syncProcess ? strings.cancel : strings.syncNews,
+            onTap: () => unawaited(_sync(appState)),
+            icon: appState.syncProcess
+                ? CupertinoActivityIndicator(
+                    radius: 9,
+                    color: glassForeground,
+                  )
+                : Icon(Icons.refresh, color: glassForeground),
+          ),
+          for (final action in visibleActions)
+            _iosDirectAction(
+              action,
+              appState,
+              foreground: glassForeground,
+            ),
+          GlassButtonGroupItem(
+            label: strings.moreActions,
+            onTap: toggleMenu,
+            icon: Icon(CupertinoIcons.ellipsis, color: glassForeground),
+          ),
+        ],
+      );
+    }
+
     final contentChrome = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1730,59 +1962,21 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: appState.iosMarkAsReadQuickAction
-                            ? GlassIconButton(
-                                quality: glassQuality,
-                                semanticLabel:
-                                    _markScopeLabel(context, appState),
-                                onPressed: () => showDeleteAllDialog(
-                                  context,
-                                  appState,
-                                  context.read<FluxNewsCounterState>(),
-                                ),
-                                icon: Icon(
-                                  Icons.check_circle_outline,
-                                  color: glassForeground,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ),
-                    const Expanded(child: SizedBox.shrink()),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: appState.iosSyncQuickAction
-                            ? GlassIconButton(
-                                quality: glassQuality,
-                                semanticLabel: appState.syncProcess
-                                    ? strings.cancel
-                                    : strings.syncNews,
-                                onPressed: () => unawaited(_sync(appState)),
-                                icon: appState.syncProcess
-                                    ? SizedBox.square(
-                                        dimension: 18,
-                                        child: CupertinoActivityIndicator(
-                                          radius: 9,
-                                          color: glassForeground,
-                                        ),
-                                      )
-                                    : Icon(
-                                        Icons.refresh,
-                                        color: glassForeground,
-                                      ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ),
-                  ],
+              child: Center(
+                child: GlassMenu(
+                  quality: GlassQuality.standard,
+                  settings: iosLiquidGlassMenuSettings(
+                    context,
+                    useClearEffect: appState.iosClearLiquidGlass,
+                  ),
+                  items: menuItems,
+                  menuWidth: (MediaQuery.sizeOf(context).width - 32)
+                      .clamp(280.0, 340.0)
+                      .toDouble(),
+                  autoAdjustToScreen: true,
+                  menuPadding: const EdgeInsets.all(12),
+                  triggerBuilder: (context, toggleMenu) =>
+                      buildButtonGroup(toggleMenu),
                 ),
               ),
             ),
@@ -1920,13 +2114,16 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                     settings: glassSettings,
                     quality: glassQuality,
                     foreground: glassForeground,
+                    newsPaneWidth: constraints.maxWidth - sidebarWidth,
                   )
-                : _compactTopActions(
-                    appState,
-                    settings: glassSettings,
-                    quality: glassQuality,
-                    foreground: glassForeground,
-                  ),
+                : widget.isTablet
+                    ? _compactTopActions(
+                        appState,
+                        settings: glassSettings,
+                        quality: glassQuality,
+                        foreground: glassForeground,
+                      )
+                    : const <Widget>[],
           ),
           drawer: usesWideSidebar ? null : widget.drawer,
           body: list,

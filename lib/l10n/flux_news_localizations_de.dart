@@ -48,6 +48,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die festen Aktionen werden immer angezeigt. Wähle und sortiere die zusätzlichen Aktionen.';
 
   @override
+  String get iosToolbarActionsHint =>
+      'Sync bleibt fest. Ausgewählte Aktionen werden direkt angezeigt, soweit der Platz reicht; weitere Aktionen bleiben unter „Mehr“ verfügbar.';
+
+  @override
   String get androidFloatingActionToggleNewsStatus =>
       'Alle/Ungelesene Nachrichten umschalten';
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -52,6 +53,18 @@ Widget _menuTestApp(
 }
 
 void main() {
+  testWidgets('tablet sidebar header uses the Drawer icon and title',
+      (tester) async {
+    await tester.pumpWidget(_testApp(const SizedBox(
+      width: 280,
+      child: AndroidTabletSidebarHeader(title: 'Flux News'),
+    )));
+
+    expect(find.text('Flux News'), findsOneWidget);
+    final icon = tester.widget<FaIcon>(find.byType(FaIcon));
+    expect(icon.icon, FontAwesomeIcons.bookOpen.data);
+  });
+
   testWidgets('status bar scrim blurs and fades over scrolling cards',
       (tester) async {
     await tester.pumpWidget(_testApp(const SizedBox(
@@ -262,6 +275,7 @@ void main() {
       ..androidFloatingToolbarActions = <String>[
         FluxNewsState.androidFloatingActionSearch,
         FluxNewsState.androidFloatingActionMarkAsRead,
+        FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
         FluxNewsState.androidFloatingActionPodcasts,
         FluxNewsState.androidFloatingActionSettings,
       ];
@@ -277,6 +291,7 @@ void main() {
     expect(find.text('Oldest first'), findsOneWidget);
     expect(find.text('Search'), findsNothing);
     expect(find.text('Mark all news as read'), findsNothing);
+    expect(find.text('Mark as read and open next'), findsNothing);
     expect(find.text('Podcasts'), findsNothing);
     expect(find.text('Settings'), findsNothing);
   });
@@ -295,6 +310,7 @@ void main() {
 
     expect(find.text('Search'), findsOneWidget);
     expect(find.text('Mark all news as read'), findsOneWidget);
+    expect(find.text('Mark as read and open next'), findsOneWidget);
     expect(find.text('Podcasts'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });
@@ -318,6 +334,7 @@ void main() {
     expect(find.text('Search'), findsNothing);
     expect(find.text('Podcasts'), findsNothing);
     expect(find.text('Mark all news as read'), findsOneWidget);
+    expect(find.text('Mark as read and open next'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });
 
@@ -338,6 +355,7 @@ void main() {
     expect(find.byIcon(Icons.checklist), findsOneWidget);
     expect(find.byIcon(Icons.sort), findsOneWidget);
     expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+    expect(find.byIcon(Icons.skip_next), findsOneWidget);
     expect(find.byIcon(Icons.podcasts), findsOneWidget);
     expect(find.byIcon(Icons.settings), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsNothing);

@@ -11,6 +11,7 @@
     "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
     "androidFloatingToolbarActions": "Acties van de zwevende werkbalk instellen",
     "androidFloatingToolbarFixedActionsHint": "De vaste acties worden altijd getoond. Selecteer en rangschik de extra acties.",
+    "iosToolbarActionsHint": "Synchronisatie blijft vast. Geselecteerde acties worden direct getoond zolang er ruimte is; extra acties blijven onder Meer beschikbaar.",
     "androidFloatingActionToggleNewsStatus": "Wisselen tussen alle en ongelezen nieuws",
     "androidFloatingActionToggleSortOrder": "Sorteervolgorde wijzigen",
     "androidFloatingAccentTint": "Accentkleur voor zwevende elementen gebruiken",

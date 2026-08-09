@@ -92,27 +92,13 @@ class Settings extends StatelessWidget {
             const Divider(),
             // this list tile contains sync settings
             // it is clickable and opens the sync settings
-            ListTile(
-              leading: const Icon(
-                Icons.code,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.headerSettings,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.code,
+              title: AppLocalizations.of(context)!.headerSettings,
               onTap: () {
-                // navigate to the search page
                 Navigator.pushNamed(
                     context, FluxNewsState.headerSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
             const Divider(),
             ListTile(
@@ -163,155 +149,67 @@ class Settings extends StatelessWidget {
             ),
             // this list tile contains general settings
             // it is clickable and opens the general settings
-            ListTile(
-              leading: const Icon(
-                Icons.settings_applications,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.generalSettings,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.settings_applications,
+              title: AppLocalizations.of(context)!.generalSettings,
               onTap: () {
-                // navigate to the search page
                 Navigator.pushNamed(
                     context, FluxNewsState.generalSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
             const Divider(),
 
             // this list tile contains sync settings
             // it is clickable and opens the sync settings
-            ListTile(
-              leading: const Icon(
-                Icons.sync,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.syncSettings,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.sync,
+              title: AppLocalizations.of(context)!.syncSettings,
               onTap: () {
-                // navigate to the search page
                 Navigator.pushNamed(
                     context, FluxNewsState.syncSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
             const Divider(),
             // this list tile contains news item settings
             // it is clickable and opens the news item settings
-            ListTile(
-              leading: const Icon(
-                Icons.article,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.newsItemSettings,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.article,
+              title: AppLocalizations.of(context)!.newsItemSettings,
               onTap: () {
-                // navigate to the search page
                 Navigator.pushNamed(
                     context, FluxNewsState.newsItemSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
             const Divider(),
 
             // this list tile contains feed settings
             // it is clickable and opens the feed settings
-            ListTile(
-              leading: const Icon(
-                Icons.feed,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.feedSettings,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.feed,
+              title: AppLocalizations.of(context)!.feedSettings,
               onTap: () {
-                // navigate to the search page
                 Navigator.pushNamed(
                     context, FluxNewsState.feedSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
             const Divider(),
 
             // this list tile contains truncate settings
             // it is clickable and opens the truncate settings
-            ListTile(
-              leading: const Icon(
-                Icons.cut_outlined,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.truncateMode,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.cut_outlined,
+              title: AppLocalizations.of(context)!.truncateMode,
               onTap: () {
-                // navigate to the search page
                 Navigator.pushNamed(
                     context, FluxNewsState.truncateSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
 
             const Divider(),
-            ListTile(
-              leading: const Icon(
-                Icons.storage_rounded,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.downloadedData,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              subtitle: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.downloadsManagerClearAll,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.storage_rounded,
+              title: AppLocalizations.of(context)!.downloadedData,
+              subtitle: AppLocalizations.of(context)!.downloadsManagerClearAll,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -319,32 +217,16 @@ class Settings extends StatelessWidget {
                   ),
                 );
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
 
             const Divider(),
-            ListTile(
-              leading: const Icon(
-                Icons.widgets_outlined,
-              ),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.widgetSettings,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.widgets_outlined,
+              title: AppLocalizations.of(context)!.widgetSettings,
               onTap: () {
                 Navigator.pushNamed(
                     context, FluxNewsState.widgetSettingsRouteString);
               },
-              trailing: const Icon(
-                Icons.arrow_right,
-              ),
             ),
 
             const Divider(),
@@ -392,17 +274,9 @@ class Settings extends StatelessWidget {
             ),
             const Divider(),
             // Log viewer
-            ListTile(
-              leading: const Icon(Icons.list_alt),
-              title: Padding(
-                padding: Platform.isAndroid
-                    ? const EdgeInsets.fromLTRB(15, 0, 0, 0)
-                    : const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.showLogs,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+            AdaptiveSettingsNavigationRow(
+              icon: Icons.list_alt,
+              title: AppLocalizations.of(context)!.showLogs,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -410,7 +284,6 @@ class Settings extends StatelessWidget {
                   ),
                 );
               },
-              trailing: const Icon(Icons.arrow_right),
             ),
             const Divider(),
             // this list tile contains the ability to export the collected logs

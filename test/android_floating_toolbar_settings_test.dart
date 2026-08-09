@@ -3,21 +3,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:flux_news/ui/settings/android_floating_toolbar_settings.dart';
 import 'package:flux_news/ui/settings/general_settings.dart';
 import 'package:provider/provider.dart';
 
 import 'test_helpers.dart';
 
-Widget _settingsTestApp(FluxNewsState appState) {
+Widget _settingsTestApp(
+  FluxNewsState appState, {
+  bool iosToolbar = false,
+}) {
   return ChangeNotifierProvider<FluxNewsState>.value(
     value: appState,
     child: MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
-        body: AndroidFloatingToolbarSettingsTile(),
+      home: Scaffold(
+        body: iosToolbar
+            ? const IOSToolbarSettingsTile()
+            : const AndroidFloatingToolbarSettingsTile(),
       ),
     ),
   );
@@ -51,15 +57,19 @@ void main() {
     final appState = FluxNewsState();
     await tester.pumpWidget(_settingsTestApp(appState));
 
-    await tester.tap(find.byIcon(Icons.dashboard_customize_outlined));
+    expect(find.byType(AdaptiveSettingsNavigationRow), findsOneWidget);
+    expect(find.byType(ListTile), findsNothing);
+
+    await tester.tap(find.text('Configure floating toolbar actions'));
     await tester.pumpAndSettle();
 
     expect(find.byType(AndroidFloatingToolbarSettings), findsOneWidget);
     expect(find.byType(ReorderableListView), findsOneWidget);
-    expect(find.byType(Card), findsNWidgets(6));
-    expect(find.byIcon(Icons.drag_handle), findsNWidgets(6));
+    expect(find.byType(Card), findsNWidgets(7));
+    expect(find.byIcon(Icons.drag_handle), findsNWidgets(7));
     expect(find.text('Toggle all/unread news'), findsOneWidget);
     expect(find.text('Change sort order'), findsOneWidget);
+    expect(find.text('Mark as read and open next'), findsOneWidget);
   });
 
   testWidgets('toolbar action changes are saved immediately', (tester) async {
@@ -89,7 +99,38 @@ void main() {
     expect(
       storage.values[
           FluxNewsState.secureStorageAndroidFloatingToolbarActionOrderKey],
-      '["search","newsStatus","sortOrder","markAsRead","podcasts","settings"]',
+      '["search","newsStatus","sortOrder","markAsRead","markAsReadAndNext","podcasts","settings"]',
+    );
+  });
+
+  testWidgets('Apple toolbar settings expose and persist all seven actions',
+      (tester) async {
+    final appState = FluxNewsState()
+      ..iosToolbarActions = <String>[
+        FluxNewsState.androidFloatingActionSearch,
+      ];
+    await tester.pumpWidget(_settingsTestApp(appState, iosToolbar: true));
+
+    await tester.tap(find.text('Configure floating toolbar actions'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byType(Card), findsNWidgets(7));
+    expect(find.text('Mark as read and open next'), findsOneWidget);
+
+    await tester.tap(find.text('Mark as read and open next'));
+    await tester.pump();
+
+    expect(
+      appState.iosToolbarActions,
+      <String>[
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
+      ],
+    );
+    expect(
+      storage.values[FluxNewsState.secureStorageIOSToolbarActionsKey],
+      '["search","markAsReadAndNext"]',
     );
   });
 
@@ -102,6 +143,7 @@ void main() {
       FluxNewsState.androidFloatingActionNewsStatus,
       FluxNewsState.androidFloatingActionSortOrder,
       FluxNewsState.androidFloatingActionMarkAsRead,
+      FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
       FluxNewsState.androidFloatingActionPodcasts,
     ];
 
@@ -115,7 +157,7 @@ void main() {
     expect(
       storage.values[
           FluxNewsState.secureStorageAndroidFloatingToolbarActionOrderKey],
-      '["settings","search","newsStatus","sortOrder","markAsRead","podcasts"]',
+      '["settings","search","newsStatus","sortOrder","markAsRead","markAsReadAndNext","podcasts"]',
     );
   });
 

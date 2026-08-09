@@ -49,6 +49,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'De vaste acties worden altijd getoond. Selecteer en rangschik de extra acties.';
 
   @override
+  String get iosToolbarActionsHint =>
+      'Synchronisatie blijft vast. Geselecteerde acties worden direct getoond zolang er ruimte is; extra acties blijven onder Meer beschikbaar.';
+
+  @override
   String get androidFloatingActionToggleNewsStatus =>
       'Wisselen tussen alle en ongelezen nieuws';
 

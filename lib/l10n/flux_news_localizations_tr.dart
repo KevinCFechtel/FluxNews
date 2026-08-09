@@ -48,6 +48,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sabit işlemler her zaman gösterilir. Ek işlemleri seçip sıralayın.';
 
   @override
+  String get iosToolbarActionsHint =>
+      'Senkronizasyon sabit kalır. Seçilen işlemler alan elverdiğince doğrudan gösterilir; diğer işlemler Daha Fazla altında kalır.';
+
+  @override
   String get androidFloatingActionToggleNewsStatus =>
       'Tüm ve okunmamış haberler arasında geçiş yap';
 

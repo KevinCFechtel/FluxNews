@@ -11,6 +11,7 @@
     "iosClearLiquidGlass": "Klares Liquid Glass verwenden",
     "androidFloatingToolbarActions": "Aktionen der schwebenden Werkzeugleiste konfigurieren",
     "androidFloatingToolbarFixedActionsHint": "Die festen Aktionen werden immer angezeigt. Wähle und sortiere die zusätzlichen Aktionen.",
+    "iosToolbarActionsHint": "Sync bleibt fest. Ausgewählte Aktionen werden direkt angezeigt, soweit der Platz reicht; weitere Aktionen bleiben unter „Mehr“ verfügbar.",
     "androidFloatingActionToggleNewsStatus": "Alle/Ungelesene Nachrichten umschalten",
     "androidFloatingActionToggleSortOrder": "Sortierreihenfolge wechseln",
     "androidFloatingAccentTint": "Akzentfarbe für schwebende Elemente verwenden",

@@ -48,6 +48,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The fixed actions are always shown. Select and arrange the additional actions.';
 
   @override
+  String get iosToolbarActionsHint =>
+      'Sync remains fixed. Selected actions are shown directly as space allows; additional actions remain under More.';
+
+  @override
   String get androidFloatingActionToggleNewsStatus => 'Toggle all/unread news';
 
   @override

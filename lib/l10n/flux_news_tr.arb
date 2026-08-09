@@ -11,6 +11,7 @@
     "iosClearLiquidGlass": "Şeffaf Liquid Glass kullan",
     "androidFloatingToolbarActions": "Yüzen araç çubuğu işlemlerini yapılandır",
     "androidFloatingToolbarFixedActionsHint": "Sabit işlemler her zaman gösterilir. Ek işlemleri seçip sıralayın.",
+    "iosToolbarActionsHint": "Senkronizasyon sabit kalır. Seçilen işlemler alan elverdiğince doğrudan gösterilir; diğer işlemler Daha Fazla altında kalır.",
     "androidFloatingActionToggleNewsStatus": "Tüm ve okunmamış haberler arasında geçiş yap",
     "androidFloatingActionToggleSortOrder": "Sıralama düzenini değiştir",
     "androidFloatingAccentTint": "Yüzen öğelerde vurgu rengini kullan",

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 
 class AndroidStatusBarScrim extends StatelessWidget {
@@ -37,6 +38,47 @@ class AndroidStatusBarScrim extends StatelessWidget {
               stops: const [0, 0.78, 1],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class AndroidTabletSidebarHeader extends StatelessWidget {
+  const AndroidTabletSidebarHeader({
+    super.key,
+    required this.title,
+  });
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 36,
+              height: 36,
+              child: Center(
+                child: FaIcon(FontAwesomeIcons.bookOpen, size: 24),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+          ],
         ),
       ),
     );

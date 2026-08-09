@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
 import 'package:provider/provider.dart';
 
@@ -10,14 +11,9 @@ class AndroidFloatingToolbarSettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    return ListTile(
-      contentPadding: const EdgeInsetsDirectional.only(start: 5, end: 0),
-      leading: const Icon(Icons.dashboard_customize_outlined),
-      title: Text(
-        strings.androidFloatingToolbarActions,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      trailing: const Icon(Icons.chevron_right),
+    return AdaptiveSettingsNavigationRow(
+      icon: Icons.dashboard_customize_outlined,
+      title: strings.androidFloatingToolbarActions,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const AndroidFloatingToolbarSettings(),
@@ -27,8 +23,32 @@ class AndroidFloatingToolbarSettingsTile extends StatelessWidget {
   }
 }
 
+class IOSToolbarSettingsTile extends StatelessWidget {
+  const IOSToolbarSettingsTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context)!;
+    return AdaptiveSettingsNavigationRow(
+      icon: Icons.dashboard_customize_outlined,
+      title: strings.androidFloatingToolbarActions,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              const AndroidFloatingToolbarSettings(iosToolbar: true),
+        ),
+      ),
+    );
+  }
+}
+
 class AndroidFloatingToolbarSettings extends StatefulWidget {
-  const AndroidFloatingToolbarSettings({super.key});
+  const AndroidFloatingToolbarSettings({
+    super.key,
+    this.iosToolbar = false,
+  });
+
+  final bool iosToolbar;
 
   @override
   State<AndroidFloatingToolbarSettings> createState() =>
@@ -45,18 +65,32 @@ class _AndroidFloatingToolbarSettingsState
     super.initState();
     final appState = context.read<FluxNewsState>();
     _orderedActions = List<String>.of(
-      appState.androidFloatingToolbarActionOrder,
+      widget.iosToolbar
+          ? appState.iosToolbarActionOrder
+          : appState.androidFloatingToolbarActionOrder,
     );
-    _selectedActions = appState.androidFloatingToolbarActions.toSet();
+    _selectedActions = (widget.iosToolbar
+            ? appState.iosToolbarActions
+            : appState.androidFloatingToolbarActions)
+        .toSet();
   }
 
   void _persistActions() {
-    context.read<FluxNewsState>().updateAndroidFloatingToolbarActions(
-          _orderedActions
-              .where(_selectedActions.contains)
-              .toList(growable: false),
-          orderedActions: _orderedActions,
-        );
+    final appState = context.read<FluxNewsState>();
+    final selectedActions = _orderedActions
+        .where(_selectedActions.contains)
+        .toList(growable: false);
+    if (widget.iosToolbar) {
+      appState.updateIOSToolbarActions(
+        selectedActions,
+        orderedActions: _orderedActions,
+      );
+    } else {
+      appState.updateAndroidFloatingToolbarActions(
+        selectedActions,
+        orderedActions: _orderedActions,
+      );
+    }
   }
 
   void _setSelected(String action, bool selected) {
@@ -87,7 +121,9 @@ class _AndroidFloatingToolbarSettingsState
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                   child: Text(
-                    strings.androidFloatingToolbarFixedActionsHint,
+                    widget.iosToolbar
+                        ? strings.iosToolbarActionsHint
+                        : strings.androidFloatingToolbarFixedActionsHint,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -133,7 +169,7 @@ class _AndroidFloatingToolbarSettingsState
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Checkbox(
+                              Checkbox.adaptive(
                                 value: selected,
                                 onChanged: (value) =>
                                     _setSelected(action, value ?? false),
@@ -173,6 +209,9 @@ class _AndroidFloatingToolbarSettingsState
     if (action == FluxNewsState.androidFloatingActionMarkAsRead) {
       return strings.markAsRead;
     }
+    if (action == FluxNewsState.floatingToolbarActionMarkAsReadAndNext) {
+      return strings.markAsReadAndNext;
+    }
     if (action == FluxNewsState.androidFloatingActionPodcasts) {
       return strings.audioDownloadsSettings;
     }
@@ -191,6 +230,9 @@ class _AndroidFloatingToolbarSettingsState
     }
     if (action == FluxNewsState.androidFloatingActionMarkAsRead) {
       return Icons.check_circle_outline;
+    }
+    if (action == FluxNewsState.floatingToolbarActionMarkAsReadAndNext) {
+      return Icons.skip_next;
     }
     if (action == FluxNewsState.androidFloatingActionPodcasts) {
       return Icons.podcasts;

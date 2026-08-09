@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'The fixed actions are always shown. Select and arrange the additional actions.'**
   String get androidFloatingToolbarFixedActionsHint;
 
+  /// No description provided for @iosToolbarActionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync remains fixed. Selected actions are shown directly as space allows; additional actions remain under More.'**
+  String get iosToolbarActionsHint;
+
   /// No description provided for @androidFloatingActionToggleNewsStatus.
   ///
   /// In en, this message translates to:

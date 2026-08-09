@@ -70,9 +70,10 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
         appState.appBarType != FluxNewsState.appBarFloatingType;
     final showAppBarCountSetting = Platform.isIOS || !appState.isTablet;
     final showAndroidAppBarTypeSetting = !Platform.isIOS && !appState.isTablet;
-    final showAndroidFloatingToolbarSettings = !Platform.isIOS &&
-        (appState.isTablet ||
-            appState.appBarType == FluxNewsState.appBarFloatingType);
+    final showFloatingToolbarSettings = Platform.isIOS ||
+        (!Platform.isIOS &&
+            (appState.isTablet ||
+                appState.appBarType == FluxNewsState.appBarFloatingType));
     // return the body of the feed settings
     return SingleChildScrollView(
         child: Container(
@@ -618,67 +619,6 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
-              if (Platform.isIOS)
-                Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
-                      child: Icon(Icons.check_circle_outline),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.iosMarkAsReadQuickAction,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    AdaptiveSettingsSwitch(
-                      value: appState.iosMarkAsReadQuickAction,
-                      onChanged: (bool value) {
-                        appState.iosMarkAsReadQuickAction = value;
-                        appState.storage.write(
-                          key: FluxNewsState
-                              .secureStorageIOSMarkAsReadQuickActionKey,
-                          value: value
-                              ? FluxNewsState.secureStorageTrueString
-                              : FluxNewsState.secureStorageFalseString,
-                        );
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-              if (Platform.isIOS) const Divider(),
-              if (Platform.isIOS)
-                Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
-                      child: Icon(Icons.refresh),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.iosSyncQuickAction,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    AdaptiveSettingsSwitch(
-                      value: appState.iosSyncQuickAction,
-                      onChanged: (bool value) {
-                        appState.iosSyncQuickAction = value;
-                        appState.storage.write(
-                          key: FluxNewsState.secureStorageIOSSyncQuickActionKey,
-                          value: value
-                              ? FluxNewsState.secureStorageTrueString
-                              : FluxNewsState.secureStorageFalseString,
-                        );
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-              if (Platform.isIOS) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
               if (showAndroidFabSettings)
                 Row(
@@ -958,9 +898,11 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   (appState.isTablet ||
                       appState.appBarType == FluxNewsState.appBarFloatingType))
                 const Divider(),
-              if (showAndroidFloatingToolbarSettings)
-                const AndroidFloatingToolbarSettingsTile(),
-              if (showAndroidFloatingToolbarSettings) const Divider(),
+              if (showFloatingToolbarSettings)
+                Platform.isIOS
+                    ? const IOSToolbarSettingsTile()
+                    : const AndroidFloatingToolbarSettingsTile(),
+              if (showFloatingToolbarSettings) const Divider(),
               // this row contains the selection of the image cache duration in days
               Row(
                 children: [

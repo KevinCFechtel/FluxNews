@@ -48,6 +48,10 @@ class AppLocalizationsGl extends AppLocalizations {
       'As accións fixas móstranse sempre. Selecciona e ordena as accións adicionais.';
 
   @override
+  String get iosToolbarActionsHint =>
+      'A sincronización permanece fixa. As accións seleccionadas móstranse directamente cando hai espazo; as adicionais permanecen en Máis.';
+
+  @override
   String get androidFloatingActionToggleNewsStatus =>
       'Alternar entre todas as novas e as non lidas';
 

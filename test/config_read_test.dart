@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -11,6 +13,17 @@ void main() {
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secureStorageChannel, null);
+  });
+
+  test('floating chrome is the default Android app bar layout', () {
+    final appState = FluxNewsState();
+
+    expect(
+      appState.appBarType,
+      Platform.isIOS
+          ? FluxNewsState.appBarGlassType
+          : FluxNewsState.appBarFloatingType,
+    );
   });
 
   test('failed config read preserves previously loaded values', () async {
@@ -73,6 +86,32 @@ void main() {
     );
   });
 
+  test('fresh Apple toolbar configuration defaults to Mark as read', () {
+    expect(
+      FluxNewsState.initialIOSToolbarActionsForLegacyValues(const {}),
+      const <String>[FluxNewsState.androidFloatingActionMarkAsRead],
+    );
+  });
+
+  test('legacy Apple toolbar preference is preserved', () {
+    expect(
+      FluxNewsState.initialIOSToolbarActionsForLegacyValues(const {
+        FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey:
+            FluxNewsState.secureStorageFalseString,
+      }),
+      isEmpty,
+    );
+    expect(
+      FluxNewsState.initialIOSToolbarActionsForLegacyValues(const {
+        FluxNewsState.secureStorageFloatingButtonVisibleKey:
+            FluxNewsState.secureStorageTrueString,
+        FluxNewsState.secureStorageFloatingButtonKey:
+            FluxNewsState.floatingButtonMarkAsReadAction,
+      }),
+      const <String>[FluxNewsState.androidFloatingActionMarkAsRead],
+    );
+  });
+
   test('floating toolbar action normalization preserves valid order', () {
     expect(
       FluxNewsState.normalizeAndroidFloatingToolbarActions(const <String>[
@@ -105,8 +144,35 @@ void main() {
         FluxNewsState.androidFloatingActionNewsStatus,
         FluxNewsState.androidFloatingActionSortOrder,
         FluxNewsState.androidFloatingActionMarkAsRead,
+        FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
         FluxNewsState.androidFloatingActionPodcasts,
       ],
+    );
+  });
+
+  test('Apple toolbar normalization includes its seventh action', () {
+    expect(
+      FluxNewsState.normalizeIOSToolbarActionOrder(const <String>[
+        FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
+        FluxNewsState.androidFloatingActionSearch,
+        'unsupported',
+      ]),
+      const <String>[
+        FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionNewsStatus,
+        FluxNewsState.androidFloatingActionSortOrder,
+        FluxNewsState.androidFloatingActionMarkAsRead,
+        FluxNewsState.androidFloatingActionPodcasts,
+        FluxNewsState.androidFloatingActionSettings,
+      ],
+    );
+  });
+
+  test('Apple toolbar defaults to Mark as read', () {
+    expect(
+      FluxNewsState().iosToolbarActions,
+      const <String>[FluxNewsState.androidFloatingActionMarkAsRead],
     );
   });
 }
