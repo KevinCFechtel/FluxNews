@@ -164,11 +164,29 @@ abstract class AppLocalizations {
   /// **'Use Clear Liquid Glass'**
   String get iosClearLiquidGlass;
 
-  /// No description provided for @androidFloatingToolbarShortcuts.
+  /// No description provided for @androidFloatingToolbarActions.
   ///
   /// In en, this message translates to:
-  /// **'Show additional actions in the floating toolbar'**
-  String get androidFloatingToolbarShortcuts;
+  /// **'Configure floating toolbar actions'**
+  String get androidFloatingToolbarActions;
+
+  /// No description provided for @androidFloatingToolbarFixedActionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The fixed actions are always shown. Select and arrange the additional actions.'**
+  String get androidFloatingToolbarFixedActionsHint;
+
+  /// No description provided for @androidFloatingActionToggleNewsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle all/unread news'**
+  String get androidFloatingActionToggleNewsStatus;
+
+  /// No description provided for @androidFloatingActionToggleSortOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Change sort order'**
+  String get androidFloatingActionToggleSortOrder;
 
   /// No description provided for @androidFloatingAccentTint.
   ///

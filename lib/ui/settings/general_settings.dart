@@ -6,6 +6,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:flux_news/ui/settings/android_floating_toolbar_settings.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -65,7 +66,13 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
     final showAndroidFabSettings = !Platform.isIOS &&
+        !appState.isTablet &&
         appState.appBarType != FluxNewsState.appBarFloatingType;
+    final showAppBarCountSetting = Platform.isIOS || !appState.isTablet;
+    final showAndroidAppBarTypeSetting = !Platform.isIOS && !appState.isTablet;
+    final showAndroidFloatingToolbarSettings = !Platform.isIOS &&
+        (appState.isTablet ||
+            appState.appBarType == FluxNewsState.appBarFloatingType);
     // return the body of the feed settings
     return SingleChildScrollView(
         child: Container(
@@ -504,41 +511,43 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
               const Divider(),
               // this row contains the selection if the app bar text is multiline
               // is turned on, the app bar text is showing the news count in the second line
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                    child: const Icon(
-                      Icons.numbers,
+              if (showAppBarCountSetting)
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.numbers,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.multilineAppBarTextSetting,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.visible,
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!
+                            .multilineAppBarTextSetting,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                  ),
-                  AdaptiveSettingsSwitch(
-                    value: appState.multilineAppBarText,
-                    onChanged: (bool value) {
-                      String stringValue =
-                          FluxNewsState.secureStorageFalseString;
-                      if (value == true) {
-                        stringValue = FluxNewsState.secureStorageTrueString;
-                      }
-                      appState.multilineAppBarText = value;
-                      appState.storage.write(
-                          key:
-                              FluxNewsState.secureStorageMultilineAppBarTextKey,
-                          value: stringValue);
-                      appState.refreshView();
-                    },
-                  ),
-                ],
-              ),
-              const Divider(),
+                    AdaptiveSettingsSwitch(
+                      value: appState.multilineAppBarText,
+                      onChanged: (bool value) {
+                        String stringValue =
+                            FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.multilineAppBarText = value;
+                        appState.storage.write(
+                            key: FluxNewsState
+                                .secureStorageMultilineAppBarTextKey,
+                            value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (showAppBarCountSetting) const Divider(),
               // this row contains the selection if the feed icon is shown
               Row(
                 children: [
@@ -803,7 +812,7 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   : SizedBox.shrink(),
               // this row contains the selection of the style of the abb bar
               // choices: normal, collapsible, glass, or floating chrome
-              if (!Platform.isIOS)
+              if (showAndroidAppBarTypeSetting)
                 Row(
                   children: [
                     Padding(
@@ -912,9 +921,10 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     ),
                   ],
                 ),
-              if (!Platform.isIOS) const Divider(),
+              if (showAndroidAppBarTypeSetting) const Divider(),
               if (!Platform.isIOS &&
-                  appState.appBarType == FluxNewsState.appBarFloatingType)
+                  (appState.isTablet ||
+                      appState.appBarType == FluxNewsState.appBarFloatingType))
                 Row(
                   children: [
                     const Padding(
@@ -945,43 +955,12 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   ],
                 ),
               if (!Platform.isIOS &&
-                  appState.appBarType == FluxNewsState.appBarFloatingType)
+                  (appState.isTablet ||
+                      appState.appBarType == FluxNewsState.appBarFloatingType))
                 const Divider(),
-              if (!Platform.isIOS &&
-                  appState.appBarType == FluxNewsState.appBarFloatingType)
-                Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: 30.0),
-                      child: Icon(Icons.dashboard_customize_outlined),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!
-                            .androidFloatingToolbarShortcuts,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    AdaptiveSettingsSwitch(
-                      value: appState.androidFloatingToolbarShortcuts,
-                      onChanged: (bool value) {
-                        appState.androidFloatingToolbarShortcuts = value;
-                        appState.storage.write(
-                          key: FluxNewsState
-                              .secureStorageAndroidFloatingToolbarShortcutsKey,
-                          value: value
-                              ? FluxNewsState.secureStorageTrueString
-                              : FluxNewsState.secureStorageFalseString,
-                        );
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-              if (!Platform.isIOS &&
-                  appState.appBarType == FluxNewsState.appBarFloatingType)
-                const Divider(),
+              if (showAndroidFloatingToolbarSettings)
+                const AndroidFloatingToolbarSettingsTile(),
+              if (showAndroidFloatingToolbarSettings) const Divider(),
               // this row contains the selection of the image cache duration in days
               Row(
                 children: [

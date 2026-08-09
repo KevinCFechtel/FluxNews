@@ -40,8 +40,19 @@ class AppLocalizationsGl extends AppLocalizations {
   String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
 
   @override
-  String get androidFloatingToolbarShortcuts =>
-      'Mostrar accións adicionais na barra flotante';
+  String get androidFloatingToolbarActions =>
+      'Configurar as accións da barra flotante';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'As accións fixas móstranse sempre. Selecciona e ordena as accións adicionais.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Alternar entre todas as novas e as non lidas';
+
+  @override
+  String get androidFloatingActionToggleSortOrder => 'Cambiar a orde';
 
   @override
   String get androidFloatingAccentTint =>

@@ -40,8 +40,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
 
   @override
-  String get androidFloatingToolbarShortcuts =>
-      'Yüzen araç çubuğunda ek işlemleri göster';
+  String get androidFloatingToolbarActions =>
+      'Yüzen araç çubuğu işlemlerini yapılandır';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'Sabit işlemler her zaman gösterilir. Ek işlemleri seçip sıralayın.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Tüm ve okunmamış haberler arasında geçiş yap';
+
+  @override
+  String get androidFloatingActionToggleSortOrder =>
+      'Sıralama düzenini değiştir';
 
   @override
   String get androidFloatingAccentTint => 'Yüzen öğelerde vurgu rengini kullan';

@@ -15,6 +15,7 @@ import 'package:flux_news/models/news_model.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/adaptive_layout.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -51,9 +52,7 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
   Widget build(BuildContext context) {
     final audioAttachments = widget.news.getAudioAttachments();
     final appState = Provider.of<FluxNewsState>(context, listen: false);
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final useTabletLayout = screenWidth >= 900 || shortestSide >= 600;
+    final useTabletLayout = useTwoPaneLayout(MediaQuery.sizeOf(context));
     final useClearEffect = appState.iosClearLiquidGlass;
     final glassSettings = iosLiquidGlassSettings(
       context,

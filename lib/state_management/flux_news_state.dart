@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -158,8 +159,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageIOSSyncQuickActionKey = 'iosSyncQuickAction';
   static const String secureStorageIOSClearLiquidGlassKey =
       'iosClearLiquidGlass';
-  static const String secureStorageAndroidFloatingToolbarShortcutsKey =
-      'androidFloatingToolbarShortcuts';
+  static const String secureStorageAndroidFloatingToolbarActionsKey =
+      'androidFloatingToolbarActions';
+  static const String secureStorageAndroidFloatingToolbarActionOrderKey =
+      'androidFloatingToolbarActionOrder';
   static const String secureStorageAndroidFloatingAccentTintKey =
       'androidFloatingAccentTint';
   static const String secureStorageNetworkImageCacheMigratedKey =
@@ -216,6 +219,46 @@ class FluxNewsState extends ChangeNotifier {
   static const String appBarCollapsedType = 'collapsed';
   static const String appBarGlassType = 'glass';
   static const String appBarFloatingType = 'floating';
+  static const String androidFloatingActionSearch = 'search';
+  static const String androidFloatingActionNewsStatus = 'newsStatus';
+  static const String androidFloatingActionSortOrder = 'sortOrder';
+  static const String androidFloatingActionMarkAsRead = 'markAsRead';
+  static const String androidFloatingActionPodcasts = 'podcasts';
+  static const String androidFloatingActionSettings = 'settings';
+  static const List<String> androidFloatingToolbarAvailableActions = <String>[
+    androidFloatingActionSearch,
+    androidFloatingActionNewsStatus,
+    androidFloatingActionSortOrder,
+    androidFloatingActionMarkAsRead,
+    androidFloatingActionPodcasts,
+    androidFloatingActionSettings,
+  ];
+
+  static List<String> normalizeAndroidFloatingToolbarActions(
+    Iterable<String> actions,
+  ) {
+    final normalizedActions = <String>[];
+    for (final action in actions) {
+      if (androidFloatingToolbarAvailableActions.contains(action) &&
+          !normalizedActions.contains(action)) {
+        normalizedActions.add(action);
+      }
+    }
+    return normalizedActions;
+  }
+
+  static List<String> normalizeAndroidFloatingToolbarActionOrder(
+    Iterable<String> actions,
+  ) {
+    final normalizedActions = normalizeAndroidFloatingToolbarActions(actions);
+    normalizedActions.addAll(
+      androidFloatingToolbarAvailableActions.where(
+        (action) => !normalizedActions.contains(action),
+      ),
+    );
+    return normalizedActions;
+  }
+
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -429,7 +472,10 @@ class FluxNewsState extends ChangeNotifier {
   bool iosMarkAsReadQuickAction = false;
   bool iosSyncQuickAction = false;
   bool iosClearLiquidGlass = false;
-  bool androidFloatingToolbarShortcuts = false;
+  List<String> androidFloatingToolbarActions = <String>[];
+  List<String> androidFloatingToolbarActionOrder = List<String>.of(
+    FluxNewsState.androidFloatingToolbarAvailableActions,
+  );
   bool androidFloatingAccentTint = true;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
@@ -2505,10 +2551,48 @@ class FluxNewsState extends ChangeNotifier {
         iosClearLiquidGlass = value == FluxNewsState.secureStorageTrueString;
       }
 
+      if (key == FluxNewsState.secureStorageAndroidFloatingToolbarActionsKey) {
+        try {
+          final decodedActions = jsonDecode(value);
+          if (decodedActions is List) {
+            androidFloatingToolbarActions =
+                FluxNewsState.normalizeAndroidFloatingToolbarActions(
+              decodedActions.whereType<String>(),
+            );
+            if (!storageValues.containsKey(FluxNewsState
+                .secureStorageAndroidFloatingToolbarActionOrderKey)) {
+              androidFloatingToolbarActionOrder =
+                  FluxNewsState.normalizeAndroidFloatingToolbarActionOrder(
+                androidFloatingToolbarActions,
+              );
+            }
+          } else {
+            androidFloatingToolbarActions = <String>[];
+          }
+        } on FormatException {
+          androidFloatingToolbarActions = <String>[];
+        }
+      }
+
       if (key ==
-          FluxNewsState.secureStorageAndroidFloatingToolbarShortcutsKey) {
-        androidFloatingToolbarShortcuts =
-            value == FluxNewsState.secureStorageTrueString;
+          FluxNewsState.secureStorageAndroidFloatingToolbarActionOrderKey) {
+        try {
+          final decodedActions = jsonDecode(value);
+          if (decodedActions is List) {
+            androidFloatingToolbarActionOrder =
+                FluxNewsState.normalizeAndroidFloatingToolbarActionOrder(
+              decodedActions.whereType<String>(),
+            );
+          } else {
+            androidFloatingToolbarActionOrder = List<String>.of(
+              FluxNewsState.androidFloatingToolbarAvailableActions,
+            );
+          }
+        } on FormatException {
+          androidFloatingToolbarActionOrder = List<String>.of(
+            FluxNewsState.androidFloatingToolbarAvailableActions,
+          );
+        }
       }
 
       if (key == FluxNewsState.secureStorageAndroidFloatingAccentTintKey) {
@@ -2897,7 +2981,8 @@ class FluxNewsState extends ChangeNotifier {
     }
 
     if ((Platform.isIOS && revealIOSLargeTitle) ||
-        (Platform.isAndroid && appBarType == appBarFloatingType)) {
+        (Platform.isAndroid &&
+            (isTablet || appBarType == appBarFloatingType))) {
       scrollController.jumpTo(scrollController.position.minScrollExtent);
       return;
     }
@@ -2915,7 +3000,9 @@ class FluxNewsState extends ChangeNotifier {
           LogLevel.WARNING);
       return;
     }
-    if (Platform.isAndroid && appBarType == appBarFloatingType && index == 0) {
+    if (Platform.isAndroid &&
+        (isTablet || appBarType == appBarFloatingType) &&
+        index == 0) {
       scrollController.jumpTo(scrollController.position.minScrollExtent);
       return;
     }
@@ -2995,6 +3082,30 @@ class FluxNewsState extends ChangeNotifier {
         value: FluxNewsState.secureStorageTrueString);
     logThis(
         'cleanLegacyCache', 'Finished cleaning of legacy cache', LogLevel.INFO);
+  }
+
+  // persist selected actions and the complete configuration order
+  void updateAndroidFloatingToolbarActions(
+    List<String> actions, {
+    required List<String> orderedActions,
+  }) {
+    final normalizedActions =
+        FluxNewsState.normalizeAndroidFloatingToolbarActions(actions);
+    final normalizedOrder =
+        FluxNewsState.normalizeAndroidFloatingToolbarActionOrder(
+      orderedActions,
+    );
+    androidFloatingToolbarActions = normalizedActions;
+    androidFloatingToolbarActionOrder = normalizedOrder;
+    unawaited(storage.write(
+      key: FluxNewsState.secureStorageAndroidFloatingToolbarActionsKey,
+      value: jsonEncode(normalizedActions),
+    ));
+    unawaited(storage.write(
+      key: FluxNewsState.secureStorageAndroidFloatingToolbarActionOrderKey,
+      value: jsonEncode(normalizedOrder),
+    ));
+    refreshView();
   }
 
   // notify the listeners of FluxNewsState to refresh views

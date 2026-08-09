@@ -40,8 +40,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get iosClearLiquidGlass => 'Klares Liquid Glass verwenden';
 
   @override
-  String get androidFloatingToolbarShortcuts =>
-      'Zusätzliche Aktionen in der schwebenden Werkzeugleiste anzeigen';
+  String get androidFloatingToolbarActions =>
+      'Aktionen der schwebenden Werkzeugleiste konfigurieren';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'Die festen Aktionen werden immer angezeigt. Wähle und sortiere die zusätzlichen Aktionen.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Alle/Ungelesene Nachrichten umschalten';
+
+  @override
+  String get androidFloatingActionToggleSortOrder =>
+      'Sortierreihenfolge wechseln';
 
   @override
   String get androidFloatingAccentTint =>

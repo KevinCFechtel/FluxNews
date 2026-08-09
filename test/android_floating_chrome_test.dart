@@ -17,7 +17,11 @@ Widget _testApp(Widget child, {ThemeData? theme}) {
   );
 }
 
-Widget _menuTestApp(FluxNewsState appState) {
+Widget _menuTestApp(
+  FluxNewsState appState, {
+  bool hideConfiguredFloatingActionsFromMore = false,
+  bool showConfiguredFloatingToolbarActions = false,
+}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<FluxNewsState>.value(value: appState),
@@ -33,7 +37,13 @@ Widget _menuTestApp(FluxNewsState appState) {
         body: Builder(
           builder: (context) => Row(
             mainAxisSize: MainAxisSize.min,
-            children: const FluxNewsBody().appBarButtons(context),
+            children: showConfiguredFloatingToolbarActions
+                ? const FluxNewsBody().androidFloatingToolbarButtons(context)
+                : const FluxNewsBody().appBarButtons(
+                    context,
+                    hideConfiguredFloatingActionsFromMore:
+                        hideConfiguredFloatingActionsFromMore,
+                  ),
           ),
         ),
       ),
@@ -47,7 +57,7 @@ void main() {
     await tester.pumpWidget(_testApp(const SizedBox(
       height: 40,
       width: 320,
-      child: AndroidFloatingStatusBarScrim(),
+      child: AndroidStatusBarScrim(),
     )));
 
     expect(find.byType(BackdropFilter), findsOneWidget);
@@ -57,7 +67,7 @@ void main() {
     expect(gradient.colors, hasLength(3));
     expect(
       gradient.colors.first,
-      Theme.of(tester.element(find.byType(AndroidFloatingStatusBarScrim)))
+      Theme.of(tester.element(find.byType(AndroidStatusBarScrim)))
           .scaffoldBackgroundColor
           .withValues(alpha: 0.92),
     );
@@ -213,15 +223,20 @@ void main() {
     await tester.pumpWidget(_testApp(SizedBox(
       width: 240,
       child: AndroidFloatingToolbar(
+        leadingChildren: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.refresh)),
+        ],
+        trailingChildren: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
+        ],
         children: [
           for (final icon in const <IconData>[
-            Icons.menu,
             Icons.check_circle_outline,
             Icons.podcasts,
             Icons.search,
             Icons.settings,
-            Icons.refresh,
-            Icons.more_vert,
+            Icons.sort,
           ])
             IconButton(onPressed: () {}, icon: Icon(icon)),
         ],
@@ -231,15 +246,29 @@ void main() {
     expect(find.byType(SingleChildScrollView), findsOneWidget);
     expect(find.byIcon(Icons.menu), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    expect(
+      tester.getCenter(find.byIcon(Icons.more_vert)).dx,
+      lessThanOrEqualTo(
+        tester.getTopRight(find.byType(AndroidFloatingToolbar)).dx,
+      ),
+    );
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('expanded floating toolbar removes its duplicates from More',
+  testWidgets('selected floating toolbar actions are removed from More',
       (tester) async {
     final appState = FluxNewsState()
       ..appBarType = FluxNewsState.appBarFloatingType
-      ..androidFloatingToolbarShortcuts = true;
-    await tester.pumpWidget(_menuTestApp(appState));
+      ..androidFloatingToolbarActions = <String>[
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionMarkAsRead,
+        FluxNewsState.androidFloatingActionPodcasts,
+        FluxNewsState.androidFloatingActionSettings,
+      ];
+    await tester.pumpWidget(_menuTestApp(
+      appState,
+      hideConfiguredFloatingActionsFromMore: true,
+    ));
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -256,7 +285,9 @@ void main() {
       (tester) async {
     final appState = FluxNewsState()
       ..appBarType = FluxNewsState.appBarNormalType
-      ..androidFloatingToolbarShortcuts = true;
+      ..androidFloatingToolbarActions = List<String>.of(
+        FluxNewsState.androidFloatingToolbarAvailableActions,
+      );
     await tester.pumpWidget(_menuTestApp(appState));
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -266,5 +297,49 @@ void main() {
     expect(find.text('Mark all news as read'), findsOneWidget);
     expect(find.text('Podcasts'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
+  });
+
+  testWidgets('unselected floating actions remain available in More',
+      (tester) async {
+    final appState = FluxNewsState()
+      ..appBarType = FluxNewsState.appBarFloatingType
+      ..androidFloatingToolbarActions = <String>[
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionPodcasts,
+      ];
+    await tester.pumpWidget(_menuTestApp(
+      appState,
+      hideConfiguredFloatingActionsFromMore: true,
+    ));
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Search'), findsNothing);
+    expect(find.text('Podcasts'), findsNothing);
+    expect(find.text('Mark all news as read'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+  });
+
+  testWidgets('tablet floating toolbar shows every action and hides More',
+      (tester) async {
+    final appState = FluxNewsState()
+      ..appBarType = FluxNewsState.appBarNormalType
+      ..androidFloatingToolbarActions = List<String>.of(
+        FluxNewsState.androidFloatingToolbarAvailableActions,
+      );
+    await tester.pumpWidget(_menuTestApp(
+      appState,
+      showConfiguredFloatingToolbarActions: true,
+    ));
+
+    expect(find.byIcon(Icons.refresh), findsOneWidget);
+    expect(find.byIcon(Icons.search), findsOneWidget);
+    expect(find.byIcon(Icons.checklist), findsOneWidget);
+    expect(find.byIcon(Icons.sort), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+    expect(find.byIcon(Icons.podcasts), findsOneWidget);
+    expect(find.byIcon(Icons.settings), findsOneWidget);
+    expect(find.byIcon(Icons.more_vert), findsNothing);
   });
 }

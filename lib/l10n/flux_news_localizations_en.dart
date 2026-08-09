@@ -40,8 +40,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iosClearLiquidGlass => 'Use Clear Liquid Glass';
 
   @override
-  String get androidFloatingToolbarShortcuts =>
-      'Show additional actions in the floating toolbar';
+  String get androidFloatingToolbarActions =>
+      'Configure floating toolbar actions';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'The fixed actions are always shown. Select and arrange the additional actions.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus => 'Toggle all/unread news';
+
+  @override
+  String get androidFloatingActionToggleSortOrder => 'Change sort order';
 
   @override
   String get androidFloatingAccentTint =>

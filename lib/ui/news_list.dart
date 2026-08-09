@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,11 +35,17 @@ class BodyNewsList extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsCounterState appCounterState =
         context.watch<FluxNewsCounterState>();
-    final useAndroidFloatingChrome =
-        appState.appBarType == FluxNewsState.appBarFloatingType;
+    final useAndroidFloatingChrome = Platform.isAndroid &&
+        (appState.isTablet ||
+            appState.appBarType == FluxNewsState.appBarFloatingType);
     bool searchView = false;
     Widget listHeader({required bool emptyBody}) {
       if (useAndroidFloatingChrome) {
+        return SliverToBoxAdapter(
+          child: SizedBox(height: topContentInset),
+        );
+      }
+      if (appState.isTablet && topContentInset > 0) {
         return SliverToBoxAdapter(
           child: SizedBox(height: topContentInset),
         );
@@ -161,10 +168,12 @@ class BodyNewsList extends StatelessWidget {
                                 'RenderSuperSliverList';
                           },
                           child: largeTitleController != null ||
-                                  !appState.isTablet
+                                  !appState.isTablet ||
+                                  topContentInset > 0
                               ? largeTitleController != null ||
                                       appState.useSliverAppBar ||
-                                      useAndroidFloatingChrome
+                                      useAndroidFloatingChrome ||
+                                      topContentInset > 0
                                   ? CustomScrollView(
                                       controller: appState.scrollController,
                                       physics: AlwaysScrollableScrollPhysics(),

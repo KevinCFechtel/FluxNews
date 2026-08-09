@@ -41,8 +41,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get iosClearLiquidGlass => 'Helder Liquid Glass gebruiken';
 
   @override
-  String get androidFloatingToolbarShortcuts =>
-      'Extra acties in de zwevende werkbalk tonen';
+  String get androidFloatingToolbarActions =>
+      'Acties van de zwevende werkbalk instellen';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'De vaste acties worden altijd getoond. Selecteer en rangschik de extra acties.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Wisselen tussen alle en ongelezen nieuws';
+
+  @override
+  String get androidFloatingActionToggleSortOrder => 'Sorteervolgorde wijzigen';
 
   @override
   String get androidFloatingAccentTint =>

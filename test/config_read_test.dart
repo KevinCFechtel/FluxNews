@@ -72,4 +72,41 @@ void main() {
       isFalse,
     );
   });
+
+  test('floating toolbar action normalization preserves valid order', () {
+    expect(
+      FluxNewsState.normalizeAndroidFloatingToolbarActions(const <String>[
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionNewsStatus,
+        FluxNewsState.androidFloatingActionSortOrder,
+        'unsupported',
+        FluxNewsState.androidFloatingActionSettings,
+        FluxNewsState.androidFloatingActionSearch,
+      ]),
+      const <String>[
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionNewsStatus,
+        FluxNewsState.androidFloatingActionSortOrder,
+        FluxNewsState.androidFloatingActionSettings,
+      ],
+    );
+  });
+
+  test('floating toolbar complete order appends missing valid actions', () {
+    expect(
+      FluxNewsState.normalizeAndroidFloatingToolbarActionOrder(const <String>[
+        FluxNewsState.androidFloatingActionSettings,
+        FluxNewsState.androidFloatingActionSearch,
+        'unsupported',
+      ]),
+      const <String>[
+        FluxNewsState.androidFloatingActionSettings,
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionNewsStatus,
+        FluxNewsState.androidFloatingActionSortOrder,
+        FluxNewsState.androidFloatingActionMarkAsRead,
+        FluxNewsState.androidFloatingActionPodcasts,
+      ],
+    );
+  });
 }

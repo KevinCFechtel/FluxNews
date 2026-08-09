@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 
-class AndroidFloatingStatusBarScrim extends StatelessWidget {
-  const AndroidFloatingStatusBarScrim({super.key});
+class AndroidStatusBarScrim extends StatelessWidget {
+  const AndroidStatusBarScrim({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,10 +109,14 @@ class AndroidFloatingToolbar extends StatelessWidget {
   const AndroidFloatingToolbar({
     super.key,
     required this.children,
+    this.leadingChildren = const <Widget>[],
+    this.trailingChildren = const <Widget>[],
     this.useAccentColor = true,
   });
 
   final List<Widget> children;
+  final List<Widget> leadingChildren;
+  final List<Widget> trailingChildren;
   final bool useAccentColor;
 
   @override
@@ -121,12 +125,23 @@ class AndroidFloatingToolbar extends StatelessWidget {
       accentColor:
           useAccentColor ? Theme.of(context).colorScheme.primary : null,
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: children,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ...leadingChildren,
+          if (children.isNotEmpty)
+            Flexible(
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: children,
+                ),
+              ),
+            ),
+          ...trailingChildren,
+        ],
       ),
     );
   }

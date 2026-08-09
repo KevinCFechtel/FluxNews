@@ -30,6 +30,7 @@ import '../state_management/flux_news_state.dart';
 import '../state_management/flux_news_theme_state.dart';
 import '../models/news_model.dart';
 import 'adaptive_glass_dialog.dart';
+import 'adaptive_layout.dart';
 import 'android_floating_chrome.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
@@ -41,11 +42,14 @@ class FluxNewsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
-    if (MediaQuery.of(context).size.shortestSide >= 550) {
-      appState.isTablet = true;
-    } else {
-      appState.isTablet = false;
-    }
+    final mediaQuery = MediaQuery.of(context);
+    final avoidBounds = DisplayFeatureSubScreen.avoidBounds(mediaQuery);
+    final horizontalFeature = horizontalSeparatingDisplayFeature(
+      mediaQuery.size,
+      avoidBounds,
+    );
+    appState.isTablet =
+        useTwoPaneLayout(mediaQuery.size) && horizontalFeature == null;
 
     return FluxNewsBodyStatefulWrapper(onInit: () {
       appState.startUp = true;
@@ -182,9 +186,17 @@ class FluxNewsBody extends StatelessWidget {
 
         if (appState.isTablet) {
           return tabletLayout(context, appState);
-        } else {
-          return smartphoneLayout(context, appState);
         }
+        if (avoidBounds.isNotEmpty) {
+          return DisplayFeatureSubScreen(
+            anchorPoint: Offset.zero,
+            child: Builder(
+              builder: (subScreenContext) =>
+                  smartphoneLayout(subScreenContext, appState),
+            ),
+          );
+        }
+        return smartphoneLayout(context, appState);
       },
     ));
   }
@@ -494,6 +506,8 @@ class FluxNewsBody extends StatelessWidget {
     } else if (appState.tooManyNews) {
       useSliverAppBar = false;
     }
+    final useScrolloverStatusBarProtection =
+        appState.scrolloverAppBar && useSliverAppBar && !useFloatingChrome;
     // start the main view in portrait mode
     final topContentInset = MediaQuery.paddingOf(context).top +
         MediaQuery.textScalerOf(context).scale(20) +
@@ -654,7 +668,7 @@ class FluxNewsBody extends StatelessWidget {
                   end: 0,
                   height: MediaQuery.paddingOf(context).top + 6,
                   child: const IgnorePointer(
-                    child: AndroidFloatingStatusBarScrim(),
+                    child: AndroidStatusBarScrim(),
                   ),
                 ),
                 PositionedDirectional(
@@ -675,12 +689,29 @@ class FluxNewsBody extends StatelessWidget {
                 ),
               ],
             )
-          : const FluxNewsBodyList(),
+          : useScrolloverStatusBarProtection
+              ? Stack(
+                  children: [
+                    const FluxNewsBodyList(),
+                    PositionedDirectional(
+                      top: 0,
+                      start: 0,
+                      end: 0,
+                      height: MediaQuery.paddingOf(context).top + 6,
+                      child: const IgnorePointer(
+                        child: AndroidStatusBarScrim(),
+                      ),
+                    ),
+                  ],
+                )
+              : const FluxNewsBodyList(),
       bottomNavigationBar: useFloatingChrome
           ? _androidFloatingBottomChrome(context, appState)
           : _BottomBanners(appState: appState),
     );
-    if (!useFloatingChrome) return scaffold;
+    if (!useFloatingChrome && !useScrolloverStatusBarProtection) {
+      return scaffold;
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: Theme.of(context).brightness == Brightness.dark
@@ -694,7 +725,6 @@ class FluxNewsBody extends StatelessWidget {
     BuildContext context,
     FluxNewsState appState,
   ) {
-    final appBarActions = appBarButtons(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -707,25 +737,10 @@ class FluxNewsBody extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 8),
             child: Center(
-              child: AndroidFloatingToolbar(
-                useAccentColor: appState.androidFloatingAccentTint,
-                children: [
-                  Builder(
-                    builder: (drawerContext) => IconButton(
-                      icon: const FaIcon(
-                        FontAwesomeIcons.bookOpen,
-                        size: 18,
-                      ),
-                      onPressed: () => Scaffold.of(drawerContext).openDrawer(),
-                      tooltip: MaterialLocalizations.of(drawerContext)
-                          .openAppDrawerTooltip,
-                    ),
-                  ),
-                  appBarActions.first,
-                  if (appState.androidFloatingToolbarShortcuts)
-                    ..._androidFloatingShortcutButtons(context, appState),
-                  ...appBarActions.skip(1),
-                ],
+              child: _androidFloatingToolbar(
+                context,
+                appState,
+                showDrawer: true,
               ),
             ),
           ),
@@ -734,42 +749,117 @@ class FluxNewsBody extends StatelessWidget {
     );
   }
 
+  Widget _androidFloatingToolbar(
+    BuildContext context,
+    FluxNewsState appState, {
+    bool showDrawer = false,
+  }) {
+    final appBarActions = appBarButtons(
+      context,
+      hideConfiguredFloatingActionsFromMore: true,
+    );
+    return AndroidFloatingToolbar(
+      useAccentColor: appState.androidFloatingAccentTint,
+      leadingChildren: [
+        if (showDrawer)
+          Builder(
+            builder: (drawerContext) => IconButton(
+              icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 18),
+              onPressed: () => Scaffold.of(drawerContext).openDrawer(),
+              tooltip:
+                  MaterialLocalizations.of(drawerContext).openAppDrawerTooltip,
+            ),
+          ),
+        appBarActions.first,
+      ],
+      trailingChildren: appBarActions.skip(1).toList(growable: false),
+      children: _androidFloatingShortcutButtons(context, appState),
+    );
+  }
+
   List<Widget> _androidFloatingShortcutButtons(
     BuildContext context,
     FluxNewsState appState,
   ) {
     final strings = AppLocalizations.of(context)!;
-    return <Widget>[
-      IconButton(
-        icon: const Icon(Icons.check_circle_outline),
-        tooltip: _androidMarkScopeLabel(context, appState),
-        onPressed: () => showDeleteAllDialog(
-          context,
-          appState,
-          context.read<FluxNewsCounterState>(),
-        ),
-      ),
-      IconButton(
-        icon: const Icon(Icons.podcasts),
-        tooltip: strings.audioDownloadsSettings,
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) => const DownloadsOverview(),
+    final buttons = <Widget>[];
+    for (final action in appState.androidFloatingToolbarActions) {
+      if (action == FluxNewsState.androidFloatingActionNewsStatus) {
+        buttons.add(IconButton(
+          icon: Icon(
+            appState.newsStatus == FluxNewsState.unreadNewsStatus
+                ? Icons.checklist
+                : Icons.fiber_new,
           ),
-        ),
-      ),
-      IconButton(
-        icon: const Icon(Icons.search),
-        tooltip: strings.search,
-        onPressed: () =>
-            Navigator.pushNamed(context, FluxNewsState.searchRouteString),
-      ),
-      IconButton(
-        icon: const Icon(Icons.settings),
-        tooltip: strings.settings,
-        onPressed: () =>
-            Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
-      ),
+          tooltip: appState.newsStatus == FluxNewsState.unreadNewsStatus
+              ? strings.showRead
+              : strings.showUnread,
+          onPressed: () => _toggleAndroidNewsStatus(
+            appState,
+            context.read<FluxNewsCounterState>(),
+          ),
+        ));
+      } else if (action == FluxNewsState.androidFloatingActionSortOrder) {
+        buttons.add(IconButton(
+          icon: const Icon(Icons.sort),
+          tooltip:
+              appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+                  ? strings.oldestFirst
+                  : strings.newestFirst,
+          onPressed: () => _toggleAndroidSortOrder(
+            appState,
+            context.read<FluxNewsCounterState>(),
+          ),
+        ));
+      } else if (action == FluxNewsState.androidFloatingActionMarkAsRead) {
+        buttons.add(IconButton(
+          icon: const Icon(Icons.check_circle_outline),
+          tooltip: _androidMarkScopeLabel(context, appState),
+          onPressed: () => showDeleteAllDialog(
+            context,
+            appState,
+            context.read<FluxNewsCounterState>(),
+          ),
+        ));
+      } else if (action == FluxNewsState.androidFloatingActionPodcasts) {
+        buttons.add(IconButton(
+          icon: const Icon(Icons.podcasts),
+          tooltip: strings.audioDownloadsSettings,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => const DownloadsOverview(),
+            ),
+          ),
+        ));
+      } else if (action == FluxNewsState.androidFloatingActionSearch) {
+        buttons.add(IconButton(
+          icon: const Icon(Icons.search),
+          tooltip: strings.search,
+          onPressed: () =>
+              Navigator.pushNamed(context, FluxNewsState.searchRouteString),
+        ));
+      } else if (action == FluxNewsState.androidFloatingActionSettings) {
+        buttons.add(IconButton(
+          icon: const Icon(Icons.settings),
+          tooltip: strings.settings,
+          onPressed: () =>
+              Navigator.pushNamed(context, FluxNewsState.settingsRouteString),
+        ));
+      }
+    }
+    return buttons;
+  }
+
+  List<Widget> androidFloatingToolbarButtons(BuildContext context) {
+    final appState = context.read<FluxNewsState>();
+    final appBarActions = appBarButtons(
+      context,
+      hideConfiguredFloatingActionsFromMore: true,
+    );
+    return <Widget>[
+      appBarActions.first,
+      ..._androidFloatingShortcutButtons(context, appState),
+      ...appBarActions.skip(1),
     ];
   }
 
@@ -792,6 +882,47 @@ class FluxNewsBody extends StatelessWidget {
     return strings.markAllAsRead;
   }
 
+  void _toggleAndroidNewsStatus(
+    FluxNewsState appState,
+    FluxNewsCounterState appCounterState,
+  ) {
+    appState.newsStatus = appState.newsStatus == FluxNewsState.unreadNewsStatus
+        ? FluxNewsState.allNewsString
+        : FluxNewsState.unreadNewsStatus;
+    appState.storage.write(
+      key: FluxNewsState.secureStorageNewsStatusKey,
+      value: appState.newsStatus,
+    );
+    _reloadAndroidNewsList(appState, appCounterState);
+  }
+
+  void _toggleAndroidSortOrder(
+    FluxNewsState appState,
+    FluxNewsCounterState appCounterState,
+  ) {
+    appState.sortOrder =
+        appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+            ? FluxNewsState.sortOrderOldestFirstString
+            : FluxNewsState.sortOrderNewestFirstString;
+    appState.storage.write(
+      key: FluxNewsState.secureStorageSortOrderKey,
+      value: appState.sortOrder,
+    );
+    _reloadAndroidNewsList(appState, appCounterState);
+  }
+
+  void _reloadAndroidNewsList(
+    FluxNewsState appState,
+    FluxNewsCounterState appCounterState,
+  ) {
+    appState.newsList = queryNewsFromDB(appState).whenComplete(() {
+      appState.jumpToItem(0);
+    });
+    appCounterState.listUpdated = true;
+    appCounterState.refreshView();
+    appState.refreshView();
+  }
+
   Widget tabletLayout(BuildContext context, FluxNewsState appState) {
     if (Platform.isIOS) {
       return _IOSLiquidGlassHome(
@@ -799,102 +930,97 @@ class FluxNewsBody extends StatelessWidget {
         drawer: getDrawer(context, appState),
       );
     }
-    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
-    return Scaffold(
+    final scaffold = Scaffold(
       extendBody: true,
-      floatingActionButton: appState.floatingButtonVisible
-          ? GestureDetector(
-              onLongPress: () async {
-                if (appState.floatingButtonAction ==
-                    FluxNewsState.floatingButtonMarkAsReadAction) {
-                  // mark news as read
-                  await markNewsAsReadInDB(appState);
-                  unawaited(
-                      FluxNewsWidgetService.updateWidgetSnapshot(appState));
-                  if (!context.mounted) return;
-                  if (appState.selectedCategoryElementType ==
-                      FluxNewsState.categoryElementType) {
-                    await queryNextCategoryFromDB(appState, context)
-                        .then((value) {
-                      if (context.mounted) {
-                        setNextCategory(value, appState, context);
-                      }
-                    });
-                  } else if (appState.selectedCategoryElementType ==
-                      FluxNewsState.feedElementType) {
-                    await queryNextFeedFromDB(appState, context).then((value) {
-                      if (context.mounted) {
-                        setNextFeed(value, appState, context);
-                      }
-                    });
-                  } else {
-                    // refresh news list with the all news state
-                    appState.newsList =
-                        queryNewsFromDB(appState).whenComplete(() {
-                      appState.jumpToItem(0);
-                    });
-
-                    // notify the categories to update the news count
-                    appCounterState.listUpdated = true;
-                    appCounterState.refreshView();
-                    appState.refreshView();
-                  }
-                }
-              },
-              child: FloatingActionButton(
-                onPressed: () async {
-                  if (appState.floatingButtonAction ==
-                      FluxNewsState.floatingButtonSyncAction) {
-                    if (appState.syncProcess) {
-                      appState.longSyncAborted = true;
-                      appState.refreshView();
-                    } else {
-                      await syncNews(appState, context);
-                    }
-                  } else if (appState.floatingButtonAction ==
-                      FluxNewsState.floatingButtonMarkAsReadAction) {
-                    showDeleteAllDialog(context, appState, appCounterState);
-                  }
-                },
-                child: appState.floatingButtonAction ==
-                        FluxNewsState.floatingButtonSyncAction
-                    ? appState.syncProcess
-                        ? const SizedBox(
-                            height: 15.0,
-                            width: 15.0,
-                            child: CircularProgressIndicator.adaptive(),
-                          )
-                        : const Icon(
-                            Icons.refresh,
-                          )
-                    : const Icon(Icons.check_circle_outline),
-              ))
-          : null,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: const AppBarTitle(),
-        actions: appBarButtons(context),
-      ),
-      body: Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: ListView(
-              children: [
-                const CategoryList(),
-              ],
-            ),
+      body: SafeArea(
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) => _androidTabletBody(
+            context,
+            appState,
+            Size(constraints.maxWidth, constraints.maxHeight),
           ),
-          const Expanded(
-            flex: 10,
-            child: FluxNewsBodyList(),
-          ),
-        ],
+        ),
       ),
       bottomNavigationBar: _BottomBanners(appState: appState),
+    );
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: scaffold,
+    );
+  }
+
+  Widget _androidTabletBody(
+    BuildContext context,
+    FluxNewsState appState,
+    Size availableSize,
+  ) {
+    final mediaQuery = MediaQuery.of(context);
+    final verticalFeature = verticalSeparatingDisplayFeature(
+      mediaQuery.size,
+      DisplayFeatureSubScreen.avoidBounds(mediaQuery),
+    );
+    final featureLeft = verticalFeature?.left.clamp(0.0, availableSize.width);
+    final featureRight = verticalFeature?.right.clamp(0.0, availableSize.width);
+    final leadingPaneWidth = featureLeft ??
+        adaptiveSidebarWidth(availableSize.width).clamp(
+          0.0,
+          availableSize.width,
+        );
+    final sidebarWidth = verticalFeature == null
+        ? leadingPaneWidth
+        : leadingPaneWidth.clamp(0.0, maximumSidebarWidth);
+
+    Widget sidebarPane = Align(
+      alignment: AlignmentDirectional.topStart,
+      child: SizedBox(
+        width: sidebarWidth,
+        height: availableSize.height,
+        child: ListView(
+          children: const [CategoryList()],
+        ),
+      ),
+    );
+    if (verticalFeature == null) {
+      sidebarPane = SizedBox(width: sidebarWidth, child: sidebarPane);
+    } else {
+      sidebarPane = SizedBox(width: leadingPaneWidth, child: sidebarPane);
+    }
+
+    return Row(
+      children: [
+        sidebarPane,
+        if (verticalFeature == null)
+          const VerticalDivider(width: 1, thickness: 1)
+        else
+          SizedBox(
+              width:
+                  (featureRight! - featureLeft!).clamp(0.0, double.infinity)),
+        Expanded(child: _androidTabletNewsPane(context, appState)),
+      ],
+    );
+  }
+
+  Widget _androidTabletNewsPane(
+    BuildContext context,
+    FluxNewsState appState,
+  ) {
+    return Stack(
+      children: [
+        const FluxNewsBodyList(topContentInset: 64),
+        PositionedDirectional(
+          top: 8,
+          start: 12,
+          end: 12,
+          child: Align(
+            alignment: AlignmentDirectional.topEnd,
+            child: _androidFloatingToolbar(context, appState),
+          ),
+        ),
+      ],
     );
   }
 
@@ -931,12 +1057,19 @@ class FluxNewsBody extends StatelessWidget {
             )));
   }
 
-  List<Widget> appBarButtons(BuildContext context) {
+  List<Widget> appBarButtons(
+    BuildContext context, {
+    bool hideConfiguredFloatingActionsFromMore = false,
+  }) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     FluxNewsState appState = context.read<FluxNewsState>();
-    final hideFloatingToolbarDuplicates =
-        appState.appBarType == FluxNewsState.appBarFloatingType &&
-            appState.androidFloatingToolbarShortcuts;
+    final floatingToolbarActions = hideConfiguredFloatingActionsFromMore
+        ? appState.androidFloatingToolbarActions.toSet()
+        : const <String>{};
+    final showMoreButton = !hideConfiguredFloatingActionsFromMore ||
+        FluxNewsState.androidFloatingToolbarAvailableActions.any(
+          (action) => !floatingToolbarActions.contains(action),
+        );
     // define the app bar buttons to sync with miniflux,
     // search for news and switch between all and only unread news view
     // and the navigation to the settings
@@ -967,56 +1100,61 @@ class FluxNewsBody extends StatelessWidget {
       // here is the popup menu where the user can search,
       // choose between all and only unread news view
       // and navigate to the settings
-      PopupMenuButton(
-          icon: const Icon(Icons.more_vert),
-          color: Theme.of(context).cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(8.0),
-              bottomRight: Radius.circular(8.0),
-              topLeft: Radius.circular(8.0),
-              topRight: Radius.circular(8.0),
+      if (showMoreButton)
+        PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            color: Theme.of(context).cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(8.0),
+                bottomRight: Radius.circular(8.0),
+                topLeft: Radius.circular(8.0),
+                topRight: Radius.circular(8.0),
+              ),
             ),
-          ),
-          itemBuilder: (context) {
-            return [
-              // the search button
-              if (!hideFloatingToolbarDuplicates)
-                PopupMenuItem<int>(
-                  value: 0,
-                  child: Row(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.search,
+            itemBuilder: (context) {
+              return [
+                // the search button
+                if (!floatingToolbarActions
+                    .contains(FluxNewsState.androidFloatingActionSearch))
+                  PopupMenuItem<int>(
+                    value: 0,
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(
+                            Icons.search,
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.search,
-                          overflow: TextOverflow.visible,
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.search,
+                            overflow: TextOverflow.visible,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              // the switch between all and only unread news view
-              PopupMenuItem<int>(
-                value: 1,
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 5),
-                      child: Icon(
-                        appState.newsStatus == FluxNewsState.unreadNewsStatus
-                            ? Icons.checklist
-                            : Icons.fiber_new,
-                      ),
+                      ],
                     ),
-                    Expanded(
-                      child:
-                          appState.newsStatus == FluxNewsState.unreadNewsStatus
+                  ),
+                // the switch between all and only unread news view
+                if (!floatingToolbarActions
+                    .contains(FluxNewsState.androidFloatingActionNewsStatus))
+                  PopupMenuItem<int>(
+                    value: 1,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Icon(
+                            appState.newsStatus ==
+                                    FluxNewsState.unreadNewsStatus
+                                ? Icons.checklist
+                                : Icons.fiber_new,
+                          ),
+                        ),
+                        Expanded(
+                          child: appState.newsStatus ==
+                                  FluxNewsState.unreadNewsStatus
                               ? Text(
                                   AppLocalizations.of(context)!.showRead,
                                   overflow: TextOverflow.visible,
@@ -1025,220 +1163,148 @@ class FluxNewsBody extends StatelessWidget {
                                   AppLocalizations.of(context)!.showUnread,
                                   overflow: TextOverflow.visible,
                                 ),
-                    )
-                  ],
-                ),
-              ),
-              // the selection of the sort order of the news (newest first or oldest first)
-              PopupMenuItem<int>(
-                value: 2,
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(
-                        Icons.sort,
-                      ),
+                        )
+                      ],
                     ),
-                    Expanded(
-                      child: appState.sortOrder ==
-                              FluxNewsState.sortOrderNewestFirstString
-                          ? Text(
-                              AppLocalizations.of(context)!.oldestFirst,
-                              overflow: TextOverflow.visible,
-                            )
-                          : Text(
-                              AppLocalizations.of(context)!.newestFirst,
-                              overflow: TextOverflow.visible,
-                            ),
-                    )
-                  ],
-                ),
-              ),
-              if (!hideFloatingToolbarDuplicates)
-                PopupMenuItem<int>(
-                  value: 3,
-                  child: Row(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.check_circle_outline,
-                        ),
-                      ),
-                      Expanded(
-                        child: appState.selectedCategoryElementType ==
-                                FluxNewsState.feedElementType
-                            ? Text(
-                                AppLocalizations.of(context)!.markFeedAsRead,
-                                overflow: TextOverflow.visible,
-                              )
-                            : appState.selectedCategoryElementType ==
-                                    FluxNewsState.categoryElementType
-                                ? Text(
-                                    AppLocalizations.of(context)!
-                                        .markCategoryAsRead,
-                                    overflow: TextOverflow.visible,
-                                  )
-                                : appState.selectedCategoryElementType ==
-                                        FluxNewsState.bookmarkedNewsElementType
-                                    ? Text(
-                                        AppLocalizations.of(context)!
-                                            .markBookmarkedAsRead,
-                                        overflow: TextOverflow.visible,
-                                      )
-                                    : Text(
-                                        AppLocalizations.of(context)!
-                                            .markAllAsRead,
-                                        overflow: TextOverflow.visible,
-                                      ),
-                      ),
-                    ],
                   ),
-                ),
-              if (!hideFloatingToolbarDuplicates)
-                PopupMenuItem<int>(
-                  value: 4,
-                  child: Row(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.podcasts,
+                // the selection of the sort order of the news (newest first or oldest first)
+                if (!floatingToolbarActions
+                    .contains(FluxNewsState.androidFloatingActionSortOrder))
+                  PopupMenuItem<int>(
+                    value: 2,
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(
+                            Icons.sort,
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.audioDownloadsSettings,
-                          overflow: TextOverflow.visible,
-                        ),
-                      ),
-                    ],
+                        Expanded(
+                          child: appState.sortOrder ==
+                                  FluxNewsState.sortOrderNewestFirstString
+                              ? Text(
+                                  AppLocalizations.of(context)!.oldestFirst,
+                                  overflow: TextOverflow.visible,
+                                )
+                              : Text(
+                                  AppLocalizations.of(context)!.newestFirst,
+                                  overflow: TextOverflow.visible,
+                                ),
+                        )
+                      ],
+                    ),
                   ),
-                ),
-              // the navigation to the settings
-              if (!hideFloatingToolbarDuplicates)
-                PopupMenuItem<int>(
-                  value: 5,
-                  child: Row(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.settings,
+                if (!floatingToolbarActions
+                    .contains(FluxNewsState.androidFloatingActionMarkAsRead))
+                  PopupMenuItem<int>(
+                    value: 3,
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(
+                            Icons.check_circle_outline,
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.settings,
-                          overflow: TextOverflow.visible,
+                        Expanded(
+                          child: appState.selectedCategoryElementType ==
+                                  FluxNewsState.feedElementType
+                              ? Text(
+                                  AppLocalizations.of(context)!.markFeedAsRead,
+                                  overflow: TextOverflow.visible,
+                                )
+                              : appState.selectedCategoryElementType ==
+                                      FluxNewsState.categoryElementType
+                                  ? Text(
+                                      AppLocalizations.of(context)!
+                                          .markCategoryAsRead,
+                                      overflow: TextOverflow.visible,
+                                    )
+                                  : appState.selectedCategoryElementType ==
+                                          FluxNewsState
+                                              .bookmarkedNewsElementType
+                                      ? Text(
+                                          AppLocalizations.of(context)!
+                                              .markBookmarkedAsRead,
+                                          overflow: TextOverflow.visible,
+                                        )
+                                      : Text(
+                                          AppLocalizations.of(context)!
+                                              .markAllAsRead,
+                                          overflow: TextOverflow.visible,
+                                        ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-            ];
-          },
-          onSelected: (value) async {
-            if (value == 0) {
-              // navigate to the search page
-              Navigator.pushNamed(context, FluxNewsState.searchRouteString);
-            } else if (value == 1) {
-              // switch between all and only unread news view
-              // if the current view is unread news change to all news
-              if (appState.newsStatus == FluxNewsState.unreadNewsStatus) {
-                // switch the state to all news
-                appState.newsStatus = FluxNewsState.allNewsString;
-
-                // save the state persistent
-                appState.storage.write(
-                    key: FluxNewsState.secureStorageNewsStatusKey,
-                    value: FluxNewsState.allNewsString);
-
-                // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-                // if the current view is all news change to only unread news
-              } else {
-                // switch the state to show only unread news
-                appState.newsStatus = FluxNewsState.unreadNewsStatus;
-
-                // save the state persistent
-                appState.storage.write(
-                    key: FluxNewsState.secureStorageNewsStatusKey,
-                    value: FluxNewsState.unreadNewsStatus);
-
-                // refresh news list with the only unread news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
+                if (!floatingToolbarActions
+                    .contains(FluxNewsState.androidFloatingActionPodcasts))
+                  PopupMenuItem<int>(
+                    value: 4,
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(
+                            Icons.podcasts,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .audioDownloadsSettings,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // the navigation to the settings
+                if (!floatingToolbarActions
+                    .contains(FluxNewsState.androidFloatingActionSettings))
+                  PopupMenuItem<int>(
+                    value: 5,
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(
+                            Icons.settings,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.settings,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ];
+            },
+            onSelected: (value) {
+              if (value == 0) {
+                // navigate to the search page
+                Navigator.pushNamed(context, FluxNewsState.searchRouteString);
+              } else if (value == 1) {
+                _toggleAndroidNewsStatus(appState, appCounterState);
+              } else if (value == 2) {
+                _toggleAndroidSortOrder(appState, appCounterState);
+              } else if (value == 3) {
+                showDeleteAllDialog(context, appState, appCounterState);
+              } else if (value == 4) {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const DownloadsOverview(),
+                  ),
+                );
+              } else if (value == 5) {
+                // navigate to the settings page
+                Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
               }
-            } else if (value == 2) {
-              // switch between newest first and oldest first
-              // if the current sort order is newest first change to oldest first
-              if (appState.sortOrder ==
-                  FluxNewsState.sortOrderNewestFirstString) {
-                // switch the state to all news
-                appState.sortOrder = FluxNewsState.sortOrderOldestFirstString;
-
-                // save the state persistent
-                appState.storage.write(
-                    key: FluxNewsState.secureStorageSortOrderKey,
-                    value: FluxNewsState.sortOrderOldestFirstString);
-
-                // refresh news list with the all news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-                // if the current sort order is oldest first change to newest first
-              } else {
-                // switch the state to show only unread news
-                appState.sortOrder = FluxNewsState.sortOrderNewestFirstString;
-
-                // save the state persistent
-                appState.storage.write(
-                    key: FluxNewsState.secureStorageSortOrderKey,
-                    value: FluxNewsState.sortOrderNewestFirstString);
-
-                // refresh news list with the only unread news state
-                appState.newsList = queryNewsFromDB(appState).whenComplete(() {
-                  appState.jumpToItem(0);
-                });
-
-                // notify the categories to update the news count
-                appCounterState.listUpdated = true;
-                appCounterState.refreshView();
-                appState.refreshView();
-              }
-            } else if (value == 3) {
-              showDeleteAllDialog(context, appState, appCounterState);
-            } else if (value == 4) {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const DownloadsOverview(),
-                ),
-              );
-            } else if (value == 5) {
-              // navigate to the settings page
-              Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
-            }
-          }),
+            }),
     ];
   }
 }
@@ -2068,9 +2134,7 @@ class _PersistentAudioMiniPlayerState extends State<PersistentAudioMiniPlayer> {
             }
 
             // Detect tablet layout
-            final screenWidth = MediaQuery.sizeOf(context).width;
-            final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-            final isTablet = screenWidth >= 900 || shortestSide >= 600;
+            final isTablet = useTwoPaneLayout(MediaQuery.sizeOf(context));
             final iconSize = isTablet ? 38.0 : 34.0;
             final buttonSize = isTablet ? 60.0 : 52.0;
             final textFontSize = isTablet ? 14.0 : 12.0;
@@ -2381,9 +2445,7 @@ class PersistentDownloadBanner extends StatelessWidget {
         final downloads = snapshot.data ?? const [];
         if (downloads.isEmpty) return const SizedBox.shrink();
 
-        final screenWidth = MediaQuery.sizeOf(context).width;
-        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-        final isTablet = screenWidth >= 900 || shortestSide >= 600;
+        final isTablet = useTwoPaneLayout(MediaQuery.sizeOf(context));
 
         if (Platform.isIOS) {
           final glassForeground = iosLiquidGlassForeground(context);
