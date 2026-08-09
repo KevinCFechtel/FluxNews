@@ -75,7 +75,7 @@ jobs:
           PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
         run: |
           vendor/flutter/bin/flutter config --no-analytics
-          vendor/flutter/bin/flutter pub get
+          vendor/flutter/bin/flutter pub get --enforce-lockfile
           sed -i -e '/play-services-cronet/d' "$PUB_CACHE"/hosted/pub.dev/cronet_http-*/android/build.gradle
 
       - name: Analyze App Sources
@@ -132,6 +132,79 @@ jobs:
           echo "VERSIONCODE=$versioncode" >> $GITHUB_ENV
           changelog_versioncode=$((versioncode + 1))
           echo "CHANGELOG_VERSIONCODE=$changelog_versioncode" >> $GITHUB_ENV
+
+      - name: Verify Release APKs
+        env:
+          APK_DIR: ${{ github.workspace }}/build/app/outputs/flutter-apk
+        run: |
+          aapt_bin="$({
+            find "${ANDROID_HOME}/build-tools" \
+              -mindepth 2 -maxdepth 2 -type f -name aapt -print
+          } | sort -V | tail -n 1)"
+          if [[ -z "${aapt_bin}" ]]; then
+            echo "::error::Could not locate aapt in ${ANDROID_HOME}/build-tools"
+            exit 1
+          fi
+
+          declare -A expected_version_codes=(
+            [app-release.apk]="${VERSIONCODE}"
+            [app-x86_64-release.apk]="$((VERSIONCODE + 1))"
+            [app-armeabi-v7a-release.apk]="$((VERSIONCODE + 2))"
+            [app-arm64-v8a-release.apk]="$((VERSIONCODE + 3))"
+          )
+          media_action_resources=(
+            audio_service_fast_forward
+            audio_service_fast_rewind
+            audio_service_pause
+            audio_service_play_arrow
+            audio_service_skip_next
+            audio_service_skip_previous
+            audio_service_stop
+          )
+
+          for apk in "${!expected_version_codes[@]}"; do
+            apk_path="${APK_DIR}/${apk}"
+            if [[ ! -s "${apk_path}" ]]; then
+              echo "::error::Missing release APK: ${apk}"
+              exit 1
+            fi
+
+            badging="$("${aapt_bin}" dump badging "${apk_path}")"
+            package_name="$(
+              sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "${badging}"
+            )"
+            actual_version_code="$(
+              sed -n "s/^package: name='[^']*' versionCode='\([^']*\)'.*/\1/p" \
+                <<< "${badging}"
+            )"
+            if [[ "${package_name}" != "de.circle_dev.flux_news" ]]; then
+              echo "::error::Unexpected package in ${apk}: ${package_name}"
+              exit 1
+            fi
+            if [[ "${actual_version_code}" != "${expected_version_codes[$apk]}" ]]; then
+              echo "::error::Unexpected versionCode in ${apk}: ${actual_version_code}; expected ${expected_version_codes[$apk]}"
+              exit 1
+            fi
+
+            resource_table="$("${aapt_bin}" dump resources "${apk_path}")"
+            for resource in "${media_action_resources[@]}"; do
+              if ! grep -Fq \
+                "de.circle_dev.flux_news:drawable/${resource}:" \
+                <<< "${resource_table}"; then
+                echo "::error::Missing ${resource} in ${apk}"
+                exit 1
+              fi
+            done
+          done
+
+          for offset in 1 2 3; do
+            changelog_version_code="$((VERSIONCODE + offset))"
+            changelog="${REPRO_BUILD_DIR}/metadata/en-US/changelogs/${changelog_version_code}.txt"
+            if [[ ! -s "${changelog}" ]]; then
+              echo "::error::Missing changelog ${changelog_version_code}.txt"
+              exit 1
+            fi
+          done
 
         #7 Extract the developer signatures for F-Droid dual publication
       - name: Extract F-Droid Signatures
