@@ -7,7 +7,6 @@
     "addBookmark": "Engadir marcador",
     "markAsRead": "Marcar como lido",
     "iosMarkAsReadQuickAction": "Mostrar Marcar como lido na barra inferior",
-    "iosSyncQuickAction": "Mostrar Sincronizar na barra inferior",
     "iosClearLiquidGlass": "Usar Liquid Glass transparente",
     "androidFloatingToolbarActions": "Configurar as accións da barra flotante",
     "androidFloatingToolbarFixedActionsHint": "As accións fixas móstranse sempre. Selecciona e ordena as accións adicionais.",

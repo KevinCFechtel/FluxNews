@@ -35,6 +35,7 @@ import 'android_floating_chrome.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
 import 'ios_liquid_glass_style.dart';
+import 'ios_overlay_drawer.dart';
 import 'ios_toolbar_layout.dart';
 
 class FluxNewsBody extends StatelessWidget {
@@ -785,6 +786,12 @@ class FluxNewsBody extends StatelessWidget {
     final strings = AppLocalizations.of(context)!;
     final buttons = <Widget>[];
     for (final action in appState.androidFloatingToolbarActions) {
+      if (!FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        appState.selectedCategoryElementType,
+      )) {
+        continue;
+      }
       if (action == FluxNewsState.androidFloatingActionNewsStatus) {
         buttons.add(IconButton(
           icon: Icon(
@@ -1074,14 +1081,22 @@ class FluxNewsBody extends StatelessWidget {
     );
   }
 
-  Drawer getDrawer(BuildContext context, FluxNewsState appState) {
+  Widget getDrawer(BuildContext context, FluxNewsState appState) {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     // update the categories, feeds and news counter, if there were updates to the list view
     if (appCounterState.listUpdated) {
       appState.categoryList = queryCategoriesFromDB(appState, context);
       appCounterState.listUpdated = false;
     }
-    // return the drawer
+    if (Platform.isIOS) {
+      return const IOSOverlayDrawer(
+        child: CategoryList(
+          iosSidebar: true,
+          closeDrawerOnSelection: true,
+        ),
+      );
+    }
+    // return the Material drawer on Android
     return Drawer(
         child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
@@ -1116,8 +1131,15 @@ class FluxNewsBody extends StatelessWidget {
     final floatingToolbarActions = hideConfiguredFloatingActionsFromMore
         ? appState.androidFloatingToolbarActions.toSet()
         : const <String>{};
+    final availableFloatingToolbarActions =
+        FluxNewsState.androidFloatingToolbarAvailableActions.where(
+      (action) => FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        appState.selectedCategoryElementType,
+      ),
+    );
     final showMoreButton = !hideConfiguredFloatingActionsFromMore ||
-        FluxNewsState.androidFloatingToolbarAvailableActions.any(
+        availableFloatingToolbarActions.any(
           (action) => !floatingToolbarActions.contains(action),
         );
     // define the app bar buttons to sync with miniflux,
@@ -1288,8 +1310,12 @@ class FluxNewsBody extends StatelessWidget {
                       ],
                     ),
                   ),
-                if (!floatingToolbarActions.contains(
-                    FluxNewsState.floatingToolbarActionMarkAsReadAndNext))
+                if (FluxNewsState.isToolbarActionAvailableForElementType(
+                      FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
+                      appState.selectedCategoryElementType,
+                    ) &&
+                    !floatingToolbarActions.contains(
+                        FluxNewsState.floatingToolbarActionMarkAsReadAndNext))
                   PopupMenuItem<int>(
                     value: 4,
                     child: Row(
@@ -1389,7 +1415,7 @@ class FluxNewsBody extends StatelessWidget {
 class _IOSLiquidGlassHome extends StatefulWidget {
   const _IOSLiquidGlassHome({this.drawer, this.isTablet = false});
 
-  final Drawer? drawer;
+  final Widget? drawer;
   final bool isTablet;
 
   @override
@@ -1521,6 +1547,17 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     return strings.markAllAsRead;
   }
 
+  List<String> _availableToolbarActions(FluxNewsState appState) {
+    return FluxNewsState.iosToolbarAvailableActions
+        .where(
+          (action) => FluxNewsState.isToolbarActionAvailableForElementType(
+            action,
+            appState.selectedCategoryElementType,
+          ),
+        )
+        .toList(growable: false);
+  }
+
   List<Widget> _menuItems(
     FluxNewsState appState, {
     Set<String> excludedActions = const <String>{},
@@ -1578,8 +1615,12 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
               context.read<FluxNewsCounterState>(),
             ),
           ),
-        if (!excludedActions
-            .contains(FluxNewsState.floatingToolbarActionMarkAsReadAndNext))
+        if (FluxNewsState.isToolbarActionAvailableForElementType(
+              FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
+              appState.selectedCategoryElementType,
+            ) &&
+            !excludedActions
+                .contains(FluxNewsState.floatingToolbarActionMarkAsReadAndNext))
           GlassMenuItem(
             title: strings.markAsReadAndNext,
             icon: const Icon(Icons.skip_next),
@@ -1634,7 +1675,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     );
     final visibleActions = iosTabletVisibleToolbarActions(
       selectedActions: appState.iosToolbarActions,
-      availableActions: FluxNewsState.iosToolbarAvailableActions,
+      availableActions: _availableToolbarActions(appState),
       newsPaneWidth: newsPaneWidth,
     );
     final directActionSet = visibleActions.toSet();
@@ -1650,12 +1691,6 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
         settings: settings,
         itemPadding: const EdgeInsets.all(10),
         items: [
-          for (final action in visibleActions)
-            _iosDirectAction(
-              action,
-              appState,
-              foreground: foreground,
-            ),
           GlassButtonGroupItem(
             label: appState.syncProcess ? strings.cancel : strings.syncNews,
             onTap: () => unawaited(_sync(appState)),
@@ -1663,6 +1698,12 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                 ? CupertinoActivityIndicator(radius: 9, color: foreground)
                 : Icon(Icons.refresh, color: foreground),
           ),
+          for (final action in visibleActions)
+            _iosDirectAction(
+              action,
+              appState,
+              foreground: foreground,
+            ),
           if (toggleMenu != null)
             GlassButtonGroupItem(
               label: strings.moreActions,
@@ -1776,39 +1817,62 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       context,
       useClearEffect: appState.iosClearLiquidGlass,
     );
+    final visibleActions = iosPhoneVisibleToolbarActions(
+      selectedActions: appState.iosToolbarActions,
+      availableActions: _availableToolbarActions(appState),
+    );
+    final menuItems = _menuItems(
+      appState,
+      excludedActions: visibleActions.toSet(),
+    );
+
+    Widget buildButtonGroup(VoidCallback? toggleMenu) {
+      return GlassButtonGroup.icons(
+        useOwnLayer: true,
+        quality: quality,
+        settings: settings,
+        itemPadding: const EdgeInsets.all(10),
+        items: [
+          GlassButtonGroupItem(
+            label: appState.syncProcess ? strings.cancel : strings.syncNews,
+            onTap: () => unawaited(_sync(appState)),
+            icon: appState.syncProcess
+                ? CupertinoActivityIndicator(radius: 9, color: foreground)
+                : Icon(Icons.refresh, color: foreground),
+          ),
+          for (final action in visibleActions)
+            _iosDirectAction(
+              action,
+              appState,
+              foreground: foreground,
+            ),
+          if (toggleMenu != null)
+            GlassButtonGroupItem(
+              label: strings.moreActions,
+              onTap: toggleMenu,
+              icon: Icon(CupertinoIcons.ellipsis, color: foreground),
+            ),
+        ],
+      );
+    }
+
     return [
       Padding(
         padding: const EdgeInsetsDirectional.only(end: 8),
-        child: GlassMenu(
-          quality: GlassQuality.standard,
-          settings: menuSettings,
-          items: _menuItems(appState),
-          menuWidth: (MediaQuery.sizeOf(context).width - 32)
-              .clamp(280.0, 340.0)
-              .toDouble(),
-          autoAdjustToScreen: true,
-          menuPadding: const EdgeInsets.all(12),
-          triggerBuilder: (context, toggleMenu) => GlassButtonGroup.icons(
-            useOwnLayer: true,
-            quality: quality,
-            settings: settings,
-            itemPadding: const EdgeInsets.all(10),
-            items: [
-              GlassButtonGroupItem(
-                label: appState.syncProcess ? strings.cancel : strings.syncNews,
-                onTap: () => unawaited(_sync(appState)),
-                icon: appState.syncProcess
-                    ? CupertinoActivityIndicator(radius: 9, color: foreground)
-                    : Icon(Icons.refresh, color: foreground),
+        child: menuItems.isEmpty
+            ? buildButtonGroup(null)
+            : GlassMenu(
+                quality: GlassQuality.standard,
+                settings: menuSettings,
+                items: menuItems,
+                menuWidth: (MediaQuery.sizeOf(context).width - 32)
+                    .clamp(280.0, 340.0)
+                    .toDouble(),
+                autoAdjustToScreen: true,
+                menuPadding: const EdgeInsets.all(12),
+                triggerBuilder: (context, toggleMenu) =>
+                    buildButtonGroup(toggleMenu),
               ),
-              GlassButtonGroupItem(
-                label: strings.moreActions,
-                onTap: toggleMenu,
-                icon: Icon(CupertinoIcons.ellipsis, color: foreground),
-              ),
-            ],
-          ),
-        ),
       ),
     ];
   }
@@ -1909,7 +1973,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     final glassForeground = iosLiquidGlassForeground(context);
     final visibleActions = iosPhoneVisibleToolbarActions(
       selectedActions: appState.iosToolbarActions,
-      availableActions: FluxNewsState.iosToolbarAvailableActions,
+      availableActions: _availableToolbarActions(appState),
     );
     final menuItems = _menuItems(
       appState,
@@ -2087,6 +2151,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
         return Scaffold(
           extendBody: true,
           extendBodyBehindAppBar: true,
+          drawerScrimColor: Colors.black.withValues(alpha: 0.28),
           appBar: GlassAppBar(
             centerTitle: false,
             largeTitleController: titleController,

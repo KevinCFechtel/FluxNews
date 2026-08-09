@@ -80,4 +80,37 @@ void main() {
       ],
     );
   });
+
+  test('Mark as read and next is limited to feeds and categories', () {
+    const action = FluxNewsState.floatingToolbarActionMarkAsReadAndNext;
+
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.feedElementType,
+      ),
+      isTrue,
+    );
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.categoryElementType,
+      ),
+      isTrue,
+    );
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.allNewsElementType,
+      ),
+      isFalse,
+    );
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.bookmarkedNewsElementType,
+      ),
+      isFalse,
+    );
+  });
 }

@@ -156,7 +156,6 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageGlassActionButtonKey = 'glassActionButton';
   static const String secureStorageIOSMarkAsReadQuickActionKey =
       'iosMarkAsReadQuickAction';
-  static const String secureStorageIOSSyncQuickActionKey = 'iosSyncQuickAction';
   static const String secureStorageIOSClearLiquidGlassKey =
       'iosClearLiquidGlass';
   static const String secureStorageIOSToolbarActionsKey = 'iosToolbarActions';
@@ -241,6 +240,15 @@ class FluxNewsState extends ChangeNotifier {
   ];
   static const List<String> iosToolbarAvailableActions =
       androidFloatingToolbarAvailableActions;
+
+  static bool isToolbarActionAvailableForElementType(
+    String action,
+    String elementType,
+  ) {
+    return action != floatingToolbarActionMarkAsReadAndNext ||
+        elementType == feedElementType ||
+        elementType == categoryElementType;
+  }
 
   static List<String> _normalizeToolbarActions(
     Iterable<String> actions,
@@ -525,7 +533,6 @@ class FluxNewsState extends ChangeNotifier {
       : FluxNewsState.appBarFloatingType;
   bool glassActionButton = Platform.isIOS ? true : false;
   bool iosMarkAsReadQuickAction = false;
-  bool iosSyncQuickAction = false;
   bool iosClearLiquidGlass = false;
   List<String> iosToolbarActions = <String>[
     FluxNewsState.androidFloatingActionMarkAsRead,
@@ -2609,10 +2616,6 @@ class FluxNewsState extends ChangeNotifier {
       if (key == FluxNewsState.secureStorageIOSMarkAsReadQuickActionKey) {
         iosMarkAsReadQuickAction =
             value == FluxNewsState.secureStorageTrueString;
-      }
-
-      if (key == FluxNewsState.secureStorageIOSSyncQuickActionKey) {
-        iosSyncQuickAction = value == FluxNewsState.secureStorageTrueString;
       }
 
       if (key == FluxNewsState.secureStorageIOSClearLiquidGlassKey) {

@@ -34,9 +34,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster';
 
   @override
-  String get iosSyncQuickAction => 'Alt araç çubuğunda senkronizasyonu göster';
-
-  @override
   String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
 
   @override

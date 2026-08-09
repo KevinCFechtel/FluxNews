@@ -7,7 +7,6 @@
     "addBookmark": "Lesezeichen hinzufügen",
     "markAsRead": "Als gelesen markieren",
     "iosMarkAsReadQuickAction": "Als gelesen markieren in der unteren Leiste anzeigen",
-    "iosSyncQuickAction": "Sync in der unteren Leiste anzeigen",
     "iosClearLiquidGlass": "Klares Liquid Glass verwenden",
     "androidFloatingToolbarActions": "Aktionen der schwebenden Werkzeugleiste konfigurieren",
     "androidFloatingToolbarFixedActionsHint": "Die festen Aktionen werden immer angezeigt. Wähle und sortiere die zusätzlichen Aktionen.",

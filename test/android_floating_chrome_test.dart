@@ -310,7 +310,7 @@ void main() {
 
     expect(find.text('Search'), findsOneWidget);
     expect(find.text('Mark all news as read'), findsOneWidget);
-    expect(find.text('Mark as read and open next'), findsOneWidget);
+    expect(find.text('Mark as read and open next'), findsNothing);
     expect(find.text('Podcasts'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });
@@ -334,7 +334,7 @@ void main() {
     expect(find.text('Search'), findsNothing);
     expect(find.text('Podcasts'), findsNothing);
     expect(find.text('Mark all news as read'), findsOneWidget);
-    expect(find.text('Mark as read and open next'), findsOneWidget);
+    expect(find.text('Mark as read and open next'), findsNothing);
     expect(find.text('Settings'), findsOneWidget);
   });
 
@@ -342,6 +342,7 @@ void main() {
       (tester) async {
     final appState = FluxNewsState()
       ..appBarType = FluxNewsState.appBarNormalType
+      ..selectedCategoryElementType = FluxNewsState.feedElementType
       ..androidFloatingToolbarActions = List<String>.of(
         FluxNewsState.androidFloatingToolbarAvailableActions,
       );
@@ -358,6 +359,26 @@ void main() {
     expect(find.byIcon(Icons.skip_next), findsOneWidget);
     expect(find.byIcon(Icons.podcasts), findsOneWidget);
     expect(find.byIcon(Icons.settings), findsOneWidget);
+    expect(find.byIcon(Icons.more_vert), findsNothing);
+  });
+
+  testWidgets('all-news scope omits Mark-and-next without an empty More menu',
+      (tester) async {
+    final appState = FluxNewsState()
+      ..appBarType = FluxNewsState.appBarNormalType
+      ..androidFloatingToolbarActions = FluxNewsState
+          .androidFloatingToolbarAvailableActions
+          .where(
+            (action) =>
+                action != FluxNewsState.floatingToolbarActionMarkAsReadAndNext,
+          )
+          .toList(growable: false);
+    await tester.pumpWidget(_menuTestApp(
+      appState,
+      showConfiguredFloatingToolbarActions: true,
+    ));
+
+    expect(find.byIcon(Icons.skip_next), findsNothing);
     expect(find.byIcon(Icons.more_vert), findsNothing);
   });
 }

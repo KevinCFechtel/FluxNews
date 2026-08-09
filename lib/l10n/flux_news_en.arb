@@ -7,7 +7,6 @@
     "addBookmark": "Add Bookmark",
     "markAsRead": "Mark as read",
     "iosMarkAsReadQuickAction": "Show Mark as read in the bottom toolbar",
-    "iosSyncQuickAction": "Show Sync in the bottom toolbar",
     "iosClearLiquidGlass": "Use Clear Liquid Glass",
     "androidFloatingToolbarActions": "Configure floating toolbar actions",
     "androidFloatingToolbarFixedActionsHint": "The fixed actions are always shown. Select and arrange the additional actions.",

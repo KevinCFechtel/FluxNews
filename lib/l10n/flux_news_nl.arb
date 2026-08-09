@@ -7,7 +7,6 @@
     "addBookmark": "Bladwijzer toevoegen",
     "markAsRead": "Markeer als gelezen",
     "iosMarkAsReadQuickAction": "Toon Markeer als gelezen in de onderste werkbalk",
-    "iosSyncQuickAction": "Toon synchronisatie in de onderste werkbalk",
     "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
     "androidFloatingToolbarActions": "Acties van de zwevende werkbalk instellen",
     "androidFloatingToolbarFixedActionsHint": "De vaste acties worden altijd getoond. Selecteer en rangschik de extra acties.",
