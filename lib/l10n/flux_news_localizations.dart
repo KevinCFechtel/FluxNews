@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Show additional actions in the floating toolbar'**
   String get androidFloatingToolbarShortcuts;
 
+  /// No description provided for @androidFloatingAccentTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the accent color for floating elements'**
+  String get androidFloatingAccentTint;
+
   /// No description provided for @markAsReadAndNext.
   ///
   /// In en, this message translates to:

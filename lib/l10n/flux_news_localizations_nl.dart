@@ -45,6 +45,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Extra acties in de zwevende werkbalk tonen';
 
   @override
+  String get androidFloatingAccentTint =>
+      'Accentkleur voor zwevende elementen gebruiken';
+
+  @override
   String get markAsReadAndNext => 'Markeer als gelezen en open volgende';
 
   @override

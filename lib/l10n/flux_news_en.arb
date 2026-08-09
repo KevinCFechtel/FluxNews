@@ -10,6 +10,7 @@
     "iosSyncQuickAction": "Show Sync in the bottom toolbar",
     "iosClearLiquidGlass": "Use Clear Liquid Glass",
     "androidFloatingToolbarShortcuts": "Show additional actions in the floating toolbar",
+    "androidFloatingAccentTint": "Use the accent color for floating elements",
     "markAsReadAndNext": "Mark as read and open next",
     "moreActions": "More actions",
     "markAsUnread": "Mark as unread",

@@ -44,6 +44,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show additional actions in the floating toolbar';
 
   @override
+  String get androidFloatingAccentTint =>
+      'Use the accent color for floating elements';
+
+  @override
   String get markAsReadAndNext => 'Mark as read and open next';
 
   @override

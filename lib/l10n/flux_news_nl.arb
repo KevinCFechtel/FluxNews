@@ -10,6 +10,7 @@
     "iosSyncQuickAction": "Toon synchronisatie in de onderste werkbalk",
     "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
     "androidFloatingToolbarShortcuts": "Extra acties in de zwevende werkbalk tonen",
+    "androidFloatingAccentTint": "Accentkleur voor zwevende elementen gebruiken",
     "markAsReadAndNext": "Markeer als gelezen en open volgende",
     "moreActions": "Meer acties",
     "markAsUnread": "Markeer als ongelezen",

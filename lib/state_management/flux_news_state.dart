@@ -160,6 +160,8 @@ class FluxNewsState extends ChangeNotifier {
       'iosClearLiquidGlass';
   static const String secureStorageAndroidFloatingToolbarShortcutsKey =
       'androidFloatingToolbarShortcuts';
+  static const String secureStorageAndroidFloatingAccentTintKey =
+      'androidFloatingAccentTint';
   static const String secureStorageNetworkImageCacheMigratedKey =
       'networkImageCacheMigrated';
   static const String secureStorageImageCacheDurationDaysKey =
@@ -428,6 +430,7 @@ class FluxNewsState extends ChangeNotifier {
   bool iosSyncQuickAction = false;
   bool iosClearLiquidGlass = false;
   bool androidFloatingToolbarShortcuts = false;
+  bool androidFloatingAccentTint = true;
   bool networkImageCacheMigrated = false;
   int imageCacheDurationDays = 30;
 
@@ -2505,6 +2508,11 @@ class FluxNewsState extends ChangeNotifier {
       if (key ==
           FluxNewsState.secureStorageAndroidFloatingToolbarShortcutsKey) {
         androidFloatingToolbarShortcuts =
+            value == FluxNewsState.secureStorageTrueString;
+      }
+
+      if (key == FluxNewsState.secureStorageAndroidFloatingAccentTintKey) {
+        androidFloatingAccentTint =
             value == FluxNewsState.secureStorageTrueString;
       }
 

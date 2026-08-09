@@ -10,6 +10,7 @@
     "iosSyncQuickAction": "Mostrar Sincronizar na barra inferior",
     "iosClearLiquidGlass": "Usar Liquid Glass transparente",
     "androidFloatingToolbarShortcuts": "Mostrar accións adicionais na barra flotante",
+    "androidFloatingAccentTint": "Usar a cor de acento nos elementos flotantes",
     "markAsReadAndNext": "Marcar como lido e abrir a seguinte",
     "moreActions": "Máis accións",
     "markAsUnread": "Marcar como non lido",

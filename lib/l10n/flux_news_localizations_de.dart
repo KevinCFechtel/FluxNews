@@ -44,6 +44,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zusätzliche Aktionen in der schwebenden Werkzeugleiste anzeigen';
 
   @override
+  String get androidFloatingAccentTint =>
+      'Akzentfarbe für schwebende Elemente verwenden';
+
+  @override
   String get markAsReadAndNext => 'Als gelesen markieren und nächste öffnen';
 
   @override

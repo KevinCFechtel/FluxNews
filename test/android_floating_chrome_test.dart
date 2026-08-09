@@ -7,9 +7,10 @@ import 'package:flux_news/ui/android_floating_chrome.dart';
 import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:provider/provider.dart';
 
-Widget _testApp(Widget child) {
+Widget _testApp(Widget child, {ThemeData? theme}) {
   return MaterialApp(
     locale: const Locale('en'),
+    theme: theme,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: Center(child: child)),
@@ -157,6 +158,53 @@ void main() {
       Theme.of(tester.element(find.byType(AndroidFloatingToolbar)))
           .colorScheme
           .primary,
+    );
+  });
+
+  testWidgets('accent tint can be disabled for all floating elements',
+      (tester) async {
+    await tester.pumpWidget(_testApp(Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const AndroidFloatingFeedHeader(
+          title: 'Feed One',
+          newsCount: 12,
+          showCount: true,
+          useAccentColor: false,
+        ),
+        AndroidFloatingToolbar(
+          useAccentColor: false,
+          children: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
+          ],
+        ),
+      ],
+    )));
+
+    final surfaces = tester.widgetList<AndroidFloatingSurface>(
+      find.byType(AndroidFloatingSurface),
+    );
+    expect(surfaces, hasLength(3));
+    expect(surfaces.every((surface) => surface.accentColor == null), isTrue);
+  });
+
+  testWidgets('dark floating surfaces use a darker neutral base',
+      (tester) async {
+    final darkTheme = ThemeData.dark();
+    await tester.pumpWidget(_testApp(
+      const AndroidFloatingSurface(child: SizedBox.square(dimension: 48)),
+      theme: darkTheme,
+    ));
+
+    final surfaceFinder = find.byType(AndroidFloatingSurface);
+    final decoratedBox = tester.widget<DecoratedBox>(find.descendant(
+      of: surfaceFinder,
+      matching: find.byType(DecoratedBox),
+    ));
+    final surfaceColor = (decoratedBox.decoration as BoxDecoration).color!;
+    expect(
+      surfaceColor.computeLuminance(),
+      lessThan(darkTheme.colorScheme.surfaceContainer.computeLuminance()),
     );
   });
 

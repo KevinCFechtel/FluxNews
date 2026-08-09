@@ -44,6 +44,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yüzen araç çubuğunda ek işlemleri göster';
 
   @override
+  String get androidFloatingAccentTint => 'Yüzen öğelerde vurgu rengini kullan';
+
+  @override
   String get markAsReadAndNext => 'Okundu olarak işaretle ve sonrakini aç';
 
   @override

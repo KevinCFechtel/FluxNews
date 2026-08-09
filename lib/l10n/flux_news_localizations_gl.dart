@@ -44,6 +44,10 @@ class AppLocalizationsGl extends AppLocalizations {
       'Mostrar accións adicionais na barra flotante';
 
   @override
+  String get androidFloatingAccentTint =>
+      'Usar a cor de acento nos elementos flotantes';
+
+  @override
   String get markAsReadAndNext => 'Marcar como lido e abrir a seguinte';
 
   @override

@@ -669,6 +669,7 @@ class FluxNewsBody extends StatelessWidget {
                           : appState.appBarText,
                       newsCount: counterState.appBarNewsCount,
                       showCount: appState.multilineAppBarText,
+                      useAccentColor: appState.androidFloatingAccentTint,
                     ),
                   ),
                 ),
@@ -707,6 +708,7 @@ class FluxNewsBody extends StatelessWidget {
             padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 8),
             child: Center(
               child: AndroidFloatingToolbar(
+                useAccentColor: appState.androidFloatingAccentTint,
                 children: [
                   Builder(
                     builder: (drawerContext) => IconButton(

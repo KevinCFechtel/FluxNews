@@ -919,6 +919,40 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(left: 17.0, right: 30.0),
+                      child: Icon(Icons.palette_outlined),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.androidFloatingAccentTint,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.androidFloatingAccentTint,
+                      onChanged: (bool value) {
+                        appState.androidFloatingAccentTint = value;
+                        appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageAndroidFloatingAccentTintKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (!Platform.isIOS &&
+                  appState.appBarType == FluxNewsState.appBarFloatingType)
+                const Divider(),
+              if (!Platform.isIOS &&
+                  appState.appBarType == FluxNewsState.appBarFloatingType)
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 30.0),
                       child: Icon(Icons.dashboard_customize_outlined),
                     ),
                     Expanded(

@@ -10,6 +10,7 @@
     "iosSyncQuickAction": "Sync in der unteren Leiste anzeigen",
     "iosClearLiquidGlass": "Klares Liquid Glass verwenden",
     "androidFloatingToolbarShortcuts": "Zusätzliche Aktionen in der schwebenden Werkzeugleiste anzeigen",
+    "androidFloatingAccentTint": "Akzentfarbe für schwebende Elemente verwenden",
     "markAsReadAndNext": "Als gelesen markieren und nächste öffnen",
     "moreActions": "Weitere Aktionen",
     "markAsUnread": "Als ungelesen markieren",
