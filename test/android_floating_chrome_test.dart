@@ -90,11 +90,13 @@ void main() {
   testWidgets('floating header uses the current displayed news count',
       (tester) async {
     final semantics = tester.ensureSemantics();
+    var drawerOpened = false;
     try {
-      await tester.pumpWidget(_testApp(const AndroidFloatingFeedHeader(
+      await tester.pumpWidget(_testApp(AndroidFloatingFeedHeader(
         title: 'Feed One',
         newsCount: 12,
         showCount: true,
+        onOpenDrawer: () => drawerOpened = true,
       )));
 
       expect(find.text('Feed One'), findsOneWidget);
@@ -104,6 +106,24 @@ void main() {
         contains('Count: 12'),
       );
       expect(find.byType(AndroidFloatingSurface), findsNWidgets(2));
+      expect(
+        find
+            .ancestor(
+              of: find.text('Feed One'),
+              matching: find.byType(AndroidFloatingSurface),
+            )
+            .evaluate()
+            .single,
+        find
+            .ancestor(
+              of: find.text('12'),
+              matching: find.byType(AndroidFloatingSurface),
+            )
+            .evaluate()
+            .single,
+      );
+      await tester.tap(find.byType(FaIcon));
+      expect(drawerOpened, isTrue);
       final surfaces = tester.widgetList<AndroidFloatingSurface>(
         find.byType(AndroidFloatingSurface),
       );
@@ -115,32 +135,38 @@ void main() {
 
   testWidgets('floating header keeps the existing count visibility setting',
       (tester) async {
-    await tester.pumpWidget(_testApp(const SizedBox(
+    await tester.pumpWidget(_testApp(SizedBox(
       width: 360,
       child: AndroidFloatingFeedHeader(
         title: 'Feed One',
         newsCount: 12,
         showCount: false,
+        onOpenDrawer: () {},
       ),
     )));
 
     expect(find.text('Feed One'), findsOneWidget);
     expect(find.text('12'), findsNothing);
-    expect(find.byType(AndroidFloatingSurface), findsOneWidget);
+    expect(find.byType(AndroidFloatingSurface), findsNWidgets(2));
+    final titleSurface = find.ancestor(
+      of: find.text('Feed One'),
+      matching: find.byType(AndroidFloatingSurface),
+    );
     expect(
-      tester.getSize(find.byType(AndroidFloatingSurface)).width,
+      tester.getSize(titleSurface).width,
       lessThan(360),
     );
   });
 
   testWidgets('long floating title stays within the available header width',
       (tester) async {
-    await tester.pumpWidget(_testApp(const SizedBox(
+    await tester.pumpWidget(_testApp(SizedBox(
       width: 280,
       child: AndroidFloatingFeedHeader(
         title: 'A very long feed title that cannot fit at its natural width',
         newsCount: 123,
         showCount: true,
+        onOpenDrawer: () {},
       ),
     )));
 
@@ -189,10 +215,11 @@ void main() {
     await tester.pumpWidget(_testApp(Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const AndroidFloatingFeedHeader(
+        AndroidFloatingFeedHeader(
           title: 'Feed One',
           newsCount: 12,
           showCount: true,
+          onOpenDrawer: () {},
           useAccentColor: false,
         ),
         AndroidFloatingToolbar(
@@ -229,6 +256,29 @@ void main() {
       surfaceColor.computeLuminance(),
       lessThan(darkTheme.colorScheme.surfaceContainer.computeLuminance()),
     );
+  });
+
+  testWidgets('true black surfaces remain translucent without accent tint',
+      (tester) async {
+    final baseTheme = ThemeData.dark();
+    final trueBlackTheme = baseTheme.copyWith(
+      scaffoldBackgroundColor: Colors.black,
+      colorScheme: baseTheme.colorScheme.copyWith(surface: Colors.black),
+    );
+    await tester.pumpWidget(_testApp(
+      const AndroidFloatingSurface(child: SizedBox.square(dimension: 48)),
+      theme: trueBlackTheme,
+    ));
+
+    final decoratedBox = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byType(AndroidFloatingSurface),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+    final surfaceColor = (decoratedBox.decoration as BoxDecoration).color!;
+    expect(surfaceColor, Colors.black.withValues(alpha: 0.72));
+    expect(find.byType(BackdropFilter), findsOneWidget);
   });
 
   testWidgets('floating toolbar scrolls additional actions on narrow screens',

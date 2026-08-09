@@ -91,12 +91,14 @@ class AndroidFloatingFeedHeader extends StatelessWidget {
     required this.title,
     required this.newsCount,
     required this.showCount,
+    required this.onOpenDrawer,
     this.useAccentColor = true,
   });
 
   final String title;
   final int newsCount;
   final bool showCount;
+  final VoidCallback onOpenDrawer;
   final bool useAccentColor;
 
   @override
@@ -106,42 +108,51 @@ class AndroidFloatingFeedHeader extends StatelessWidget {
         useAccentColor ? Theme.of(context).colorScheme.primary : null;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment:
-          showCount ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
       children: [
+        AndroidFloatingSurface(
+          accentColor: accentColor,
+          child: IconButton(
+            icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 18),
+            onPressed: onOpenDrawer,
+            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+          ),
+        ),
+        const SizedBox(width: 8),
         Flexible(
           fit: FlexFit.loose,
           child: AndroidFloatingSurface(
             accentColor: accentColor,
             padding: const EdgeInsetsDirectional.fromSTEB(14, 10, 14, 10),
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
+                ),
+                if (showCount) ...[
+                  const SizedBox(width: 8),
+                  Semantics(
+                    label: '${strings.itemCount}: $newsCount',
+                    child: Text(
+                      '$newsCount',
+                      maxLines: 1,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
-        if (showCount)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 8),
-            child: Semantics(
-              label: '${strings.itemCount}: $newsCount',
-              child: AndroidFloatingSurface(
-                accentColor: accentColor,
-                padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 12, 10),
-                child: Text(
-                  '$newsCount',
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -219,9 +230,11 @@ class AndroidFloatingSurface extends StatelessWidget {
             : colorScheme.surfaceContainer;
     final opacity = highContrast
         ? 0.94
-        : theme.brightness == Brightness.dark
-            ? 0.88
-            : 0.78;
+        : trueBlack
+            ? 0.72
+            : theme.brightness == Brightness.dark
+                ? 0.82
+                : 0.72;
     final surfaceColor = baseColor.withValues(alpha: opacity);
     final tintedSurfaceColor = accentColor == null
         ? surfaceColor

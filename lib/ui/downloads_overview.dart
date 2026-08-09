@@ -9,10 +9,10 @@ import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
-import 'package:flux_news/ui/adaptive_glass_dialog.dart';
 import 'package:flux_news/ui/audioplayer.dart';
 import 'package:flux_news/ui/ios_liquid_glass_style.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -273,8 +273,9 @@ class _DownloadsOverviewState extends State<DownloadsOverview> {
                   final horizontalPadding = appState.isTablet ? 24.0 : 12.0;
                   return Center(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                          maxWidth: appState.isTablet ? 1100 : double.infinity),
+                      constraints: const BoxConstraints(
+                        maxWidth: adaptiveSettingsMaximumContentWidth,
+                      ),
                       child: ListView(
                         padding: EdgeInsets.symmetric(
                             horizontal: horizontalPadding, vertical: 12),

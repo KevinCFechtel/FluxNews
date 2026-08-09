@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 
 export '../adaptive_glass_dialog.dart';
 
+const double adaptiveSettingsMaximumContentWidth = 720;
+
 /// The shared rounded surface used to group settings rows on every settings
 /// page. Pages with no meaningful sections can place all rows in one group.
 class AdaptiveSettingsGroup extends StatelessWidget {
@@ -39,7 +41,9 @@ class AdaptiveSettingsGroup extends StatelessWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: const BoxConstraints(
+          maxWidth: adaptiveSettingsMaximumContentWidth,
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
@@ -102,7 +106,7 @@ class AdaptiveSettingsGroupSurface extends StatelessWidget {
         child: DividerTheme(
           data: DividerThemeData(
             color: dividerColor,
-            space: 1,
+            space: 8,
             thickness: 0.5,
             // Align separators with the leading edge of row icons.
             indent: 16,

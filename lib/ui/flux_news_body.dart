@@ -685,6 +685,7 @@ class FluxNewsBody extends StatelessWidget {
                           : appState.appBarText,
                       newsCount: counterState.appBarNewsCount,
                       showCount: appState.multilineAppBarText,
+                      onOpenDrawer: () => Scaffold.of(context).openDrawer(),
                       useAccentColor: appState.androidFloatingAccentTint,
                     ),
                   ),
@@ -742,7 +743,6 @@ class FluxNewsBody extends StatelessWidget {
               child: _androidFloatingToolbar(
                 context,
                 appState,
-                showDrawer: true,
               ),
             ),
           ),
@@ -753,9 +753,8 @@ class FluxNewsBody extends StatelessWidget {
 
   Widget _androidFloatingToolbar(
     BuildContext context,
-    FluxNewsState appState, {
-    bool showDrawer = false,
-  }) {
+    FluxNewsState appState,
+  ) {
     final appBarActions = appBarButtons(
       context,
       hideConfiguredFloatingActionsFromMore: true,
@@ -763,15 +762,6 @@ class FluxNewsBody extends StatelessWidget {
     return AndroidFloatingToolbar(
       useAccentColor: appState.androidFloatingAccentTint,
       leadingChildren: [
-        if (showDrawer)
-          Builder(
-            builder: (drawerContext) => IconButton(
-              icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 18),
-              onPressed: () => Scaffold.of(drawerContext).openDrawer(),
-              tooltip:
-                  MaterialLocalizations.of(drawerContext).openAppDrawerTooltip,
-            ),
-          ),
         appBarActions.first,
       ],
       trailingChildren: appBarActions.skip(1).toList(growable: false),

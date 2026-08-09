@@ -74,6 +74,7 @@ void main() {
       ),
     );
     expect(dividerTheme.data.indent, 16);
+    expect(dividerTheme.data.space, 8);
     expect(find.byIcon(Icons.drag_handle), findsNWidgets(7));
     expect(find.text('Toggle all/unread news'), findsOneWidget);
     expect(find.text('Change sort order'), findsOneWidget);
