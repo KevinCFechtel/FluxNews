@@ -211,6 +211,8 @@ class NewsAudioPlayer extends StatefulWidget {
 }
 
 class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
+  static const double _chapterTileExtent = 56;
+
   static final List<RegExp> _chapterTimestampPatterns = [
     RegExp(r'\((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\)'),
     RegExp(r'\[(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\]'),
@@ -974,10 +976,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   void _scrollToActiveChapter(
     ScrollController controller,
     int activeIndex,
-    double itemHeight,
   ) {
     if (!controller.hasClients) return;
-    final targetOffset = (activeIndex * itemHeight).clamp(
+    final targetOffset = (activeIndex * _chapterTileExtent).clamp(
       0.0,
       controller.position.maxScrollExtent,
     );
@@ -1321,8 +1322,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
           final mediaName = _audioAttachments.length == 1
               ? widget.news.title
               : fallbackMediaName;
-          final chapterListHeight =
-              chapters.length > 4 ? 224.0 : chapters.length * 56.0;
+          final chapterListHeight = chapters.length > 4
+              ? 4 * _chapterTileExtent
+              : chapters.length * _chapterTileExtent;
           final chapterScrollController =
               _chapterControllerFor(attachment.attachmentID);
 
@@ -1529,7 +1531,6 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                         _scrollToActiveChapter(
                                           chapterScrollController,
                                           activeChapterIdx,
-                                          56.0,
                                         );
                                       });
                                     }
@@ -1540,6 +1541,7 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     primary: false,
                                     padding: EdgeInsets.zero,
                                     clipBehavior: Clip.hardEdge,
+                                    itemExtent: _chapterTileExtent,
                                     itemCount: chapters.length,
                                     itemBuilder: (context, index) {
                                       final chapter = chapters[index];
@@ -1603,10 +1605,19 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                                 .textTheme
                                                 .bodySmall,
                                           ),
-                                          onTap: () => _seekToChapter(
-                                            attachment,
-                                            chapter,
-                                          ),
+                                          onTap: () {
+                                            // The tapped row is already in the
+                                            // viewport. Treat it as positioned
+                                            // so the subsequent playback-state
+                                            // update does not scroll it away.
+                                            _lastAutoScrolledChapterIndexByAttachmentID[
+                                                    attachment.attachmentID] =
+                                                index;
+                                            unawaited(_seekToChapter(
+                                              attachment,
+                                              chapter,
+                                            ));
+                                          },
                                         ),
                                       );
                                     },
