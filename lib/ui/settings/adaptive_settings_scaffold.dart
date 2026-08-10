@@ -64,6 +64,7 @@ class _AdaptiveSettingsScaffoldState extends State<AdaptiveSettingsScaffold> {
           top: false,
           left: false,
           right: false,
+          maintainBottomViewPadding: true,
           child: widget.body,
         ),
       );

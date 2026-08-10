@@ -4,63 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 
-enum AndroidFloatingChromeEdge { top, bottom }
-
-/// Extends the scaffold surface behind floating Android chrome and fades it
-/// gradually into scrolling content. This reduces rapid contrast changes below
-/// translucent controls while keeping the list visibly continuous.
-class AndroidFloatingChromeEdgeScrim extends StatelessWidget {
-  const AndroidFloatingChromeEdgeScrim({
-    super.key,
-    required this.edge,
-    this.chromeExtent = 0,
-    this.transitionExtent = 25,
-  });
-
-  final AndroidFloatingChromeEdge edge;
-
-  /// Chrome height that is not already represented by the system/Scaffold
-  /// media padding. The top floating header uses this; extended bottom chrome
-  /// is already included in `MediaQuery.padding.bottom` by `Scaffold`.
-  final double chromeExtent;
-  final double transitionExtent;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mediaPadding = MediaQuery.paddingOf(context);
-    final systemOrChromeInset = edge == AndroidFloatingChromeEdge.top
-        ? mediaPadding.top
-        : mediaPadding.bottom;
-    final protectedExtent = systemOrChromeInset + chromeExtent;
-    final extent = protectedExtent + transitionExtent;
-    final baseColor = theme.scaffoldBackgroundColor;
-    final isTop = edge == AndroidFloatingChromeEdge.top;
-    const curveStops = <double>[0, 0.16, 0.34, 0.51, 0.68, 0.84, 1];
-    const curveOpacities = <double>[0, 0.15, 0.25, 0.45, 0.55, 0.70, 1];
-    final opacities = isTop ? curveOpacities.reversed : curveOpacities;
-    final colors = opacities
-        .map((opacity) => baseColor.withValues(alpha: opacity))
-        .toList(growable: false);
-
-    return IgnorePointer(
-      child: SizedBox(
-        height: extent,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: colors,
-              stops: curveStops,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class AndroidStatusBarScrim extends StatelessWidget {
   const AndroidStatusBarScrim({super.key});
 

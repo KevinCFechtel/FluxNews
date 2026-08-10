@@ -5,6 +5,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/android_floating_chrome.dart';
+import 'package:flux_news/ui/floating_chrome_edge_gradient.dart';
 import 'package:flux_news/ui/flux_news_body.dart';
 import 'package:provider/provider.dart';
 
@@ -91,19 +92,19 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_testApp(const MediaQuery(
       data: MediaQueryData(padding: EdgeInsets.only(top: 24)),
-      child: AndroidFloatingChromeEdgeScrim(
-        edge: AndroidFloatingChromeEdge.top,
+      child: FloatingChromeEdgeGradient(
+        edge: FloatingChromeEdge.top,
         chromeExtent: 56,
       ),
     )));
 
     expect(
-      tester.getSize(find.byType(AndroidFloatingChromeEdgeScrim)).height,
+      tester.getSize(find.byType(FloatingChromeEdgeGradient)).height,
       105,
     );
     expect(
       find.descendant(
-        of: find.byType(AndroidFloatingChromeEdgeScrim),
+        of: find.byType(FloatingChromeEdgeGradient),
         matching: find.byType(BackdropFilter),
       ),
       findsNothing,
@@ -114,9 +115,9 @@ void main() {
     expect(gradient.colors.first.a, greaterThan(gradient.colors.last.a));
     expect(
       gradient.colors.map((color) => color.a),
-      <double>[1, 0.85, 0.55, 0.25, 0.15, 0.03, 0],
+      floatingChromeGradientLightOpacities.reversed,
     );
-    expect(gradient.stops, <double>[0, 0.16, 0.34, 0.51, 0.68, 0.84, 1]);
+    expect(gradient.stops, floatingChromeGradientStops);
   });
 
   testWidgets('floating bottom scrim follows the real bottom chrome height',
@@ -130,8 +131,8 @@ void main() {
               bottom: 0,
               start: 0,
               end: 0,
-              child: AndroidFloatingChromeEdgeScrim(
-                edge: AndroidFloatingChromeEdge.bottom,
+              child: FloatingChromeEdgeGradient(
+                edge: FloatingChromeEdge.bottom,
               ),
             ),
           ],
@@ -141,7 +142,7 @@ void main() {
     ));
 
     expect(
-      tester.getSize(find.byType(AndroidFloatingChromeEdgeScrim)).height,
+      tester.getSize(find.byType(FloatingChromeEdgeGradient)).height,
       105,
     );
     final decoratedBox = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
@@ -149,9 +150,46 @@ void main() {
         (decoratedBox.decoration as BoxDecoration).gradient as LinearGradient;
     expect(
       gradient.colors.map((color) => color.a),
-      <double>[0, 0.03, 0.15, 0.25, 0.55, 0.85, 1],
+      floatingChromeGradientLightOpacities,
     );
-    expect(gradient.stops, <double>[0, 0.16, 0.34, 0.51, 0.68, 0.84, 1]);
+    expect(gradient.stops, floatingChromeGradientStops);
+  });
+
+  testWidgets('dark floating gradient keeps the stronger opacity curve',
+      (tester) async {
+    await tester.pumpWidget(_testApp(
+      const FloatingChromeEdgeGradient(
+        edge: FloatingChromeEdge.bottom,
+        chromeExtent: 56,
+      ),
+      theme: ThemeData.dark(),
+    ));
+
+    final decoratedBox = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
+    final gradient =
+        (decoratedBox.decoration as BoxDecoration).gradient as LinearGradient;
+    expect(
+      gradient.colors.map((color) => color.a),
+      floatingChromeGradientDarkOpacities,
+    );
+    expect(gradient.stops, floatingChromeGradientStops);
+  });
+
+  testWidgets('fixed chrome extent can ignore inherited media padding',
+      (tester) async {
+    await tester.pumpWidget(_testApp(const MediaQuery(
+      data: MediaQueryData(padding: EdgeInsets.only(top: 24)),
+      child: FloatingChromeEdgeGradient(
+        edge: FloatingChromeEdge.top,
+        chromeExtent: 68,
+        includeMediaPadding: false,
+      ),
+    )));
+
+    expect(
+      tester.getSize(find.byType(FloatingChromeEdgeGradient)).height,
+      93,
+    );
   });
 
   testWidgets('floating header uses the current displayed news count',

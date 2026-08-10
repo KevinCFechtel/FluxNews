@@ -210,10 +210,15 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: MediaQuery(
-          data: MediaQueryData(padding: EdgeInsets.only(bottom: 32)),
+          // Mirrors an edge-to-edge subtree where the regular padding was
+          // consumed but the persistent system inset is still available.
+          data: MediaQueryData(
+            size: Size(800, 600),
+            viewPadding: EdgeInsets.only(bottom: 32),
+          ),
           child: AdaptiveSettingsScaffold(
             title: 'Settings',
-            body: SizedBox(key: bodyKey),
+            body: SizedBox.expand(key: bodyKey),
           ),
         ),
       ),
@@ -227,5 +232,7 @@ void main() {
     );
     expect(safeArea.top, isFalse);
     expect(safeArea.bottom, isTrue);
+    expect(safeArea.maintainBottomViewPadding, isTrue);
+    expect(tester.getBottomRight(find.byKey(bodyKey)).dy, 568);
   });
 }

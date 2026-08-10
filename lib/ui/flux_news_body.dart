@@ -32,6 +32,7 @@ import '../models/news_model.dart';
 import 'adaptive_glass_dialog.dart';
 import 'adaptive_layout.dart';
 import 'android_floating_chrome.dart';
+import 'floating_chrome_edge_gradient.dart';
 import 'audioplayer.dart';
 import 'downloads_overview.dart';
 import 'ios_liquid_glass_style.dart';
@@ -668,8 +669,8 @@ class FluxNewsBody extends StatelessWidget {
                   top: 0,
                   start: 0,
                   end: 0,
-                  child: const AndroidFloatingChromeEdgeScrim(
-                    edge: AndroidFloatingChromeEdge.top,
+                  child: const FloatingChromeEdgeGradient(
+                    edge: FloatingChromeEdge.top,
                     chromeExtent: 56,
                   ),
                 ),
@@ -677,8 +678,8 @@ class FluxNewsBody extends StatelessWidget {
                   bottom: 0,
                   start: 0,
                   end: 0,
-                  child: AndroidFloatingChromeEdgeScrim(
-                    edge: AndroidFloatingChromeEdge.bottom,
+                  child: FloatingChromeEdgeGradient(
+                    edge: FloatingChromeEdge.bottom,
                   ),
                 ),
                 PositionedDirectional(
@@ -978,6 +979,10 @@ class FluxNewsBody extends StatelessWidget {
       extendBody: true,
       body: SafeArea(
         bottom: true,
+        // Keep using the persistent window inset even if edge-to-edge layout
+        // or an ancestor consumed the regular padding. This keeps Android's
+        // navigation bar outside both tablet panes.
+        maintainBottomViewPadding: true,
         child: LayoutBuilder(
           builder: (context, constraints) => _androidTabletBody(
             context,
@@ -1067,8 +1072,8 @@ class FluxNewsBody extends StatelessWidget {
           top: 0,
           start: 0,
           end: 0,
-          child: AndroidFloatingChromeEdgeScrim(
-            edge: AndroidFloatingChromeEdge.top,
+          child: FloatingChromeEdgeGradient(
+            edge: FloatingChromeEdge.top,
             chromeExtent: 56,
           ),
         ),
@@ -2120,11 +2125,9 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
         final sidebarWidth = usesWideSidebar
             ? (constraints.maxWidth * 0.25).clamp(260.0, 340.0).toDouble()
             : 0.0;
-        Widget list = GlassScrollEdgeEffect(
-          topFadeHeight: topContentInset + 20,
-          fadeBottom: false,
-          style: GlassScrollEdgeStyle.soft,
-          fadeColor: Theme.of(context).scaffoldBackgroundColor,
+        Widget list = IOSNewsScrollEdgeEffect(
+          topChromeExtent: topContentInset,
+          isTablet: widget.isTablet,
           child: FluxNewsBodyList(
             largeTitleController: titleController,
             topContentInset: topContentInset,
