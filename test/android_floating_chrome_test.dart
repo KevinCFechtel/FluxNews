@@ -87,6 +87,73 @@ void main() {
     expect(gradient.colors.last.a, 0);
   });
 
+  testWidgets('floating top scrim mirrors the curved fade toward the edge',
+      (tester) async {
+    await tester.pumpWidget(_testApp(const MediaQuery(
+      data: MediaQueryData(padding: EdgeInsets.only(top: 24)),
+      child: AndroidFloatingChromeEdgeScrim(
+        edge: AndroidFloatingChromeEdge.top,
+        chromeExtent: 56,
+      ),
+    )));
+
+    expect(
+      tester.getSize(find.byType(AndroidFloatingChromeEdgeScrim)).height,
+      105,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(AndroidFloatingChromeEdgeScrim),
+        matching: find.byType(BackdropFilter),
+      ),
+      findsNothing,
+    );
+    final decoratedBox = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
+    final gradient =
+        (decoratedBox.decoration as BoxDecoration).gradient as LinearGradient;
+    expect(gradient.colors.first.a, greaterThan(gradient.colors.last.a));
+    expect(
+      gradient.colors.map((color) => color.a),
+      <double>[1, 0.85, 0.55, 0.25, 0.15, 0.03, 0],
+    );
+    expect(gradient.stops, <double>[0, 0.16, 0.34, 0.51, 0.68, 0.84, 1]);
+  });
+
+  testWidgets('floating bottom scrim follows the real bottom chrome height',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        extendBody: true,
+        body: Stack(
+          children: [
+            PositionedDirectional(
+              bottom: 0,
+              start: 0,
+              end: 0,
+              child: AndroidFloatingChromeEdgeScrim(
+                edge: AndroidFloatingChromeEdge.bottom,
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: SizedBox(height: 80),
+      ),
+    ));
+
+    expect(
+      tester.getSize(find.byType(AndroidFloatingChromeEdgeScrim)).height,
+      105,
+    );
+    final decoratedBox = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
+    final gradient =
+        (decoratedBox.decoration as BoxDecoration).gradient as LinearGradient;
+    expect(
+      gradient.colors.map((color) => color.a),
+      <double>[0, 0.03, 0.15, 0.25, 0.55, 0.85, 1],
+    );
+    expect(gradient.stops, <double>[0, 0.16, 0.34, 0.51, 0.68, 0.84, 1]);
+  });
+
   testWidgets('floating header uses the current displayed news count',
       (tester) async {
     final semantics = tester.ensureSemantics();

@@ -4,6 +4,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
 import 'package:flux_news/ui/settings/android_floating_toolbar_settings.dart';
 import 'package:flux_news/ui/settings/general_settings.dart';
 import 'package:provider/provider.dart';
@@ -201,5 +202,30 @@ void main() {
       find.text('Select the action for the extra button'),
       findsNothing,
     );
+  });
+
+  testWidgets('Android settings body respects the bottom system inset',
+      (tester) async {
+    const bodyKey = Key('settings-body');
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(padding: EdgeInsets.only(bottom: 32)),
+          child: AdaptiveSettingsScaffold(
+            title: 'Settings',
+            body: SizedBox(key: bodyKey),
+          ),
+        ),
+      ),
+    );
+
+    final safeArea = tester.widget<SafeArea>(
+      find.ancestor(
+        of: find.byKey(bodyKey),
+        matching: find.byType(SafeArea),
+      ),
+    );
+    expect(safeArea.top, isFalse);
+    expect(safeArea.bottom, isTrue);
   });
 }

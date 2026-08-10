@@ -52,6 +52,30 @@ void main() {
     );
   });
 
+  test('floating bottom chrome becomes scrollable list space', () {
+    expect(
+      floatingNewsListBottomInset(
+        hasFloatingBottomToolbar: true,
+        mediaBottomPadding: 82,
+      ),
+      82,
+    );
+    expect(
+      floatingNewsListBottomInset(
+        hasFloatingBottomToolbar: false,
+        mediaBottomPadding: 82,
+      ),
+      0,
+    );
+    expect(
+      floatingNewsListBottomInset(
+        hasFloatingBottomToolbar: true,
+        mediaBottomPadding: -1,
+      ),
+      0,
+    );
+  });
+
   test('separating display features are classified by direction', () {
     const size = Size(1000, 800);
     const verticalHinge = Rect.fromLTWH(495, 0, 10, 800);

@@ -39,6 +39,11 @@ class BodyNewsList extends StatelessWidget {
     final useAndroidFloatingChrome = Platform.isAndroid &&
         (appState.isTablet ||
             appState.appBarType == FluxNewsState.appBarFloatingType);
+    final bottomContentInset = floatingNewsListBottomInset(
+      hasFloatingBottomToolbar:
+          useAndroidFloatingChrome || (Platform.isIOS && !appState.isTablet),
+      mediaBottomPadding: MediaQuery.paddingOf(context).bottom,
+    );
     bool searchView = false;
     Widget listHeader({required bool emptyBody}) {
       if (useAndroidFloatingChrome) {
@@ -208,12 +213,10 @@ class BodyNewsList extends StatelessWidget {
                                                         newsList: snapshot.data,
                                                       );
                                               }),
-                                          if (useAndroidFloatingChrome)
+                                          if (bottomContentInset > 0)
                                             SliverToBoxAdapter(
                                               child: SizedBox(
-                                                height: MediaQuery.paddingOf(
-                                                        context)
-                                                    .bottom,
+                                                height: bottomContentInset,
                                               ),
                                             ),
                                         ])

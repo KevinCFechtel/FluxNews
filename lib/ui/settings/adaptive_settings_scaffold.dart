@@ -60,7 +60,12 @@ class _AdaptiveSettingsScaffoldState extends State<AdaptiveSettingsScaffold> {
           ),
           actions: widget.actions,
         ),
-        body: widget.body,
+        body: SafeArea(
+          top: false,
+          left: false,
+          right: false,
+          child: widget.body,
+        ),
       );
     }
 

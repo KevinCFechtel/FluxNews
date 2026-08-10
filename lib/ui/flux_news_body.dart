@@ -668,9 +668,17 @@ class FluxNewsBody extends StatelessWidget {
                   top: 0,
                   start: 0,
                   end: 0,
-                  height: MediaQuery.paddingOf(context).top + 6,
-                  child: const IgnorePointer(
-                    child: AndroidStatusBarScrim(),
+                  child: const AndroidFloatingChromeEdgeScrim(
+                    edge: AndroidFloatingChromeEdge.top,
+                    chromeExtent: 56,
+                  ),
+                ),
+                const PositionedDirectional(
+                  bottom: 0,
+                  start: 0,
+                  end: 0,
+                  child: AndroidFloatingChromeEdgeScrim(
+                    edge: AndroidFloatingChromeEdge.bottom,
                   ),
                 ),
                 PositionedDirectional(
@@ -969,7 +977,7 @@ class FluxNewsBody extends StatelessWidget {
     final scaffold = Scaffold(
       extendBody: true,
       body: SafeArea(
-        bottom: false,
+        bottom: true,
         child: LayoutBuilder(
           builder: (context, constraints) => _androidTabletBody(
             context,
@@ -1055,6 +1063,15 @@ class FluxNewsBody extends StatelessWidget {
     return Stack(
       children: [
         const FluxNewsBodyList(topContentInset: 64),
+        const PositionedDirectional(
+          top: 0,
+          start: 0,
+          end: 0,
+          child: AndroidFloatingChromeEdgeScrim(
+            edge: AndroidFloatingChromeEdge.top,
+            chromeExtent: 56,
+          ),
+        ),
         PositionedDirectional(
           top: 8,
           start: 12,

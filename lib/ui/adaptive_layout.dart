@@ -29,6 +29,19 @@ bool useStandaloneTabletListHeaderInset({
   return isTablet && topContentInset > 0 && !hasLargeTitleController;
 }
 
+/// Keeps the final news item scrollable past an overlaid bottom toolbar.
+///
+/// With `Scaffold.extendBody`, Flutter exposes the occupied bottom chrome as
+/// bottom media padding. Lists without bottom floating chrome must not consume
+/// that padding a second time.
+double floatingNewsListBottomInset({
+  required bool hasFloatingBottomToolbar,
+  required double mediaBottomPadding,
+}) {
+  if (!hasFloatingBottomToolbar) return 0;
+  return mediaBottomPadding.clamp(0.0, double.infinity).toDouble();
+}
+
 double adaptiveSidebarWidth(double availableWidth) {
   return (availableWidth * 0.28).clamp(
     minimumSidebarWidth,
