@@ -19,7 +19,7 @@ const List<double> floatingChromeGradientLightOpacities = <double>[
   0.36,
   0.46,
   0.62,
-  1,
+  0.9,
 ];
 const List<double> floatingChromeGradientDarkOpacities = <double>[
   0,
@@ -28,7 +28,7 @@ const List<double> floatingChromeGradientDarkOpacities = <double>[
   0.45,
   0.55,
   0.70,
-  1,
+  0.9,
 ];
 
 /// Fades scrolling content into the scaffold background near floating chrome.

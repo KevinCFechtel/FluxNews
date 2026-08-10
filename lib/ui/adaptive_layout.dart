@@ -1,4 +1,7 @@
+import 'dart:math' as math;
 import 'dart:ui';
+
+import 'package:flutter/widgets.dart' show MediaQueryData;
 
 const double compactWindowHeightBreakpoint = 480;
 const double mediumWindowWidthBreakpoint = 600;
@@ -40,6 +43,22 @@ double floatingNewsListBottomInset({
 }) {
   if (!hasFloatingBottomToolbar) return 0;
   return mediaBottomPadding.clamp(0.0, double.infinity).toDouble();
+}
+
+/// Resolves Android's persistent bottom navigation area before a [Scaffold]
+/// can consume its regular media padding.
+///
+/// Gesture navigation can expose a larger gesture inset while three-button
+/// navigation is normally represented by padding/viewPadding, so the safest
+/// content boundary is the largest of the three values.
+double androidBottomSystemNavigationInset(MediaQueryData mediaQuery) {
+  return math.max(
+    mediaQuery.padding.bottom,
+    math.max(
+      mediaQuery.viewPadding.bottom,
+      mediaQuery.systemGestureInsets.bottom,
+    ),
+  );
 }
 
 double adaptiveSidebarWidth(double availableWidth) {

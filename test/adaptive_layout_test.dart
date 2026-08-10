@@ -1,5 +1,4 @@
-import 'dart:ui';
-
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/adaptive_layout.dart';
@@ -73,6 +72,29 @@ void main() {
         mediaBottomPadding: -1,
       ),
       0,
+    );
+  });
+
+  test('Android bottom navigation inset survives consumed body padding', () {
+    expect(
+      androidBottomSystemNavigationInset(
+        const MediaQueryData(
+          padding: EdgeInsets.zero,
+          viewPadding: EdgeInsets.only(bottom: 24),
+          systemGestureInsets: EdgeInsets.only(bottom: 32),
+        ),
+      ),
+      32,
+    );
+    expect(
+      androidBottomSystemNavigationInset(
+        const MediaQueryData(
+          padding: EdgeInsets.only(bottom: 48),
+          viewPadding: EdgeInsets.only(bottom: 24),
+          systemGestureInsets: EdgeInsets.only(bottom: 16),
+        ),
+      ),
+      48,
     );
   });
 

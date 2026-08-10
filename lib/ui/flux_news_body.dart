@@ -974,14 +974,19 @@ class FluxNewsBody extends StatelessWidget {
         drawer: getDrawer(context, appState),
       );
     }
+    final windowMediaQuery = MediaQueryData.fromView(View.of(context));
+    final bottomSystemInset =
+        androidBottomSystemNavigationInset(windowMediaQuery);
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     final scaffold = Scaffold(
       extendBody: true,
       body: SafeArea(
         bottom: true,
-        // Keep using the persistent window inset even if edge-to-edge layout
-        // or an ancestor consumed the regular padding. This keeps Android's
-        // navigation bar outside both tablet panes.
+        // `_BottomBanners` is always registered as a bottom navigation widget,
+        // so Scaffold consumes the body's regular bottom padding even while
+        // the banners are empty. Preserve the raw window/gesture inset as an
+        // explicit minimum for both tablet panes.
+        minimum: EdgeInsets.only(bottom: bottomSystemInset),
         maintainBottomViewPadding: true,
         child: LayoutBuilder(
           builder: (context, constraints) => _androidTabletBody(
