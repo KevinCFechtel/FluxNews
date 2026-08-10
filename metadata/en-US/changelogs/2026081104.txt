@@ -1,0 +1,6 @@
+The following has been added and improved:
+ •	Completely redesigned adaptive user interface for Android and iOS
+ •	New Liquid Glass interface on iPhone and iPad
+ •	New floating Android layout enabled by default, the previous App Bar layouts remain available
+ •	New configurable action toolbars on Android and iOS
+ •	Fixed several UI issues on Android and iOS
