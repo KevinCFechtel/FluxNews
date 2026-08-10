@@ -1539,63 +1539,75 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     controller: chapterScrollController,
                                     primary: false,
                                     padding: EdgeInsets.zero,
+                                    clipBehavior: Clip.hardEdge,
                                     itemCount: chapters.length,
                                     itemBuilder: (context, index) {
                                       final chapter = chapters[index];
                                       final isActiveChapter =
                                           index == activeChapterIdx;
-                                      return ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        tileColor: isActiveChapter
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primaryContainer
-                                                .withAlpha(128)
-                                            : null,
-                                        title: Row(children: [
-                                          isActiveChapter
-                                              ? Icon(
-                                                  Icons.play_arrow,
-                                                  size: 16,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                )
-                                              : const SizedBox(width: 16),
-                                          Expanded(
-                                              child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 4.0),
-                                            child: Text(
-                                              chapter.title,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: isActiveChapter
-                                                  ? Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onPrimaryContainer,
-                                                      )
-                                                  : Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium,
-                                            ),
-                                          )),
-                                        ]),
-                                        trailing: Text(
-                                          _formatChapterStart(chapter.start),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
+                                      final tileColor = isActiveChapter
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer
+                                              .withAlpha(128)
+                                          : Colors.transparent;
+                                      // Keep the highlight on the same clipped
+                                      // render layer as its row. ListTile's
+                                      // tileColor otherwise paints on the
+                                      // surrounding player Card and remains
+                                      // visible below the ExpansionTile header.
+                                      return Material(
+                                        color: tileColor,
+                                        child: ListTile(
+                                          dense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                          title: Row(children: [
+                                            isActiveChapter
+                                                ? Icon(
+                                                    Icons.play_arrow,
+                                                    size: 16,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                  )
+                                                : const SizedBox(width: 16),
+                                            Expanded(
+                                                child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 4.0),
+                                              child: Text(
+                                                chapter.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: isActiveChapter
+                                                    ? Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onPrimaryContainer,
+                                                        )
+                                                    : Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium,
+                                              ),
+                                            )),
+                                          ]),
+                                          trailing: Text(
+                                            _formatChapterStart(chapter.start),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                          onTap: () => _seekToChapter(
+                                            attachment,
+                                            chapter,
+                                          ),
                                         ),
-                                        onTap: () =>
-                                            _seekToChapter(attachment, chapter),
                                       );
                                     },
                                   );
