@@ -29,21 +29,21 @@ The unread articles should appear in the app.
 ## Screenshots
 ### Phone
 <p float="left">
-<img src="screenshots/AllNewsLight.png" width="300">
-<img src="screenshots/AllNewsDark.png" width="300">
-<img src="screenshots/Audioplayer.png" width="300">
-<img src="screenshots/Podcast_Overview.png" width="300">
-<img src="screenshots/DrawerWithFeeds.png" width="300">
-<img src="screenshots/NavBarMenu.png" width="300">
-<img src="screenshots/Search.png" width="300">
-<img src="screenshots/Settings.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot1.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot2.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot3.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot4.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot5.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot6.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot7.png" width="300">
+<img src="metadata/en-US/images/phoneScreenshots/screenshot8.png" width="300">
 </p>
 
 ### Tablet
 <p float="left">
-<img src="screenshots/Tablet_Light.png" width="600">
-<img src="screenshots/Tablet_Dark.png" width="600">
-<img src="screenshots/Tablet_Portrait.png" width="600">
+<img src="metadata/en-US/images/sevenInchScreenshots/screenshot1.png" width="600">
+<img src="metadata/en-US/images/sevenInchScreenshots/screenshot4.png" width="600">
+<img src="metadata/en-US/images/sevenInchScreenshots/screenshot6.png" width="600">
 </p>
 <br/><br/>
 
