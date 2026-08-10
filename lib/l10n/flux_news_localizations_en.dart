@@ -34,10 +34,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show Mark as read in the bottom toolbar';
 
   @override
-  String get iosSyncQuickAction => 'Show Sync in the bottom toolbar';
+  String get iosClearLiquidGlass => 'Use Clear Liquid Glass';
 
   @override
-  String get iosClearLiquidGlass => 'Use Clear Liquid Glass';
+  String get androidFloatingToolbarActions =>
+      'Configure floating toolbar actions';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'The fixed actions are always shown. Select and arrange the additional actions.';
+
+  @override
+  String get iosToolbarActionsHint =>
+      'Sync remains fixed. Selected actions are shown directly as space allows; additional actions remain under More.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus => 'Toggle all/unread news';
+
+  @override
+  String get androidFloatingActionToggleSortOrder => 'Change sort order';
+
+  @override
+  String get androidFloatingAccentTint =>
+      'Use the accent color for floating elements';
 
   @override
   String get markAsReadAndNext => 'Mark as read and open next';
@@ -520,6 +539,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get glass => 'Glass Effect';
+
+  @override
+  String get floating => 'Floating';
 
   @override
   String get appBarType => 'Select the App Bar Type';

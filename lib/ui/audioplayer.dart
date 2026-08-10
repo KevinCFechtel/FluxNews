@@ -15,6 +15,7 @@ import 'package:flux_news/models/news_model.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/adaptive_layout.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -51,9 +52,7 @@ class _NewsAudioPlayerScreenState extends State<NewsAudioPlayerScreen> {
   Widget build(BuildContext context) {
     final audioAttachments = widget.news.getAudioAttachments();
     final appState = Provider.of<FluxNewsState>(context, listen: false);
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final useTabletLayout = screenWidth >= 900 || shortestSide >= 600;
+    final useTabletLayout = useTwoPaneLayout(MediaQuery.sizeOf(context));
     final useClearEffect = appState.iosClearLiquidGlass;
     final glassSettings = iosLiquidGlassSettings(
       context,
@@ -212,6 +211,8 @@ class NewsAudioPlayer extends StatefulWidget {
 }
 
 class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
+  static const double _chapterTileExtent = 56;
+
   static final List<RegExp> _chapterTimestampPatterns = [
     RegExp(r'\((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\)'),
     RegExp(r'\[(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\]'),
@@ -975,10 +976,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
   void _scrollToActiveChapter(
     ScrollController controller,
     int activeIndex,
-    double itemHeight,
   ) {
     if (!controller.hasClients) return;
-    final targetOffset = (activeIndex * itemHeight).clamp(
+    final targetOffset = (activeIndex * _chapterTileExtent).clamp(
       0.0,
       controller.position.maxScrollExtent,
     );
@@ -1322,8 +1322,9 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
           final mediaName = _audioAttachments.length == 1
               ? widget.news.title
               : fallbackMediaName;
-          final chapterListHeight =
-              chapters.length > 4 ? 224.0 : chapters.length * 56.0;
+          final chapterListHeight = chapters.length > 4
+              ? 4 * _chapterTileExtent
+              : chapters.length * _chapterTileExtent;
           final chapterScrollController =
               _chapterControllerFor(attachment.attachmentID);
 
@@ -1530,7 +1531,6 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                         _scrollToActiveChapter(
                                           chapterScrollController,
                                           activeChapterIdx,
-                                          56.0,
                                         );
                                       });
                                     }
@@ -1540,63 +1540,85 @@ class _NewsAudioPlayerState extends State<NewsAudioPlayer> {
                                     controller: chapterScrollController,
                                     primary: false,
                                     padding: EdgeInsets.zero,
+                                    clipBehavior: Clip.hardEdge,
+                                    itemExtent: _chapterTileExtent,
                                     itemCount: chapters.length,
                                     itemBuilder: (context, index) {
                                       final chapter = chapters[index];
                                       final isActiveChapter =
                                           index == activeChapterIdx;
-                                      return ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        tileColor: isActiveChapter
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primaryContainer
-                                                .withAlpha(128)
-                                            : null,
-                                        title: Row(children: [
-                                          isActiveChapter
-                                              ? Icon(
-                                                  Icons.play_arrow,
-                                                  size: 16,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                )
-                                              : const SizedBox(width: 16),
-                                          Expanded(
-                                              child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 4.0),
-                                            child: Text(
-                                              chapter.title,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: isActiveChapter
-                                                  ? Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onPrimaryContainer,
-                                                      )
-                                                  : Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium,
-                                            ),
-                                          )),
-                                        ]),
-                                        trailing: Text(
-                                          _formatChapterStart(chapter.start),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
+                                      final tileColor = isActiveChapter
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer
+                                              .withAlpha(128)
+                                          : Colors.transparent;
+                                      // Keep the highlight on the same clipped
+                                      // render layer as its row. ListTile's
+                                      // tileColor otherwise paints on the
+                                      // surrounding player Card and remains
+                                      // visible below the ExpansionTile header.
+                                      return Material(
+                                        color: tileColor,
+                                        child: ListTile(
+                                          dense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                          title: Row(children: [
+                                            isActiveChapter
+                                                ? Icon(
+                                                    Icons.play_arrow,
+                                                    size: 16,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                  )
+                                                : const SizedBox(width: 16),
+                                            Expanded(
+                                                child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 4.0),
+                                              child: Text(
+                                                chapter.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: isActiveChapter
+                                                    ? Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onPrimaryContainer,
+                                                        )
+                                                    : Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium,
+                                              ),
+                                            )),
+                                          ]),
+                                          trailing: Text(
+                                            _formatChapterStart(chapter.start),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                          onTap: () {
+                                            // The tapped row is already in the
+                                            // viewport. Treat it as positioned
+                                            // so the subsequent playback-state
+                                            // update does not scroll it away.
+                                            _lastAutoScrolledChapterIndexByAttachmentID[
+                                                    attachment.attachmentID] =
+                                                index;
+                                            unawaited(_seekToChapter(
+                                              attachment,
+                                              chapter,
+                                            ));
+                                          },
                                         ),
-                                        onTap: () =>
-                                            _seekToChapter(attachment, chapter),
                                       );
                                     },
                                   );

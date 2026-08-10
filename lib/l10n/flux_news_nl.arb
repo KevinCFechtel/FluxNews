@@ -7,8 +7,13 @@
     "addBookmark": "Bladwijzer toevoegen",
     "markAsRead": "Markeer als gelezen",
     "iosMarkAsReadQuickAction": "Toon Markeer als gelezen in de onderste werkbalk",
-    "iosSyncQuickAction": "Toon synchronisatie in de onderste werkbalk",
     "iosClearLiquidGlass": "Helder Liquid Glass gebruiken",
+    "androidFloatingToolbarActions": "Acties van de zwevende werkbalk instellen",
+    "androidFloatingToolbarFixedActionsHint": "De vaste acties worden altijd getoond. Selecteer en rangschik de extra acties.",
+    "iosToolbarActionsHint": "Synchronisatie blijft vast. Geselecteerde acties worden direct getoond zolang er ruimte is; extra acties blijven onder Meer beschikbaar.",
+    "androidFloatingActionToggleNewsStatus": "Wisselen tussen alle en ongelezen nieuws",
+    "androidFloatingActionToggleSortOrder": "Sorteervolgorde wijzigen",
+    "androidFloatingAccentTint": "Accentkleur voor zwevende elementen gebruiken",
     "markAsReadAndNext": "Markeer als gelezen en open volgende",
     "moreActions": "Meer acties",
     "markAsUnread": "Markeer als ongelezen",
@@ -102,5 +107,6 @@
     "androidAutoBackupFoundMessage": "An Android backup was restored for Flux News. If the backup is encrypted, you will be asked for the password before restoring.",
     "checkAndroidAutoBackup": "Check Android backup",
     "noAndroidAutoBackupFound": "No Android backup was found.",
-    "optional": "Optioneel"
+    "optional": "Optioneel",
+    "floating": "Zwevend"
 }

@@ -1,6 +1,41 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flux_news/ui/floating_chrome_edge_gradient.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+const EdgeInsetsDirectional iosLiquidGlassSidebarHeaderPadding =
+    EdgeInsetsDirectional.fromSTEB(20, 24, 20, 16);
+
+/// Owns the iOS news-list edge treatment behind floating controls.
+///
+/// Keeping this behind a Flux News facade lets the current Flutter
+/// approximation be replaced by iOS-native scroll-edge APIs without changing
+/// the surrounding phone and tablet layouts.
+class IOSNewsScrollEdgeEffect extends StatelessWidget {
+  const IOSNewsScrollEdgeEffect({
+    super.key,
+    required this.child,
+    required this.topChromeExtent,
+    required this.isTablet,
+  });
+
+  final Widget child;
+  final double topChromeExtent;
+  final bool isTablet;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassScrollEdgeEffect(
+      topFadeHeight: topChromeExtent + floatingChromeGradientTransitionExtent,
+      bottomFadeHeight: MediaQuery.paddingOf(context).bottom +
+          floatingChromeGradientTransitionExtent,
+      fadeBottom: !isTablet,
+      style: GlassScrollEdgeStyle.soft,
+      fadeColor: Theme.of(context).scaffoldBackgroundColor,
+      child: child,
+    );
+  }
+}
 
 const _lightHighContrastGlassSettings = LiquidGlassSettings(
   glassColor: Color(0x3DFFFFFF),

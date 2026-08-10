@@ -9,6 +9,115 @@ import 'package:provider/provider.dart';
 
 export '../adaptive_glass_dialog.dart';
 
+const double adaptiveSettingsMaximumContentWidth = 720;
+
+/// The shared rounded surface used to group settings rows on every settings
+/// page. Pages with no meaningful sections can place all rows in one group.
+class AdaptiveSettingsGroup extends StatelessWidget {
+  const AdaptiveSettingsGroup({
+    super.key,
+    required this.children,
+    this.title,
+  });
+
+  final List<Widget> children;
+  final String? title;
+
+  @override
+  Widget build(BuildContext context) {
+    final groupChildren = List<Widget>.of(children);
+    while (groupChildren.isNotEmpty && groupChildren.first is Divider) {
+      groupChildren.removeAt(0);
+    }
+    while (groupChildren.isNotEmpty && groupChildren.last is Divider) {
+      groupChildren.removeLast();
+    }
+
+    final theme = Theme.of(context);
+    final secondaryLabel = Platform.isIOS
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : theme.colorScheme.onSurfaceVariant;
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: adaptiveSettingsMaximumContentWidth,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (title case final title?)
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 6),
+                  child: Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: secondaryLabel,
+                      fontWeight: Platform.isAndroid ? FontWeight.w600 : null,
+                    ),
+                  ),
+                ),
+              AdaptiveSettingsGroupSurface(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: groupChildren,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rounded settings surface for pages that need to provide their own
+/// scrollable child, such as the reorderable action list.
+class AdaptiveSettingsGroupSurface extends StatelessWidget {
+  const AdaptiveSettingsGroupSurface({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final useTrueBlack = theme.brightness == Brightness.dark &&
+        theme.colorScheme.surface == Colors.black;
+    final groupColor = useTrueBlack
+        ? Colors.black
+        : Platform.isIOS
+            ? CupertinoColors.secondarySystemGroupedBackground
+                .resolveFrom(context)
+            : theme.colorScheme.surfaceContainerLow;
+    final dividerColor = Platform.isIOS
+        ? CupertinoColors.separator.resolveFrom(context)
+        : theme.colorScheme.outlineVariant;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(Platform.isIOS ? 18 : 16),
+      child: Material(
+        color: groupColor,
+        child: DividerTheme(
+          data: DividerThemeData(
+            color: dividerColor,
+            space: 8,
+            thickness: 0.5,
+            // Align separators with the leading edge of row icons.
+            indent: 16,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 /// A Material switch on Android and a Liquid Glass switch on iOS.
 class AdaptiveSettingsSwitch extends StatelessWidget {
   const AdaptiveSettingsSwitch({
@@ -55,6 +164,88 @@ class AdaptiveSettingsSwitch extends StatelessWidget {
                   useClearEffect: useClearEffect,
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A full-width settings row that opens another settings page.
+class AdaptiveSettingsNavigationRow extends StatelessWidget {
+  const AdaptiveSettingsNavigationRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final secondaryColor = Platform.isIOS
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : theme.colorScheme.onSurfaceVariant;
+    final hasSubtitle = subtitle != null && subtitle!.isNotEmpty;
+
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: Platform.isIOS ? 44 : 48),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: hasSubtitle ? 8 : 0),
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: 17,
+                    end: Platform.isIOS ? 15 : 30,
+                  ),
+                  child: Icon(icon),
+                ),
+                Expanded(
+                  child: hasSubtitle
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: theme.textTheme.titleMedium,
+                              overflow: TextOverflow.visible,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: secondaryColor,
+                              ),
+                              overflow: TextOverflow.visible,
+                            ),
+                          ],
+                        )
+                      : Text(
+                          title,
+                          style: theme.textTheme.titleMedium,
+                          overflow: TextOverflow.visible,
+                        ),
+                ),
+                const Padding(
+                  padding: EdgeInsetsDirectional.only(start: 12, end: 12),
+                  child: ExcludeSemantics(
+                    child: Icon(Icons.chevron_right),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

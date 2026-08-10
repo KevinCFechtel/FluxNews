@@ -152,17 +152,47 @@ abstract class AppLocalizations {
   /// **'Show Mark as read in the bottom toolbar'**
   String get iosMarkAsReadQuickAction;
 
-  /// No description provided for @iosSyncQuickAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Show Sync in the bottom toolbar'**
-  String get iosSyncQuickAction;
-
   /// No description provided for @iosClearLiquidGlass.
   ///
   /// In en, this message translates to:
   /// **'Use Clear Liquid Glass'**
   String get iosClearLiquidGlass;
+
+  /// No description provided for @androidFloatingToolbarActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure floating toolbar actions'**
+  String get androidFloatingToolbarActions;
+
+  /// No description provided for @androidFloatingToolbarFixedActionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The fixed actions are always shown. Select and arrange the additional actions.'**
+  String get androidFloatingToolbarFixedActionsHint;
+
+  /// No description provided for @iosToolbarActionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync remains fixed. Selected actions are shown directly as space allows; additional actions remain under More.'**
+  String get iosToolbarActionsHint;
+
+  /// No description provided for @androidFloatingActionToggleNewsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle all/unread news'**
+  String get androidFloatingActionToggleNewsStatus;
+
+  /// No description provided for @androidFloatingActionToggleSortOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Change sort order'**
+  String get androidFloatingActionToggleSortOrder;
+
+  /// No description provided for @androidFloatingAccentTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the accent color for floating elements'**
+  String get androidFloatingAccentTint;
 
   /// No description provided for @markAsReadAndNext.
   ///
@@ -1039,6 +1069,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Glass Effect'**
   String get glass;
+
+  /// No description provided for @floating.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating'**
+  String get floating;
 
   /// No description provided for @appBarType.
   ///

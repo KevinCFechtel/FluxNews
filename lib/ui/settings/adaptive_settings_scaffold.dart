@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/ios_liquid_glass_style.dart';
+import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -59,7 +60,13 @@ class _AdaptiveSettingsScaffoldState extends State<AdaptiveSettingsScaffold> {
           ),
           actions: widget.actions,
         ),
-        body: widget.body,
+        body: SafeArea(
+          top: false,
+          left: false,
+          right: false,
+          maintainBottomViewPadding: true,
+          child: widget.body,
+        ),
       );
     }
 
@@ -165,7 +172,9 @@ class _AdaptiveSettingsScaffoldState extends State<AdaptiveSettingsScaffold> {
   Widget _wideIOSBody(Widget body) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth.clamp(0.0, 720.0).toDouble();
+        final width = constraints.maxWidth
+            .clamp(0.0, adaptiveSettingsMaximumContentWidth)
+            .toDouble();
         return Align(
           alignment: Alignment.topCenter,
           child: SizedBox(

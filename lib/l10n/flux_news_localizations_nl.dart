@@ -34,11 +34,30 @@ class AppLocalizationsNl extends AppLocalizations {
       'Toon Markeer als gelezen in de onderste werkbalk';
 
   @override
-  String get iosSyncQuickAction =>
-      'Toon synchronisatie in de onderste werkbalk';
+  String get iosClearLiquidGlass => 'Helder Liquid Glass gebruiken';
 
   @override
-  String get iosClearLiquidGlass => 'Helder Liquid Glass gebruiken';
+  String get androidFloatingToolbarActions =>
+      'Acties van de zwevende werkbalk instellen';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'De vaste acties worden altijd getoond. Selecteer en rangschik de extra acties.';
+
+  @override
+  String get iosToolbarActionsHint =>
+      'Synchronisatie blijft vast. Geselecteerde acties worden direct getoond zolang er ruimte is; extra acties blijven onder Meer beschikbaar.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Wisselen tussen alle en ongelezen nieuws';
+
+  @override
+  String get androidFloatingActionToggleSortOrder => 'Sorteervolgorde wijzigen';
+
+  @override
+  String get androidFloatingAccentTint =>
+      'Accentkleur voor zwevende elementen gebruiken';
 
   @override
   String get markAsReadAndNext => 'Markeer als gelezen en open volgende';
@@ -523,6 +542,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get glass => 'Glass Effect';
+
+  @override
+  String get floating => 'Zwevend';
 
   @override
   String get appBarType => 'Select the App Bar Type';

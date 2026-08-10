@@ -34,10 +34,30 @@ class AppLocalizationsGl extends AppLocalizations {
       'Mostrar Marcar como lido na barra inferior';
 
   @override
-  String get iosSyncQuickAction => 'Mostrar Sincronizar na barra inferior';
+  String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
 
   @override
-  String get iosClearLiquidGlass => 'Usar Liquid Glass transparente';
+  String get androidFloatingToolbarActions =>
+      'Configurar as accións da barra flotante';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'As accións fixas móstranse sempre. Selecciona e ordena as accións adicionais.';
+
+  @override
+  String get iosToolbarActionsHint =>
+      'A sincronización permanece fixa. As accións seleccionadas móstranse directamente cando hai espazo; as adicionais permanecen en Máis.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Alternar entre todas as novas e as non lidas';
+
+  @override
+  String get androidFloatingActionToggleSortOrder => 'Cambiar a orde';
+
+  @override
+  String get androidFloatingAccentTint =>
+      'Usar a cor de acento nos elementos flotantes';
 
   @override
   String get markAsReadAndNext => 'Marcar como lido e abrir a seguinte';
@@ -526,6 +546,9 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get glass => 'Efecto vidro';
+
+  @override
+  String get floating => 'Flotante';
 
   @override
   String get appBarType => 'Elixe o tipo de barra da app';

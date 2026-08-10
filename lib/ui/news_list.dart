@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/ui/news_card.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/ui/news_row.dart';
+import 'package:flux_news/ui/adaptive_layout.dart';
 import 'package:flux_news/ui/sliver_glass_app_bar.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
@@ -34,8 +36,30 @@ class BodyNewsList extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsCounterState appCounterState =
         context.watch<FluxNewsCounterState>();
+    final useAndroidFloatingChrome = Platform.isAndroid &&
+        (appState.isTablet ||
+            appState.appBarType == FluxNewsState.appBarFloatingType);
+    final bottomContentInset = floatingNewsListBottomInset(
+      hasFloatingBottomToolbar:
+          useAndroidFloatingChrome || (Platform.isIOS && !appState.isTablet),
+      mediaBottomPadding: MediaQuery.paddingOf(context).bottom,
+    );
     bool searchView = false;
     Widget listHeader({required bool emptyBody}) {
+      if (useAndroidFloatingChrome) {
+        return SliverToBoxAdapter(
+          child: SizedBox(height: topContentInset),
+        );
+      }
+      if (useStandaloneTabletListHeaderInset(
+        isTablet: appState.isTablet,
+        topContentInset: topContentInset,
+        hasLargeTitleController: largeTitleController != null,
+      )) {
+        return SliverToBoxAdapter(
+          child: SizedBox(height: topContentInset),
+        );
+      }
       if (largeTitleController != null) {
         final showCount = appState.multilineAppBarText;
         final largeTitle = GlassLargeTitle(
@@ -154,9 +178,12 @@ class BodyNewsList extends StatelessWidget {
                                 'RenderSuperSliverList';
                           },
                           child: largeTitleController != null ||
-                                  !appState.isTablet
+                                  !appState.isTablet ||
+                                  topContentInset > 0
                               ? largeTitleController != null ||
-                                      appState.useSliverAppBar
+                                      appState.useSliverAppBar ||
+                                      useAndroidFloatingChrome ||
+                                      topContentInset > 0
                                   ? CustomScrollView(
                                       controller: appState.scrollController,
                                       physics: AlwaysScrollableScrollPhysics(),
@@ -186,6 +213,12 @@ class BodyNewsList extends StatelessWidget {
                                                         newsList: snapshot.data,
                                                       );
                                               }),
+                                          if (bottomContentInset > 0)
+                                            SliverToBoxAdapter(
+                                              child: SizedBox(
+                                                height: bottomContentInset,
+                                              ),
+                                            ),
                                         ])
                                   : SuperListView.builder(
                                       key: const PageStorageKey<String>(

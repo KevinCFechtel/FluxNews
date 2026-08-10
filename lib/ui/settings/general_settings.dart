@@ -6,6 +6,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_scaffold.dart';
 import 'package:flux_news/ui/settings/adaptive_settings_controls.dart';
+import 'package:flux_news/ui/settings/android_floating_toolbar_settings.dart';
 import 'package:provider/provider.dart';
 
 import '../../state_management/flux_news_state.dart';
@@ -64,14 +65,20 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     FluxNewsState appState = context.watch<FluxNewsState>();
     FluxNewsThemeState themeState = context.read<FluxNewsThemeState>();
+    final showAndroidFabSettings = !Platform.isIOS &&
+        !appState.isTablet &&
+        appState.appBarType != FluxNewsState.appBarFloatingType;
+    final showAppBarCountSetting = Platform.isIOS || !appState.isTablet;
+    final showAndroidAppBarTypeSetting = !Platform.isIOS && !appState.isTablet;
+    final showFloatingToolbarSettings = Platform.isIOS ||
+        (!Platform.isIOS &&
+            (appState.isTablet ||
+                appState.appBarType == FluxNewsState.appBarFloatingType));
     // return the body of the feed settings
     return SingleChildScrollView(
-        child: Container(
+        child: Padding(
             padding: const EdgeInsets.all(12),
-            alignment: Alignment.center,
-            // this is the main column of the settings page
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: AdaptiveSettingsGroup(children: [
               const Divider(),
               Padding(
                 padding: const EdgeInsets.only(top: 12.0),
@@ -502,41 +509,43 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
               const Divider(),
               // this row contains the selection if the app bar text is multiline
               // is turned on, the app bar text is showing the news count in the second line
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
-                    child: const Icon(
-                      Icons.numbers,
+              if (showAppBarCountSetting)
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                      child: const Icon(
+                        Icons.numbers,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.multilineAppBarTextSetting,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.visible,
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!
+                            .multilineAppBarTextSetting,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
                     ),
-                  ),
-                  AdaptiveSettingsSwitch(
-                    value: appState.multilineAppBarText,
-                    onChanged: (bool value) {
-                      String stringValue =
-                          FluxNewsState.secureStorageFalseString;
-                      if (value == true) {
-                        stringValue = FluxNewsState.secureStorageTrueString;
-                      }
-                      appState.multilineAppBarText = value;
-                      appState.storage.write(
-                          key:
-                              FluxNewsState.secureStorageMultilineAppBarTextKey,
-                          value: stringValue);
-                      appState.refreshView();
-                    },
-                  ),
-                ],
-              ),
-              const Divider(),
+                    AdaptiveSettingsSwitch(
+                      value: appState.multilineAppBarText,
+                      onChanged: (bool value) {
+                        String stringValue =
+                            FluxNewsState.secureStorageFalseString;
+                        if (value == true) {
+                          stringValue = FluxNewsState.secureStorageTrueString;
+                        }
+                        appState.multilineAppBarText = value;
+                        appState.storage.write(
+                            key: FluxNewsState
+                                .secureStorageMultilineAppBarTextKey,
+                            value: stringValue);
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (showAppBarCountSetting) const Divider(),
               // this row contains the selection if the feed icon is shown
               Row(
                 children: [
@@ -607,69 +616,8 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                 ],
               ),
               const Divider(),
-              if (Platform.isIOS)
-                Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
-                      child: Icon(Icons.check_circle_outline),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.iosMarkAsReadQuickAction,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    AdaptiveSettingsSwitch(
-                      value: appState.iosMarkAsReadQuickAction,
-                      onChanged: (bool value) {
-                        appState.iosMarkAsReadQuickAction = value;
-                        appState.storage.write(
-                          key: FluxNewsState
-                              .secureStorageIOSMarkAsReadQuickActionKey,
-                          value: value
-                              ? FluxNewsState.secureStorageTrueString
-                              : FluxNewsState.secureStorageFalseString,
-                        );
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-              if (Platform.isIOS) const Divider(),
-              if (Platform.isIOS)
-                Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 17.0, right: 15.0),
-                      child: Icon(Icons.refresh),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.iosSyncQuickAction,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    AdaptiveSettingsSwitch(
-                      value: appState.iosSyncQuickAction,
-                      onChanged: (bool value) {
-                        appState.iosSyncQuickAction = value;
-                        appState.storage.write(
-                          key: FluxNewsState.secureStorageIOSSyncQuickActionKey,
-                          value: value
-                              ? FluxNewsState.secureStorageTrueString
-                              : FluxNewsState.secureStorageFalseString,
-                        );
-                        appState.refreshView();
-                      },
-                    ),
-                  ],
-                ),
-              if (Platform.isIOS) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
-              if (!Platform.isIOS)
+              if (showAndroidFabSettings)
                 Row(
                   children: [
                     Padding(
@@ -704,9 +652,9 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     ),
                   ],
                 ),
-              if (!Platform.isIOS) const Divider(),
+              if (showAndroidFabSettings) const Divider(),
               // this row contains the selection if the button to mark as read is turned on
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? Row(
                       children: [
                         Padding(
@@ -743,12 +691,12 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       ],
                     )
                   : SizedBox.shrink(),
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? const Divider()
                   : SizedBox.shrink(),
               // this row contains the selection of the function of the action button
               // there are the choices of sync news and mark news as read
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? Row(
                       children: [
                         Padding(
@@ -796,12 +744,12 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                       ],
                     )
                   : SizedBox.shrink(),
-              !Platform.isIOS && appState.floatingButtonVisible
+              showAndroidFabSettings && appState.floatingButtonVisible
                   ? const Divider()
                   : SizedBox.shrink(),
               // this row contains the selection of the style of the abb bar
-              // there are the choices of normal, overscrollable and glass effect
-              if (!Platform.isIOS)
+              // choices: normal, collapsible, glass, or floating chrome
+              if (showAndroidAppBarTypeSetting)
                 Row(
                   children: [
                     Padding(
@@ -865,6 +813,22 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                                 key: FluxNewsState
                                     .secureStorageUseSliverAppBarKey,
                                 value: FluxNewsState.secureStorageTrueString);
+                          } else if (value.key ==
+                              FluxNewsState.appBarFloatingType) {
+                            appState.scrolloverAppBar = false;
+                            appState.glassAppBar = false;
+                            appState.useSliverAppBar = true;
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageScrolloverAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState.secureStorageGlassAppBarKey,
+                                value: FluxNewsState.secureStorageFalseString);
+                            appState.storage.write(
+                                key: FluxNewsState
+                                    .secureStorageUseSliverAppBarKey,
+                                value: FluxNewsState.secureStorageTrueString);
                           } else {
                             appState.scrolloverAppBar = false;
                             appState.glassAppBar = false;
@@ -894,7 +858,48 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                     ),
                   ],
                 ),
-              if (!Platform.isIOS) const Divider(),
+              if (showAndroidAppBarTypeSetting) const Divider(),
+              if (!Platform.isIOS &&
+                  (appState.isTablet ||
+                      appState.appBarType == FluxNewsState.appBarFloatingType))
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 17.0, right: 30.0),
+                      child: Icon(Icons.palette_outlined),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.androidFloatingAccentTint,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.androidFloatingAccentTint,
+                      onChanged: (bool value) {
+                        appState.androidFloatingAccentTint = value;
+                        appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageAndroidFloatingAccentTintKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
+              if (!Platform.isIOS &&
+                  (appState.isTablet ||
+                      appState.appBarType == FluxNewsState.appBarFloatingType))
+                const Divider(),
+              if (showFloatingToolbarSettings)
+                Platform.isIOS
+                    ? const IOSToolbarSettingsTile()
+                    : const AndroidFloatingToolbarSettingsTile(),
+              if (showFloatingToolbarSettings) const Divider(),
               // this row contains the selection of the image cache duration in days
               Row(
                 children: [

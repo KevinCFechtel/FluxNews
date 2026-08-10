@@ -138,11 +138,9 @@ class _WidgetSettingsState extends State<WidgetSettings> {
       title: AppLocalizations.of(context)!.widgetSettings,
       useLargeTitle: true,
       body: SingleChildScrollView(
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.all(12),
-          alignment: Alignment.center,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: AdaptiveSettingsGroup(
             children: [
               const Divider(),
               Row(

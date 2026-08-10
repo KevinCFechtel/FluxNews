@@ -121,86 +121,84 @@ class _DownloadStorageSettingsState extends State<DownloadStorageSettings> {
         child: ListView(
           padding: const EdgeInsets.all(12),
           children: [
-            FutureBuilder<List<DownloadedAudioInfo>>(
-              future: _downloadsFuture,
-              builder: (context, snapshot) {
-                final count =
-                    (snapshot.data ?? const <DownloadedAudioInfo>[]).length;
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(AppLocalizations.of(context)!.downloadedData,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Text(
-                            '$count ${AppLocalizations.of(context)!.fileList}'),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            FutureBuilder<int>(
-              future: _totalSizeFuture,
-              builder: (context, snapshot) {
-                final totalSize = snapshot.data ?? 0;
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(AppLocalizations.of(context)!.totalStorage,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Text(
-                          AudioDownloadService.formatBytes(totalSize),
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            FutureBuilder<int>(
-              future: _totalSizeFuture,
-              builder: (context, snapshot) {
-                final totalSize = snapshot.data ?? 0;
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Platform.isIOS
-                          ? AdaptiveSettingsButton(
-                              onPressed: totalSize == 0 ? null : _deleteAll,
-                              isDestructive: true,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.delete_sweep_outlined),
-                                  const SizedBox(width: 8),
-                                  Text(AppLocalizations.of(context)!
-                                      .downloadsManagerClearAll),
-                                ],
+            AdaptiveSettingsGroup(
+              children: [
+                FutureBuilder<List<DownloadedAudioInfo>>(
+                  future: _downloadsFuture,
+                  builder: (context, snapshot) {
+                    final count =
+                        (snapshot.data ?? const <DownloadedAudioInfo>[]).length;
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(AppLocalizations.of(context)!.downloadedData,
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          Text(
+                              '$count ${AppLocalizations.of(context)!.fileList}'),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                FutureBuilder<int>(
+                  future: _totalSizeFuture,
+                  builder: (context, snapshot) {
+                    final totalSize = snapshot.data ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(AppLocalizations.of(context)!.totalStorage,
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          Text(
+                            AudioDownloadService.formatBytes(totalSize),
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                FutureBuilder<int>(
+                  future: _totalSizeFuture,
+                  builder: (context, snapshot) {
+                    final totalSize = snapshot.data ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Platform.isIOS
+                            ? AdaptiveSettingsButton(
+                                onPressed: totalSize == 0 ? null : _deleteAll,
+                                isDestructive: true,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.delete_sweep_outlined),
+                                    const SizedBox(width: 8),
+                                    Text(AppLocalizations.of(context)!
+                                        .downloadsManagerClearAll),
+                                  ],
+                                ),
+                              )
+                            : FilledButton.icon(
+                                onPressed: totalSize == 0 ? null : _deleteAll,
+                                icon: const Icon(Icons.delete_sweep_outlined),
+                                label: Text(AppLocalizations.of(context)!
+                                    .downloadsManagerClearAll),
                               ),
-                            )
-                          : FilledButton.icon(
-                              onPressed: totalSize == 0 ? null : _deleteAll,
-                              icon: const Icon(Icons.delete_sweep_outlined),
-                              label: Text(AppLocalizations.of(context)!
-                                  .downloadsManagerClearAll),
-                            ),
-                    ),
-                  ),
-                );
-              },
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

@@ -70,12 +70,9 @@ class _FluxNewsHeaderSettingsBodyState
     FluxNewsState appState = context.watch<FluxNewsState>();
     // return the body of the feed settings
     return SingleChildScrollView(
-        child: Container(
+        child: Padding(
             padding: const EdgeInsets.all(12),
-            alignment: Alignment.center,
-            // this is the main column of the settings page
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: AdaptiveSettingsGroup(children: [
               Wrap(children: [
                 Text(AppLocalizations.of(context)!.headerKey),
                 AdaptiveSettingsTextField(

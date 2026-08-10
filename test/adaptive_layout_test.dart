@@ -1,0 +1,196 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flux_news/state_management/flux_news_state.dart';
+import 'package:flux_news/ui/adaptive_layout.dart';
+import 'package:flux_news/ui/ios_toolbar_layout.dart';
+
+void main() {
+  test('two-pane layout uses shared width and height breakpoints', () {
+    expect(useTwoPaneLayout(const Size(599, 1000)), isFalse);
+    expect(useTwoPaneLayout(const Size(600, 480)), isTrue);
+    expect(useTwoPaneLayout(const Size(900, 479)), isFalse);
+  });
+
+  test('sidebar width stays within its compact bounds', () {
+    expect(adaptiveSidebarWidth(600), minimumSidebarWidth);
+    expect(adaptiveSidebarWidth(1000), 280);
+    expect(adaptiveSidebarWidth(2000), maximumSidebarWidth);
+  });
+
+  test('full-width portrait iPads keep the permanent sidebar', () {
+    expect(
+      useIOSPermanentSidebar(isTablet: true, availableWidth: 834),
+      isTrue,
+    );
+    expect(
+      useIOSPermanentSidebar(isTablet: true, availableWidth: 799),
+      isFalse,
+    );
+    expect(
+      useIOSPermanentSidebar(isTablet: false, availableWidth: 834),
+      isFalse,
+    );
+  });
+
+  test('iPad large title takes precedence over the tablet top spacer', () {
+    expect(
+      useStandaloneTabletListHeaderInset(
+        isTablet: true,
+        topContentInset: 64,
+        hasLargeTitleController: true,
+      ),
+      isFalse,
+    );
+    expect(
+      useStandaloneTabletListHeaderInset(
+        isTablet: true,
+        topContentInset: 64,
+        hasLargeTitleController: false,
+      ),
+      isTrue,
+    );
+  });
+
+  test('floating bottom chrome becomes scrollable list space', () {
+    expect(
+      floatingNewsListBottomInset(
+        hasFloatingBottomToolbar: true,
+        mediaBottomPadding: 82,
+      ),
+      82,
+    );
+    expect(
+      floatingNewsListBottomInset(
+        hasFloatingBottomToolbar: false,
+        mediaBottomPadding: 82,
+      ),
+      0,
+    );
+    expect(
+      floatingNewsListBottomInset(
+        hasFloatingBottomToolbar: true,
+        mediaBottomPadding: -1,
+      ),
+      0,
+    );
+  });
+
+  test('Android bottom navigation inset survives consumed body padding', () {
+    expect(
+      androidBottomSystemNavigationInset(
+        const MediaQueryData(
+          padding: EdgeInsets.zero,
+          viewPadding: EdgeInsets.only(bottom: 24),
+          systemGestureInsets: EdgeInsets.only(bottom: 32),
+        ),
+      ),
+      32,
+    );
+    expect(
+      androidBottomSystemNavigationInset(
+        const MediaQueryData(
+          padding: EdgeInsets.only(bottom: 48),
+          viewPadding: EdgeInsets.only(bottom: 24),
+          systemGestureInsets: EdgeInsets.only(bottom: 16),
+        ),
+      ),
+      48,
+    );
+  });
+
+  test('separating display features are classified by direction', () {
+    const size = Size(1000, 800);
+    const verticalHinge = Rect.fromLTWH(495, 0, 10, 800);
+    const horizontalHinge = Rect.fromLTWH(0, 395, 1000, 10);
+
+    expect(
+      verticalSeparatingDisplayFeature(size, const [verticalHinge]),
+      verticalHinge,
+    );
+    expect(
+      horizontalSeparatingDisplayFeature(size, const [horizontalHinge]),
+      horizontalHinge,
+    );
+    expect(
+      verticalSeparatingDisplayFeature(size, const [horizontalHinge]),
+      isNull,
+    );
+  });
+
+  test('iPad toolbar keeps selected order and overflows on narrow panes', () {
+    final visibleActions = iosTabletVisibleToolbarActions(
+      selectedActions: FluxNewsState.iosToolbarAvailableActions,
+      availableActions: FluxNewsState.iosToolbarAvailableActions,
+      newsPaneWidth: 640,
+    );
+
+    expect(
+      visibleActions,
+      FluxNewsState.iosToolbarAvailableActions.take(5),
+    );
+  });
+
+  test('iPad toolbar can omit More when every action fits', () {
+    expect(
+      iosTabletVisibleToolbarActions(
+        selectedActions: FluxNewsState.iosToolbarAvailableActions,
+        availableActions: FluxNewsState.iosToolbarAvailableActions,
+        newsPaneWidth: 764,
+      ),
+      FluxNewsState.iosToolbarAvailableActions,
+    );
+  });
+
+  test('iPhone toolbar keeps the first three selected actions', () {
+    expect(
+      iosPhoneVisibleToolbarActions(
+        selectedActions: const <String>[
+          FluxNewsState.androidFloatingActionSettings,
+          'unsupported',
+          FluxNewsState.androidFloatingActionSearch,
+          FluxNewsState.androidFloatingActionSettings,
+          FluxNewsState.androidFloatingActionPodcasts,
+        ],
+        availableActions: FluxNewsState.iosToolbarAvailableActions,
+      ),
+      const <String>[
+        FluxNewsState.androidFloatingActionSettings,
+        FluxNewsState.androidFloatingActionSearch,
+        FluxNewsState.androidFloatingActionPodcasts,
+      ],
+    );
+  });
+
+  test('Mark as read and next is limited to feeds and categories', () {
+    const action = FluxNewsState.floatingToolbarActionMarkAsReadAndNext;
+
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.feedElementType,
+      ),
+      isTrue,
+    );
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.categoryElementType,
+      ),
+      isTrue,
+    );
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.allNewsElementType,
+      ),
+      isFalse,
+    );
+    expect(
+      FluxNewsState.isToolbarActionAvailableForElementType(
+        action,
+        FluxNewsState.bookmarkedNewsElementType,
+      ),
+      isFalse,
+    );
+  });
+}

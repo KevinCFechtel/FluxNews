@@ -34,10 +34,30 @@ class AppLocalizationsTr extends AppLocalizations {
       'Alt araç çubuğunda Okundu olarak işaretle seçeneğini göster';
 
   @override
-  String get iosSyncQuickAction => 'Alt araç çubuğunda senkronizasyonu göster';
+  String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
 
   @override
-  String get iosClearLiquidGlass => 'Şeffaf Liquid Glass kullan';
+  String get androidFloatingToolbarActions =>
+      'Yüzen araç çubuğu işlemlerini yapılandır';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'Sabit işlemler her zaman gösterilir. Ek işlemleri seçip sıralayın.';
+
+  @override
+  String get iosToolbarActionsHint =>
+      'Senkronizasyon sabit kalır. Seçilen işlemler alan elverdiğince doğrudan gösterilir; diğer işlemler Daha Fazla altında kalır.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Tüm ve okunmamış haberler arasında geçiş yap';
+
+  @override
+  String get androidFloatingActionToggleSortOrder =>
+      'Sıralama düzenini değiştir';
+
+  @override
+  String get androidFloatingAccentTint => 'Yüzen öğelerde vurgu rengini kullan';
 
   @override
   String get markAsReadAndNext => 'Okundu olarak işaretle ve sonrakini aç';
@@ -514,6 +534,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get glass => 'Glass Effect';
+
+  @override
+  String get floating => 'Yüzen';
 
   @override
   String get appBarType => 'Select the App Bar Type';

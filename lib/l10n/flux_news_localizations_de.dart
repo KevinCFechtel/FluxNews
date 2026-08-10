@@ -34,10 +34,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Als gelesen markieren in der unteren Leiste anzeigen';
 
   @override
-  String get iosSyncQuickAction => 'Sync in der unteren Leiste anzeigen';
+  String get iosClearLiquidGlass => 'Klares Liquid Glass verwenden';
 
   @override
-  String get iosClearLiquidGlass => 'Klares Liquid Glass verwenden';
+  String get androidFloatingToolbarActions =>
+      'Aktionen der schwebenden Werkzeugleiste konfigurieren';
+
+  @override
+  String get androidFloatingToolbarFixedActionsHint =>
+      'Die festen Aktionen werden immer angezeigt. Wähle und sortiere die zusätzlichen Aktionen.';
+
+  @override
+  String get iosToolbarActionsHint =>
+      'Sync bleibt fest. Ausgewählte Aktionen werden direkt angezeigt, soweit der Platz reicht; weitere Aktionen bleiben unter „Mehr“ verfügbar.';
+
+  @override
+  String get androidFloatingActionToggleNewsStatus =>
+      'Alle/Ungelesene Nachrichten umschalten';
+
+  @override
+  String get androidFloatingActionToggleSortOrder =>
+      'Sortierreihenfolge wechseln';
+
+  @override
+  String get androidFloatingAccentTint =>
+      'Akzentfarbe für schwebende Elemente verwenden';
 
   @override
   String get markAsReadAndNext => 'Als gelesen markieren und nächste öffnen';
@@ -529,6 +550,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get glass => 'Glas Effekt';
+
+  @override
+  String get floating => 'Schwebend';
 
   @override
   String get appBarType => 'Wähle die Art der Appbar';
