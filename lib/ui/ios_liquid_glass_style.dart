@@ -5,6 +5,32 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 const EdgeInsetsDirectional iosLiquidGlassSidebarHeaderPadding =
     EdgeInsetsDirectional.fromSTEB(20, 24, 20, 16);
+const double iosToolbarIconExtent = 24;
+
+/// Keeps the iOS toolbar geometry stable while Sync changes between its
+/// refresh and progress states.
+class IOSSyncStatusIcon extends StatelessWidget {
+  const IOSSyncStatusIcon({
+    super.key,
+    required this.syncing,
+    required this.color,
+  });
+
+  final bool syncing;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: iosToolbarIconExtent,
+      child: Center(
+        child: syncing
+            ? CupertinoActivityIndicator(radius: 9, color: color)
+            : Icon(Icons.refresh, size: iosToolbarIconExtent, color: color),
+      ),
+    );
+  }
+}
 
 /// Owns the iOS news-list edge treatment behind floating controls.
 ///

@@ -1742,9 +1742,10 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
           GlassButtonGroupItem(
             label: appState.syncProcess ? strings.cancel : strings.syncNews,
             onTap: () => unawaited(_sync(appState)),
-            icon: appState.syncProcess
-                ? CupertinoActivityIndicator(radius: 9, color: foreground)
-                : Icon(Icons.refresh, color: foreground),
+            icon: IOSSyncStatusIcon(
+              syncing: appState.syncProcess,
+              color: foreground,
+            ),
           ),
           for (final action in visibleActions)
             _iosDirectAction(
@@ -1884,9 +1885,10 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
           GlassButtonGroupItem(
             label: appState.syncProcess ? strings.cancel : strings.syncNews,
             onTap: () => unawaited(_sync(appState)),
-            icon: appState.syncProcess
-                ? CupertinoActivityIndicator(radius: 9, color: foreground)
-                : Icon(Icons.refresh, color: foreground),
+            icon: IOSSyncStatusIcon(
+              syncing: appState.syncProcess,
+              color: foreground,
+            ),
           ),
           for (final action in visibleActions)
             _iosDirectAction(
@@ -2038,12 +2040,10 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
           GlassButtonGroupItem(
             label: appState.syncProcess ? strings.cancel : strings.syncNews,
             onTap: () => unawaited(_sync(appState)),
-            icon: appState.syncProcess
-                ? CupertinoActivityIndicator(
-                    radius: 9,
-                    color: glassForeground,
-                  )
-                : Icon(Icons.refresh, color: glassForeground),
+            icon: IOSSyncStatusIcon(
+              syncing: appState.syncProcess,
+              color: glassForeground,
+            ),
           ),
           for (final action in visibleActions)
             _iosDirectAction(

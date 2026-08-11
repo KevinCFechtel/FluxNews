@@ -4,6 +4,29 @@ import 'package:flux_news/ui/ios_liquid_glass_style.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 void main() {
+  testWidgets('sync status keeps a stable toolbar icon extent', (tester) async {
+    Future<Size> pumpStatus({required bool syncing}) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Center(
+          child: IOSSyncStatusIcon(
+            syncing: syncing,
+            color: Colors.black,
+          ),
+        ),
+      ));
+      return tester.getSize(find.byType(IOSSyncStatusIcon));
+    }
+
+    expect(
+      await pumpStatus(syncing: false),
+      const Size.square(iosToolbarIconExtent),
+    );
+    expect(
+      await pumpStatus(syncing: true),
+      const Size.square(iosToolbarIconExtent),
+    );
+  });
+
   testWidgets('clear light preset is less frosted than high contrast',
       (tester) async {
     late BuildContext testContext;
