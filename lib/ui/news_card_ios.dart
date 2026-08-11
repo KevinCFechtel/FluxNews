@@ -204,6 +204,20 @@ class NewsCardIOS extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                if (news.starred)
+                                  SizedBox(
+                                    width: 40,
+                                    height: 35,
+                                    child: Icon(
+                                      Icons.star,
+                                      color: news.status ==
+                                              FluxNewsState.unreadNewsStatus
+                                          ? Theme.of(context)
+                                              .primaryIconTheme
+                                              .color
+                                          : Theme.of(context).disabledColor,
+                                    ),
+                                  ),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 8.0),
                                   child: Text(
@@ -211,6 +225,7 @@ class NewsCardIOS extends StatelessWidget {
                                         .read<FluxNewsState>()
                                         .dateFormat
                                         .format(news.getPublishingDate()),
+                                    textAlign: TextAlign.end,
                                     style: news.status ==
                                             FluxNewsState.unreadNewsStatus
                                         ? Theme.of(context).textTheme.bodyMedium
@@ -221,21 +236,6 @@ class NewsCardIOS extends StatelessWidget {
                                                 color: Theme.of(context)
                                                     .disabledColor),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: 40,
-                                  height: 35,
-                                  child: news.starred
-                                      ? Icon(
-                                          Icons.star,
-                                          color: news.status ==
-                                                  FluxNewsState.unreadNewsStatus
-                                              ? Theme.of(context)
-                                                  .primaryIconTheme
-                                                  .color
-                                              : Theme.of(context).disabledColor,
-                                        )
-                                      : const SizedBox.shrink(),
                                 ),
                               ],
                             ),

@@ -211,6 +211,28 @@ void main() {
         contains('Count: 12'),
       );
       expect(find.byType(AndroidFloatingSurface), findsNWidgets(2));
+      final titleSurface = find.ancestor(
+        of: find.text('Feed One'),
+        matching: find.byType(AndroidFloatingSurface),
+      );
+      final drawerSurface = find.byType(AndroidFloatingSurface).first;
+      expect(
+        tester.getSize(titleSurface).height,
+        lessThan(tester.getSize(drawerSurface).height),
+      );
+      expect(
+        tester.getSize(drawerSurface),
+        const Size.square(androidFloatingDrawerVisualExtent),
+      );
+      expect(
+        tester.getSize(find.byType(IconButton).first),
+        const Size.square(androidFloatingDrawerTouchExtent),
+      );
+      expect(tester.widget<FaIcon>(find.byType(FaIcon)).size, 24);
+      expect(
+        tester.widget<AndroidFloatingSurface>(titleSurface).padding,
+        const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6),
+      );
       expect(
         find
             .ancestor(
@@ -303,6 +325,25 @@ void main() {
     expect(find.byIcon(Icons.menu), findsOneWidget);
     expect(find.byIcon(Icons.refresh), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(AndroidFloatingSurface)).height,
+      androidFloatingToolbarVisualHeight,
+    );
+    expect(
+      tester.getSize(find.byType(AndroidFloatingToolbar)).height,
+      androidFloatingToolbarTouchHeight,
+    );
+    final syncButton = find.widgetWithIcon(IconButton, Icons.refresh);
+    final syncStateLayer = find.descendant(
+      of: syncButton,
+      matching: find.byType(Material),
+    );
+    expect(tester.getSize(syncButton), const Size.square(48));
+    expect(syncStateLayer, findsOneWidget);
+    expect(
+      tester.getSize(syncStateLayer),
+      const Size.square(androidFloatingToolbarStateLayerExtent),
+    );
     expect(
       tester
           .widget<AndroidFloatingSurface>(
@@ -515,6 +556,21 @@ void main() {
     expect(find.byIcon(Icons.podcasts), findsOneWidget);
     expect(find.byIcon(Icons.settings), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsNothing);
+  });
+
+  testWidgets('tablet floating sync indicator keeps its stable 15dp extent',
+      (tester) async {
+    final appState = FluxNewsState()..syncProcess = true;
+    await tester.pumpWidget(_menuTestApp(
+      appState,
+      showConfiguredFloatingToolbarActions: true,
+    ));
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(CircularProgressIndicator)),
+      const Size.square(15),
+    );
   });
 
   testWidgets('all-news scope omits Mark-and-next without an empty More menu',

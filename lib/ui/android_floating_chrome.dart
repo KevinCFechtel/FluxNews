@@ -4,6 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 
+const double androidFloatingDrawerVisualExtent = 40;
+const double androidFloatingDrawerTouchExtent = 48;
+const double androidFloatingToolbarVisualHeight = 40;
+const double androidFloatingToolbarTouchHeight = 48;
+const double androidFloatingToolbarStateLayerExtent = 36;
+const double _androidFloatingDrawerVisualInset =
+    (androidFloatingDrawerTouchExtent - androidFloatingDrawerVisualExtent) / 2;
+
 class AndroidStatusBarScrim extends StatelessWidget {
   const AndroidStatusBarScrim({super.key});
 
@@ -109,12 +117,30 @@ class AndroidFloatingFeedHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        AndroidFloatingSurface(
-          accentColor: accentColor,
-          child: IconButton(
-            icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 18),
-            onPressed: onOpenDrawer,
-            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+        SizedBox.square(
+          dimension: androidFloatingDrawerTouchExtent,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                top: _androidFloatingDrawerVisualInset,
+                bottom: _androidFloatingDrawerVisualInset,
+                left: _androidFloatingDrawerVisualInset,
+                right: _androidFloatingDrawerVisualInset,
+                child: AndroidFloatingSurface(
+                  accentColor: accentColor,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              Positioned.fill(
+                child: IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 24),
+                  onPressed: onOpenDrawer,
+                  tooltip:
+                      MaterialLocalizations.of(context).openAppDrawerTooltip,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 8),
@@ -122,7 +148,7 @@ class AndroidFloatingFeedHeader extends StatelessWidget {
           fit: FlexFit.loose,
           child: AndroidFloatingSurface(
             accentColor: accentColor,
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 10, 14, 10),
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -137,7 +163,7 @@ class AndroidFloatingFeedHeader extends StatelessWidget {
                   ),
                 ),
                 if (showCount) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Semantics(
                     label: '${strings.itemCount}: $newsCount',
                     child: Text(
@@ -174,28 +200,67 @@ class AndroidFloatingToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AndroidFloatingSurface(
-      accentColor:
-          useAccentColor ? Theme.of(context).colorScheme.primary : null,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ...leadingChildren,
-          if (children.isNotEmpty)
-            Flexible(
-              fit: FlexFit.loose,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: children,
+    final accentColor =
+        useAccentColor ? Theme.of(context).colorScheme.primary : null;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(
+          top: (androidFloatingToolbarTouchHeight -
+                  androidFloatingToolbarVisualHeight) /
+              2,
+          bottom: (androidFloatingToolbarTouchHeight -
+                  androidFloatingToolbarVisualHeight) /
+              2,
+          child: AndroidFloatingSurface(
+            accentColor: accentColor,
+            child: const SizedBox.expand(),
+          ),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: androidFloatingToolbarTouchHeight,
+          ),
+          child: IconButtonTheme(
+            data: IconButtonThemeData(
+              style: IconButton.styleFrom(
+                minimumSize: const Size.square(
+                  androidFloatingToolbarStateLayerExtent,
                 ),
+                fixedSize: const Size.square(
+                  androidFloatingToolbarStateLayerExtent,
+                ),
+                maximumSize: const Size.square(
+                  androidFloatingToolbarStateLayerExtent,
+                ),
+                padding: const EdgeInsets.all(6),
+                tapTargetSize: MaterialTapTargetSize.padded,
               ),
             ),
-          ...trailingChildren,
-        ],
-      ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...leadingChildren,
+                  if (children.isNotEmpty)
+                    Flexible(
+                      fit: FlexFit.loose,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: children,
+                        ),
+                      ),
+                    ),
+                  ...trailingChildren,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

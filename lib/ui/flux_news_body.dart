@@ -1209,8 +1209,8 @@ class FluxNewsBody extends StatelessWidget {
         },
         icon: appState.syncProcess
             ? const SizedBox(
-                height: 15.0,
-                width: 15.0,
+                height: 15,
+                width: 15,
                 child: CircularProgressIndicator.adaptive(),
               )
             : const Icon(

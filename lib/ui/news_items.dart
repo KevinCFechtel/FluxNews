@@ -80,21 +80,6 @@ class NewsTopHeadline extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Text(
-                      context
-                          .read<FluxNewsState>()
-                          .dateFormat
-                          .format(news.getPublishingDate()),
-                      style: news.status == FluxNewsState.unreadNewsStatus
-                          ? Theme.of(context).textTheme.bodyMedium
-                          : Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(color: Theme.of(context).disabledColor),
-                    ),
-                  ),
                   if (news.getAudioAttachments().isNotEmpty &&
                       news.getFormattedPlaybackTime().isNotEmpty)
                     Padding(
@@ -107,17 +92,32 @@ class NewsTopHeadline extends StatelessWidget {
                                 color: Theme.of(context).disabledColor),
                       ),
                     ),
-                  SizedBox(
-                    width: 40,
-                    height: 35,
-                    child: news.starred
-                        ? Icon(
-                            Icons.star,
-                            color: news.status == FluxNewsState.unreadNewsStatus
-                                ? Theme.of(context).primaryIconTheme.color
-                                : Theme.of(context).disabledColor,
-                          )
-                        : const SizedBox.shrink(),
+                  if (news.starred)
+                    SizedBox(
+                      width: 40,
+                      height: 35,
+                      child: Icon(
+                        Icons.star,
+                        color: news.status == FluxNewsState.unreadNewsStatus
+                            ? Theme.of(context).primaryIconTheme.color
+                            : Theme.of(context).disabledColor,
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text(
+                      context
+                          .read<FluxNewsState>()
+                          .dateFormat
+                          .format(news.getPublishingDate()),
+                      textAlign: TextAlign.end,
+                      style: news.status == FluxNewsState.unreadNewsStatus
+                          ? Theme.of(context).textTheme.bodyMedium
+                          : Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: Theme.of(context).disabledColor),
+                    ),
                   ),
                 ],
               ),
