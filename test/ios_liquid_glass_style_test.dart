@@ -83,7 +83,7 @@ void main() {
         data: MediaQueryData(padding: EdgeInsets.only(bottom: 34)),
         child: IOSNewsScrollEdgeEffect(
           topChromeExtent: 68,
-          isTablet: false,
+          hasBottomControls: true,
           child: SizedBox.expand(),
         ),
       ),
@@ -97,11 +97,11 @@ void main() {
     expect(effect.style, GlassScrollEdgeStyle.soft);
   });
 
-  testWidgets('iPad edge facade omits the unused bottom fade', (tester) async {
+  testWidgets('edge facade omits fade without bottom controls', (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: IOSNewsScrollEdgeEffect(
         topChromeExtent: 68,
-        isTablet: true,
+        hasBottomControls: false,
         child: SizedBox.expand(),
       ),
     ));

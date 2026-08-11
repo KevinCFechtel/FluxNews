@@ -14,6 +14,16 @@ bool useTwoPaneLayout(Size size) {
       size.height >= compactWindowHeightBreakpoint;
 }
 
+/// Moves floating phone actions to the top in a short, single-pane landscape
+/// window where a bottom toolbar would consume scarce content height. Tablets
+/// and expanded foldables already own a dedicated top toolbar.
+bool useTopFloatingActionsInCompactLandscape({
+  required bool isTabletLayout,
+  required Size availableSize,
+}) {
+  return !isTabletLayout && availableSize.width > availableSize.height;
+}
+
 bool useIOSPermanentSidebar({
   required bool isTablet,
   required double availableWidth,
@@ -45,13 +55,13 @@ double floatingNewsListBottomInset({
   return mediaBottomPadding.clamp(0.0, double.infinity).toDouble();
 }
 
-/// Resolves Android's persistent bottom navigation area before a [Scaffold]
+/// Resolves the persistent bottom system-navigation area before a [Scaffold]
 /// can consume its regular media padding.
 ///
 /// Gesture navigation can expose a larger gesture inset while three-button
 /// navigation is normally represented by padding/viewPadding, so the safest
 /// content boundary is the largest of the three values.
-double androidBottomSystemNavigationInset(MediaQueryData mediaQuery) {
+double bottomSystemNavigationInset(MediaQueryData mediaQuery) {
   return math.max(
     mediaQuery.padding.bottom,
     math.max(

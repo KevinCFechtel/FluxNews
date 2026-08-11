@@ -493,6 +493,11 @@ class FluxNewsBody extends StatelessWidget {
     FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     final useFloatingChrome =
         appState.appBarType == FluxNewsState.appBarFloatingType;
+    final useTopFloatingActions = useFloatingChrome &&
+        useTopFloatingActionsInCompactLandscape(
+          isTabletLayout: appState.isTablet,
+          availableSize: MediaQuery.sizeOf(context),
+        );
     bool useSliverAppBar = appState.useSliverAppBar || useFloatingChrome;
     if (appState.minifluxURL == null ||
         appState.minifluxAPIKey == null ||
@@ -674,30 +679,46 @@ class FluxNewsBody extends StatelessWidget {
                     chromeExtent: 56,
                   ),
                 ),
-                const PositionedDirectional(
-                  bottom: 0,
-                  start: 0,
-                  end: 0,
-                  child: FloatingChromeEdgeGradient(
-                    edge: FloatingChromeEdge.bottom,
+                if (!useTopFloatingActions)
+                  const PositionedDirectional(
+                    bottom: 0,
+                    start: 0,
+                    end: 0,
+                    child: FloatingChromeEdgeGradient(
+                      edge: FloatingChromeEdge.bottom,
+                    ),
                   ),
-                ),
                 PositionedDirectional(
                   top: MediaQuery.paddingOf(context).top + 8,
                   start: 12,
                   end: 12,
-                  child: Consumer<FluxNewsCounterState>(
-                    builder: (context, counterState, child) =>
-                        AndroidFloatingFeedHeader(
-                      title: appState.appBarText.isEmpty
-                          ? AppLocalizations.of(context)!.fluxNews
-                          : appState.appBarText,
-                      newsCount: counterState.appBarNewsCount,
-                      showCount: appState.multilineAppBarText,
-                      onOpenDrawer: () => Scaffold.of(context).openDrawer(),
-                      useAccentColor: appState.androidFloatingAccentTint,
-                    ),
-                  ),
+                  child: useTopFloatingActions
+                      ? LayoutBuilder(
+                          builder: (context, constraints) {
+                            final toolbarMaxWidth =
+                                (constraints.maxWidth * 0.55)
+                                    .clamp(160.0, 420.0)
+                                    .toDouble();
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: _androidFloatingFeedHeader(appState),
+                                ),
+                                const SizedBox(width: 8),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: toolbarMaxWidth,
+                                  ),
+                                  child: _androidFloatingToolbar(
+                                    context,
+                                    appState,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                      : _androidFloatingFeedHeader(appState),
                 ),
               ],
             )
@@ -717,7 +738,7 @@ class FluxNewsBody extends StatelessWidget {
                   ],
                 )
               : const FluxNewsBodyList(),
-      bottomNavigationBar: useFloatingChrome
+      bottomNavigationBar: useFloatingChrome && !useTopFloatingActions
           ? _androidFloatingBottomChrome(context, appState)
           : _BottomBanners(appState: appState),
     );
@@ -757,6 +778,20 @@ class FluxNewsBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _androidFloatingFeedHeader(FluxNewsState appState) {
+    return Consumer<FluxNewsCounterState>(
+      builder: (context, counterState, child) => AndroidFloatingFeedHeader(
+        title: appState.appBarText.isEmpty
+            ? AppLocalizations.of(context)!.fluxNews
+            : appState.appBarText,
+        newsCount: counterState.appBarNewsCount,
+        showCount: appState.multilineAppBarText,
+        onOpenDrawer: () => Scaffold.of(context).openDrawer(),
+        useAccentColor: appState.androidFloatingAccentTint,
+      ),
     );
   }
 
@@ -975,8 +1010,7 @@ class FluxNewsBody extends StatelessWidget {
       );
     }
     final windowMediaQuery = MediaQueryData.fromView(View.of(context));
-    final bottomSystemInset =
-        androidBottomSystemNavigationInset(windowMediaQuery);
+    final bottomSystemInset = bottomSystemNavigationInset(windowMediaQuery);
     // start the main view in landscape mode, replace the drawer with a fixed list view on the left side
     final scaffold = Scaffold(
       extendBody: true,
@@ -1960,6 +1994,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
     FluxNewsState appState, {
     required bool usesWideSidebar,
     required double sidebarWidth,
+    required bool hasBottomActions,
   }) {
     if (usesWideSidebar) {
       return Row(
@@ -1971,7 +2006,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
       );
     }
 
-    if (widget.isTablet) {
+    if (widget.isTablet || !hasBottomActions) {
       return _BottomBanners(appState: appState);
     }
 
@@ -2130,9 +2165,14 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
         final sidebarWidth = usesWideSidebar
             ? (constraints.maxWidth * 0.25).clamp(260.0, 340.0).toDouble()
             : 0.0;
+        final useTopFloatingActions = useTopFloatingActionsInCompactLandscape(
+          isTabletLayout: widget.isTablet,
+          availableSize: Size(constraints.maxWidth, constraints.maxHeight),
+        );
+        final hasBottomActions = !widget.isTablet && !useTopFloatingActions;
         Widget list = IOSNewsScrollEdgeEffect(
           topChromeExtent: topContentInset,
-          isTablet: widget.isTablet,
+          hasBottomControls: hasBottomActions,
           child: FluxNewsBodyList(
             largeTitleController: titleController,
             topContentInset: topContentInset,
@@ -2195,7 +2235,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
                     foreground: glassForeground,
                     newsPaneWidth: constraints.maxWidth - sidebarWidth,
                   )
-                : widget.isTablet
+                : widget.isTablet || useTopFloatingActions
                     ? _compactTopActions(
                         appState,
                         settings: glassSettings,
@@ -2210,6 +2250,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
             appState,
             usesWideSidebar: usesWideSidebar,
             sidebarWidth: sidebarWidth,
+            hasBottomActions: hasBottomActions,
           ),
         );
       },

@@ -11,6 +11,30 @@ void main() {
     expect(useTwoPaneLayout(const Size(900, 479)), isFalse);
   });
 
+  test('compact landscape moves platform floating actions to the top', () {
+    expect(
+      useTopFloatingActionsInCompactLandscape(
+        isTabletLayout: false,
+        availableSize: const Size(800, 400),
+      ),
+      isTrue,
+    );
+    expect(
+      useTopFloatingActionsInCompactLandscape(
+        isTabletLayout: false,
+        availableSize: const Size(400, 800),
+      ),
+      isFalse,
+    );
+    expect(
+      useTopFloatingActionsInCompactLandscape(
+        isTabletLayout: true,
+        availableSize: const Size(1000, 700),
+      ),
+      isFalse,
+    );
+  });
+
   test('sidebar width stays within its compact bounds', () {
     expect(adaptiveSidebarWidth(600), minimumSidebarWidth);
     expect(adaptiveSidebarWidth(1000), 280);
@@ -75,9 +99,9 @@ void main() {
     );
   });
 
-  test('Android bottom navigation inset survives consumed body padding', () {
+  test('bottom system navigation inset survives consumed body padding', () {
     expect(
-      androidBottomSystemNavigationInset(
+      bottomSystemNavigationInset(
         const MediaQueryData(
           padding: EdgeInsets.zero,
           viewPadding: EdgeInsets.only(bottom: 24),
@@ -87,7 +111,7 @@ void main() {
       32,
     );
     expect(
-      androidBottomSystemNavigationInset(
+      bottomSystemNavigationInset(
         const MediaQueryData(
           padding: EdgeInsets.only(bottom: 48),
           viewPadding: EdgeInsets.only(bottom: 24),

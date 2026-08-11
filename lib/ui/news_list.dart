@@ -39,11 +39,24 @@ class BodyNewsList extends StatelessWidget {
     final useAndroidFloatingChrome = Platform.isAndroid &&
         (appState.isTablet ||
             appState.appBarType == FluxNewsState.appBarFloatingType);
-    final bottomContentInset = floatingNewsListBottomInset(
-      hasFloatingBottomToolbar:
-          useAndroidFloatingChrome || (Platform.isIOS && !appState.isTablet),
-      mediaBottomPadding: MediaQuery.paddingOf(context).bottom,
-    );
+    final usesFloatingPhoneActions = !appState.isTablet &&
+        (Platform.isIOS ||
+            (Platform.isAndroid &&
+                appState.appBarType == FluxNewsState.appBarFloatingType));
+    final useTopFloatingActions = usesFloatingPhoneActions &&
+        useTopFloatingActionsInCompactLandscape(
+          isTabletLayout: appState.isTablet,
+          availableSize: MediaQuery.sizeOf(context),
+        );
+    final hasBottomFloatingActions =
+        usesFloatingPhoneActions && !useTopFloatingActions;
+    final mediaQuery = MediaQuery.of(context);
+    final bottomContentInset = useTopFloatingActions
+        ? bottomSystemNavigationInset(mediaQuery)
+        : floatingNewsListBottomInset(
+            hasFloatingBottomToolbar: hasBottomFloatingActions,
+            mediaBottomPadding: mediaQuery.padding.bottom,
+          );
     bool searchView = false;
     Widget listHeader({required bool emptyBody}) {
       if (useAndroidFloatingChrome) {

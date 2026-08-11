@@ -16,12 +16,12 @@ class IOSNewsScrollEdgeEffect extends StatelessWidget {
     super.key,
     required this.child,
     required this.topChromeExtent,
-    required this.isTablet,
+    required this.hasBottomControls,
   });
 
   final Widget child;
   final double topChromeExtent;
-  final bool isTablet;
+  final bool hasBottomControls;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class IOSNewsScrollEdgeEffect extends StatelessWidget {
       topFadeHeight: topChromeExtent + floatingChromeGradientTransitionExtent,
       bottomFadeHeight: MediaQuery.paddingOf(context).bottom +
           floatingChromeGradientTransitionExtent,
-      fadeBottom: !isTablet,
+      fadeBottom: hasBottomControls,
       style: GlassScrollEdgeStyle.soft,
       fadeColor: Theme.of(context).scaffoldBackgroundColor,
       child: child,
