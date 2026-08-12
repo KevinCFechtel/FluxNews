@@ -9,6 +9,7 @@ import 'flux_news_localizations_de.dart';
 import 'flux_news_localizations_en.dart';
 import 'flux_news_localizations_gl.dart';
 import 'flux_news_localizations_nl.dart';
+import 'flux_news_localizations_ta.dart';
 import 'flux_news_localizations_tr.dart';
 
 // ignore_for_file: type=lint
@@ -101,6 +102,7 @@ abstract class AppLocalizations {
     Locale('en'),
     Locale('gl'),
     Locale('nl'),
+    Locale('ta'),
     Locale('tr')
   ];
 
@@ -1783,8 +1785,14 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['de', 'en', 'gl', 'nl', 'tr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+        'de',
+        'en',
+        'gl',
+        'nl',
+        'ta',
+        'tr'
+      ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -1801,6 +1809,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsGl();
     case 'nl':
       return AppLocalizationsNl();
+    case 'ta':
+      return AppLocalizationsTa();
     case 'tr':
       return AppLocalizationsTr();
   }
