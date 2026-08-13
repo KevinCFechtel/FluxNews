@@ -205,6 +205,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get showFeedIconsTextSettings => 'Zeige die Icons der Feeds an';
 
   @override
+  String get automaticFeedIconContrast =>
+      'Dunkle Feed-Icons automatisch hervorheben';
+
+  @override
+  String get automaticFeedIconContrastDescription =>
+      'Fügt im Dark Mode hinter dunklen transparenten Icons eine helle Fläche ein. Manuelle Feed-Einstellungen haben Vorrang.';
+
+  @override
+  String get ignoreAutomaticFeedIconContrast =>
+      'Automatische Icon-Hervorhebung für diesen Feed ignorieren';
+
+  @override
   String get descriptionMinifluxApp =>
       'Dies ist ein simpler Newsreader, der mit dem miniflux Server zusammenarbeitet\nFür mehr Informationen über das miniflux Projekt besuchen Sie bitte die Projektseite:';
 

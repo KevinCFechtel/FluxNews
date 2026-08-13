@@ -201,6 +201,18 @@ class AppLocalizationsGl extends AppLocalizations {
   String get showFeedIconsTextSettings => 'Mostrar iconas das canles';
 
   @override
+  String get automaticFeedIconContrast =>
+      'Automatically highlight dark feed icons';
+
+  @override
+  String get automaticFeedIconContrastDescription =>
+      'Adds a light surface behind dark transparent icons in Dark Mode. Manual feed settings take priority.';
+
+  @override
+  String get ignoreAutomaticFeedIconContrast =>
+      'Ignore automatic icon highlighting for this feed';
+
+  @override
   String get descriptionMinifluxApp =>
       'Este é un Lector de novas que funciona con Miniflux.\nPara máis información sobre Miniflux, visita a páxina do proxecto:';
 

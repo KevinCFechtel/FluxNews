@@ -200,6 +200,34 @@ class FeedSettingsList extends StatelessWidget {
           ],
         ),
         const Divider(),
+        if (appState.automaticFeedIconContrast)
+          Row(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                    left: 17.0, right: Platform.isIOS ? 15.0 : 30.0),
+                child: const Icon(Icons.auto_fix_off),
+              ),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.ignoreAutomaticFeedIconContrast,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  overflow: TextOverflow.visible,
+                ),
+              ),
+              AdaptiveSettingsSwitch(
+                value: appState.ignoredAutomaticFeedIconContrastFeedIDs
+                    .contains(feed.feedID),
+                onChanged: (bool value) {
+                  appState.updateAutomaticFeedIconContrastIgnoredForFeed(
+                    feed.feedID,
+                    ignored: value,
+                  );
+                },
+              ),
+            ],
+          ),
+        if (appState.automaticFeedIconContrast) const Divider(),
         Row(
           children: [
             Padding(

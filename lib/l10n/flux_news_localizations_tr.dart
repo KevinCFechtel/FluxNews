@@ -195,6 +195,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get showFeedIconsTextSettings => 'Besleme simgelerini göster';
 
   @override
+  String get automaticFeedIconContrast =>
+      'Automatically highlight dark feed icons';
+
+  @override
+  String get automaticFeedIconContrastDescription =>
+      'Adds a light surface behind dark transparent icons in Dark Mode. Manual feed settings take priority.';
+
+  @override
+  String get ignoreAutomaticFeedIconContrast =>
+      'Ignore automatic icon highlighting for this feed';
+
+  @override
   String get descriptionMinifluxApp =>
       'Bu, miniflux ile çalışmak için basit bir Haber okuyucusudur.\nMiniflux hakkında daha fazla bilgi için proje sayfasını ziyaret edin:';
 

@@ -580,6 +580,51 @@ class FluxNewsGeneralSettingsBody extends StatelessWidget {
                   ),
                 ],
               ),
+              if (appState.showFeedIcons) const Divider(),
+              if (appState.showFeedIcons)
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 17.0,
+                        right: Platform.isIOS ? 15.0 : 30.0,
+                      ),
+                      child: const Icon(Icons.contrast),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!
+                                .automaticFeedIconContrast,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            AppLocalizations.of(context)!
+                                .automaticFeedIconContrastDescription,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    AdaptiveSettingsSwitch(
+                      value: appState.automaticFeedIconContrast,
+                      onChanged: (bool value) {
+                        appState.automaticFeedIconContrast = value;
+                        appState.storage.write(
+                          key: FluxNewsState
+                              .secureStorageAutomaticFeedIconContrastKey,
+                          value: value
+                              ? FluxNewsState.secureStorageTrueString
+                              : FluxNewsState.secureStorageFalseString,
+                        );
+                        appState.refreshView();
+                      },
+                    ),
+                  ],
+                ),
               const Divider(),
               // this row contains the selection if the headline is shown on top of the news
               Row(

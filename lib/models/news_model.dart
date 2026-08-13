@@ -8,6 +8,7 @@ import 'package:flux_news/functions/android_url_launcher.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_theme_state.dart';
+import 'package:flux_news/ui/adaptive_feed_icon.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:html2md/html2md.dart' as html2md;
@@ -624,6 +625,9 @@ class News {
   // the icon is colored in black if the dark mode is disabled
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
+    final automaticFeedIconContrast = context
+        .read<FluxNewsState>()
+        .automaticFeedIconContrastEnabledForFeed(feedID);
     bool darkModeEnabled = false;
     if (context.read<FluxNewsThemeState>().brightnessMode ==
         FluxNewsState.brightnessModeDarkString) {
@@ -694,10 +698,14 @@ class News {
             }
           }
         } else {
-          return SvgPicture.string(
-            String.fromCharCodes(icon!),
-            width: size,
-            height: size,
+          return AdaptiveFeedIcon(
+            bytes: icon!,
+            mimeType: iconMimeType ?? '',
+            size: size,
+            feedIconID: feedIconID,
+            automaticContrastEnabled: automaticFeedIconContrast,
+            manualAdaptLightMode: false,
+            manualAdaptDarkMode: false,
           );
         }
       } else {
@@ -768,12 +776,14 @@ class News {
             }
           }
         } else {
-          return Image.memory(
-            icon!,
-            width: size,
-            height: size,
-            errorBuilder: (context, error, stackTrace) =>
-                SizedBox.fromSize(size: Size(size, size)),
+          return AdaptiveFeedIcon(
+            bytes: icon!,
+            mimeType: iconMimeType ?? '',
+            size: size,
+            feedIconID: feedIconID,
+            automaticContrastEnabled: automaticFeedIconContrast,
+            manualAdaptLightMode: false,
+            manualAdaptDarkMode: false,
           );
         }
       }
@@ -966,6 +976,9 @@ class Feed {
   // the icon is colored in black if the dark mode is disabled
   // if the icon is a png image it is processed by the Image.memory widget
   Widget getFeedIcon(double size, BuildContext context) {
+    final automaticFeedIconContrast = context
+        .read<FluxNewsState>()
+        .automaticFeedIconContrastEnabledForFeed(feedID);
     bool darkModeEnabled = false;
     if (context.read<FluxNewsThemeState>().brightnessMode ==
         FluxNewsState.brightnessModeDarkString) {
@@ -1036,10 +1049,14 @@ class Feed {
             }
           }
         } else {
-          return SvgPicture.string(
-            String.fromCharCodes(icon!),
-            width: size,
-            height: size,
+          return AdaptiveFeedIcon(
+            bytes: icon!,
+            mimeType: iconMimeType,
+            size: size,
+            feedIconID: feedIconID,
+            automaticContrastEnabled: automaticFeedIconContrast,
+            manualAdaptLightMode: false,
+            manualAdaptDarkMode: false,
           );
         }
       } else {
@@ -1110,12 +1127,14 @@ class Feed {
             }
           }
         } else {
-          return Image.memory(
-            icon!,
-            width: size,
-            height: size,
-            errorBuilder: (context, error, stackTrace) =>
-                SizedBox.fromSize(size: Size(size, size)),
+          return AdaptiveFeedIcon(
+            bytes: icon!,
+            mimeType: iconMimeType,
+            size: size,
+            feedIconID: feedIconID,
+            automaticContrastEnabled: automaticFeedIconContrast,
+            manualAdaptLightMode: false,
+            manualAdaptDarkMode: false,
           );
         }
       }

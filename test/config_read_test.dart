@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -24,6 +25,32 @@ void main() {
           ? FluxNewsState.appBarGlassType
           : FluxNewsState.appBarFloatingType,
     );
+  });
+
+  test('automatic feed icon contrast is opt-in and loads from storage', () {
+    final appState = FluxNewsState();
+
+    expect(appState.automaticFeedIconContrast, isFalse);
+    expect(appState.ignoredAutomaticFeedIconContrastFeedIDs, isEmpty);
+    expect(appState.automaticFeedIconContrastEnabledForFeed(42), isFalse);
+
+    appState.storageValues = {
+      FluxNewsState.secureStorageAutomaticFeedIconContrastKey:
+          FluxNewsState.secureStorageTrueString,
+      FluxNewsState.secureStorageIgnoredAutomaticFeedIconContrastFeedIDsKey:
+          jsonEncode(<Object>[42, '43', -1, 'invalid']),
+    };
+    appState.applyStoredConfigValuesHeadless();
+
+    expect(appState.automaticFeedIconContrast, isTrue);
+    expect(appState.ignoredAutomaticFeedIconContrastFeedIDs, {42, 43});
+    expect(appState.automaticFeedIconContrastEnabledForFeed(41), isTrue);
+    expect(appState.automaticFeedIconContrastEnabledForFeed(42), isFalse);
+  });
+
+  test('invalid ignored feed list is treated as an empty preference', () {
+    expect(FluxNewsState.decodeFeedIDSet('not-json'), isEmpty);
+    expect(FluxNewsState.decodeFeedIDSet('{"feed": 42}'), isEmpty);
   });
 
   test('failed config read preserves previously loaded values', () async {

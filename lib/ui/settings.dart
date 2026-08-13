@@ -14,6 +14,7 @@ import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/models/news_model.dart';
+import 'package:flux_news/ui/adaptive_feed_icon.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -1043,6 +1044,7 @@ class Settings extends StatelessWidget {
   Future<void> _deleteFeedIconsOnly(
       BuildContext context, FluxNewsState appState) async {
     await appState.deleteAllFeedIconFiles();
+    FeedIconContrastAnalyzer.clearCache();
 
     try {
       final news = await appState.newsList;
@@ -1091,6 +1093,7 @@ class Settings extends StatelessWidget {
       BuildContext context, FluxNewsState appState) async {
     await stopFluxNewsAudioHandlerIfInitialized();
     await deleteLocalNewsCache(appState);
+    FeedIconContrastAnalyzer.clearCache();
     if (!context.mounted) return;
 
     appState.newsList = Future<List<News>>.value([]);

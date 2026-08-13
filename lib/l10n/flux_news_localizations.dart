@@ -454,6 +454,24 @@ abstract class AppLocalizations {
   /// **'Show feed icons'**
   String get showFeedIconsTextSettings;
 
+  /// No description provided for @automaticFeedIconContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically highlight dark feed icons'**
+  String get automaticFeedIconContrast;
+
+  /// No description provided for @automaticFeedIconContrastDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds a light surface behind dark transparent icons in Dark Mode. Manual feed settings take priority.'**
+  String get automaticFeedIconContrastDescription;
+
+  /// No description provided for @ignoreAutomaticFeedIconContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore automatic icon highlighting for this feed'**
+  String get ignoreAutomaticFeedIconContrast;
+
   /// No description provided for @descriptionMinifluxApp.
   ///
   /// In en, this message translates to:

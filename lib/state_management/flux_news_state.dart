@@ -96,6 +96,10 @@ class FluxNewsState extends ChangeNotifier {
   static const String secureStorageMultilineAppBarTextKey =
       'multilineAppBarText';
   static const String secureStorageShowFeedIconsTextKey = 'showFeedIcons';
+  static const String secureStorageAutomaticFeedIconContrastKey =
+      'automaticFeedIconContrast';
+  static const String secureStorageIgnoredAutomaticFeedIconContrastFeedIDsKey =
+      'ignoredAutomaticFeedIconContrastFeedIDs';
   static const String secureStorageActivateTruncateKey = 'activateTruncate';
   static const String secureStorageTruncateModeKey = 'truncateMode';
   static const String secureStorageCharactersToTruncateKey =
@@ -301,6 +305,21 @@ class FluxNewsState extends ChangeNotifier {
     return normalizedActions;
   }
 
+  static Set<int> decodeFeedIDSet(String rawValue) {
+    try {
+      final decoded = jsonDecode(rawValue);
+      if (decoded is! List) return <int>{};
+      return decoded
+          .map((value) =>
+              value is num ? value.toInt() : int.tryParse(value.toString()))
+          .whereType<int>()
+          .where((feedID) => feedID > 0)
+          .toSet();
+    } on FormatException {
+      return <int>{};
+    }
+  }
+
   static const String cancelContextString = 'Cancel';
   static const String logTag = 'FluxNews';
   static const String logsWriteDirectoryName = "FluxNewsLogs";
@@ -466,6 +485,8 @@ class FluxNewsState extends ChangeNotifier {
   bool syncOnStart = false;
   bool multilineAppBarText = false;
   bool showFeedIcons = Platform.isIOS ? true : false;
+  bool automaticFeedIconContrast = false;
+  Set<int> ignoredAutomaticFeedIconContrastFeedIDs = <int>{};
   List<KeyValueRecordType>? recordTypesBrightnessMode;
   List<KeyValueRecordType>? recordTypesAmountOfSyncedNews;
   List<KeyValueRecordType>? recordTypesAmountOfSearchedNews;
@@ -1874,6 +1895,16 @@ class FluxNewsState extends ChangeNotifier {
     backgroundSyncIntervalMinutes = intFor(
         FluxNewsState.secureStorageBackgroundSyncIntervalMinutesKey,
         backgroundSyncIntervalMinutes);
+    automaticFeedIconContrast = boolFor(
+      FluxNewsState.secureStorageAutomaticFeedIconContrastKey,
+      automaticFeedIconContrast,
+    );
+    final ignoredFeedIDs = valueFor(
+      FluxNewsState.secureStorageIgnoredAutomaticFeedIconContrastFeedIDsKey,
+    );
+    if (ignoredFeedIDs != null) {
+      ignoredAutomaticFeedIconContrastFeedIDs = decodeFeedIDSet(ignoredFeedIDs);
+    }
 
     customHeaders.clear();
     var headerCounter = 0;
@@ -2440,6 +2471,17 @@ class FluxNewsState extends ChangeNotifier {
             showFeedIcons = false;
           }
         }
+      }
+
+      if (key == FluxNewsState.secureStorageAutomaticFeedIconContrastKey) {
+        automaticFeedIconContrast =
+            value == FluxNewsState.secureStorageTrueString;
+      }
+
+      if (key ==
+          FluxNewsState
+              .secureStorageIgnoredAutomaticFeedIconContrastFeedIDsKey) {
+        ignoredAutomaticFeedIconContrastFeedIDs = decodeFeedIDSet(value);
       }
 
       // assign the shown news status selection (all news or only unread)
@@ -3246,6 +3288,30 @@ class FluxNewsState extends ChangeNotifier {
     unawaited(storage.write(
       key: FluxNewsState.secureStorageIOSToolbarActionOrderKey,
       value: jsonEncode(normalizedOrder),
+    ));
+    refreshView();
+  }
+
+  bool automaticFeedIconContrastEnabledForFeed(int feedID) {
+    return automaticFeedIconContrast &&
+        !ignoredAutomaticFeedIconContrastFeedIDs.contains(feedID);
+  }
+
+  void updateAutomaticFeedIconContrastIgnoredForFeed(
+    int feedID, {
+    required bool ignored,
+  }) {
+    if (ignored) {
+      ignoredAutomaticFeedIconContrastFeedIDs.add(feedID);
+    } else {
+      ignoredAutomaticFeedIconContrastFeedIDs.remove(feedID);
+    }
+    final sortedFeedIDs = ignoredAutomaticFeedIconContrastFeedIDs.toList()
+      ..sort();
+    unawaited(storage.write(
+      key:
+          FluxNewsState.secureStorageIgnoredAutomaticFeedIconContrastFeedIDsKey,
+      value: jsonEncode(sortedFeedIDs),
     ));
     refreshView();
   }
