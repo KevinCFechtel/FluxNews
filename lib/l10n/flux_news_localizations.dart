@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'flux_news_localizations_de.dart';
 import 'flux_news_localizations_en.dart';
+import 'flux_news_localizations_es.dart';
 import 'flux_news_localizations_gl.dart';
 import 'flux_news_localizations_nl.dart';
 import 'flux_news_localizations_ta.dart';
@@ -100,6 +101,7 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('de'),
     Locale('en'),
+    Locale('es'),
     Locale('gl'),
     Locale('nl'),
     Locale('ta'),
@@ -1806,6 +1808,7 @@ class _AppLocalizationsDelegate
   bool isSupported(Locale locale) => <String>[
         'de',
         'en',
+        'es',
         'gl',
         'nl',
         'ta',
@@ -1823,6 +1826,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
     case 'gl':
       return AppLocalizationsGl();
     case 'nl':
