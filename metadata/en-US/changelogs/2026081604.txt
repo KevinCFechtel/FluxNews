@@ -1,0 +1,4 @@
+The following has been improved:
+ •	UI Improvements
+ •	The adaptation of feed icons for Light and Dark Mode has been automated, making it unnecessary to configure this individually for each feed
+ •	Fix default language fallback to english

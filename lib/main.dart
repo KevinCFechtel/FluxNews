@@ -428,7 +428,15 @@ class FluxNews extends StatelessWidget {
         },
         // define localization with english as fallback
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+        supportedLocales: <Locale>[
+          Locale('en'),
+          Locale('de'),
+          Locale('es'),
+          Locale('gl'),
+          Locale('nl'),
+          Locale('ta'),
+          Locale('tr')
+        ],
       );
     });
   }
