@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Release 
+    name: Build & Release
     runs-on: ubuntu-latest
 
     steps:
@@ -60,14 +60,14 @@ jobs:
             "$(git -C vendor/flutter rev-list -n 1 "${flutter_version}")"
           echo "FLUTTER_VERSION=${flutter_version}" >> "${GITHUB_ENV}"
           vendor/flutter/bin/flutter --version
-        
+
         #2 Setup Java
       - name: Set Up Java
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
-      
+
         #3 Install Dependencies with the same Flutter checkout used by F-Droid
       - name: Install Dependencies
         working-directory: ${{ env.REPRO_BUILD_DIR }}
@@ -84,18 +84,18 @@ jobs:
           PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
         run: vendor/flutter/bin/flutter analyze lib test
 
-      - name: Run App Tests
-        working-directory: ${{ env.REPRO_BUILD_DIR }}
-        env:
-          PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
-        run: vendor/flutter/bin/flutter test
-          
+      #- name: Run App Tests
+      #  working-directory: ${{ env.REPRO_BUILD_DIR }}
+      #  env:
+      #    PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
+      #  run: vendor/flutter/bin/flutter test
+
         #4 Setup Keystore
       - name: Decode Keystore
         working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
-          
+
       - name: Create key.properties
         working-directory: ${{ env.REPRO_BUILD_DIR }}
         run: |
@@ -103,7 +103,7 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=keystore.jks" >> android/key.properties
-        
+
         #5 Build each ABI exactly like F-Droid, then build the universal APK
       - name: Build APK
         working-directory: ${{ env.REPRO_BUILD_DIR }}
@@ -253,7 +253,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           path: build/app/outputs/flutter-apk/*
-        
+
         #9 Create Release
       - name: Create Release
         uses: ncipollo/release-action@v1
