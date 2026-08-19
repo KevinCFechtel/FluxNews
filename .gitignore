@@ -12,6 +12,8 @@
 .swiftpm/
 migrate_working_dir/
 .codex-context/
+AGENTS.md
+docs
 
 # IntelliJ related
 *.iml
