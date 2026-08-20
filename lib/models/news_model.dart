@@ -65,6 +65,7 @@ class News {
   String publishedAt = '';
   String createdAt = '';
   String status = '';
+  late final ValueNotifier<String> statusListenable = ValueNotifier(status);
   int readingTime = 0;
   bool starred = false;
   String feedTitle = '';
@@ -85,6 +86,12 @@ class News {
   bool? expandedWithFulltext = false;
   int? expandedFulltextLimit = 0;
   bool expanded = false;
+
+  void updateStatus(String value) {
+    if (status == value) return;
+    status = value;
+    statusListenable.value = value;
+  }
 
   int? _previewTextCacheKey;
   String? _previewTextCache;
@@ -722,6 +729,7 @@ class News {
                     icon!,
                     width: size,
                     height: size,
+                    gaplessPlayback: true,
                     errorBuilder: (context, error, stackTrace) =>
                         SizedBox.fromSize(size: Size(size, size)),
                   ));
@@ -730,6 +738,7 @@ class News {
                 icon!,
                 width: size,
                 height: size,
+                gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) =>
                     SizedBox.fromSize(size: Size(size, size)),
               );
@@ -746,6 +755,7 @@ class News {
                     icon!,
                     width: size,
                     height: size,
+                    gaplessPlayback: true,
                     errorBuilder: (context, error, stackTrace) =>
                         SizedBox.fromSize(size: Size(size, size)),
                   ));
@@ -761,6 +771,7 @@ class News {
                       icon!,
                       width: size,
                       height: size,
+                      gaplessPlayback: true,
                       errorBuilder: (context, error, stackTrace) =>
                           SizedBox.fromSize(size: Size(size, size)),
                     ));
@@ -769,6 +780,7 @@ class News {
                   icon!,
                   width: size,
                   height: size,
+                  gaplessPlayback: true,
                   errorBuilder: (context, error, stackTrace) =>
                       SizedBox.fromSize(size: Size(size, size)),
                 );
@@ -1073,6 +1085,7 @@ class Feed {
                     icon!,
                     width: size,
                     height: size,
+                    gaplessPlayback: true,
                     errorBuilder: (context, error, stackTrace) =>
                         SizedBox.fromSize(size: Size(size, size)),
                   ));
@@ -1088,6 +1101,7 @@ class Feed {
                       icon!,
                       width: size,
                       height: size,
+                      gaplessPlayback: true,
                       errorBuilder: (context, error, stackTrace) =>
                           SizedBox.fromSize(size: Size(size, size)),
                     ));
@@ -1096,6 +1110,7 @@ class Feed {
                   icon!,
                   width: size,
                   height: size,
+                  gaplessPlayback: true,
                   errorBuilder: (context, error, stackTrace) =>
                       SizedBox.fromSize(size: Size(size, size)),
                 );
@@ -1113,6 +1128,7 @@ class Feed {
                     icon!,
                     width: size,
                     height: size,
+                    gaplessPlayback: true,
                     errorBuilder: (context, error, stackTrace) =>
                         SizedBox.fromSize(size: Size(size, size)),
                   ));
@@ -1121,6 +1137,7 @@ class Feed {
                 icon!,
                 width: size,
                 height: size,
+                gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) =>
                     SizedBox.fromSize(size: Size(size, size)),
               );

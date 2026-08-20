@@ -193,6 +193,7 @@ Future<void> runFluxNewsBackgroundSync() async {
   _backgroundSyncRunning = true;
   final appState = FluxNewsState();
   FluxNewsSyncLock? syncLock;
+  RemoteSyncSnapshot? remoteSnapshot;
 
   try {
     await _initializeBackgroundLogging();
@@ -272,7 +273,6 @@ Future<void> runFluxNewsBackgroundSync() async {
 
     logThis('backgroundSync', 'Running Miniflux sync steps', LogLevel.INFO);
     await toggleNewsAsRead(appState);
-    final RemoteSyncSnapshot remoteSnapshot;
     try {
       remoteSnapshot = await fetchRemoteSyncSnapshot(appState);
     } on RemoteSyncAbortedException {
@@ -293,7 +293,7 @@ Future<void> runFluxNewsBackgroundSync() async {
     final starredNews = remoteSnapshot.starredNews;
     logThis(
         'backgroundSync',
-        'Fetched news: count=${newNews.news.length} '
+        'Fetched news: staged=${remoteSnapshot.staged} '
             'reportedCount=${newNews.newsCount}',
         LogLevel.INFO);
     logThis(
@@ -302,7 +302,7 @@ Future<void> runFluxNewsBackgroundSync() async {
         LogLevel.INFO);
     logThis(
         'backgroundSync',
-        'Fetched starred news: count=${starredNews.news.length}',
+        'Fetched starred news: reportedCount=${starredNews.newsCount}',
         LogLevel.INFO);
 
     try {
@@ -315,8 +315,13 @@ Future<void> runFluxNewsBackgroundSync() async {
           LogLevel.ERROR);
       Error.throwWithStackTrace(error, error.stackTrace);
     }
-    AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
-    AudioDownloadService.refreshMediaProgressionCacheFromSync(starredNews.news);
+    final syncedAudioNews = remoteSnapshot.staged
+        ? await queryStagedRemoteAudioNews(appState)
+        : [...newNews.news, ...starredNews.news];
+    final downloadableNews = remoteSnapshot.staged
+        ? await queryStagedRemoteAudioNews(appState, mainOnly: true)
+        : newNews.news;
+    AudioDownloadService.refreshMediaProgressionCacheFromSync(syncedAudioNews);
 
     await cleanUnstarredNews(appState);
     await cleanStarredNews(appState);
@@ -324,15 +329,19 @@ Future<void> runFluxNewsBackgroundSync() async {
         LogLevel.INFO);
     await FluxNewsWidgetService.updateWidgetSnapshot(appState);
     await markFluxNewsBackgroundSyncFinished();
-    await _markPendingForegroundAudioDownloads(appState, newNews.news);
+    await _markPendingForegroundAudioDownloads(appState, downloadableNews);
     logThis(
         'backgroundSync',
         'Finished background sync in '
             '${DateTime.now().difference(startedAt).inSeconds}s',
         LogLevel.INFO);
   } finally {
-    appState.db = null;
-    await syncLock?.release();
+    try {
+      await remoteSnapshot?.dispose(appState);
+    } finally {
+      appState.db = null;
+      await syncLock?.release();
+    }
     _backgroundSyncRunning = false;
     logThis('backgroundSync', 'Background sync execution cleanup finished',
         LogLevel.INFO);

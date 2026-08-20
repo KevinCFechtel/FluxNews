@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 
@@ -5,6 +7,7 @@ import 'package:flux_news/miniflux/miniflux_backend.dart';
 import 'package:flux_news/models/news_model.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart' as http_testing;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -59,6 +62,71 @@ void main() {
   });
 
   group('miniflux backend', () {
+    test('paged fetch consumes every page and proves unique completeness',
+        () async {
+      final appState = FluxNewsState()
+        ..minifluxURL = 'https://example.test/v1/'
+        ..minifluxAPIKey = 'test';
+      final offsets = <int>[];
+      final client = http_testing.MockClient((request) async {
+        final offset = int.parse(request.url.queryParameters['offset']!);
+        offsets.add(offset);
+        final count = offset == 0 ? 1000 : 2;
+        return http.Response(
+          jsonEncode({
+            'total': 1002,
+            'entries': List.generate(count, (index) => {'id': offset + index}),
+          }),
+          200,
+        );
+      });
+      final stagedIDs = <int>{};
+
+      final result = await fetchNewsPages(
+        appState,
+        starred: false,
+        httpClient: client,
+        consumePage: (entries) async {
+          final before = stagedIDs.length;
+          stagedIDs.addAll(entries.map((entry) => entry['id'] as int));
+          return stagedIDs.length - before;
+        },
+      );
+
+      expect(offsets, [0, 1000]);
+      expect(result.fetchedCount, 1002);
+      expect(result.reportedCount, 1002);
+      expect(result.complete, isTrue);
+    });
+
+    test('configured cap returns a non-authoritative partial page', () async {
+      final appState = FluxNewsState()
+        ..minifluxURL = 'https://example.test/v1/'
+        ..minifluxAPIKey = 'test'
+        ..amountOfSyncedNews = 800;
+      final client = http_testing.MockClient((request) async {
+        expect(request.url.queryParameters['limit'], '800');
+        return http.Response(
+          jsonEncode({
+            'total': 1200,
+            'entries': List.generate(800, (index) => {'id': index}),
+          }),
+          200,
+        );
+      });
+
+      final result = await fetchNewsPages(
+        appState,
+        starred: true,
+        httpClient: client,
+        consumePage: (entries) async => entries.length,
+      );
+
+      expect(result.fetchedCount, 800);
+      expect(result.reportedCount, 1200);
+      expect(result.complete, isFalse);
+    });
+
     test('fetchNews success test', () async {
       FluxNewsState appState = FluxNewsState();
       var offset = 0;
@@ -594,6 +662,48 @@ void main() {
             isTrue);
       }
     });
+    test('toggleNewsAsRead acknowledges IDs in bounded chunks', () async {
+      final batch = database.batch();
+      for (var id = 2; id <= 1001; id++) {
+        batch.rawInsert(
+          '''INSERT INTO news(newsID, status, syncStatus)
+             VALUES(?, ?, ?)''',
+          [
+            id,
+            FluxNewsState.readNewsStatus,
+            FluxNewsState.notSyncedSyncStatus,
+          ],
+        );
+      }
+      batch.rawUpdate(
+        'UPDATE news SET status = ?, syncStatus = ? WHERE newsID = 1',
+        [
+          FluxNewsState.readNewsStatus,
+          FluxNewsState.notSyncedSyncStatus,
+        ],
+      );
+      await batch.commit(noResult: true);
+      final appState = FluxNewsState()
+        ..db = database
+        ..minifluxURL = 'https://circle-dev.local/v1/'
+        ..minifluxAPIKey = 'test';
+      final chunkLengths = <int>[];
+      final client = http_testing.MockClient((request) async {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        chunkLengths.add((body['entry_ids'] as List).length);
+        return http.Response('', 204);
+      });
+
+      await toggleNewsAsRead(appState, httpClient: client);
+
+      expect(chunkLengths, [500, 500, 1]);
+      final unsynced = await database.rawQuery(
+        'SELECT COUNT(*) AS count FROM news WHERE syncStatus = ?',
+        [FluxNewsState.notSyncedSyncStatus],
+      );
+      expect(unsynced.single['count'], 0);
+    });
+
     test('toggleNewsAsRead failure test', () async {
       FluxNewsState appState = FluxNewsState();
       appState.db = database;

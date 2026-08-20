@@ -32,11 +32,21 @@ class RemoteSyncSnapshot {
     required this.news,
     required this.categories,
     required this.starredNews,
+    this.staged = false,
+    this.mainComplete = true,
+    this.starredComplete = true,
   });
 
   final NewsList news;
   final Categories categories;
   final NewsList starredNews;
+  final bool staged;
+  final bool mainComplete;
+  final bool starredComplete;
+
+  Future<void> dispose(FluxNewsState appState) async {
+    if (staged) await discardRemoteSyncStaging(appState);
+  }
 }
 
 typedef NewsListFetcher = Future<NewsList> Function(FluxNewsState appState);
@@ -49,14 +59,6 @@ class RemoteSyncFetchOperations {
     required this.fetchStarredNews,
   });
 
-  factory RemoteSyncFetchOperations.production() {
-    return RemoteSyncFetchOperations(
-      fetchNews: (appState) => miniflux.fetchNews(appState),
-      fetchCategories: miniflux.fetchCategoryInformation,
-      fetchStarredNews: (appState) => miniflux.fetchStarredNews(appState),
-    );
-  }
-
   final NewsListFetcher fetchNews;
   final CategoriesFetcher fetchCategories;
   final NewsListFetcher fetchStarredNews;
@@ -66,7 +68,10 @@ Future<RemoteSyncSnapshot> fetchRemoteSyncSnapshot(
   FluxNewsState appState, {
   RemoteSyncFetchOperations? operations,
 }) async {
-  final fetchOperations = operations ?? RemoteSyncFetchOperations.production();
+  if (operations == null) {
+    return _fetchStagedRemoteSyncSnapshot(appState);
+  }
+  final fetchOperations = operations;
 
   final NewsList news;
   try {
@@ -100,6 +105,77 @@ Future<RemoteSyncSnapshot> fetchRemoteSyncSnapshot(
     categories: categories,
     starredNews: starredNews,
   );
+}
+
+Future<RemoteSyncSnapshot> _fetchStagedRemoteSyncSnapshot(
+    FluxNewsState appState) async {
+  await initializeRemoteSyncStaging(appState);
+  try {
+    final miniflux.PagedNewsFetchResult mainResult;
+    try {
+      mainResult = await miniflux.fetchNewsPages(
+        appState,
+        starred: false,
+        consumePage: (entries) => stageRemoteSyncNewsPage(
+          appState,
+          entries,
+          starred: false,
+        ),
+      );
+    } on miniflux.RemoteFetchAbortedException {
+      throw const RemoteSyncAbortedException();
+    } catch (error, stackTrace) {
+      throw RemoteSyncFetchException(
+          RemoteSyncFetchStage.news, error, stackTrace);
+    }
+    _throwIfSyncWasAborted(appState);
+
+    final Categories categories;
+    try {
+      categories = await miniflux.fetchCategoryInformation(appState);
+    } catch (error, stackTrace) {
+      throw RemoteSyncFetchException(
+          RemoteSyncFetchStage.categories, error, stackTrace);
+    }
+    _throwIfSyncWasAborted(appState);
+
+    final miniflux.PagedNewsFetchResult starredResult;
+    try {
+      starredResult = await miniflux.fetchNewsPages(
+        appState,
+        starred: true,
+        consumePage: (entries) => stageRemoteSyncNewsPage(
+          appState,
+          entries,
+          starred: true,
+        ),
+      );
+    } on miniflux.RemoteFetchAbortedException {
+      throw const RemoteSyncAbortedException();
+    } catch (error, stackTrace) {
+      throw RemoteSyncFetchException(
+          RemoteSyncFetchStage.starredNews, error, stackTrace);
+    }
+    _throwIfSyncWasAborted(appState);
+
+    return RemoteSyncSnapshot(
+      news: NewsList(
+        news: const [],
+        newsCount: mainResult.reportedCount,
+      ),
+      categories: categories,
+      starredNews: NewsList(
+        news: const [],
+        newsCount: starredResult.reportedCount,
+      ),
+      staged: true,
+      mainComplete: mainResult.complete,
+      starredComplete: starredResult.complete,
+    );
+  } catch (_) {
+    await discardRemoteSyncStaging(appState);
+    rethrow;
+  }
 }
 
 void _throwIfSyncWasAborted(FluxNewsState appState) {
@@ -168,7 +244,24 @@ Future<void> reconcileRemoteSyncSnapshot(
   RemoteSyncSnapshot snapshot,
   FluxNewsState appState, {
   SyncReconciliationOperations? operations,
+  Future<void> Function()? stagedNewsBeforeCommitForTesting,
 }) async {
+  if (snapshot.staged && operations == null) {
+    await _runReconciliationStep(
+      LocalSyncReconciliationStage.categories,
+      () => insertCategoriesInDB(snapshot.categories, appState),
+    );
+    await _runReconciliationStep(
+      LocalSyncReconciliationStage.news,
+      () => reconcileStagedRemoteNewsInTransaction(
+        appState,
+        mainComplete: snapshot.mainComplete,
+        starredComplete: snapshot.starredComplete,
+        beforeCommitForTesting: stagedNewsBeforeCommitForTesting,
+      ),
+    );
+    return;
+  }
   final reconciliationOperations =
       operations ?? SyncReconciliationOperations.production();
 

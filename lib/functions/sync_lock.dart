@@ -1,23 +1,28 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flux_news/functions/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FluxNewsSyncLock {
-  FluxNewsSyncLock._(this._file, this._token, this.owner);
+  FluxNewsSyncLock._(this._file, this._token, this.owner) {
+    _heartbeat = Timer.periodic(heartbeatInterval, (_) => _refreshLease());
+  }
 
   static const Duration staleAfter = Duration(minutes: 10);
+  static const Duration heartbeatInterval = Duration(minutes: 1);
   static const String _lockFileName = 'flux_news_sync.lock';
-  static bool _activeInIsolate = false;
 
   final File _file;
   final String _token;
   final String owner;
+  Timer? _heartbeat;
 
   static Future<FluxNewsSyncLock?> tryAcquire(String owner) async {
     final supportDirectory = await getApplicationSupportDirectory();
     final file = File('${supportDirectory.path}/$_lockFileName');
-    final token = '${DateTime.now().toIso8601String()}|$owner|$pid';
+    final token = '${DateTime.now().toIso8601String()}|$owner|$pid|'
+        '${DateTime.now().microsecondsSinceEpoch}';
 
     if (file.existsSync()) {
       final removed = await _removeStaleOrOrphanedLock(file);
@@ -35,7 +40,6 @@ class FluxNewsSyncLock {
     try {
       file.createSync(exclusive: true);
       file.writeAsStringSync(token, flush: true);
-      _activeInIsolate = true;
       logThis('syncLock', 'Acquired sync lock for $owner', LogLevel.INFO);
       return FluxNewsSyncLock._(file, token, owner);
     } on FileSystemException {
@@ -51,12 +55,8 @@ class FluxNewsSyncLock {
 
   static Future<bool> _removeStaleOrOrphanedLock(File file) async {
     final details = await _readLockDetails(file);
-    final now = DateTime.now();
-    final age = details == null
-        ? now.difference(file.statSync().modified)
-        : now.difference(details.createdAt);
-    final samePid = details?.pid == pid;
-    final shouldRemove = age > staleAfter || (samePid && !_activeInIsolate);
+    final age = DateTime.now().difference(file.statSync().modified);
+    final shouldRemove = age > staleAfter;
 
     if (!shouldRemove) {
       return false;
@@ -66,7 +66,7 @@ class FluxNewsSyncLock {
       await file.delete();
       logThis(
           'syncLock',
-          'Removed ${age > staleAfter ? 'stale' : 'orphaned same-process'} sync lock'
+          'Removed stale sync lock'
               '${details == null ? '' : ' (${details.describe()})'} '
               'ageSeconds=${age.inSeconds}',
           LogLevel.WARNING);
@@ -82,7 +82,7 @@ class FluxNewsSyncLock {
     try {
       final value = await file.readAsString();
       final parts = value.trim().split('|');
-      if (parts.length != 3) return null;
+      if (parts.length != 3 && parts.length != 4) return null;
 
       final createdAt = DateTime.tryParse(parts[0]);
       final lockPid = int.tryParse(parts[2]);
@@ -99,19 +99,33 @@ class FluxNewsSyncLock {
   }
 
   Future<void> release() async {
+    _heartbeat?.cancel();
+    _heartbeat = null;
     try {
       if (!_file.existsSync()) return;
       final currentToken = await _file.readAsString();
       if (currentToken == _token) {
         await _file.delete();
-        _activeInIsolate = false;
         logThis('syncLock', 'Released sync lock for $owner', LogLevel.INFO);
       }
     } catch (e) {
       logThis('syncLock', 'Could not release sync lock for $owner: $e',
           LogLevel.WARNING);
-    } finally {
-      _activeInIsolate = false;
+    }
+  }
+
+  Future<void> _refreshLease() async {
+    try {
+      if (!await _file.exists()) return;
+      if (await _file.readAsString() != _token) {
+        _heartbeat?.cancel();
+        _heartbeat = null;
+        return;
+      }
+      await _file.setLastModified(DateTime.now());
+    } catch (e) {
+      logThis('syncLock', 'Could not refresh sync lock lease for $owner: $e',
+          LogLevel.WARNING);
     }
   }
 }

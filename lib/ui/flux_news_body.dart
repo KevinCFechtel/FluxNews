@@ -702,7 +702,8 @@ class FluxNewsBody extends StatelessWidget {
                             return Row(
                               children: [
                                 Expanded(
-                                  child: _androidFloatingFeedHeader(appState),
+                                  child: _androidFloatingFeedHeader(
+                                      context, appState),
                                 ),
                                 const SizedBox(width: 8),
                                 ConstrainedBox(
@@ -718,7 +719,7 @@ class FluxNewsBody extends StatelessWidget {
                             );
                           },
                         )
-                      : _androidFloatingFeedHeader(appState),
+                      : _androidFloatingFeedHeader(context, appState),
                 ),
               ],
             )
@@ -781,13 +782,16 @@ class FluxNewsBody extends StatelessWidget {
     );
   }
 
-  Widget _androidFloatingFeedHeader(FluxNewsState appState) {
-    return Consumer<FluxNewsCounterState>(
-      builder: (context, counterState, child) => AndroidFloatingFeedHeader(
+  Widget _androidFloatingFeedHeader(
+      BuildContext context, FluxNewsState appState) {
+    final counterState = context.read<FluxNewsCounterState>();
+    return ValueListenableBuilder<int>(
+      valueListenable: counterState.appBarNewsCountListenable,
+      builder: (context, newsCount, child) => AndroidFloatingFeedHeader(
         title: appState.appBarText.isEmpty
             ? AppLocalizations.of(context)!.fluxNews
             : appState.appBarText,
-        newsCount: counterState.appBarNewsCount,
+        newsCount: newsCount,
         showCount: appState.multilineAppBarText,
         onOpenDrawer: () => Scaffold.of(context).openDrawer(),
         useAccentColor: appState.androidFloatingAccentTint,
@@ -2102,7 +2106,7 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<FluxNewsState>();
-    final appCounterState = context.watch<FluxNewsCounterState>();
+    final appCounterState = context.read<FluxNewsCounterState>();
     final hasNewsConfiguration = appState.startUp ||
         (appState.minifluxURL != null &&
             appState.minifluxAPIKey != null &&
@@ -2140,15 +2144,17 @@ class _IOSLiquidGlassHomeState extends State<_IOSLiquidGlassHome> {
           ),
           if (appState.multilineAppBarText) ...[
             const SizedBox(width: 6),
-            Semantics(
-              label:
-                  '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
-              child: Text(
-                '${appCounterState.appBarNewsCount}',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: glassForeground,
-                      fontWeight: FontWeight.w700,
-                    ),
+            ValueListenableBuilder<int>(
+              valueListenable: appCounterState.appBarNewsCountListenable,
+              builder: (context, count, _) => Semantics(
+                label: '${AppLocalizations.of(context)!.itemCount}: $count',
+                child: Text(
+                  '$count',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: glassForeground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
               ),
             ),
           ],
@@ -3300,8 +3306,7 @@ class AppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FluxNewsCounterState appCounterState =
-        context.watch<FluxNewsCounterState>();
+    FluxNewsCounterState appCounterState = context.read<FluxNewsCounterState>();
     FluxNewsState appState = context.watch<FluxNewsState>();
 
     // set the app bar title depending on the chosen category to show in list view
@@ -3317,9 +3322,12 @@ class AppBarTitle extends StatelessWidget {
               maxLines: 2,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            Text(
-              '${AppLocalizations.of(context)!.itemCount}: ${appCounterState.appBarNewsCount}',
-              style: Theme.of(context).textTheme.labelMedium,
+            ValueListenableBuilder<int>(
+              valueListenable: appCounterState.appBarNewsCountListenable,
+              builder: (context, count, _) => Text(
+                '${AppLocalizations.of(context)!.itemCount}: $count',
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
             )
           ],
         );
@@ -3353,75 +3361,63 @@ class CategoryList extends StatelessWidget {
     FluxNewsState appState = context.watch<FluxNewsState>();
     var getData = FutureBuilder<Categories>(
         future: appState.categoryList,
+        initialData: appState.actualCategoryList,
         builder: (context, snapshot) {
+          final categories = snapshot.data ?? appState.actualCategoryList;
           if (appCounterState.listUpdated) {
             appCounterState.listUpdated = false;
-            snapshot.data?.renewNewsCount(appState, context);
+            categories?.renewNewsCount(appState, context);
             renewAllNewsCount(appState, context);
           }
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-            case ConnectionState.waiting:
-              // we add a static category of "All News" to the list of categories
-              // while waiting on the news list from the miniflux server
-              return _buildNavigationTile(
+          if (categories == null) {
+            if (snapshot.hasError) return const SizedBox.shrink();
+            return _buildNavigationTile(
+              context: context,
+              leading: const Icon(Icons.home),
+              title: AppLocalizations.of(context)!.allNews,
+              selected: false,
+            );
+          }
+          if (snapshot.data != null &&
+              snapshot.connectionState == ConnectionState.done &&
+              !snapshot.hasError) {
+            appState.actualCategoryList = snapshot.data;
+          }
+          if (categories.categories.isEmpty) return const SizedBox.shrink();
+
+          return Column(children: [
+            ValueListenableBuilder<int>(
+              valueListenable: appCounterState.allNewsCountListenable,
+              builder: (context, count, _) => _buildNavigationTile(
                 context: context,
                 leading: const Icon(Icons.home),
                 title: AppLocalizations.of(context)!.allNews,
-                selected: false,
-              );
-            default:
-              if (snapshot.hasError) {
-                return const SizedBox.shrink();
-              } else {
-                appState.actualCategoryList = snapshot.data;
-                return snapshot.data != null
-                    ? snapshot.data!.categories.isEmpty
-                        ? const SizedBox.shrink()
-                        // if the category list from the miniflux server is not null
-                        // and not empty, we show the category list
-                        : Column(children: [
-                            // we add a static category of "All News" to the list of categories
-                            _buildNavigationTile(
-                              context: context,
-                              leading: const Icon(
-                                Icons.home,
-                              ),
-                              title: AppLocalizations.of(context)!.allNews,
-                              count: appCounterState.allNewsCount,
-                              selected: appState.selectedCategoryElementType ==
-                                  FluxNewsState.allNewsElementType,
-                              onTap: () {
-                                allNewsOnClick(appState, context);
-                              },
-                            ),
-                            // we add a static category of "Bookmarked" to the list of categories
-                            _buildNavigationTile(
-                              context: context,
-                              leading: const Icon(
-                                Icons.star,
-                              ),
-                              title: AppLocalizations.of(context)!.bookmarked,
-                              count: appCounterState.starredCount,
-                              selected: appState.selectedCategoryElementType ==
-                                  FluxNewsState.bookmarkedNewsElementType,
-                              onTap: () {
-                                bookmarkedOnClick(appState, context);
-                              },
-                            ),
-                            // we iterate over the category list
-                            for (Category category in snapshot.data!.categories)
-                              appState.showOnlyFeedCategoriesWithNewNews
-                                  ? category.newsCount > 0
-                                      ? showCategory(
-                                          category, snapshot.data!, context)
-                                      : const SizedBox.shrink()
-                                  : showCategory(
-                                      category, snapshot.data!, context),
-                          ])
-                    : const SizedBox.shrink();
-              }
-          }
+                count: count,
+                selected: appState.selectedCategoryElementType ==
+                    FluxNewsState.allNewsElementType,
+                onTap: () {
+                  allNewsOnClick(appState, context);
+                },
+              ),
+            ),
+            _buildNavigationTile(
+              context: context,
+              leading: const Icon(Icons.star),
+              title: AppLocalizations.of(context)!.bookmarked,
+              count: appCounterState.starredCount,
+              selected: appState.selectedCategoryElementType ==
+                  FluxNewsState.bookmarkedNewsElementType,
+              onTap: () {
+                bookmarkedOnClick(appState, context);
+              },
+            ),
+            for (Category category in categories.categories)
+              appState.showOnlyFeedCategoriesWithNewNews
+                  ? category.newsCount > 0
+                      ? showCategory(category, categories, context)
+                      : const SizedBox.shrink()
+                  : showCategory(category, categories, context),
+          ]);
         });
     return getData;
   }
@@ -3578,6 +3574,7 @@ class CategoryList extends StatelessWidget {
               children: [
                 for (Feed feed in category.feeds)
                   FeedTile(
+                    key: ValueKey<int>(feed.feedID),
                     feed: feed,
                     categories: categories,
                     iosSidebar: iosSidebar,

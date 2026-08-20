@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
+import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_counter_state.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:flux_news/ui/android_floating_chrome.dart';
@@ -54,6 +57,53 @@ Widget _menuTestApp(
 }
 
 void main() {
+  testWidgets('category menu keeps previous data while refresh is pending',
+      (tester) async {
+    final refresh = Completer<Categories>();
+    final previous = Categories(categories: [
+      Category(
+        categoryID: 1,
+        title: 'Previous Category',
+        feeds: [
+          Feed(
+            feedID: 10,
+            title: 'Previous Feed',
+            siteUrl: 'https://example.com/previous',
+          ),
+        ],
+      ),
+    ]);
+    final appState = FluxNewsState()
+      ..actualCategoryList = previous
+      ..categoryList = refresh.future;
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<FluxNewsState>.value(value: appState),
+        ChangeNotifierProvider<FluxNewsCounterState>(
+          create: (_) => FluxNewsCounterState(),
+        ),
+      ],
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(body: CategoryList()),
+      ),
+    ));
+
+    expect(find.text('Previous Category'), findsOneWidget);
+    expect(find.text('All News'), findsOneWidget);
+
+    refresh.complete(Categories(categories: [
+      Category(categoryID: 2, title: 'Updated Category'),
+    ]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Previous Category'), findsNothing);
+    expect(find.text('Updated Category'), findsOneWidget);
+  });
+
   testWidgets('tablet sidebar header uses the Drawer icon and title',
       (tester) async {
     await tester.pumpWidget(_testApp(const SizedBox(

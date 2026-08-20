@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/sync_pipeline.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -199,6 +200,148 @@ void main() {
   });
 
   group('local sync reconciliation', () {
+    test('partial staged snapshot never authorizes absence cleanup', () async {
+      final secureStorage = SecureStorageMock();
+      secureStorage.install();
+      addTearDown(SecureStorageMock.uninstall);
+      final database = await createFluxNewsTestDatabase();
+      addTearDown(database.close);
+      final appState = FluxNewsState()..db = database;
+      await insertTestNews(
+        database,
+        newsID: 2,
+        feedID: 1,
+        title: 'Outside cap',
+        starred: true,
+      );
+      await initializeRemoteSyncStaging(appState);
+
+      await reconcileRemoteSyncSnapshot(
+        RemoteSyncSnapshot(
+          news: NewsList(news: [], newsCount: 100),
+          categories: Categories(categories: []),
+          starredNews: NewsList(news: [], newsCount: 100),
+          staged: true,
+          mainComplete: false,
+          starredComplete: false,
+        ),
+        appState,
+      );
+
+      final row = (await database.query('news', where: 'newsID = 2')).single;
+      expect(row['status'], FluxNewsState.unreadNewsStatus);
+      expect(row['starred'], 1);
+      await discardRemoteSyncStaging(appState);
+    });
+
+    test('staged news transaction rolls back every news-side change', () async {
+      final secureStorage = SecureStorageMock();
+      secureStorage.install();
+      addTearDown(SecureStorageMock.uninstall);
+      final database = await createFluxNewsTestDatabase();
+      addTearDown(database.close);
+      final appState = FluxNewsState()..db = database;
+      await insertTestNews(
+        database,
+        newsID: 1,
+        feedID: 1,
+        title: 'Missing remotely',
+        starred: true,
+      );
+      await insertTestNews(
+        database,
+        newsID: 4,
+        feedID: 1,
+        title: 'Existing unstarred',
+        status: FluxNewsState.readNewsStatus,
+      );
+      await initializeRemoteSyncStaging(appState);
+      await stageRemoteSyncNewsPage(
+        appState,
+        [_entryPayload(2, attachmentID: 20)],
+        starred: false,
+      );
+      await stageRemoteSyncNewsPage(
+        appState,
+        [_entryPayload(3, starred: true), _entryPayload(4, starred: true)],
+        starred: true,
+      );
+
+      await expectLater(
+        reconcileRemoteSyncSnapshot(
+          RemoteSyncSnapshot(
+            news: NewsList(news: [], newsCount: 1),
+            categories: Categories(categories: []),
+            starredNews: NewsList(news: [], newsCount: 2),
+            staged: true,
+          ),
+          appState,
+          stagedNewsBeforeCommitForTesting: () async {
+            throw StateError('injected before commit');
+          },
+        ),
+        throwsA(
+          isA<LocalSyncReconciliationException>()
+              .having((error) => error.stage, 'stage',
+                  LocalSyncReconciliationStage.news)
+              .having((error) => error.error, 'error', isA<StateError>()),
+        ),
+      );
+
+      final original =
+          (await database.query('news', where: 'newsID = 1')).single;
+      final existing =
+          (await database.query('news', where: 'newsID = 4')).single;
+      expect(original['status'], FluxNewsState.unreadNewsStatus);
+      expect(original['starred'], 1);
+      expect(existing['starred'], 0);
+      expect(await database.query('news', where: 'newsID IN (2, 3)'), isEmpty);
+      expect(await database.query('attachments'), isEmpty);
+      await discardRemoteSyncStaging(appState);
+    });
+
+    test('overlapping main and starred entry uses main payload once', () async {
+      final secureStorage = SecureStorageMock();
+      secureStorage.install();
+      addTearDown(SecureStorageMock.uninstall);
+      final database = await createFluxNewsTestDatabase();
+      addTearDown(database.close);
+      final appState = FluxNewsState()..db = database;
+      await initializeRemoteSyncStaging(appState);
+      await stageRemoteSyncNewsPage(
+        appState,
+        [_entryPayload(8, title: 'Main payload', attachmentID: 80)],
+        starred: false,
+      );
+      await stageRemoteSyncNewsPage(
+        appState,
+        [
+          _entryPayload(8,
+              title: 'Starred payload', starred: true, attachmentID: 81)
+        ],
+        starred: true,
+      );
+
+      await reconcileRemoteSyncSnapshot(
+        RemoteSyncSnapshot(
+          news: NewsList(news: [], newsCount: 1),
+          categories: Categories(categories: []),
+          starredNews: NewsList(news: [], newsCount: 1),
+          staged: true,
+        ),
+        appState,
+      );
+
+      final news = (await database.query('news', where: 'newsID = 8')).single;
+      expect(news['title'], 'Main payload');
+      expect(news['starred'], 1);
+      expect(
+        (await database.query('attachments')).map((row) => row['attachmentID']),
+        [80],
+      );
+      await discardRemoteSyncStaging(appState);
+    });
+
     test('executes every stage in canonical order', () async {
       final calls = <String>[];
 
@@ -267,6 +410,41 @@ void main() {
       });
     }
   });
+}
+
+Map<String, dynamic> _entryPayload(
+  int id, {
+  String? title,
+  bool starred = false,
+  int? attachmentID,
+}) {
+  return {
+    'id': id,
+    'feed_id': 1,
+    'title': title ?? 'News $id',
+    'url': 'https://example.com/$id',
+    'comments_url': '',
+    'share_code': '',
+    'content': '<p>Content $id</p>',
+    'hash': 'hash-$id',
+    'published_at': '2026-08-20T10:00:00Z',
+    'created_at': '2026-08-20T10:00:00Z',
+    'status': FluxNewsState.unreadNewsStatus,
+    'reading_time': 1,
+    'starred': starred,
+    'feed': {'title': 'Feed', 'icon': null},
+    'enclosures': attachmentID == null
+        ? null
+        : [
+            {
+              'id': attachmentID,
+              'entry_id': id,
+              'url': 'https://example.com/$attachmentID.mp3',
+              'mime_type': 'audio/mpeg',
+              'media_progression': 5,
+            }
+          ],
+  };
 }
 
 RemoteSyncFetchOperations _successfulFetchOperations() {

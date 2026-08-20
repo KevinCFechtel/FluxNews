@@ -80,6 +80,7 @@ class AdaptiveFeedIcon extends StatelessWidget {
       bytes,
       width: size,
       height: size,
+      gaplessPlayback: true,
       errorBuilder: (context, error, stackTrace) =>
           SizedBox.square(dimension: size),
     );
@@ -198,7 +199,8 @@ class FeedIconContrastAnalyzer {
     try {
       final sourceSize = pictureInfo.size;
       if (sourceSize.isEmpty) {
-        return pictureInfo.picture.toImage(_analysisExtent, _analysisExtent);
+        return await pictureInfo.picture
+            .toImage(_analysisExtent, _analysisExtent);
       }
       final scale = math.min(
         _analysisExtent / sourceSize.width,
@@ -214,7 +216,7 @@ class FeedIconContrastAnalyzer {
       canvas.drawPicture(pictureInfo.picture);
       final scaledPicture = recorder.endRecording();
       try {
-        return scaledPicture.toImage(_analysisExtent, _analysisExtent);
+        return await scaledPicture.toImage(_analysisExtent, _analysisExtent);
       } finally {
         scaledPicture.dispose();
       }

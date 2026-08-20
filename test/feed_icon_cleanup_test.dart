@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
@@ -36,5 +37,20 @@ void main() {
     );
     expect(await File('${externalDirectory.path}/keep.txt').readAsString(),
         'keep');
+  });
+
+  test('reuses icon bytes until the icon is replaced or deleted', () async {
+    final firstRead = appState.readFeedIconFile(1);
+    final secondRead = appState.readFeedIconFile(1);
+
+    expect(firstRead, isNotNull);
+    expect(identical(firstRead, secondRead), isTrue);
+
+    final replacement = Uint8List.fromList([3, 4]);
+    await appState.saveFeedIconFile(1, replacement);
+    expect(identical(appState.readFeedIconFile(1), replacement), isTrue);
+
+    appState.deleteFeedIconFile(1);
+    expect(appState.readFeedIconFile(1), isNull);
   });
 }

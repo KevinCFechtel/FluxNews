@@ -27,6 +27,7 @@ Future<void> syncNews(
   }
 
   logThis('syncNews', 'Start syncing with miniflux server.', LogLevel.INFO);
+  RemoteSyncSnapshot? remoteSnapshot;
   try {
     appState.longSyncAlerted = false;
     appState.longSyncAborted = false;
@@ -96,7 +97,6 @@ Future<void> syncNews(
         }
       });
 
-      RemoteSyncSnapshot? remoteSnapshot;
       if (appState.errorString == '') {
         try {
           remoteSnapshot = await fetchRemoteSyncSnapshot(appState);
@@ -165,15 +165,20 @@ Future<void> syncNews(
       }
 
       if (reconciliationSucceeded) {
+        final syncedAudioNews = remoteSnapshot!.staged
+            ? await queryStagedRemoteAudioNews(appState)
+            : [...newNews.news, ...starredNews.news];
         // Refresh the in-memory mediaProgression cache so CarPlay / Android Auto
         // pick up the server's latest position on the next playback without a DB query.
-        AudioDownloadService.refreshMediaProgressionCacheFromSync(newNews.news);
         AudioDownloadService.refreshMediaProgressionCacheFromSync(
-            starredNews.news);
+            syncedAudioNews);
 
         if (appState.autoDownloadAudioAfterSync) {
+          final downloadableNews = remoteSnapshot.staged
+              ? await queryStagedRemoteAudioNews(appState, mainOnly: true)
+              : newNews.news;
           unawaited(AudioDownloadService.downloadAudioForNewsList(
-            newsList: newNews.news,
+            newsList: downloadableNews,
             retentionDays: appState.audioDownloadRetentionDays,
             onlyOnWifi: appState.downloadAudioOnlyOnWifi,
           ));
@@ -211,10 +216,6 @@ Future<void> syncNews(
         // regular syncs (i.e. already-read, non-starred downloaded podcasts).
         await _syncDownloadedAudioProgressions(
           appState,
-          alreadySyncedIds: {
-            ...newNews.news.map((n) => n.newsID),
-            ...starredNews.news.map((n) => n.newsID),
-          },
         ).onError((e, _) => logThis('syncDownloadedAudioProgressions',
             'Error syncing downloaded progression: $e', LogLevel.ERROR));
       }
@@ -338,7 +339,11 @@ Future<void> syncNews(
     logThis(
         'syncNews', 'Finished syncing with miniflux server.', LogLevel.INFO);
   } finally {
-    await syncLock.release();
+    try {
+      await remoteSnapshot?.dispose(appState);
+    } finally {
+      await syncLock.release();
+    }
   }
 }
 
@@ -355,11 +360,14 @@ Future<void> syncNews(
 /// ahead (e.g. because CarPlay/Android Auto was terminated before the
 /// fire-and-forget PUT could complete), it is pushed to the server here.
 Future<void> _syncDownloadedAudioProgressions(
-  FluxNewsState appState, {
-  required Set<int> alreadySyncedIds,
-}) async {
+  FluxNewsState appState,
+) async {
   final downloadedNewsIds = await getDownloadedAudioNewsIds(appState);
   if (downloadedNewsIds.isEmpty) return;
+  final alreadySyncedIds = await stagedRemoteNewsIDsAmong(
+    appState,
+    downloadedNewsIds,
+  );
 
   // ── INBOUND ──────────────────────────────────────────────────────────────
   // Fetch server progression for read/non-starred episodes not yet covered.

@@ -78,17 +78,17 @@ jobs:
           vendor/flutter/bin/flutter pub get --enforce-lockfile
           sed -i -e '/play-services-cronet/d' "$PUB_CACHE"/hosted/pub.dev/cronet_http-*/android/build.gradle
 
-      #- name: Analyze App Sources
-      #  working-directory: ${{ env.REPRO_BUILD_DIR }}
-      #  env:
-      #    PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
-      #  run: vendor/flutter/bin/flutter analyze lib test
+      - name: Analyze App Sources
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
+        env:
+          PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
+        run: vendor/flutter/bin/flutter analyze lib test
 
-      #- name: Run App Tests
-      #  working-directory: ${{ env.REPRO_BUILD_DIR }}
-      #  env:
-      #    PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
-      #  run: vendor/flutter/bin/flutter test
+      - name: Run App Tests
+        working-directory: ${{ env.REPRO_BUILD_DIR }}
+        env:
+          PUB_CACHE: ${{ env.REPRO_BUILD_DIR }}/.pub-cache
+        run: vendor/flutter/bin/flutter test
 
         #4 Setup Keystore
       - name: Decode Keystore

@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flux_news/database/database_backend.dart';
+import 'package:flux_news/functions/latest_async_controller.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/sync_news.dart';
@@ -41,10 +42,25 @@ class FluxNewsWidgetService {
   static Map<String, dynamic>? _pendingWidgetAction;
   static bool _handlingWidgetAction = false;
   static DateTime? _lastSnapshotUpdatedAt;
+  static final LatestAsyncController<FluxNewsState> _snapshotUpdates =
+      LatestAsyncController<FluxNewsState>(
+    handler: _updateWidgetSnapshotNow,
+    onError: (error, stackTrace) {
+      logThis(
+        'WidgetService',
+        'Could not update widget snapshot: $error\n$stackTrace',
+        LogLevel.ERROR,
+      );
+    },
+  );
 
-  static Future<void> updateWidgetSnapshot(FluxNewsState appState) async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
+  static Future<void> updateWidgetSnapshot(FluxNewsState appState) {
+    if (!Platform.isAndroid && !Platform.isIOS) return Future<void>.value();
 
+    return _snapshotUpdates.add(appState);
+  }
+
+  static Future<void> _updateWidgetSnapshotNow(FluxNewsState appState) async {
     final snapshotPayload = await buildWidgetSnapshotPayload(appState);
     logThis(
         'WidgetService',

@@ -213,4 +213,100 @@ void main() {
       hasLength(1),
     );
   });
+
+  test('staged SQL reconciliation handles 8000 IDs without bind expansion',
+      () async {
+    final appState = FluxNewsState()..db = database;
+    await insertTestNews(
+      database,
+      newsID: 1,
+      feedID: 1,
+      title: 'Present',
+      starred: true,
+    );
+    await insertTestNews(
+      database,
+      newsID: 8001,
+      feedID: 1,
+      title: 'Missing',
+      starred: true,
+    );
+    await initializeRemoteSyncStaging(appState);
+    for (var start = 1; start <= 8000; start += 500) {
+      await stageRemoteSyncNewsPage(
+        appState,
+        List.generate(500, (index) => {'id': start + index}),
+        starred: false,
+      );
+      await stageRemoteSyncNewsPage(
+        appState,
+        List.generate(500, (index) => {'id': start + index}),
+        starred: true,
+      );
+    }
+
+    await markNewsMissingFromCompleteStagingAsRead(appState);
+    await clearStarredMissingFromCompleteStaging(appState);
+
+    final present = (await database.query(
+      'news',
+      columns: ['status', 'starred'],
+      where: 'newsID = 1',
+    ))
+        .single;
+    final missing = (await database.query(
+      'news',
+      columns: ['status', 'starred'],
+      where: 'newsID = 8001',
+    ))
+        .single;
+    expect(present['status'], FluxNewsState.unreadNewsStatus);
+    expect(present['starred'], 1);
+    expect(missing['status'], FluxNewsState.readNewsStatus);
+    expect(missing['starred'], 0);
+    await discardRemoteSyncStaging(appState);
+  });
+
+  test('counter snapshot reflects current status and selected feed scope',
+      () async {
+    await insertTestFeed(database, feedID: 1, title: 'First Feed');
+    await insertTestFeed(database, feedID: 2, title: 'Second Feed');
+    await insertTestNews(
+      database,
+      newsID: 1,
+      feedID: 1,
+      title: 'First unread',
+    );
+    await insertTestNews(
+      database,
+      newsID: 2,
+      feedID: 2,
+      title: 'Second unread',
+    );
+    await insertTestNews(
+      database,
+      newsID: 3,
+      feedID: 1,
+      title: 'Already read',
+      status: FluxNewsState.readNewsStatus,
+    );
+    final appState = FluxNewsState()
+      ..db = database
+      ..newsStatus = FluxNewsState.unreadNewsStatus
+      ..selectedCategoryElementType = FluxNewsState.feedElementType
+      ..feedIDs = [1];
+
+    var snapshot = await queryNewsCounterSnapshot(appState);
+    expect(snapshot.allNewsCount, 2);
+    expect(snapshot.currentViewCount, 1);
+
+    await updateNewsStatusInDB(
+      1,
+      FluxNewsState.readNewsStatus,
+      appState,
+    );
+    snapshot = await queryNewsCounterSnapshot(appState);
+    expect(snapshot.allNewsCount, 1);
+    expect(snapshot.currentViewCount, 0);
+  });
 }

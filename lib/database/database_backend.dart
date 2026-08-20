@@ -14,10 +14,317 @@ import '../state_management/flux_news_state.dart';
 import '../models/news_model.dart';
 
 const int _sqliteInChunkSize = 500;
+const int _remoteSyncReconciliationBatchSize = 100;
+const String _remoteSyncStagingTable = 'flux_news_remote_sync_entries';
 
-Future<void> _prepareNewsListMetadata(News news, FluxNewsState appState) async {
+Future<void> initializeRemoteSyncStaging(FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    throw StateError('Database is not initialized');
+  }
+  await appState.db!
+      .execute('DROP TABLE IF EXISTS temp.$_remoteSyncStagingTable');
+  await appState.db!.execute('''CREATE TEMP TABLE $_remoteSyncStagingTable(
+    newsID INTEGER PRIMARY KEY,
+    mainPayload TEXT,
+    starredPayload TEXT,
+    inMain INTEGER NOT NULL DEFAULT 0,
+    inStarred INTEGER NOT NULL DEFAULT 0
+  ) WITHOUT ROWID''');
+}
+
+Future<int> stageRemoteSyncNewsPage(
+  FluxNewsState appState,
+  List<Map<String, dynamic>> entries, {
+  required bool starred,
+}) async {
+  if (appState.db == null || entries.isEmpty) return 0;
+  final membership = starred ? 'inStarred' : 'inMain';
+  final payloadColumn = starred ? 'starredPayload' : 'mainPayload';
+  final before = await appState.db!.rawQuery(
+    'SELECT COUNT(*) AS count FROM $_remoteSyncStagingTable WHERE $membership = 1',
+  );
+  final batch = appState.db!.batch();
+  for (final entry in entries) {
+    final newsID = entry['id'];
+    if (newsID is! int) {
+      throw const FormatException('Miniflux entry is missing an integer id');
+    }
+    batch.rawInsert('''INSERT INTO $_remoteSyncStagingTable
+      (newsID, $payloadColumn, $membership) VALUES (?, ?, 1)
+      ON CONFLICT(newsID) DO UPDATE SET
+        $payloadColumn = excluded.$payloadColumn,
+        $membership = 1''', [newsID, jsonEncode(entry)]);
+  }
+  await batch.commit(noResult: true);
+  final after = await appState.db!.rawQuery(
+    'SELECT COUNT(*) AS count FROM $_remoteSyncStagingTable WHERE $membership = 1',
+  );
+  return (after.first['count'] as int) - (before.first['count'] as int);
+}
+
+Future<void> discardRemoteSyncStaging(FluxNewsState appState) async {
+  if (appState.db == null) return;
+  await appState.db!
+      .execute('DROP TABLE IF EXISTS temp.$_remoteSyncStagingTable');
+}
+
+Future<void> markNewsMissingFromCompleteStagingAsRead(
+    FluxNewsState appState) async {
+  if (appState.db == null) return;
+  await _markNewsMissingFromCompleteStagingAsRead(appState.db!);
+}
+
+Future<void> _markNewsMissingFromCompleteStagingAsRead(
+    DatabaseExecutor executor) async {
+  await executor.rawUpdate('''UPDATE news
+    SET status = ?, syncStatus = ?
+    WHERE status = ?
+      AND syncStatus = ?
+      AND NOT EXISTS (
+        SELECT 1 FROM $_remoteSyncStagingTable staged
+        WHERE staged.newsID = news.newsID AND staged.inMain = 1
+      )''', [
+    FluxNewsState.readNewsStatus,
+    FluxNewsState.syncedSyncStatus,
+    FluxNewsState.unreadNewsStatus,
+    FluxNewsState.notSyncedSyncStatus,
+  ]);
+}
+
+Future<void> reconcileStagedRemoteNewsInTransaction(
+  FluxNewsState appState, {
+  required bool mainComplete,
+  required bool starredComplete,
+  FutureOr<void> Function()? beforeCommitForTesting,
+}) async {
+  if (appState.db == null) return;
+  await appState.db!.transaction((transaction) async {
+    if (mainComplete) {
+      await _markNewsMissingFromCompleteStagingAsRead(transaction);
+    }
+
+    var lastNewsID = -1;
+    while (true) {
+      if (appState.longSyncAborted) {
+        throw StateError('Staged news reconciliation was aborted');
+      }
+      final rows = await transaction.rawQuery('''SELECT newsID,
+          mainPayload, starredPayload, inMain, inStarred
+        FROM $_remoteSyncStagingTable
+        WHERE newsID > ?
+        ORDER BY newsID
+        LIMIT ?''', [lastNewsID, _remoteSyncReconciliationBatchSize]);
+      if (rows.isEmpty) break;
+      await _writeStagedNewsPage(transaction, rows);
+      lastNewsID = rows.last['newsID'] as int;
+    }
+
+    await transaction.rawUpdate('''UPDATE news SET starred = 1
+      WHERE EXISTS (
+        SELECT 1 FROM $_remoteSyncStagingTable staged
+        WHERE staged.newsID = news.newsID AND staged.inStarred = 1
+      )''');
+    if (starredComplete) {
+      await _clearStarredMissingFromCompleteStaging(transaction);
+    }
+    await beforeCommitForTesting?.call();
+  });
+}
+
+Future<void> clearStarredMissingFromCompleteStaging(
+    FluxNewsState appState) async {
+  if (appState.db == null) return;
+  await _clearStarredMissingFromCompleteStaging(appState.db!);
+}
+
+Future<void> _clearStarredMissingFromCompleteStaging(
+    DatabaseExecutor executor) async {
+  await executor.rawUpdate('''UPDATE news SET starred = 0
+    WHERE starred = 1
+      AND NOT EXISTS (
+        SELECT 1 FROM $_remoteSyncStagingTable staged
+        WHERE staged.newsID = news.newsID AND staged.inStarred = 1
+      )''');
+}
+
+Future<void> _writeStagedNewsPage(
+  Transaction transaction,
+  List<Map<String, Object?>> rows,
+) async {
+  final newsIDs = rows.map((row) => row['newsID'] as int).toList();
+  final placeholders = List.filled(newsIDs.length, '?').join(',');
+  final existingNewsRows = await transaction.rawQuery(
+    'SELECT newsID FROM news WHERE newsID IN ($placeholders)',
+    newsIDs,
+  );
+  final existingNewsIDs =
+      existingNewsRows.map((row) => row['newsID'] as int).toSet();
+  final staged = <({News news, bool inMain, bool exists})>[];
+
+  for (final row in rows) {
+    final inMain = row['inMain'] == 1;
+    final rawPayload = inMain ? row['mainPayload'] : row['starredPayload'];
+    if (rawPayload is! String) {
+      throw StateError('Staged entry ${row['newsID']} has no payload');
+    }
+    final payload = jsonDecode(rawPayload);
+    final news = News.fromJson(Map<String, dynamic>.from(payload as Map));
+    final exists = existingNewsIDs.contains(news.newsID);
+    staged.add((news: news, inMain: inMain, exists: exists));
+  }
+
+  final metadataFeedIDs = staged
+      .where((entry) => entry.inMain || !entry.exists)
+      .map((entry) => entry.news.feedID)
+      .toSet()
+      .toList();
+  final feedSettings =
+      <int, ({bool preferParagraph, bool preferAttachmentImage})>{};
+  if (metadataFeedIDs.isNotEmpty) {
+    final feedPlaceholders = List.filled(metadataFeedIDs.length, '?').join(',');
+    final feedRows = await transaction.rawQuery(
+      '''SELECT feedID, preferParagraph, preferAttachmentImage
+           FROM feeds
+          WHERE feedID IN ($feedPlaceholders)''',
+      metadataFeedIDs,
+    );
+    for (final row in feedRows) {
+      feedSettings[row['feedID'] as int] = (
+        preferParagraph: row['preferParagraph'] == 1,
+        preferAttachmentImage: row['preferAttachmentImage'] == 1,
+      );
+    }
+  }
+
+  final attachmentIDs = <int>[];
+  for (final entry in staged) {
+    if (entry.inMain || !entry.exists) {
+      final settings = feedSettings[entry.news.feedID];
+      if (settings != null) {
+        entry.news.preferParagraph = settings.preferParagraph;
+        entry.news.preferAttachmentImage = settings.preferAttachmentImage;
+      }
+      entry.news.prepareListMetadata();
+    }
+    if (!entry.exists) {
+      attachmentIDs.addAll(entry.news.attachments
+              ?.where((attachment) => attachment.attachmentID != -1)
+              .map((attachment) => attachment.attachmentID) ??
+          const []);
+    }
+  }
+
+  final existingAttachmentIDs = <int>{};
+  for (final ids in _chunks(attachmentIDs, _sqliteInChunkSize)) {
+    final attachmentPlaceholders = List.filled(ids.length, '?').join(',');
+    final attachmentRows = await transaction.rawQuery(
+      'SELECT attachmentID FROM attachments WHERE attachmentID IN ($attachmentPlaceholders)',
+      ids,
+    );
+    existingAttachmentIDs
+        .addAll(attachmentRows.map((row) => row['attachmentID'] as int));
+  }
+
+  final batch = transaction.batch();
+  for (final entry in staged) {
+    final news = entry.news;
+    if (!entry.exists) {
+      batch.insert('news', news.toMap());
+      for (final attachment in news.attachments ?? const <Attachment>[]) {
+        if (attachment.attachmentID != -1 &&
+            existingAttachmentIDs.add(attachment.attachmentID)) {
+          batch.insert('attachments', attachment.toMap());
+        }
+      }
+      continue;
+    }
+    // Starred-only entries preserve local status/content for existing news.
+    if (!entry.inMain) continue;
+    batch.rawUpdate('''UPDATE news
+      SET status = ?, syncStatus = ?, content = ?, previewText = ?, imageUrl = ?
+      WHERE newsID = ?''', [
+      news.status,
+      FluxNewsState.notSyncedSyncStatus,
+      news.content,
+      news.previewText,
+      news.imageUrl,
+      news.newsID,
+    ]);
+    for (final attachment in news.attachments ?? const <Attachment>[]) {
+      if (attachment.attachmentID != -1 && attachment.mediaProgression > 0) {
+        batch.rawUpdate(
+          'UPDATE attachments SET mediaProgression = ? WHERE attachmentID = ?',
+          [attachment.mediaProgression, attachment.attachmentID],
+        );
+      }
+    }
+  }
+  await batch.commit(noResult: true);
+}
+
+Future<List<News>> queryStagedRemoteAudioNews(
+  FluxNewsState appState, {
+  bool mainOnly = false,
+}) async {
+  if (appState.db == null) return [];
+  final rows = await appState.db!.rawQuery('''SELECT DISTINCT
+      news.newsID, news.feedID, news.title, news.url, news.commentsUrl,
+      news.shareCode, '' AS content, 0 AS contentLoaded,
+      news.previewText, news.imageUrl, news.hash, news.publishedAt,
+      news.createdAt, news.status, news.readingTime, news.starred,
+      news.feedTitle, news.syncStatus
+    FROM news
+    INNER JOIN $_remoteSyncStagingTable staged ON staged.newsID = news.newsID
+    INNER JOIN attachments ON attachments.newsID = news.newsID
+    WHERE ${mainOnly ? 'staged.inMain = 1' : '(staged.inMain = 1 OR staged.inStarred = 1)'}''');
+  final result = rows.map((row) => News.fromMap(row)).toList();
+  if (result.isEmpty) return result;
+  final byID = {for (final news in result) news.newsID: news};
+  for (final ids in _chunks(byID.keys.toList(), _sqliteInChunkSize)) {
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final attachmentRows = await appState.db!.rawQuery(
+      'SELECT * FROM attachments WHERE newsID IN ($placeholders)',
+      ids,
+    );
+    for (final row in attachmentRows) {
+      final news = byID[row['newsID'] as int];
+      if (news == null) continue;
+      (news.attachments ??= []).add(Attachment.fromMap(row));
+    }
+  }
+  return result;
+}
+
+Future<Set<int>> stagedRemoteNewsIDsAmong(
+    FluxNewsState appState, Set<int> candidateIDs) async {
+  if (appState.db == null || candidateIDs.isEmpty) return <int>{};
+  final result = <int>{};
+  for (final ids in _chunks(candidateIDs.toList(), _sqliteInChunkSize)) {
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final rows = await appState.db!.rawQuery('''SELECT newsID
+      FROM $_remoteSyncStagingTable
+      WHERE (inMain = 1 OR inStarred = 1)
+        AND newsID IN ($placeholders)''', ids);
+    result.addAll(rows.map((row) => row['newsID'] as int));
+  }
+  return result;
+}
+
+Iterable<List<int>> _chunks(List<int> values, int size) sync* {
+  for (var start = 0; start < values.length; start += size) {
+    yield values.sublist(
+        start, start + size < values.length ? start + size : values.length);
+  }
+}
+
+Future<void> _prepareNewsListMetadata(
+  News news,
+  FluxNewsState appState, [
+  DatabaseExecutor? executor,
+]) async {
   if (!news.contentLoaded) return;
-  final rows = await appState.db!.rawQuery(
+  final rows = await (executor ?? appState.db!).rawQuery(
     '''SELECT preferParagraph, preferAttachmentImage
          FROM feeds
         WHERE feedID = ?
@@ -463,24 +770,10 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
       if (!appState.longSyncAborted) {
         await _prepareNewsListMetadata(news, appState);
         // check if news already present in the database
-        resultSelect = await appState.db!.rawQuery('''
-          SELECT news.newsID, 
-                 news.feedID, 
-                 substr(news.title, 1, 1000000) as title, 
-                 substr(news.url, 1, 1000000) as url, 
-                 substr(news.commentsUrl, 1, 1000000) as commentsUrl,
-                 substr(news.shareCode, 1, 1000000) as shareCode,
-                 substr(news.content, 1, 1000000) as content, 
-                 news.hash, 
-                 news.publishedAt, 
-                 news.createdAt, 
-                 news.status, 
-                 news.readingTime, 
-                 news.starred, 
-                 substr(news.feedTitle, 1, 1000000) as feedTitle,
-                 news.syncStatus 
-          FROM news 
-          WHERE newsID = ?''', [news.newsID]);
+        resultSelect = await appState.db!.rawQuery(
+          'SELECT newsID FROM news WHERE newsID = ? LIMIT 1',
+          [news.newsID],
+        );
         // if the news is not present, insert the news
         if (resultSelect.isEmpty) {
           batch.insert('news', news.toMap());
@@ -490,7 +783,7 @@ Future<int> insertNewsInDB(NewsList newsList, FluxNewsState appState) async {
             for (Attachment attachment in news.attachments!) {
               if (attachment.attachmentID != -1) {
                 resultSelect = await appState.db!.rawQuery(
-                    'SELECT * FROM attachments WHERE attachmentID = ?',
+                    'SELECT attachmentID FROM attachments WHERE attachmentID = ? LIMIT 1',
                     [attachment.attachmentID]);
                 // if the attachment is not present, insert the attachment
                 if (resultSelect.isEmpty) {
@@ -619,21 +912,7 @@ Future<int> updateStarredNewsInDB(
       } else {
         // check if the news is already marked as bookmarked
         resultSelect = await appState.db!.rawQuery('''
-              SELECT news.newsID, 
-                     news.feedID, 
-                     substr(news.title, 1, 1000000) as title, 
-                     substr(news.url, 1, 1000000) as url, 
-                     substr(news.commentsUrl, 1, 1000000) as commentsUrl,
-                     substr(news.shareCode, 1, 1000000) as shareCode,
-                     substr(news.content, 1, 1000000) as content, 
-                     news.hash, 
-                     news.publishedAt, 
-                     news.createdAt, 
-                     news.status, 
-                     news.readingTime, 
-                     news.starred, 
-                     substr(news.feedTitle, 1, 1000000) as feedTitle,
-                     news.syncStatus 
+              SELECT newsID
               FROM news 
               WHERE newsID = ? AND starred = ?''', [news.newsID, 1]);
         if (resultSelect.isEmpty) {
@@ -651,37 +930,18 @@ Future<int> updateStarredNewsInDB(
     }
     // check if the existing bookmarks also exist in the given list.
     // if not, delete the bookmark flag at the news
-    List<News> existingNotStarredNews = [];
-    resultSelect = await appState.db!.rawQuery('''
-                SELECT news.newsID, 
-                     news.feedID, 
-                     substr(news.title, 1, 1000000) as title, 
-                     substr(news.url, 1, 1000000) as url, 
-                     substr(news.commentsUrl, 1, 1000000) as commentsUrl,
-                     substr(news.shareCode, 1, 1000000) as shareCode,
-                     substr(news.content, 1, 1000000) as content, 
-                     news.hash, 
-                     news.publishedAt, 
-                     news.createdAt, 
-                     news.status, 
-                     news.readingTime, 
-                     news.starred, 
-                     substr(news.feedTitle, 1, 1000000) as feedTitle,
-                     news.syncStatus 
-              FROM news 
-              WHERE starred = ?''', [1]);
-    if (resultSelect.isNotEmpty) {
-      existingNotStarredNews =
-          resultSelect.map((e) => News.fromMap(e)).toList();
-    }
-    for (News news in existingNotStarredNews) {
-      if (!newsList.news.any((item) => item.newsID == news.newsID)) {
+    resultSelect = await appState.db!
+        .rawQuery('SELECT newsID FROM news WHERE starred = ?', [1]);
+    final remoteStarredIDs = newsList.news.map((news) => news.newsID).toSet();
+    for (final row in resultSelect) {
+      final newsID = row['newsID'] as int;
+      if (!remoteStarredIDs.contains(newsID)) {
         result = await appState.db!.rawUpdate(
-            'UPDATE news SET starred = ? WHERE newsId = ?', [0, news.newsID]);
+            'UPDATE news SET starred = ? WHERE newsId = ?', [0, newsID]);
         if (appState.debugMode) {
           logThis(
               'updateStarredNewsInDB',
-              'Deleted starred status for news with id ${news.newsID} in DB',
+              'Deleted starred status for news with id $newsID in DB',
               LogLevel.INFO);
         }
       }
@@ -707,47 +967,29 @@ Future<int> markNotFetchedNewsAsRead(
   appState.db ??= await appState.initializeDB();
   if (appState.db != null) {
     List<Map<String, Object?>> resultSelect = [];
-    List<News> existingNews = [];
     // get the local unread news
     resultSelect = await appState.db!.rawQuery('''
-                SELECT news.newsID, 
-                     news.feedID, 
-                     substr(news.title, 1, 1000000) as title, 
-                     substr(news.url, 1, 1000000) as url, 
-                     substr(news.commentsUrl, 1, 1000000) as commentsUrl,
-                     substr(news.shareCode, 1, 1000000) as shareCode,
-                     substr(news.content, 1, 1000000) as content, 
-                     news.hash, 
-                     news.publishedAt, 
-                     news.createdAt, 
-                     news.status, 
-                     news.readingTime, 
-                     news.starred, 
-                     substr(news.feedTitle, 1, 1000000) as feedTitle,
-                     news.syncStatus 
-              FROM news 
-              WHERE status = ? AND syncStatus = ?''',
+                SELECT newsID
+               FROM news
+               WHERE status = ? AND syncStatus = ?''',
         [FluxNewsState.unreadNewsStatus, FluxNewsState.notSyncedSyncStatus]);
-    if (resultSelect.isNotEmpty) {
-      existingNews = resultSelect.map((e) => News.fromMap(e)).toList();
-    }
+    final remoteNewsIDs = newNewsList.news.map((news) => news.newsID).toSet();
 
-    for (News news in existingNews) {
+    for (final row in resultSelect) {
       if (!appState.longSyncAborted) {
+        final newsID = row['newsID'] as int;
         // check if the news exists in the unread news list which was fetched.
-        if (!newNewsList.news.any((item) => item.newsID == news.newsID)) {
+        if (!remoteNewsIDs.contains(newsID)) {
           // if not, mark the news as read
           result = await appState.db!.rawUpdate(
               'UPDATE news SET status = ?, syncStatus = ? WHERE newsId = ?', [
             FluxNewsState.readNewsStatus,
             FluxNewsState.syncedSyncStatus,
-            news.newsID
+            newsID
           ]);
           if (appState.debugMode) {
-            logThis(
-                'markNotFetchedNewsAsRead',
-                'Marked the news with id ${news.newsID} as read in DB',
-                LogLevel.INFO);
+            logThis('markNotFetchedNewsAsRead',
+                'Marked the news with id $newsID as read in DB', LogLevel.INFO);
           }
         }
       } else {
@@ -1336,6 +1578,67 @@ Future<int> queryUnreadNewsCountFromDB(FluxNewsState appState) async {
       [FluxNewsState.unreadNewsStatus]);
   if (result.isEmpty) return 0;
   return result.first['count'] as int? ?? 0;
+}
+
+class NewsCounterSnapshot {
+  const NewsCounterSnapshot({
+    required this.allNewsCount,
+    required this.currentViewCount,
+  });
+
+  final int allNewsCount;
+  final int currentViewCount;
+}
+
+Future<NewsCounterSnapshot> queryNewsCounterSnapshot(
+    FluxNewsState appState) async {
+  appState.db ??= await appState.initializeDB();
+  if (appState.db == null) {
+    return const NewsCounterSnapshot(allNewsCount: 0, currentViewCount: 0);
+  }
+
+  final statusParameters = <Object?>[];
+  final statusClause = appState.newsStatus == FluxNewsState.allNewsString
+      ? '1 = 1'
+      : 'news.status = ?';
+  if (appState.newsStatus != FluxNewsState.allNewsString) {
+    statusParameters.add(appState.newsStatus);
+  }
+
+  Future<int> count(String where, List<Object?> parameters) async {
+    final rows = await appState.db!.rawQuery(
+      'SELECT COUNT(*) AS count FROM news WHERE $where',
+      parameters,
+    );
+    return rows.first['count'] as int? ?? 0;
+  }
+
+  final allNewsCount = await count(statusClause, statusParameters);
+  late final int currentViewCount;
+  switch (appState.selectedCategoryElementType) {
+    case FluxNewsState.bookmarkedNewsElementType:
+      currentViewCount = await count('news.starred = ?', const [1]);
+    case FluxNewsState.categoryElementType:
+    case FluxNewsState.feedElementType:
+      final feedIDs = appState.feedIDs ?? const <int>[];
+      final feedParameters = <Object?>[];
+      final feedClause = _buildChunkedInClause(
+        'news.feedID',
+        feedIDs,
+        feedParameters,
+      );
+      currentViewCount = await count(
+        '$statusClause AND $feedClause',
+        [...statusParameters, ...feedParameters],
+      );
+    default:
+      currentViewCount = allNewsCount;
+  }
+
+  return NewsCounterSnapshot(
+    allNewsCount: allNewsCount,
+    currentViewCount: currentViewCount,
+  );
 }
 
 // update the status (read or unread) of the news in the database

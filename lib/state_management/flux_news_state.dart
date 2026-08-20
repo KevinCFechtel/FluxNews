@@ -578,6 +578,7 @@ class FluxNewsState extends ChangeNotifier {
 
   // the directory for Saving pictures
   Directory? externalDirectory;
+  final Map<int, Uint8List> _feedIconBytesCache = <int, Uint8List>{};
 
   // the database connection as a variable
   Database? db;
@@ -3050,11 +3051,18 @@ class FluxNewsState extends ChangeNotifier {
   Future<void> saveFeedIconFile(int feedIconID, Uint8List? bytes) async {
     String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     await saveFile(filename, bytes);
+    if (externalDirectory != null && bytes != null) {
+      _feedIconBytesCache[feedIconID] = bytes;
+    }
   }
 
   Uint8List? readFeedIconFile(int feedIconID) {
+    final cached = _feedIconBytesCache[feedIconID];
+    if (cached != null) return cached;
     String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
-    return readFile(filename);
+    final bytes = readFile(filename);
+    if (bytes != null) _feedIconBytesCache[feedIconID] = bytes;
+    return bytes;
   }
 
   bool checkIfFeedIconFileExists(int feedIconID) {
@@ -3065,11 +3073,13 @@ class FluxNewsState extends ChangeNotifier {
   }
 
   void deleteFeedIconFile(int feedIconID) {
+    _feedIconBytesCache.remove(feedIconID);
     String filename = "${FluxNewsState.feedIconFilePath}$feedIconID";
     deleteFile(filename);
   }
 
   Future<void> deleteAllFeedIconFiles() async {
+    _feedIconBytesCache.clear();
     if (externalDirectory != null) {
       final fileIconPath = FluxNewsState.feedIconFilePath
           .substring(0, FluxNewsState.feedIconFilePath.lastIndexOf('/'));

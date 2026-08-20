@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -24,6 +25,141 @@ class ReadNewsList {
         'entry_ids': newsIds,
         'status': status,
       };
+}
+
+class PagedNewsFetchResult {
+  const PagedNewsFetchResult({
+    required this.fetchedCount,
+    required this.reportedCount,
+    required this.complete,
+  });
+
+  final int fetchedCount;
+  final int reportedCount;
+  final bool complete;
+}
+
+typedef NewsPageConsumer = Future<int> Function(
+    List<Map<String, dynamic>> entries);
+
+/// Fetches entry pages without retaining parsed [News] objects between pages.
+/// The consumer returns the number of newly staged IDs so duplicate pages
+/// cannot accidentally satisfy the completeness check.
+Future<PagedNewsFetchResult> fetchNewsPages(
+  FluxNewsState appState, {
+  required bool starred,
+  required NewsPageConsumer consumePage,
+  Client? httpClient,
+}) async {
+  if (appState.minifluxURL == null || appState.minifluxAPIKey == null) {
+    return const PagedNewsFetchResult(
+      fetchedCount: 0,
+      reportedCount: 0,
+      complete: true,
+    );
+  }
+
+  final client = httpClient ?? createMinifluxHttpClient();
+  final header = {
+    FluxNewsState.httpMinifluxAuthHeaderString: appState.minifluxAPIKey!,
+    FluxNewsState.httpMinifluxAcceptHeaderString:
+        FluxNewsState.httpContentTypeString,
+    ...appState.customHeaders,
+  };
+  final sortOrder =
+      appState.sortOrder == FluxNewsState.sortOrderNewestFirstString
+          ? FluxNewsState.minifluxDescString
+          : FluxNewsState.minifluxAscString;
+  final configuredCap = appState.amountOfSyncedNews;
+  var offset = 0;
+  var uniqueCount = 0;
+  int? reportedCount;
+
+  String statusQuery() {
+    if (starred) return '&starred=true';
+    if (!appState.syncReadNews) return '&status=unread';
+    if (appState.syncReadNewsAfterDays <= 0) return '';
+    final syncDate =
+        DateTime.now().subtract(Duration(days: appState.syncReadNewsAfterDays));
+    final timestamp = syncDate.toUtc().millisecondsSinceEpoch ~/ 1000;
+    return '&after=$timestamp';
+  }
+
+  try {
+    while (true) {
+      if (appState.longSyncAborted) {
+        throw const RemoteFetchAbortedException();
+      }
+      if (configuredCap > 0 && offset >= configuredCap) break;
+      final limit = configuredCap > 0
+          ? math.min(
+              FluxNewsState.amountOfNewlyCaughtNews, configuredCap - offset)
+          : FluxNewsState.amountOfNewlyCaughtNews;
+      final uri = Uri.parse(
+        '${appState.minifluxURL!}entries?order=published_at${statusQuery()}'
+        '&direction=$sortOrder&limit=$limit&offset=$offset',
+      );
+      final response = await client.get(uri, headers: header);
+      if (response.statusCode != 200) {
+        logThis(
+          'fetchNewsPages',
+          'Got unexpected response ${response.statusCode} for '
+              '${starred ? 'starred' : 'main'} news',
+          LogLevel.ERROR,
+        );
+        throw FluxNewsState.httpUnexpectedResponseErrorString;
+      }
+
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if (decoded is! Map<String, dynamic> ||
+          decoded['total'] is! int ||
+          decoded['entries'] is! List) {
+        throw const FormatException('Invalid Miniflux entries response');
+      }
+      final pageReportedCount = decoded['total'] as int;
+      reportedCount ??= pageReportedCount;
+      if (reportedCount != pageReportedCount) {
+        throw const FormatException(
+            'Miniflux entry count changed during pagination');
+      }
+      final entries = (decoded['entries'] as List)
+          .map((entry) => Map<String, dynamic>.from(entry as Map))
+          .toList(growable: false);
+      if (entries.isEmpty) {
+        if (offset < reportedCount) {
+          throw const FormatException(
+              'Miniflux pagination ended before the reported total');
+        }
+        break;
+      }
+
+      uniqueCount += await consumePage(entries);
+      offset += entries.length;
+      if (offset >= reportedCount) break;
+      if (entries.length < limit) {
+        throw const FormatException(
+            'Miniflux returned a short page before the reported total');
+      }
+    }
+
+    final total = reportedCount ?? 0;
+    final capped = configuredCap > 0 && configuredCap < total;
+    if (!capped && uniqueCount != total) {
+      throw FormatException(
+          'Miniflux pagination staged $uniqueCount of $total unique entries');
+    }
+    return PagedNewsFetchResult(
+      fetchedCount: uniqueCount,
+      reportedCount: total,
+      complete: !capped && uniqueCount == total,
+    );
+  } finally {
+    if (httpClient == null) client.close();
+  }
+}
+
+class RemoteFetchAbortedException implements Exception {
+  const RemoteFetchAbortedException();
 }
 
 // fetch unread news from the miniflux backend
@@ -506,38 +642,16 @@ Future<void> toggleNewsAsRead(FluxNewsState appState,
     if (appState.db != null) {
       // query the database for all news with the status read and the sync status not synced
       final List<Map<String, Object?>> queryResult = await appState.db!
-          .rawQuery('''
-             SELECT news.newsID, 
-                    news.feedID, 
-                    substr(news.title, 1, 1000000) as title, 
-                    substr(news.url, 1, 1000000) as url, 
-                    substr(news.commentsUrl, 1, 1000000) as commentsUrl,
-                    substr(news.shareCode, 1, 1000000) as shareCode,
-                    substr(news.content, 1, 1000000) as content, 
-                    news.hash, 
-                    news.publishedAt, 
-                    news.createdAt, 
-                    news.status, 
-                    news.readingTime, 
-                    news.starred, 
-                    substr(news.feedTitle, 1, 1000000) as feedTitle,
-                    news.syncStatus
-             FROM news 
-             WHERE status LIKE ? 
-              AND syncStatus = ?''', [
+          .rawQuery('''SELECT newsID
+             FROM news
+             WHERE status = ? AND syncStatus = ?
+             ORDER BY newsID''', [
         FluxNewsState.readNewsStatus,
         FluxNewsState.notSyncedSyncStatus
       ]);
-      List<News> newsList = queryResult.map((e) => News.fromMap(e)).toList();
-      // iterate over the news list and add the news id to the news id list
-      for (News news in newsList) {
-        newsIds.add(news.newsID);
-      }
+      newsIds.addAll(queryResult.map((row) => row['newsID'] as int));
       // if the news id list is not empty, create a new ReadNewsList object
       if (newsIds.isNotEmpty) {
-        // add the news id list and the status to the ReadNewsList object
-        ReadNewsList newReadNewsList = ReadNewsList(
-            newsIds: newsIds, status: FluxNewsState.readNewsStatus);
         final client = httpClient ?? createMinifluxHttpClient();
         try {
           final header = {
@@ -549,32 +663,31 @@ Future<void> toggleNewsAsRead(FluxNewsState appState,
           if (appState.customHeaders.isNotEmpty) {
             header.addAll(appState.customHeaders);
           }
-          // send the ReadNewsList object to the miniflux server to mark the news as read
-          final response = await client.put(
+          const chunkSize = 500;
+          for (var start = 0; start < newsIds.length; start += chunkSize) {
+            final end = math.min(start + chunkSize, newsIds.length);
+            final chunk = newsIds.sublist(start, end);
+            final body = ReadNewsList(
+              newsIds: chunk,
+              status: FluxNewsState.readNewsStatus,
+            );
+            final response = await client.put(
               Uri.parse('${appState.minifluxURL!}entries'),
               headers: header,
-              body: jsonEncode(newReadNewsList));
-          if (response.statusCode != 204) {
-            logThis(
-                'toggleNewsAsRead',
-                'Got unexpected response from miniflux server: ${response.statusCode} for news ${newsIds.toString()}',
-                LogLevel.ERROR);
-
-            // if the response code is not 204, throw a error
-            throw FluxNewsState.httpUnexpectedResponseErrorString;
-          } else {
-            // if the response code is 204, update the sync status of the news in the database to synced
-            for (News news in newsList) {
-              await appState.db!.rawUpdate(
-                  'UPDATE news SET syncStatus = ? WHERE newsId = ?',
-                  [FluxNewsState.syncedSyncStatus, news.newsID]);
-              if (appState.debugMode) {
-                logThis(
-                    'toggleNewsAsRead',
-                    'Updated sync status of news ${news.newsID} in database',
-                    LogLevel.INFO);
-              }
+              body: jsonEncode(body),
+            );
+            if (response.statusCode != 204) {
+              logThis(
+                  'toggleNewsAsRead',
+                  'Got unexpected response from miniflux server: ${response.statusCode} for ${chunk.length} news',
+                  LogLevel.ERROR);
+              throw FluxNewsState.httpUnexpectedResponseErrorString;
             }
+            final placeholders = List.filled(chunk.length, '?').join(',');
+            await appState.db!.rawUpdate(
+              'UPDATE news SET syncStatus = ? WHERE newsID IN ($placeholders)',
+              [FluxNewsState.syncedSyncStatus, ...chunk],
+            );
           }
         } finally {
           if (httpClient == null) client.close();

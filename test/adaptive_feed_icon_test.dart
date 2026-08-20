@@ -88,6 +88,7 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(_contrastSurfaceKey), findsOneWidget);
+    expect(tester.widget<Image>(find.byType(Image)).gaplessPlayback, isTrue);
     final surface = tester.widget<Container>(find.byKey(_contrastSurfaceKey));
     final color = (surface.decoration! as BoxDecoration).color!;
     expect(color.computeLuminance(), greaterThan(0.5));

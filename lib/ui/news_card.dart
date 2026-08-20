@@ -490,8 +490,7 @@ class NewsCard extends StatelessWidget {
     return ClipRect(
       clipBehavior: Clip.none,
       child: Slidable(
-          // Specify a key if the Slidable is dismissible.
-          key: UniqueKey(),
+          key: ValueKey<int>(news.newsID),
           closeOnScroll: true,
           enabled: appState.activateSwipeGestures,
           // The start action pane is the one at the left or the top side.
