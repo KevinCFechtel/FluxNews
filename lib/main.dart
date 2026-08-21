@@ -104,7 +104,6 @@ Future<void> main() async {
     try {
       await LiquidGlassWidgets.initialize(
         enablePerformanceMonitor: false,
-        warmUpImpellerPipeline: false,
       );
     } catch (error) {
       _startupLogError('main', 'Liquid Glass initialization fell back: $error');

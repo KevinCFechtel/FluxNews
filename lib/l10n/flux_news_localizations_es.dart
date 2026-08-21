@@ -49,8 +49,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'La sincronización se mantiene fija. Las acciones seleccionadas se mostrarán directamente siempre que haya espacio; las acciones adicionales permanecen dentro de \"Más\".';
 
   @override
-  String get androidFloatingActionToggleNewsStatus =>
-      'Mostrar \"Todas\"  las noticias o sólo las \"No leidas\"';
+  String get androidFloatingActionToggleNewsStatus => 'Mostrar Todas/No leidas';
 
   @override
   String get androidFloatingActionToggleSortOrder => 'Cambiar ordenación';
@@ -109,7 +108,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get minifluxVersion => 'Versión de Miniflux';
 
   @override
-  String get brightnesMode => 'Brightness mode';
+  String get brightnesMode => 'Apariencia';
 
   @override
   String get sortOrderOfNews => 'Sort order of News';

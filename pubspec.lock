@@ -426,10 +426,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_carplay
-      sha256: "5af3ba08bae2080a66103aed495b6bf4587f3052f0d235a84b690a89deccd88a"
+      sha256: ca3bed87715eb9bb8adf69e7a7878bcd971d09af231b6f3216e8033c4e6ba3d8
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.4"
+    version: "1.6.5"
   flutter_highlight:
     dependency: transitive
     description:
@@ -777,10 +777,10 @@ packages:
     dependency: "direct main"
     description:
       name: liquid_glass_widgets
-      sha256: "9e7de8a33ac308a0e61a4311fbf12d2a7a9dbe9058cfeca59262e3cd06b39419"
+      sha256: "6eb319af884c7269403089873dfe7a2d948cbbf384b856ea3518d4a187aa5314"
       url: "https://pub.dev"
     source: hosted
-    version: "0.29.8"
+    version: "0.30.2"
   logger:
     dependency: "direct main"
     description:

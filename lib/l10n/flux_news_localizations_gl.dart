@@ -202,15 +202,15 @@ class AppLocalizationsGl extends AppLocalizations {
 
   @override
   String get automaticFeedIconContrast =>
-      'Automatically highlight dark feed icons';
+      'Destacar automaticamente iconas escuras da canle';
 
   @override
   String get automaticFeedIconContrastDescription =>
-      'Adds a light surface behind dark transparent icons in Dark Mode. Manual feed settings take priority.';
+      'Engade unha superficie clara detrás das iconas escuras con transparencia no Modo Escuro. Os axustes manuais da canle teñen preferencia.';
 
   @override
   String get ignoreAutomaticFeedIconContrast =>
-      'Ignore automatic icon highlighting for this feed';
+      'Ignorar o destaque automático para iconas escuras nesta canle';
 
   @override
   String get descriptionMinifluxApp =>
