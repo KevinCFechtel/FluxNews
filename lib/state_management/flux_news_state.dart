@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;

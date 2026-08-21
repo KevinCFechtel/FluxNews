@@ -51,7 +51,7 @@ dependencies:
   equatable: ^2.0.5
   flutter_oss_licenses: ^3.0.2
   flutter_svg: ^2.0.5
-  dynamic_color: ^1.9.0
+  dynamic_color: ^2.1.0
   logger: ^2.6.2
   share_plus: ^13.1.0
   shared_preferences: ^2.5.3
@@ -78,6 +78,8 @@ dependencies:
   workmanager: ^0.10.7
   liquid_glass_widgets: ^0.30.2
 
+  material_ui: any
+  cupertino_ui: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,5 +1,5 @@
 // here we define the appearance of the news cards
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flux_news/models/news_model.dart';
 import 'package:flux_news/state_management/flux_news_state.dart';
 import 'package:provider/provider.dart';

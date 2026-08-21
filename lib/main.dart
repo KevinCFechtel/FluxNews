@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as sec_store;
 
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flux_news/functions/audio_download_service.dart';

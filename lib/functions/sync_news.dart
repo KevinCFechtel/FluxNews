@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flux_news/l10n/flux_news_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/audio_progress_store.dart';

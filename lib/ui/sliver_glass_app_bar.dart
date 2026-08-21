@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flux_news/database/database_backend.dart';
 import 'package:flux_news/functions/news_widget_functions.dart';
 import 'package:flux_news/functions/sync_news.dart';

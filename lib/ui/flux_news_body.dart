@@ -4,8 +4,8 @@ import 'dart:ui';
 
 import 'package:extended_image/extended_image.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flux_news/functions/flux_news_audio_handler.dart';
 import 'package:flux_news/functions/audio_progress_store.dart';

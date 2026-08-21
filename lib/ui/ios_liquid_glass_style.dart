@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flux_news/ui/floating_chrome_edge_gradient.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flux_news/functions/logging.dart';
 import 'package:flux_news/miniflux/miniflux_http_client.dart';
