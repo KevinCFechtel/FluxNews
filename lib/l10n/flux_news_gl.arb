@@ -283,5 +283,8 @@
     "androidAutoBackupFoundTitle": "Atopouse unha copia",
     "androidAutoBackupFoundMessage": "Recuperouse a copia de apoio de Android para Flux News. Se o ficheiro está cifrado pediráseche o contrasinal antes de restablecelo.",
     "checkAndroidAutoBackup": "Comprobar copia de Android",
-    "noAndroidAutoBackupFound": "Non se atopou copia de apoio de Android."
+    "noAndroidAutoBackupFound": "Non se atopou copia de apoio de Android.",
+    "automaticFeedIconContrast": "Destacar automaticamente iconas escuras da canle",
+    "automaticFeedIconContrastDescription": "Engade unha superficie clara detrás das iconas escuras con transparencia no Modo Escuro. Os axustes manuais da canle teñen preferencia.",
+    "ignoreAutomaticFeedIconContrast": "Ignorar o destaque automático para iconas escuras nesta canle"
 }
