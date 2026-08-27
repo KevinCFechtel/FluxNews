@@ -937,7 +937,7 @@ Future<void> onTabAction(FluxNewsState appState, BuildContext context,
       }
     }
   } else {
-    await toggleNewsExpanded(news, appState);
+    await toggleNewsExpandedAction(news, appState, itemIndex, searchView);
     if (!context.mounted) return;
     markNewsAsReadAction(news, appState, context, searchView,
         context.read<FluxNewsCounterState>());
@@ -978,21 +978,36 @@ Future<void> onTabContentAction(FluxNewsState appState, BuildContext context,
       }
     }
   } else {
-    await toggleNewsExpanded(news, appState);
+    await toggleNewsExpandedAction(news, appState, itemIndex, searchView);
     if (!context.mounted) return;
     markNewsAsReadAction(news, appState, context, searchView,
         context.read<FluxNewsCounterState>());
   }
 }
 
-Future<void> toggleNewsExpanded(News news, FluxNewsState appState) async {
+Future<bool> toggleNewsExpanded(News news, FluxNewsState appState) async {
   if (news.expanded) {
     news.expanded = false;
+    appState.refreshView();
+    return true;
   } else {
     await ensureNewsContentLoaded(appState, news);
     news.expanded = true;
+    appState.refreshView();
+    return false;
   }
-  appState.refreshView();
+}
+
+Future<void> toggleNewsExpandedAction(
+  News news,
+  FluxNewsState appState,
+  int itemIndex,
+  bool searchView,
+) async {
+  final collapsed = await toggleNewsExpanded(news, appState);
+  if (collapsed) {
+    await appState.jumpToCollapsedNewsItem(itemIndex, searchView: searchView);
+  }
 }
 
 Future<bool> _openAudioPlayerIfAvailable(

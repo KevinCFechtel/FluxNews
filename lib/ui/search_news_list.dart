@@ -57,6 +57,8 @@ class SearchNewsList extends StatelessWidget {
                               key: const PageStorageKey<String>(
                                   'NewsSearchList'),
                               padding: EdgeInsets.only(top: topContentInset),
+                              controller: appState.searchScrollController,
+                              listController: appState.searchListController,
                               itemCount: snapshot.data!.length,
                               itemBuilder: (context, i) {
                                 return appState.orientation ==

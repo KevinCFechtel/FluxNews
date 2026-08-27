@@ -689,7 +689,8 @@ class NewsRow extends StatelessWidget {
                               newsList);
                         } else if (appState.longPressAction ==
                             FluxNewsState.longPressActionExpandString) {
-                          await toggleNewsExpanded(news, appState);
+                          await toggleNewsExpandedAction(
+                              news, appState, itemIndex, searchView);
                           if (!context.mounted) return;
                           markNewsAsReadAction(news, appState, context,
                               searchView, context.read<FluxNewsCounterState>());

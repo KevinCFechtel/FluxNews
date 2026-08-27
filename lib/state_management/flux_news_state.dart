@@ -420,6 +420,8 @@ class FluxNewsState extends ChangeNotifier {
   int scrollPosition = 0;
   ScrollController scrollController = ScrollController();
   final ListController listController = ListController();
+  final ScrollController searchScrollController = ScrollController();
+  final ListController searchListController = ListController();
   bool floatingButtonVisible = false;
   String floatingButtonAction = FluxNewsState.floatingButtonMarkAsReadAction;
   bool syncNow = false;
@@ -3136,6 +3138,17 @@ class FluxNewsState extends ChangeNotifier {
     unawaited(_jumpToItemWhenReady(index));
   }
 
+  /// Repositions a collapsed item after its shorter layout has been rendered.
+  Future<void> jumpToCollapsedNewsItem(int index,
+      {required bool searchView}) async {
+    await WidgetsBinding.instance.endOfFrame;
+    await _jumpToItemWhenReady(
+      index,
+      scrollController: searchView ? searchScrollController : scrollController,
+      listController: searchView ? searchListController : listController,
+    );
+  }
+
   void resetListToStart({bool revealIOSLargeTitle = false}) {
     unawaited(_resetListToStartWhenReady(
       revealIOSLargeTitle: revealIOSLargeTitle,
@@ -3165,8 +3178,17 @@ class FluxNewsState extends ChangeNotifier {
         index: 0, scrollController: scrollController, alignment: 0.0);
   }
 
-  Future<void> _jumpToItemWhenReady(int index) async {
-    final listReady = await waitUntilNewsListBuild();
+  Future<void> _jumpToItemWhenReady(
+    int index, {
+    ScrollController? scrollController,
+    ListController? listController,
+  }) async {
+    final targetScrollController = scrollController ?? this.scrollController;
+    final targetListController = listController ?? this.listController;
+    final listReady = await _waitUntilListBuild(
+      scrollController: targetScrollController,
+      listController: targetListController,
+    );
     if (!listReady) {
       logThis(
           'jumpToItem',
@@ -3177,11 +3199,12 @@ class FluxNewsState extends ChangeNotifier {
     if (Platform.isAndroid &&
         (isTablet || appBarType == appBarFloatingType) &&
         index == 0) {
-      scrollController.jumpTo(scrollController.position.minScrollExtent);
+      targetScrollController
+          .jumpTo(targetScrollController.position.minScrollExtent);
       return;
     }
-    listController.jumpToItem(
-        index: index, scrollController: scrollController, alignment: 0.0);
+    targetListController.jumpToItem(
+        index: index, scrollController: targetScrollController, alignment: 0.0);
   }
 
   // this function is needed because after the news are fetched from the database,
@@ -3194,6 +3217,18 @@ class FluxNewsState extends ChangeNotifier {
   // With calling this function as await, we can wait with the further processing
   // on finishing with the list build.
   Future<bool> waitUntilNewsListBuild({
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    return _waitUntilListBuild(
+      scrollController: scrollController,
+      listController: listController,
+      timeout: timeout,
+    );
+  }
+
+  Future<bool> _waitUntilListBuild({
+    required ScrollController scrollController,
+    required ListController listController,
     Duration timeout = const Duration(seconds: 10),
   }) async {
     final deadline = DateTime.now().add(timeout);
