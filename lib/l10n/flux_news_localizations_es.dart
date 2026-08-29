@@ -114,72 +114,73 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sortOrderOfNews => 'Sort order of News';
 
   @override
-  String get markAsReadOnScrollover => 'Mark as read on scrollover';
+  String get markAsReadOnScrollover => 'Marcar como leida al desplazarse';
 
   @override
-  String get amountSaved => 'Amount of News which should be saved';
+  String get amountSaved => 'Cantidad de noticias a conservar';
 
   @override
   String get amountSavedStarred =>
-      'Amount of starred News which should be saved';
+      'Cantidad de noticias preferidas a conservar';
 
   @override
   String get titleURL => 'URL';
 
   @override
-  String get enterURL => 'Enter the URL';
+  String get enterURL => 'Introduce la dirección web';
 
   @override
-  String get enterValidURL => 'Enter a valid Miniflux URL with trailing slash';
+  String get enterValidURL =>
+      'Introduce la dirección web de Miniflux con la barra final';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'Cancelar';
 
   @override
-  String get enterAPIKey => 'Enter the API Key:';
+  String get enterAPIKey => 'Introduce la llave API:';
 
   @override
-  String get titleAPIKey => 'API Key';
+  String get titleAPIKey => 'Llave API';
 
   @override
-  String get save => 'Save';
+  String get save => 'Guardar';
 
   @override
-  String get system => 'System';
+  String get system => 'Sistema';
 
   @override
-  String get dark => 'Dark';
+  String get dark => 'Oscuro';
 
   @override
-  String get light => 'Light';
+  String get light => 'Claro';
 
   @override
-  String get newestFirst => 'Newest first';
+  String get newestFirst => 'Ultimas primero';
 
   @override
-  String get oldestFirst => 'Oldest first';
+  String get oldestFirst => 'Antiguas primero';
 
   @override
   String get communicateionMinifluxError =>
-      'Error while communicating with the miniflux server';
+      'Error al comunicarse con el servidor Miniflux';
 
   @override
-  String get databaseError => 'Error occurred while processing the data';
+  String get databaseError => 'Error al procesar los datos';
 
   @override
-  String get authError => 'Error authenticating against miniflux';
+  String get authError => 'Error al autenticar con el servidor Miniflux';
 
   @override
-  String get generalSettings => 'General Settings';
+  String get generalSettings => 'Ajustes Generales';
 
   @override
-  String get syncOnStart => 'Sync News on startup';
+  String get syncOnStart => 'Sincronizar Noticias al arrancar';
 
   @override
-  String get bookmarked => 'Bookmarked';
+  String get bookmarked => 'Marcadas';
 
   @override
-  String get itemCount => 'Count';
+  String get itemCount => 'Recuento';
 
   @override
   String largeTitleNewsCount(int count) {
@@ -193,176 +194,178 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get multilineAppBarTextSetting => 'Show newscount in Appbar';
+  String get multilineAppBarTextSetting =>
+      'Mostrar numero de noticias en la Appbar';
 
   @override
-  String get showFeedIconsTextSettings => 'Show feed icons';
+  String get showFeedIconsTextSettings => 'Mostrar icono del feed';
 
   @override
   String get automaticFeedIconContrast =>
-      'Automatically highlight dark feed icons';
+      'Resaltar iconos de feed oscuros automaticamente';
 
   @override
   String get automaticFeedIconContrastDescription =>
-      'Adds a light surface behind dark transparent icons in Dark Mode. Manual feed settings take priority.';
+      'Añade una superficial clara detrás de iconos transparentes en modo oscuro. Tienen preferencia los ajustes del feed.';
 
   @override
   String get ignoreAutomaticFeedIconContrast =>
-      'Ignore automatic icon highlighting for this feed';
+      'Ignora el resaltar automáticamente el icono del feed.';
 
   @override
   String get descriptionMinifluxApp =>
-      'This is a simple Newsreader to work with miniflux.\nFor more information about miniflux, visit the projekt page:';
+      'Un simple lector de noticias para Miniflux.\nPara mas información sobre Miniflux, visita la pagina del proyecto:';
 
   @override
   String get descriptionMoreInformation =>
-      'For more information about this app, visit the project page:';
+      'Para mas información sobre esta aplicación, visita la pagina del proyecto:';
 
   @override
-  String get search => 'Search';
+  String get search => 'Buscar';
 
   @override
-  String get searchHint => 'Search…';
+  String get searchHint => 'Buscar…';
 
   @override
-  String get emptySearch => 'No News found';
+  String get emptySearch => 'No se han encontrado noticias';
 
   @override
-  String get exportLogs => 'Export debug logs';
+  String get exportLogs => 'Exportar los registros de depuración';
 
   @override
-  String get debugModeTextSettings => 'Activate debug mode';
+  String get debugModeTextSettings => 'Activar modo depuración';
 
   @override
-  String get clearLogsOnStart => 'Clear logs on start';
+  String get clearLogsOnStart => 'Elimina los registros al arrancar';
 
   @override
   String get clearLogsOnStartDescription =>
-      'Delete all logs when the app starts';
+      'Eliminar todos los registros al arrancar la aplicación';
 
   @override
-  String get deleteLocalCache => 'Clear local data';
+  String get deleteLocalCache => 'Borrar datos locales';
 
   @override
-  String get deleteLocalCacheDialogTitle => 'Delete local data';
+  String get deleteLocalCacheDialogTitle => 'Eliminar datos locales';
 
   @override
   String get deleteLocalCacheDialogContent =>
-      'Choose whether to delete only the feed icons or all local data, including downloaded audio files.';
+      'Elije entre eliminar solamente los icono o todos los datos, archivos de audio inclusive.';
 
   @override
-  String get deleteFeedIconsOnly => 'Feed icons only';
+  String get deleteFeedIconsOnly => 'Solo iconos del feed';
 
   @override
-  String get deleteAllLocalData => 'All data';
+  String get deleteAllLocalData => 'Todo los datos';
 
   @override
-  String get contextSaveButton => 'Save news to third party';
+  String get contextSaveButton => 'Guardar noticias en otro servicio';
 
   @override
   String get insecureMinifluxURL =>
-      'An insecure connection to miniflux is used!';
+      'Conectado al servidor miniflux con una conexión insegura!';
 
   @override
   String get longSyncWarning =>
-      'The number of messages leads to slow synchronization!';
+      'La cantidad de mensajes afecta al tiempo de sincronizado!';
 
   @override
-  String get longSyncHeader => 'Slow synchronization';
+  String get longSyncHeader => 'Sincronización lenta';
 
   @override
   String get tooManyNews =>
-      'The number of messages exceeds the limit of 10,000, so synchronization is not possible.\nPlease reduce the amount of synced news.';
+      'El número de mensajes excede el limite de 10,000, por lo que no se puede realizar la sincronización.\nPor favor, reduce el número de noticias sincronizadas.';
 
   @override
-  String get markAllAsRead => 'Mark all news as read';
+  String get markAllAsRead => 'Marcar todas las noticias como leídas';
 
   @override
   String get markBookmarkedAsRead => 'Mark bookmarked news as read';
 
   @override
-  String get markCategoryAsRead => 'Mark category as read';
+  String get markCategoryAsRead => 'Marcar categoría cómo leída';
 
   @override
-  String get markFeedAsRead => 'Mark feed as read';
+  String get markFeedAsRead => 'Marcar feed como leído';
 
   @override
   String get amountOfSyncedNews =>
-      'Amount of unread News which should be synced';
+      'Cantidad de Noticias no leídas que sincronizar';
 
   @override
-  String get amountOfSearchedNews => 'Amount of News which should be searched';
+  String get amountOfSearchedNews =>
+      'Cantidad de Notícias a incluir en la búsqueda';
 
   @override
-  String get debugSettings => 'Debug Settings';
+  String get debugSettings => 'Ajustes de depuración';
 
   @override
-  String get truncateSettings => 'Truncate Settings';
+  String get truncateSettings => 'Ajustes de truncado';
 
   @override
-  String get activateTruncate => 'Truncate news text';
+  String get activateTruncate => 'Truncar el texto de las noticias';
 
   @override
-  String get truncateMode => 'Truncate Mode';
+  String get truncateMode => 'Modo de truncado';
 
   @override
-  String get truncateModeAll => 'Truncate all news';
+  String get truncateModeAll => 'Truncar todas las noticias';
 
   @override
   String get truncateModeScraper =>
-      'Truncate all news from feeds with original content fetched';
+      'Truncar todas las noticias de feeds con contenido original extraido';
 
   @override
   String get truncateModeManual =>
-      'Truncate all news from feeds which has been selected manually in the feed settings';
+      'Truncar todas las noticias de feeds seleccionados manualmente en los ajustes del feed';
 
   @override
-  String get charactersToTruncate =>
-      'Amount of characters to which the text is truncated';
+  String get charactersToTruncate => 'Cantidad de caracteres que truncar';
 
   @override
   String get charactersToTruncateLimit =>
-      'Amount of characters from which the text is truncated';
+      'Cantidad de caracteres a partir de la cual truncar';
 
   @override
-  String get manualTruncate => 'Truncate news';
+  String get manualTruncate => 'Truncar noticias';
 
   @override
-  String get successfullSaveToThirdParty => 'The news was successfully saved!';
+  String get successfullSaveToThirdParty =>
+      'La noticia se ha guardado correctamente!';
 
   @override
-  String get addBookmarkShort => 'Add Bookmark';
+  String get addBookmarkShort => 'Añadir Marcador';
 
   @override
-  String get bookmarkShort => 'Bookmark';
+  String get bookmarkShort => 'Marcador';
 
   @override
-  String get saveShort => 'Save';
+  String get saveShort => 'Guardar';
 
   @override
-  String get readShort => 'Read';
+  String get readShort => 'Leer';
 
   @override
-  String get unreadShort => 'Unread';
+  String get unreadShort => 'No leidas';
 
   @override
   String get leftSwipeSelectionOption =>
-      'Select action for swiping to the left';
+      'Seleccionar accion para el deslizamiento hacia la izquierda';
 
   @override
   String get rightSwipeSelectionOption =>
-      'Select action for swiping to the right';
+      'Seleccionar accion para el deslizamiento hacia la derecha';
 
   @override
   String get secondLeftSwipeSelectionOption =>
-      'Select second action for swiping to the left';
+      'Selecciona la segunda acción al deslizar hacía la izquierda';
 
   @override
   String get secondRightSwipeSelectionOption =>
-      'Select second action for swiping to the right';
+      'Selecciona la segunda acción al deslizar hacía la derecha';
 
   @override
-  String get deleteBookmarkShort => 'Delete bookmark';
+  String get deleteBookmarkShort => 'Eliminar Marcador';
 
   @override
   String get activateSwiping => 'Activate swipe gestures';

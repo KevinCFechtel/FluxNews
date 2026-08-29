@@ -1,0 +1,4 @@
+The following has been improved:
+ •	Fix crash with too many news items on startup
+ •	Optimized the expanding the news items in the list
+ •	Updated translations (thanks to contributors)
