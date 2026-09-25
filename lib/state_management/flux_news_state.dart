@@ -440,6 +440,7 @@ class FluxNewsState extends ChangeNotifier {
   String errorString = '';
   bool newError = false;
   bool errorDialogVisible = false;
+  bool openSettingsAfterErrorDialog = false;
   bool errorOnMinifluxAuth = false;
   bool tooManyNews = false;
   bool longSync = false;

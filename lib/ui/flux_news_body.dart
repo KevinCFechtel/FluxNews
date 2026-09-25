@@ -105,7 +105,11 @@ class FluxNewsBody extends StatelessWidget {
               'FluxNewsBody',
               'Running deferred sync on startup after foreground resume',
               LogLevel.INFO);
-          await syncNews(appState, context);
+          await syncNews(
+            appState,
+            context,
+            openSettingsOnConnectionFailure: true,
+          );
         } else {
           logThis(
               'FluxNewsBody',
@@ -389,7 +393,11 @@ class FluxNewsBody extends StatelessWidget {
         appState.startupSyncHandledForUiSession = true;
         // sync on startup or now
         if (context.mounted) {
-          await syncNews(appState, context);
+          await syncNews(
+            appState,
+            context,
+            openSettingsOnConnectionFailure: true,
+          );
         }
       } else {
         if (appState.syncOnStart && skipStartupSyncForWidgetAction) {
@@ -2994,16 +3002,21 @@ class ErrorWidget extends StatelessWidget {
       final message = currentMessage.isEmpty
           ? AppLocalizations.of(context)!.communicateionMinifluxError
           : currentMessage;
+      final openSettingsAfterDismissal = appState.openSettingsAfterErrorDialog;
 
       // Consume this exact error before scheduling the dialog. A later error
       // can set newError again and will be displayed after the current dialog
       // closes instead of being cleared by its completion callback.
       appState.newError = false;
+      appState.openSettingsAfterErrorDialog = false;
       appState.errorDialogVisible = true;
       Timer.run(() async {
         try {
           if (context.mounted) {
             await showErrorDialog(context, message);
+            if (openSettingsAfterDismissal && context.mounted) {
+              Navigator.pushNamed(context, FluxNewsState.settingsRouteString);
+            }
           }
         } finally {
           appState.errorDialogVisible = false;

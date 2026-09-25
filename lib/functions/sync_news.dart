@@ -18,6 +18,7 @@ Future<void> syncNews(
   FluxNewsState appState,
   BuildContext context, {
   VoidCallback? onSuccessfulListReset,
+  bool openSettingsOnConnectionFailure = false,
 }) async {
   final syncLock = await FluxNewsSyncLock.tryAcquire('foreground');
   if (syncLock == null) {
@@ -50,6 +51,7 @@ Future<void> syncNews(
     // error dialog and produce an empty popup.
     appState.errorString = '';
     appState.newError = false;
+    appState.openSettingsAfterErrorDialog = false;
 
     // remove the native splash after updating the list view
     FlutterNativeSplash.remove();
@@ -67,6 +69,8 @@ Future<void> syncNews(
           appState.errorString =
               AppLocalizations.of(context)!.communicateionMinifluxError;
           appState.newError = true;
+          appState.openSettingsAfterErrorDialog =
+              openSettingsOnConnectionFailure;
           appState.refreshView();
         }
       }
