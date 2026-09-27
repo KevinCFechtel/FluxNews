@@ -3040,28 +3040,20 @@ class ErrorWidget extends StatelessWidget {
   // not every function which require the connection should raise a pop up)
   // we check if the error which is shown is a new error.
   Future<void> showErrorDialog(BuildContext context, String message) async {
-    FluxNewsState appState = context.read<FluxNewsState>();
     if (Platform.isIOS) {
-      await showAdaptiveGlassDialog<void>(
+      await showCupertinoDialog<void>(
         context: context,
-        title: AppLocalizations.of(context)!.error,
-        message: message,
-        settings: iosLiquidGlassMenuSettings(
-          context,
-          useClearEffect: appState.iosClearLiquidGlass,
-        ),
-        quality: GlassQuality.standard,
-        maxWidth: 340,
-        actions: [
-          GlassDialogAction(
-            label: AppLocalizations.of(context)!.ok,
-            isPrimary: true,
-            onPressed: () => Navigator.pop(
-              context,
-              FluxNewsState.cancelContextString,
+        builder: (dialogContext) => CupertinoAlertDialog(
+          title: Text(AppLocalizations.of(dialogContext)!.error),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(AppLocalizations.of(dialogContext)!.ok),
             ),
-          ),
-        ],
+          ],
+        ),
       );
       return;
     }
@@ -3074,7 +3066,7 @@ class ErrorWidget extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.pop(context, FluxNewsState.cancelContextString);
+                Navigator.pop(context);
               },
               child: Text(AppLocalizations.of(context)!.ok),
             ),
