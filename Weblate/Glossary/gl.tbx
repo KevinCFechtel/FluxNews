@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE martif PUBLIC "ISO 12200:1999A//DTD MARTIF core (DXFcdV04)//EN" "TBXcdv04.dtd">
+<martif type="TBX" xml:lang="en">
+  <martifHeader>
+    <fileDesc>
+      <sourceDesc>
+        <p>Flux News shared Weblate glossary</p>
+      </sourceDesc>
+    </fileDesc>
+  </martifHeader>
+  <text>
+    <body>
+      <termEntry weblate-flags="terminology">
+        <descrip type="Translation needed">No</descrip>
+        <descrip>Product display name. Keep unchanged in every language.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Flux News</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip type="Translation needed">No</descrip>
+        <descrip>Project and legacy product name used in some UI and technical contexts. Keep unchanged.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>FluxNews</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip type="Translation needed">No</descrip>
+        <descrip>Name of the Miniflux service/project. Keep unchanged.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Miniflux</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Flux News feature containing articles or audio selected for later listening.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Listening List</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>An RSS/Atom feed subscribed to through Miniflux.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Feed</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Fonte</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>A Miniflux category used to group feeds.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Category</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Categoría</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Manual synchronization of Flux News with the configured Miniflux server.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Sync</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Synchronization performed by the operating system while the app is not actively used.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Background Sync</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Sincronización en segundo plano</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Article state indicating that an article has not been marked as read.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Unread</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Action that changes an article from unread to read.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Mark as Read</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>The in-app article reading view.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Reader</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Lector</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Articles marked with a star/bookmark in Miniflux.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Starred</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Destacados</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Action to save audio media locally on the device.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Download</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Descargar</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Locally downloaded media and the related settings/status.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Downloads</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Descargas</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>The screen or state showing the currently playing audio item.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Now Playing</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Reproducindo agora</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Search action and search interface.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Search</term>
+          </tig>
+        </langSet>
+        <langSet xml:lang="gl">
+          <tig>
+            <term>Buscar</term>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry weblate-flags="terminology">
+        <descrip>Application settings and preferences.</descrip>
+        <langSet xml:lang="en">
+          <tig>
+            <term>Settings</term>
+          </tig>
+        </langSet>
+      </termEntry>
+    </body>
+  </text>
+</martif>
