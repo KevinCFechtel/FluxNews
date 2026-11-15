@@ -8,6 +8,7 @@ on:
       - "android/**"
       - "core/**"
       - ".gitmodules"
+      - "vendor/rustls-platform-verifier"
       - ".github/workflows/fdroid-native.yml"
       - "fdroid/**"
   workflow_dispatch:
@@ -81,7 +82,7 @@ jobs:
           echo "FDROID_SOURCE_SHA=${source_sha}" >> "${GITHUB_ENV}"
           echo "F-Droid source commit: ${source_sha}"
           # fdroidserver 2.4.5 reads SOURCE_DATE_EPOCH before it checks out sources.
-          git clone --no-checkout https://github.com/KevinCFechtel/Flux.git fdroid-ci/build/de.circle_dev.flux_news
+          git clone --no-checkout https://github.com/KevinCFechtel/FluxNews.git fdroid-ci/build/de.circle_dev.flux_news
           git -C fdroid-ci/build/de.circle_dev.flux_news checkout --detach "${source_sha}"
           git -C fdroid-ci/build/de.circle_dev.flux_news log -1 --format=%ct | grep -Eq '^[0-9]+$'
           printf "sdk_path: '%s'\n" "${ANDROID_HOME}" > fdroid-ci/config.yml
@@ -109,6 +110,8 @@ jobs:
           assert builds[0]["versionName"] == versions["VERSION_NAME"], "Android versionName and F-Droid recipe differ"
           assert builds[0]["commit"] == __import__("os").environ["FDROID_SOURCE_SHA"]
           assert "scanignore" not in builds[0], "Native recipe must not suppress scanner findings"
+          assert builds[0]["rm"] == ["Archived/Flutter"], "Only the archived Flutter tree is excluded from the native build"
+          assert data["Repo"] == "https://github.com/KevinCFechtel/FluxNews.git"
           app_gradle = Path("../android/app/build.gradle.kts").read_text()
           assert 'implementation(project(":rustls-platform-verifier"))' in app_gradle
           assert "rustls:rustls-platform-verifier" not in app_gradle, "Prebuilt verifier dependency returned"

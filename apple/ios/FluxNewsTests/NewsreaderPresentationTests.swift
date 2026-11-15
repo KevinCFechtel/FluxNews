@@ -387,7 +387,7 @@ final class NewsreaderPresentationTests: XCTestCase {
         )
         XCTAssertEqual(
             IOSAboutInformation.fluxRepositoryURL.absoluteString,
-            "https://github.com/KevinCFechtel/Flux"
+            "https://github.com/KevinCFechtel/FluxNews"
         )
         XCTAssertEqual(
             IOSAboutInformation.minifluxProjectURL.absoluteString,

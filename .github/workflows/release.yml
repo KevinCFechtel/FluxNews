@@ -1,4 +1,4 @@
-name: Flux scoped release
+name: FluxNews scoped release
 on:
   workflow_dispatch:
     inputs:
@@ -39,6 +39,10 @@ jobs:
           VERSION: ${{ inputs.version_name }}
           MODE: ${{ inputs.mode }}
         run: |
+          if [[ "$GITHUB_REPOSITORY" != KevinCFechtel/FluxNews ]]; then
+            echo '::error::Native release orchestration belongs to KevinCFechtel/FluxNews' >&2
+            exit 1
+          fi
           if [[ "$MODE" == release && "$GITHUB_REF" != refs/heads/main ]]; then
             echo '::error::Release jobs must be dispatched from main' >&2
             exit 1

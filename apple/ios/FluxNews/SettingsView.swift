@@ -105,7 +105,7 @@ enum IOSAboutInformation {
     static let fluxNewsRepositoryURL =
         URL(string: "https://github.com/KevinCFechtel/FluxNews")!
     static let fluxRepositoryURL =
-        URL(string: "https://github.com/KevinCFechtel/Flux")!
+        URL(string: "https://github.com/KevinCFechtel/FluxNews")!
     static let minifluxProjectURL =
         URL(string: "https://miniflux.app")!
     static let licenseURL =

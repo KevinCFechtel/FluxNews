@@ -5,13 +5,13 @@ Categories:
 License: BSD-3-Clause
 AuthorName: Kevin Fechtel
 WebSite: https://github.com/KevinCFechtel/FluxNews
-SourceCode: https://github.com/KevinCFechtel/Flux
+SourceCode: https://github.com/KevinCFechtel/FluxNews
 IssueTracker: https://github.com/KevinCFechtel/FluxNews/issues
 
 AutoName: Flux News
 
 RepoType: git
-Repo: https://github.com/KevinCFechtel/Flux.git
+Repo: https://github.com/KevinCFechtel/FluxNews.git
 
 Builds:
   - versionName: 1.3.1
@@ -2887,6 +2887,8 @@ Builds:
     commit: FLUX_NATIVE_COMMIT
     subdir: android
     submodules: true
+    rm:
+      - Archived/Flutter
     sudo:
       - apt-get update
       - apt-get install -y rustup

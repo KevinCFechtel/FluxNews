@@ -34,8 +34,8 @@ enum AccountTransportWarning {
 
 enum MacOSAboutInformation {
     static let fluxNewsRepositoryURL = URL(string: "https://github.com/KevinCFechtel/FluxNews")!
-    static let fluxRepositoryURL = URL(string: "https://github.com/KevinCFechtel/Flux")!
-    static let licenseURL = URL(string: "https://github.com/KevinCFechtel/Flux/blob/main/LICENSE")!
+    static let fluxRepositoryURL = URL(string: "https://github.com/KevinCFechtel/FluxNews")!
+    static let licenseURL = URL(string: "https://github.com/KevinCFechtel/FluxNews/blob/main/LICENSE")!
     static let minifluxProjectURL = URL(string: "https://miniflux.app")!
 
     static func version(from infoDictionary: [String: Any]) -> String {

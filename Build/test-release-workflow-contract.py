@@ -44,6 +44,8 @@ require("bash Build/check-release-candidate.sh" in jobs["preflight"],
         "preflight must call the candidate checker")
 require("refs/heads/main" in jobs["preflight"],
         "release dispatch must be guarded to main")
+require('"$GITHUB_REPOSITORY" != KevinCFechtel/FluxNews' in jobs["preflight"],
+        "release orchestration must be restricted to the FluxNews repository")
 
 require("needs: preflight" in jobs["rust"], "Rust gate must depend only on preflight")
 require("inputs.scope" not in jobs["rust"], "Rust gate must run once for every candidate scope")
@@ -104,6 +106,10 @@ require("automation will not rewrite or delete tags" in publish,
         "partial promotion diagnostic must preserve tag immutability")
 
 require("workflow_call:" in FDROID, "F-Droid workflow must be reusable")
+require("git clone --no-checkout https://github.com/KevinCFechtel/FluxNews.git" in FDROID,
+        "F-Droid must check out sources from FluxNews")
+require('builds[0]["rm"] == ["Archived/Flutter"]' in FDROID,
+        "native F-Droid validation must exclude the archived Flutter source")
 require(re.search(r"source_sha:\n\s+required: true", FDROID) is not None,
         "reusable F-Droid workflow must require source_sha")
 require("ref: ${{ inputs.source_sha || github.event.pull_request.head.sha || github.sha }}" in FDROID,

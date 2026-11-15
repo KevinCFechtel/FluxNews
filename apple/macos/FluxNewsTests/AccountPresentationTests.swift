@@ -64,7 +64,7 @@ final class AccountPresentationTests: XCTestCase {
         XCTAssertEqual(MacOSAboutInformation.build(from: ["CFBundleVersion": "20261015"]), "20261015")
         XCTAssertEqual(MacOSAboutInformation.version(from: [:]), String(localized: "Unknown"))
         XCTAssertEqual(MacOSAboutInformation.build(from: ["CFBundleVersion": "  "]), String(localized: "Unknown"))
-        XCTAssertEqual(MacOSAboutInformation.licenseURL.absoluteString, "https://github.com/KevinCFechtel/Flux/blob/main/LICENSE")
+        XCTAssertEqual(MacOSAboutInformation.licenseURL.absoluteString, "https://github.com/KevinCFechtel/FluxNews/blob/main/LICENSE")
     }
 
     func testMinifluxEntryURLUsesCoreResolvedRootAndSubpathURLs() {

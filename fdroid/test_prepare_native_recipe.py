@@ -15,6 +15,8 @@ SOURCE = """Builds:
     commit: FLUX_NATIVE_COMMIT
     subdir: android
     submodules: true
+    rm:
+      - Archived/Flutter
     gradleprops:
       - fluxBuildVersionCode=2026101801
       - fluxBuildVersionName=3.0.0
@@ -32,6 +34,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(updated.split("\nAllowedAPKSigningKeys:")[1], SOURCE.split("\nAllowedAPKSigningKeys:")[1])
         self.assertIn("commit: " + SHA, updated)
         self.assertIn("submodules: true", updated)
+        self.assertIn("    rm:\n      - Archived/Flutter\n", updated)
         self.assertIn("fluxBuildVersionCode=2026102001", updated)
         self.assertEqual(updated, prepare(updated, "3.1.0", 2026102001, SHA))
     def test_reject_ambiguous(self):

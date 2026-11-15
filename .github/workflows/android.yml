@@ -6,6 +6,7 @@ on:
       - "android/**"
       - "core/**"
       - ".gitmodules"
+      - "vendor/rustls-platform-verifier"
       - ".github/workflows/android.yml"
       - "docs/ANDROID_WEBLATE_LOCALIZATION.md"
   push:
@@ -15,6 +16,7 @@ on:
       - "android/**"
       - "core/**"
       - ".gitmodules"
+      - "vendor/rustls-platform-verifier"
       - ".github/workflows/android.yml"
 
 concurrency:
@@ -41,6 +43,16 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
+          # Only diffs crossing the Flutter-to-native cutover use the imported
+          # native baseline. Later changes remain subject to the normal PR/push
+          # base; changes since the imported native commit are never exempted.
+          flutter_source=dfe92486a709cfadea9b44f516261db3eed390be
+          native_source=65bb8eba008ddb3a66711ecba3e624068883f8d1
+          if git merge-base --is-ancestor "${BASE_SHA}" "${flutter_source}" &&
+             git merge-base --is-ancestor "${native_source}" HEAD; then
+            BASE_SHA="${native_source}"
+          fi
+          echo "Android localization diff base: ${BASE_SHA}"
           python3 android/Build/check-localization.py --base "${BASE_SHA}"
       - uses: actions/setup-java@v6
         with:

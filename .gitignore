@@ -68,3 +68,16 @@ android/Build/reports/
 
 # Local SourceKit-LSP / xcode-build-server configuration
 buildServer.json
+
+# Local IDE state and credentials are not migration inputs.
+**/xcuserdata/
+*.xcuserstate
+.idea/
+*.iml
+*.pyc
+__pycache__/
+*.jks
+*.keystore
+*.pfx
+*.mobileprovision
+fdroid-ci/
