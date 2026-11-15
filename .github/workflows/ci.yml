@@ -20,6 +20,7 @@ jobs:
       apple: ${{ steps.select.outputs.apple }}
       fdroid: ${{ steps.select.outputs.fdroid }}
       contracts: ${{ steps.select.outputs.contracts }}
+      armv7: ${{ steps.select.outputs.armv7 }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -43,6 +44,8 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.android == 'true' }}
     uses: ./.github/workflows/android.yml
+    with:
+      include_armv7: ${{ needs.changes.outputs.armv7 == 'true' }}
 
   apple:
     name: Apple

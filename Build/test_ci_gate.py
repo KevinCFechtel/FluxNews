@@ -5,8 +5,12 @@ import unittest
 from ci_gate import JOBS, evaluate_needs, select_jobs
 
 
+def selectors(*paths: str) -> dict[str, bool]:
+    return select_jobs(list(paths))
+
+
 def selected(*paths: str) -> set[str]:
-    return {key for key, run in select_jobs(list(paths)).items() if run}
+    return {key for key, run in selectors(*paths).items() if run and key in JOBS}
 
 
 def needs(selected_jobs: set[str]) -> dict:
@@ -25,17 +29,21 @@ class CISelectionTests(unittest.TestCase):
     def test_docs_only_has_no_expensive_jobs(self):
         self.assertEqual(selected("README.md", "docs/MOBILE_PRODUCT_SEMANTICS.md"), set())
 
-    def test_rust_source_checks_all_consumers_but_not_fdroid_recipe(self):
+    def test_rust_source_checks_all_consumers_and_armv7_without_full_fdroid(self):
+        paths = selectors("core/crates/flux-core/src/lib.rs")
         self.assertEqual(
-            selected("core/crates/flux-core/src/lib.rs"),
+            {key for key, run in paths.items() if run and key in JOBS},
             {"rust", "android", "apple"},
         )
+        self.assertTrue(paths["armv7"])
 
-    def test_rust_dependencies_include_fdroid(self):
+    def test_rust_dependencies_include_fdroid_without_duplicate_armv7(self):
+        paths = selectors("core/Cargo.lock")
         self.assertEqual(
-            selected("core/Cargo.lock"),
+            {key for key, run in paths.items() if run and key in JOBS},
             {"rust", "android", "apple", "fdroid"},
         )
+        self.assertFalse(paths["armv7"])
 
     def test_android_ui_only(self):
         self.assertEqual(selected("android/app/src/main/example.kt"), {"android"})
@@ -88,6 +96,7 @@ class CISelectionTests(unittest.TestCase):
     def test_ci_control_always_exercises_all_jobs(self):
         self.assertEqual(selected(".github/workflows/ci.yml"), set(JOBS))
         self.assertEqual(selected("Build/ci_gate.py"), set(JOBS))
+        self.assertTrue(selectors(".github/workflows/ci.yml")["armv7"])
 
     def test_leaf_workflow_change_only_affects_itself(self):
         self.assertEqual(selected(".github/workflows/rust.yml"), {"rust"})
