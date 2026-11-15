@@ -20,7 +20,7 @@ CATALOG = ROOT / "FluxNews" / "Localizable.xcstrings"
 HANDOFF = ROOT / "Weblate"
 LANGUAGES = ("de", "es", "gl", "nl", "ta", "tr")
 PLURAL_ORDER = ("zero", "one", "two", "few", "many", "other")
-PLURAL_MARKER = "\n|==|plural."
+PLURAL_MARKER = " |==|plural."
 NS = "urn:oasis:names:tc:xliff:document:1.2"
 XSI = "http://www.w3.org/2001/XMLSchema-instance"
 XML = "http://www.w3.org/XML/1998/namespace"
