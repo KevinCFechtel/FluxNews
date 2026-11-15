@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Declares the Android-platform half of the Flux transport policy and keeps the semantics the
+    Flutter production client shipped:
+
+    * plain HTTP Miniflux installations remain supported;
+    * both system and user-installed certificate anchors are trusted.
+
+    Miniflux traffic itself runs through the Rust core, which verifies against the Android trust
+    infrastructure via rustls-platform-verifier rather than through this file. This configuration
+    therefore states the product policy for the Android platform layer; it is not the mechanism
+    that makes the Rust transport trust user-installed anchors.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

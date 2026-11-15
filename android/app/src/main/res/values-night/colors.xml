@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="flux_widget_background">#151517</color>
+    <color name="flux_widget_text_primary">#F4F2F5</color>
+    <color name="flux_widget_text_secondary">#B9B6BD</color>
+</resources>

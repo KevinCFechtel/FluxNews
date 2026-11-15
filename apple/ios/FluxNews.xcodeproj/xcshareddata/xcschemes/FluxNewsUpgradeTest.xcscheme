@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "2660"
+   version = "1.7">
+   <BuildAction parallelizeBuildables = "YES" buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "T1" BuildableName = "FluxNews.app" BlueprintName = "FluxNews" ReferencedContainer = "container:FluxNews.xcodeproj" />
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <RunAction buildConfiguration = "Upgrade Test" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle = "0" useCustomWorkingDirectory = "NO" ignoresPersistentStateOnLaunch = "NO" debugDocumentVersioning = "YES" debugServiceExtension = "internal">
+      <EnvironmentVariables>
+         <EnvironmentVariable key = "FLUX_DEV_BASE_URL" value = "https://example.com" isEnabled = "YES" />
+         <EnvironmentVariable key = "FLUX_DEV_API_KEY" value = "development-placeholder" isEnabled = "YES" />
+      </EnvironmentVariables>
+      <BuildableProductRunnable runnableDebuggingMode = "0">
+         <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "T1" BuildableName = "FluxNews.app" BlueprintName = "FluxNews" ReferencedContainer = "container:FluxNews.xcodeproj" />
+      </BuildableProductRunnable>
+   </RunAction>
+   <TestAction buildConfiguration = "Upgrade Test" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "YES" />
+   <ProfileAction buildConfiguration = "Upgrade Test" shouldUseLaunchSchemeArgsEnv = "YES" savedToolIdentifier = "" />
+   <AnalyzeAction buildConfiguration = "Upgrade Test" />
+   <ArchiveAction buildConfiguration = "Upgrade Test" revealArchiveInOrganizer = "YES" />
+</Scheme>

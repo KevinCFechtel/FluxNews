@@ -1,0 +1,92 @@
+name: Android
+
+on:
+  pull_request:
+    paths:
+      - "android/**"
+      - "core/**"
+      - ".gitmodules"
+      - ".github/workflows/android.yml"
+      - "docs/ANDROID_WEBLATE_LOCALIZATION.md"
+  push:
+    branches:
+      - main
+    paths:
+      - "android/**"
+      - "core/**"
+      - ".gitmodules"
+      - ".github/workflows/android.yml"
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Unit and build gate
+    runs-on: ubuntu-24.04
+    env:
+      ANDROID_NDK_VERSION: "29.0.14206865"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Audit existing Android UI literals (non-blocking inventory)
+        run: python3 android/Build/check-localization.py --all
+      - name: Check new Android UI text is localizable
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python3 android/Build/check-localization.py --base "${BASE_SHA}"
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: platform-tools
+      - name: Install Android SDK and NDK
+        run: |
+          ANDROID_CLI="${ANDROID_HOME}/cmdline-tools/22.0/bin/android"
+          test -x "${ANDROID_CLI}"
+          "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "platforms/android-37.0"
+          "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "build-tools/37.0.0"
+          "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "ndk/${ANDROID_NDK_VERSION}"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "${GITHUB_ENV}"
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+      - name: Run Android CI gate
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.warning.mode=all"
+        run: |
+          ./android/Build/test.sh
+          ./android/Build/build-app.sh developmentRelease
+          ./android/Build/build-app.sh productionRelease
+          bash -n android/Build/*.sh
+          ./android/Build/build-app.sh --help | grep -q productionBundle
+          if ./android/Build/build-app.sh productionBundle 2026100901 >/dev/null 2>&1; then
+            echo "productionBundle unexpectedly accepted a missing versionName" >&2
+            exit 1
+          fi
+      - name: Upload Android Lint reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-lint-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            android/app/build/reports/lint-results-*.html
+            android/app/build/reports/lint-results-*.xml
+            android/app/build/reports/lint-results-*.sarif
+            android/app/build/reports/lint-results-*.txt
+            android/app/build/intermediates/lint_intermediate_text_report/**/lint-results-*.txt
+            android/app/build/intermediates/lint_intermediate_xml_report/**/lint-results-*.xml

@@ -1,0 +1,5 @@
+"Open ${applicationName}" = "${applicationName} öffnen";
+"Refresh ${applicationName}" = "${applicationName} aktualisieren";
+"Show starred in ${applicationName}" = "Markierte Artikel in ${applicationName} anzeigen";
+"Open ${feed} in ${applicationName}" = "${feed} in ${applicationName} öffnen";
+"Open ${category} in ${applicationName}" = "${category} in ${applicationName} öffnen";

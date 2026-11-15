@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.FluxNews" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowLightStatusBar">?android:attr/isLightTheme</item>
+        <item name="android:windowLightNavigationBar">?android:attr/isLightTheme</item>
+        <item name="android:fontFamily">sans</item>
+    </style>
+</resources>

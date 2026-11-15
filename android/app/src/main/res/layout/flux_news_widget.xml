@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/flux_widget_background"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/ic_launcher" />
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_all_news"
+            android:textAppearance="@android:style/TextAppearance.Material.Widget.TextView"
+            android:textColor="@color/flux_widget_text_primary"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="@android:style/TextAppearance.Material.Widget.TextView"
+            android:textColor="@color/flux_widget_text_primary"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_count_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="@string/widget_unread"
+            android:textAppearance="@android:style/TextAppearance.Material.Widget.TextView"
+            android:textColor="@color/flux_widget_text_secondary" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_last_sync"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/widget_waiting_for_sync"
+        android:textAppearance="@android:style/TextAppearance.Material.Widget.TextView"
+        android:textColor="@color/flux_widget_text_secondary" />
+
+    <ListView
+        android:id="@+id/widget_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp" />
+
+    <TextView
+        android:id="@+id/widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/widget_no_articles"
+        android:textAppearance="@android:style/TextAppearance.Material.Widget.TextView"
+        android:textColor="@color/flux_widget_text_secondary"
+        android:visibility="gone" />
+</LinearLayout>

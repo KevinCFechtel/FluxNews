@@ -1,0 +1,34 @@
+[workspace]
+members = ["crates/flux-core", "crates/flux-uniffi"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "BSD-3-Clause"
+version = "1.0.0"
+
+[workspace.dependencies]
+aes-gcm = "0.11.1"
+argon2 = "0.6.0"
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+base64 = "0.23.1"
+html5ever = "0.40.1"
+jni = { version = "0.22.4", default-features = false }
+image = { version = "0.25.10", default-features = false, features = ["bmp", "gif", "ico", "jpeg", "png", "webp"] }
+resvg = { version = "0.48.1", default-features = false }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+rand = "0.10.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+symphonia = { version = "0.6.1", default-features = false, features = ["all-formats", "all-meta", "flac", "mp3"] }
+rustls-platform-verifier = "0.7.1"
+thiserror = "2.0.21"
+ureq = { version = "3.4.2", default-features = false, features = ["rustls", "platform-verifier"] }
+url = "2.5.8"
+uniffi = { version = "0.32.2", features = ["cli"] }
+tempfile = "3.27.0"
+tiny-skia = "0.12.0"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+usvg = "0.48.1"

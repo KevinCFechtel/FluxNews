@@ -1,0 +1,20 @@
+[package]
+name = "flux-uniffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+flux-core = { path = "../flux-core" }
+serde_json.workspace = true
+uniffi.workspace = true
+
+# Narrow Android TLS bootstrap. The pinned platform verifier needs a JVM handle and an
+# Android Context before the first Rust TLS handshake, and `flux-uniffi` is the crate that
+# Android actually loads. Nothing else in this target block belongs to the product API.
+[target.'cfg(target_os = "android")'.dependencies]
+jni.workspace = true
+rustls-platform-verifier.workspace = true

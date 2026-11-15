@@ -1,0 +1,30 @@
+[package]
+name = "flux-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+aes-gcm.workspace = true
+argon2.workspace = true
+chrono.workspace = true
+base64.workspace = true
+html5ever.workspace = true
+image.workspace = true
+resvg.workspace = true
+rusqlite.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+symphonia.workspace = true
+thiserror.workspace = true
+ureq.workspace = true
+url.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tiny-skia.workspace = true
+usvg.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

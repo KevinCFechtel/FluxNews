@@ -1,0 +1,5 @@
+# Copy to the gitignored android/migration-signing.properties and provide the Flutter production signer.
+storeFile=/absolute/path/to/production.keystore
+storePassword=
+keyAlias=
+keyPassword=

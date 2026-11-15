@@ -1,0 +1,48 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/core"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 8
+    groups:
+      cargo-routine:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gradle"
+    directory: "/android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:30"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 8
+    groups:
+      gradle-routine:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 8
+    groups:
+      actions-routine:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"

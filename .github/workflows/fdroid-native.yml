@@ -1,0 +1,170 @@
+name: F-Droid native build feasibility
+
+on:
+  pull_request:
+    paths:
+      - "Build/versions/android.properties"
+      - "Build/release.sh"
+      - "android/**"
+      - "core/**"
+      - ".gitmodules"
+      - ".github/workflows/fdroid-native.yml"
+      - "fdroid/**"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      source_sha:
+        required: true
+        type: string
+      artifact_name:
+        required: false
+        type: string
+        default: fdroid-native-recipe-diagnostics
+
+concurrency:
+  group: fdroid-native-${{ github.workflow }}-${{ inputs.artifact_name || 'fdroid-native-recipe-diagnostics' }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fdroid-recipe:
+    name: F-Droid metadata and source build (experimental)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      FLUX_ANDROID_INCLUDE_ARMV7: "1"
+      ANDROID_NDK_VERSION: "29.0.14206865"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_sha || github.event.pull_request.head.sha || github.sha }}
+          submodules: recursive
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: platform-tools
+      - name: Install Android SDK and NDK
+        run: |
+          ANDROID_CLI="${ANDROID_HOME}/cmdline-tools/22.0/bin/android"
+          "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "platforms/android-37.0"
+          "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "build-tools/37.0.0"
+          "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "ndk/${ANDROID_NDK_VERSION}"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "${GITHUB_ENV}"
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android,armv7-linux-androideabi
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+          gradle-version: "9.8.1"
+      - name: Verify pinned Gradle for local F-Droid recipe
+        run: gradle --version | grep -F 'Gradle 9.8.1'
+      - name: Install fdroidserver in isolated Python environment
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/fdroid-venv"
+          "${RUNNER_TEMP}/fdroid-venv/bin/pip" install --upgrade pip
+          "${RUNNER_TEMP}/fdroid-venv/bin/pip" install "fdroidserver==2.4.5"
+          echo "${RUNNER_TEMP}/fdroid-venv/bin" >> "${GITHUB_PATH}"
+      - name: Prepare isolated F-Droid metadata workspace
+        run: |
+          set -euo pipefail
+          source_sha="${{ inputs.source_sha || github.event.pull_request.head.sha || github.sha }}"
+          python3 fdroid/test_prepare_native_recipe.py
+          python3 fdroid/prepare_native_recipe.py --source-sha "${source_sha}" --output fdroid-ci/metadata/de.circle_dev.flux_news.yml
+          echo "FDROID_SOURCE_SHA=${source_sha}" >> "${GITHUB_ENV}"
+          echo "F-Droid source commit: ${source_sha}"
+          # fdroidserver 2.4.5 reads SOURCE_DATE_EPOCH before it checks out sources.
+          git clone --no-checkout https://github.com/KevinCFechtel/Flux.git fdroid-ci/build/de.circle_dev.flux_news
+          git -C fdroid-ci/build/de.circle_dev.flux_news checkout --detach "${source_sha}"
+          git -C fdroid-ci/build/de.circle_dev.flux_news log -1 --format=%ct | grep -Eq '^[0-9]+$'
+          printf "sdk_path: '%s'\n" "${ANDROID_HOME}" > fdroid-ci/config.yml
+          printf "gradle: '%s'\n" "$(command -v gradle)" >> fdroid-ci/config.yml
+          cat >> fdroid-ci/config.yml <<'YAML'
+          categories:
+            - Internet
+            - News
+            - Reading
+          YAML
+      - name: Validate F-Droid YAML and native build selection
+        working-directory: fdroid-ci
+        run: |
+          python3 - <<'PY'
+          import yaml
+          from pathlib import Path
+          data = yaml.safe_load(Path("metadata/de.circle_dev.flux_news.yml").read_text())
+          version_file = Path("../Build/versions/android.properties")
+          versions = dict(line.split("=", 1) for line in version_file.read_text().splitlines()
+                          if line and not line.startswith("#"))
+          builds = [b for b in data["Builds"] if b["versionCode"] == int(versions["BUILD_NUMBER"])]
+          assert len(builds) == 1, "Expected exactly one native build recipe"
+          # Committed Android version is authoritative; historical metadata is immutable.
+          assert builds[0]["versionCode"] == int(versions["BUILD_NUMBER"]), "Android versionCode and F-Droid recipe differ"
+          assert builds[0]["versionName"] == versions["VERSION_NAME"], "Android versionName and F-Droid recipe differ"
+          assert builds[0]["commit"] == __import__("os").environ["FDROID_SOURCE_SHA"]
+          assert "scanignore" not in builds[0], "Native recipe must not suppress scanner findings"
+          app_gradle = Path("../android/app/build.gradle.kts").read_text()
+          assert 'implementation(project(":rustls-platform-verifier"))' in app_gradle
+          assert "rustls:rustls-platform-verifier" not in app_gradle, "Prebuilt verifier dependency returned"
+          assert not list(Path("../vendor/rustls-platform-verifier").rglob("*.aar")), "Verifier submodule contains a prebuilt AAR"
+          assert len(data["AllowedAPKSigningKeys"]) == 2
+          print("F-Droid YAML and native build selection verified")
+          PY
+      - name: Run full F-Droid lint
+        working-directory: fdroid-ci
+        run: fdroid lint de.circle_dev.flux_news
+      - name: Scan native source with a blocking exit status
+        working-directory: fdroid-ci
+        run: |
+          set -euo pipefail
+          source ../Build/versions/android.properties
+          fdroid scanner --verbose --exit-code "de.circle_dev.flux_news:${BUILD_NUMBER}" 2>&1 | tee fdroid-scanner.log
+      - name: Build using fdroidserver recipe
+        working-directory: fdroid-ci
+        run: |
+          set -euo pipefail
+          source ../Build/versions/android.properties
+          fdroid build --verbose --test --stop --no-tarball "de.circle_dev.flux_news:${BUILD_NUMBER}" 2>&1 | tee fdroid-build.log
+          if grep -Eq '([1-9][0-9]* build[s]? failed|Could not build app|Traceback \(most recent call last\))' fdroid-build.log; then
+            echo "::error::fdroidserver reported a build failure despite its exit status"
+            exit 1
+          fi
+          # fdroidserver --test outputs are in tmp/, not unsigned/.
+          apk="tmp/de.circle_dev.flux_news_${BUILD_NUMBER}.apk"
+          if [[ ! -s "${apk}" ]]; then
+            echo "::error::Missing or empty F-Droid test APK: ${apk}"
+            find tmp -maxdepth 1 -type f -name '*.apk' -print || true
+            exit 1
+          fi
+          package_line="$("${ANDROID_HOME}/build-tools/37.0.0/aapt" dump badging "${apk}" | grep '^package:')"
+          if [[ "${package_line}" != *"name='de.circle_dev.flux_news'"* || "${package_line}" != *"versionCode='${BUILD_NUMBER}'"* || "${package_line}" != *"versionName='${VERSION_NAME}'"* ]]; then
+            echo "::error::Unexpected F-Droid APK identity: ${package_line}"
+            exit 1
+          fi
+          for abi in arm64-v8a x86_64 armeabi-v7a; do
+            if ! unzip -Z1 "${apk}" | grep -Fx "lib/${abi}/libflux_uniffi.so" >/dev/null; then
+              echo "::error::Missing libflux_uniffi.so for ${abi}"
+              exit 1
+            fi
+          done
+          sha256sum "${apk}"
+          echo "Validated F-Droid test APK: ${package_line}"
+      - name: Upload F-Droid diagnostic output
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.artifact_name || 'fdroid-native-recipe-diagnostics' }}
+          path: |
+            fdroid-ci/fdroid-build.log
+            fdroid-ci/fdroid-scanner.log
+            fdroid-ci/logs/
+            fdroid-ci/tmp/*.apk
+            fdroid-ci/metadata/de.circle_dev.flux_news.yml
+          if-no-files-found: ignore
+          retention-days: 7

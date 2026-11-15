@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file original="Localizable.xcstrings" source-language="en" target-language="ta" datatype="plaintext">
+    <body>
+      <trans-unit id="%@ · %@" xml:space="preserve"><source>%@ · %@</source></trans-unit>
+      <trans-unit id="%@ articles marked as read" xml:space="preserve"><source>%@ articles marked as read</source></trans-unit>
+      <trans-unit id="%@ new" xml:space="preserve"><source>%@ new</source></trans-unit>
+      <trans-unit id="%@ results" xml:space="preserve"><source>%@ results</source></trans-unit>
+      <trans-unit id="%@, new data available" xml:space="preserve"><source>%@, new data available</source></trans-unit>
+      <trans-unit id="%arg articles marked as read" xml:space="preserve"><source>%arg articles marked as read</source></trans-unit>
+      <trans-unit id="%arg new" xml:space="preserve"><source>%arg new</source></trans-unit>
+      <trans-unit id="%arg new articles" xml:space="preserve"><source>%arg new articles</source></trans-unit>
+      <trans-unit id="%arg results" xml:space="preserve"><source>%arg results</source></trans-unit>
+      <trans-unit id="%lld new articles" xml:space="preserve"><source>%lld new articles</source></trans-unit>
+      <trans-unit id="%lld unread articles" xml:space="preserve"><source>%lld unread articles</source></trans-unit>
+      <trans-unit id="© 2023 Kevin Fechtel" xml:space="preserve"><source>© 2023 Kevin Fechtel</source></trans-unit>
+      <trans-unit id="1 new article" xml:space="preserve"><source>1 new article</source></trans-unit>
+      <trans-unit id="1 unread article" xml:space="preserve"><source>1 unread article</source></trans-unit>
+      <trans-unit id="10,000 characters" xml:space="preserve"><source>10,000 characters</source></trans-unit>
+      <trans-unit id="180 days" xml:space="preserve"><source>180 days</source></trans-unit>
+      <trans-unit id="2 lines" xml:space="preserve"><source>2 lines</source></trans-unit>
+      <trans-unit id="20,000 characters" xml:space="preserve"><source>20,000 characters</source></trans-unit>
+      <trans-unit id="3 lines" xml:space="preserve"><source>3 lines</source></trans-unit>
+      <trans-unit id="30 days" xml:space="preserve"><source>30 days</source></trans-unit>
+      <trans-unit id="365 days" xml:space="preserve"><source>365 days</source></trans-unit>
+      <trans-unit id="5 lines" xml:space="preserve"><source>5 lines</source></trans-unit>
+      <trans-unit id="5,000 characters" xml:space="preserve"><source>5,000 characters</source></trans-unit>
+      <trans-unit id="60 days" xml:space="preserve"><source>60 days</source></trans-unit>
+      <trans-unit id="90 days" xml:space="preserve"><source>90 days</source></trans-unit>
+      <trans-unit id="About" xml:space="preserve"><source>About</source></trans-unit>
+      <trans-unit id="Account" xml:space="preserve"><source>Account</source></trans-unit>
+      <trans-unit id="Add" xml:space="preserve"><source>Add</source></trans-unit>
+      <trans-unit id="Add Category" xml:space="preserve"><source>Add Category</source></trans-unit>
+      <trans-unit id="Add Category..." xml:space="preserve"><source>Add Category...</source></trans-unit>
+      <trans-unit id="Add Feed" xml:space="preserve"><source>Add Feed</source></trans-unit>
+      <trans-unit id="Add Feed..." xml:space="preserve"><source>Add Feed...</source></trans-unit>
+      <trans-unit id="Add Header" xml:space="preserve"><source>Add Header</source></trans-unit>
+      <trans-unit id="Adding..." xml:space="preserve"><source>Adding...</source></trans-unit>
+      <trans-unit id="Advanced" xml:space="preserve"><source>Advanced</source></trans-unit>
+      <trans-unit id="Advanced Settings" xml:space="preserve"><source>Advanced Settings</source></trans-unit>
+      <trans-unit id="All" xml:space="preserve"><source>All</source></trans-unit>
+      <trans-unit id="All Feeds" xml:space="preserve"><source>All Feeds</source></trans-unit>
+      <trans-unit id="All locally downloaded audio files will be removed. Listening List entries and playback progress remain intact." xml:space="preserve"><source>All locally downloaded audio files will be removed. Listening List entries and playback progress remain intact.</source></trans-unit>
+      <trans-unit id="All locally stored support records will be deleted." xml:space="preserve"><source>All locally stored support records will be deleted.</source></trans-unit>
+      <trans-unit id="All News" xml:space="preserve"><source>All News</source></trans-unit>
+      <trans-unit id="Any Network" xml:space="preserve"><source>Any Network</source></trans-unit>
+      <trans-unit id="API Key" xml:space="preserve"><source>API Key</source></trans-unit>
+      <trans-unit id="API keys and custom header values are stored securely in the macOS Keychain." xml:space="preserve"><source>API keys and custom header values are stored securely in the macOS Keychain.</source></trans-unit>
+      <trans-unit id="Article image" xml:space="preserve"><source>Article image</source></trans-unit>
+      <trans-unit id="Article thumbnail" xml:space="preserve"><source>Article thumbnail</source></trans-unit>
+      <trans-unit id="Articles" xml:space="preserve"><source>Articles</source></trans-unit>
+      <trans-unit id="Audio available" xml:space="preserve"><source>Audio available</source></trans-unit>
+      <trans-unit id="Audio News added to the Listening List will appear here." xml:space="preserve"><source>Audio News added to the Listening List will appear here.</source></trans-unit>
+      <trans-unit id="Automatic and manual downloads use the same network policy. Retention only removes media that is no longer protected by playback or other Core media state." xml:space="preserve"><source>Automatic and manual downloads use the same network policy. Retention only removes media that is no longer protected by playback or other Core media state.</source></trans-unit>
+      <trans-unit id="Automatically download audio from this feed" xml:space="preserve"><source>Automatically download audio from this feed</source></trans-unit>
+      <trans-unit id="Automatically download items added to Listening List" xml:space="preserve"><source>Automatically download items added to Listening List</source></trans-unit>
+      <trans-unit id="Automatically download Listening List audio" xml:space="preserve"><source>Automatically download Listening List audio</source></trans-unit>
+      <trans-unit id="Back" xml:space="preserve"><source>Back</source></trans-unit>
+      <trans-unit id="Background Sync" xml:space="preserve"><source>Background Sync</source></trans-unit>
+      <trans-unit id="Backup imported successfully." xml:space="preserve"><source>Backup imported successfully.</source></trans-unit>
+      <trans-unit id="Backup imported successfully. Synchronization could not be completed and will be retried later." xml:space="preserve"><source>Backup imported successfully. Synchronization could not be completed and will be retried later.</source></trans-unit>
+      <trans-unit id="Backup Password" xml:space="preserve"><source>Backup Password</source></trans-unit>
+      <trans-unit id="Blocklist Rules" xml:space="preserve"><source>Blocklist Rules</source></trans-unit>
+      <trans-unit id="bookmarked" xml:space="preserve"><source>bookmarked</source></trans-unit>
+      <trans-unit id="Bookmarks" xml:space="preserve"><source>Bookmarks</source></trans-unit>
+      <trans-unit id="BSD 3-Clause License" xml:space="preserve"><source>BSD 3-Clause License</source></trans-unit>
+      <trans-unit id="Build" xml:space="preserve"><source>Build</source></trans-unit>
+      <trans-unit id="Cancel" xml:space="preserve"><source>Cancel</source></trans-unit>
+      <trans-unit id="Cancel Download" xml:space="preserve"><source>Cancel Download</source></trans-unit>
+      <trans-unit id="Category" xml:space="preserve"><source>Category</source></trans-unit>
+      <trans-unit id="Category in FluxNews" xml:space="preserve"><source>Category in FluxNews</source></trans-unit>
+      <trans-unit id="Category name" xml:space="preserve"><source>Category name</source></trans-unit>
+      <trans-unit id="Chapters" xml:space="preserve"><source>Chapters</source></trans-unit>
+      <trans-unit id="Choose a Feed" xml:space="preserve"><source>Choose a Feed</source></trans-unit>
+      <trans-unit id="Choose audio to play" xml:space="preserve"><source>Choose audio to play</source></trans-unit>
+      <trans-unit id="Choose the FluxNews content this widget shows." xml:space="preserve"><source>Choose the FluxNews content this widget shows.</source></trans-unit>
+      <trans-unit id="Choose which feeds may send macOS notifications." xml:space="preserve"><source>Choose which feeds may send macOS notifications.</source></trans-unit>
+      <trans-unit id="Clear Logs" xml:space="preserve"><source>Clear Logs</source></trans-unit>
+      <trans-unit id="Clear Logs?" xml:space="preserve"><source>Clear Logs?</source></trans-unit>
+      <trans-unit id="Clear search" xml:space="preserve"><source>Clear search</source></trans-unit>
+      <trans-unit id="Clear Selection" xml:space="preserve"><source>Clear Selection</source></trans-unit>
+      <trans-unit id="Click on News" xml:space="preserve"><source>Click on News</source></trans-unit>
+      <trans-unit id="Comments available" xml:space="preserve"><source>Comments available</source></trans-unit>
+      <trans-unit id="Completed" xml:space="preserve"><source>Completed</source></trans-unit>
+      <trans-unit id="Configuration Backup" xml:space="preserve"><source>Configuration Backup</source></trans-unit>
+      <trans-unit id="Confirm Password" xml:space="preserve"><source>Confirm Password</source></trans-unit>
+      <trans-unit id="Content" xml:space="preserve"><source>Content</source></trans-unit>
+      <trans-unit id="Continue" xml:space="preserve"><source>Continue</source></trans-unit>
+      <trans-unit id="Control-Option-F" xml:space="preserve"><source>Control-Option-F</source></trans-unit>
+      <trans-unit id="Copy Link" xml:space="preserve"><source>Copy Link</source></trans-unit>
+      <trans-unit id="Could not add category. Please try again." xml:space="preserve"><source>Could not add category. Please try again.</source></trans-unit>
+      <trans-unit id="Could not add feed. Please try again." xml:space="preserve"><source>Could not add feed. Please try again.</source></trans-unit>
+      <trans-unit id="Could not discover feeds. Please try again." xml:space="preserve"><source>Could not discover feeds. Please try again.</source></trans-unit>
+      <trans-unit id="Credentials are stored securely in the macOS Keychain." xml:space="preserve"><source>Credentials are stored securely in the macOS Keychain.</source></trans-unit>
+      <trans-unit id="Credentials, URLs and local media paths are redacted before support records are stored or exported." xml:space="preserve"><source>Credentials, URLs and local media paths are redacted before support records are stored or exported.</source></trans-unit>
+      <trans-unit id="Custom HTTP Headers" xml:space="preserve"><source>Custom HTTP Headers</source></trans-unit>
+      <trans-unit id="Debug Logging" xml:space="preserve"><source>Debug Logging</source></trans-unit>
+      <trans-unit id="Deferred" xml:space="preserve"><source>Deferred</source></trans-unit>
+      <trans-unit id="Delete" xml:space="preserve"><source>Delete</source></trans-unit>
+      <trans-unit id="Delete All Downloads" xml:space="preserve"><source>Delete All Downloads</source></trans-unit>
+      <trans-unit id="Delete All Downloads?" xml:space="preserve"><source>Delete All Downloads?</source></trans-unit>
+      <trans-unit id="Delete download after playback" xml:space="preserve"><source>Delete download after playback</source></trans-unit>
+      <trans-unit id="Delete download after playback completes" xml:space="preserve"><source>Delete download after playback completes</source></trans-unit>
+      <trans-unit id="Delete Download pending" xml:space="preserve"><source>Delete Download pending</source></trans-unit>
+      <trans-unit id="Delete Download?" xml:space="preserve"><source>Delete Download?</source></trans-unit>
+      <trans-unit id="Destructive Operations" xml:space="preserve"><source>Destructive Operations</source></trans-unit>
+      <trans-unit id="Detail Preview" xml:space="preserve"><source>Detail Preview</source></trans-unit>
+      <trans-unit id="Detail Rendering" xml:space="preserve"><source>Detail Rendering</source></trans-unit>
+      <trans-unit id="Disabled" xml:space="preserve"><source>Disabled</source></trans-unit>
+      <trans-unit id="Discard synchronized local content. Miniflux becomes authoritative again; FluxNews and Feed Settings are preserved. Unsynchronized Read or Star changes may be lost." xml:space="preserve"><source>Discard synchronized local content. Miniflux becomes authoritative again; FluxNews and Feed Settings are preserved. Unsynchronized Read or Star changes may be lost.</source></trans-unit>
+      <trans-unit id="Discovering..." xml:space="preserve"><source>Discovering...</source></trans-unit>
+      <trans-unit id="Done" xml:space="preserve"><source>Done</source></trans-unit>
+      <trans-unit id="Download" xml:space="preserve"><source>Download</source></trans-unit>
+      <trans-unit id="Download Network" xml:space="preserve"><source>Download Network</source></trans-unit>
+      <trans-unit id="Downloaded audio for this item will also be deleted." xml:space="preserve"><source>Downloaded audio for this item will also be deleted.</source></trans-unit>
+      <trans-unit id="Downloaded Data" xml:space="preserve"><source>Downloaded Data</source></trans-unit>
+      <trans-unit id="Downloaded Files" xml:space="preserve"><source>Downloaded Files</source></trans-unit>
+      <trans-unit id="Downloads" xml:space="preserve"><source>Downloads</source></trans-unit>
+      <trans-unit id="Downloads audio automatically when an item is added to Listening List." xml:space="preserve"><source>Downloads audio automatically when an item is added to Listening List.</source></trans-unit>
+      <trans-unit id="Duration" xml:space="preserve"><source>Duration</source></trans-unit>
+      <trans-unit id="Encrypt Configuration Backup" xml:space="preserve"><source>Encrypt Configuration Backup</source></trans-unit>
+      <trans-unit id="Enter a backup password." xml:space="preserve"><source>Enter a backup password.</source></trans-unit>
+      <trans-unit id="Enter a query and press Return." xml:space="preserve"><source>Enter a query and press Return.</source></trans-unit>
+      <trans-unit id="Enter a website or feed URL. Flux asks Miniflux to discover available subscriptions." xml:space="preserve"><source>Enter a website or feed URL. Flux asks Miniflux to discover available subscriptions.</source></trans-unit>
+      <trans-unit id="entity.category.type" xml:space="preserve"><source>entity.category.type</source></trans-unit>
+      <trans-unit id="entity.feed.type" xml:space="preserve"><source>entity.feed.type</source></trans-unit>
+      <trans-unit id="Export" xml:space="preserve"><source>Export</source></trans-unit>
+      <trans-unit id="Export Configuration Backup..." xml:space="preserve"><source>Export Configuration Backup...</source></trans-unit>
+      <trans-unit id="Export Diagnostics…" xml:space="preserve"><source>Export Diagnostics…</source></trans-unit>
+      <trans-unit id="Export or import your account, FluxNews settings, Feed Settings, and macOS preferences. Backups are password encrypted." xml:space="preserve"><source>Export or import your account, FluxNews settings, Feed Settings, and macOS preferences. Backups are password encrypted.</source></trans-unit>
+      <trans-unit id="Export or import your account, FluxNews settings, Feed Settings, and macOS preferences. Configuration backups are password encrypted." xml:space="preserve"><source>Export or import your account, FluxNews settings, Feed Settings, and macOS preferences. Configuration backups are password encrypted.</source></trans-unit>
+      <trans-unit id="Feed" xml:space="preserve"><source>Feed</source></trans-unit>
+      <trans-unit id="Feed icon" xml:space="preserve"><source>Feed icon</source></trans-unit>
+      <trans-unit id="Feed in FluxNews" xml:space="preserve"><source>Feed in FluxNews</source></trans-unit>
+      <trans-unit id="Feed Settings" xml:space="preserve"><source>Feed Settings</source></trans-unit>
+      <trans-unit id="Feed Settings..." xml:space="preserve"><source>Feed Settings...</source></trans-unit>
+      <trans-unit id="Feeds" xml:space="preserve"><source>Feeds</source></trans-unit>
+      <trans-unit id="Filter by Feed" xml:space="preserve"><source>Filter by Feed</source></trans-unit>
+      <trans-unit id="Flux could not resolve the Miniflux entry URL." xml:space="preserve"><source>Flux could not resolve the Miniflux entry URL.</source></trans-unit>
+      <trans-unit id="Flux Development Repository" xml:space="preserve"><source>Flux Development Repository</source></trans-unit>
+      <trans-unit id="Flux News" xml:space="preserve"><source>Flux News</source></trans-unit>
+      <trans-unit id="Flux News is a newsreader and podcast client for the Miniflux backend." xml:space="preserve"><source>Flux News is a newsreader and podcast client for the Miniflux backend.</source></trans-unit>
+      <trans-unit id="Flux News is open source. The Flux repository contains the native development history and shared Rust Core." xml:space="preserve"><source>Flux News is open source. The Flux repository contains the native development history and shared Rust Core.</source></trans-unit>
+      <trans-unit id="FluxNews cannot recover this password." xml:space="preserve"><source>FluxNews cannot recover this password.</source></trans-unit>
+      <trans-unit id="FluxNews could not be fully reset." xml:space="preserve"><source>FluxNews could not be fully reset.</source></trans-unit>
+      <trans-unit id="FluxNews notification permission is disabled. Enable notifications in macOS System Settings to use System Notifications." xml:space="preserve"><source>FluxNews notification permission is disabled. Enable notifications in macOS System Settings to use System Notifications.</source></trans-unit>
+      <trans-unit id="FluxNews Repository" xml:space="preserve"><source>FluxNews Repository</source></trans-unit>
+      <trans-unit id="FluxNews Settings" xml:space="preserve"><source>FluxNews Settings</source></trans-unit>
+      <trans-unit id="FluxNews was reset" xml:space="preserve"><source>FluxNews was reset</source></trans-unit>
+      <trans-unit id="General" xml:space="preserve"><source>General</source></trans-unit>
+      <trans-unit id="Global shortcut" xml:space="preserve"><source>Global shortcut</source></trans-unit>
+      <trans-unit id="Global Shortcut" xml:space="preserve"><source>Global Shortcut</source></trans-unit>
+      <trans-unit id="Header Name" xml:space="preserve"><source>Header Name</source></trans-unit>
+      <trans-unit id="Hide empty feeds" xml:space="preserve"><source>Hide empty feeds</source></trans-unit>
+      <trans-unit id="Hide Empty Feeds / Categories" xml:space="preserve"><source>Hide Empty Feeds / Categories</source></trans-unit>
+      <trans-unit id="Hide header value" xml:space="preserve"><source>Hide header value</source></trans-unit>
+      <trans-unit id="Hide navigation" xml:space="preserve"><source>Hide navigation</source></trans-unit>
+      <trans-unit id="Immediate delivery saves read/unread and star changes locally first and then sends them to Miniflux. Failed delivery remains pending for a later retry." xml:space="preserve"><source>Immediate delivery saves read/unread and star changes locally first and then sends them to Miniflux. Failed delivery remains pending for a later retry.</source></trans-unit>
+      <trans-unit id="Immediately" xml:space="preserve"><source>Immediately</source></trans-unit>
+      <trans-unit id="Import" xml:space="preserve"><source>Import</source></trans-unit>
+      <trans-unit id="Import Configuration Backup" xml:space="preserve"><source>Import Configuration Backup</source></trans-unit>
+      <trans-unit id="Import Configuration Backup..." xml:space="preserve"><source>Import Configuration Backup...</source></trans-unit>
+      <trans-unit id="Info, warning and error records are always retained. Debug and trace records require Debug Logging." xml:space="preserve"><source>Info, warning and error records are always retained. Debug and trace records require Debug Logging.</source></trans-unit>
+      <trans-unit id="intent.category.description" xml:space="preserve"><source>intent.category.description</source></trans-unit>
+      <trans-unit id="intent.category.parameter" xml:space="preserve"><source>intent.category.parameter</source></trans-unit>
+      <trans-unit id="intent.category.title" xml:space="preserve"><source>intent.category.title</source></trans-unit>
+      <trans-unit id="intent.feed.description" xml:space="preserve"><source>intent.feed.description</source></trans-unit>
+      <trans-unit id="intent.feed.parameter" xml:space="preserve"><source>intent.feed.parameter</source></trans-unit>
+      <trans-unit id="intent.feed.title" xml:space="preserve"><source>intent.feed.title</source></trans-unit>
+      <trans-unit id="intent.open.description" xml:space="preserve"><source>intent.open.description</source></trans-unit>
+      <trans-unit id="intent.open.title" xml:space="preserve"><source>intent.open.title</source></trans-unit>
+      <trans-unit id="intent.refresh.description" xml:space="preserve"><source>intent.refresh.description</source></trans-unit>
+      <trans-unit id="intent.refresh.title" xml:space="preserve"><source>intent.refresh.title</source></trans-unit>
+      <trans-unit id="intent.starred.description" xml:space="preserve"><source>intent.starred.description</source></trans-unit>
+      <trans-unit id="intent.starred.title" xml:space="preserve"><source>intent.starred.title</source></trans-unit>
+      <trans-unit id="Keep Downloads" xml:space="preserve"><source>Keep Downloads</source></trans-unit>
+      <trans-unit id="Keep read articles" xml:space="preserve"><source>Keep read articles</source></trans-unit>
+      <trans-unit id="Keeplist Rules" xml:space="preserve"><source>Keeplist Rules</source></trans-unit>
+      <trans-unit id="Last sync:" xml:space="preserve"><source>Last sync:</source></trans-unit>
+      <trans-unit id="Last sync: %@" xml:space="preserve"><source>Last sync: %@</source></trans-unit>
+      <trans-unit id="Launch automatically at login" xml:space="preserve"><source>Launch automatically at login</source></trans-unit>
+      <trans-unit id="Layout" xml:space="preserve"><source>Layout</source></trans-unit>
+      <trans-unit id="Level" xml:space="preserve"><source>Level</source></trans-unit>
+      <trans-unit id="Listening List" xml:space="preserve"><source>Listening List</source></trans-unit>
+      <trans-unit id="Listening List is Empty" xml:space="preserve"><source>Listening List is Empty</source></trans-unit>
+      <trans-unit id="Listening List unavailable" xml:space="preserve"><source>Listening List unavailable</source></trans-unit>
+      <trans-unit id="Live" xml:space="preserve"><source>Live</source></trans-unit>
+      <trans-unit id="Loading article..." xml:space="preserve"><source>Loading article...</source></trans-unit>
+      <trans-unit id="Loading Miniflux..." xml:space="preserve"><source>Loading Miniflux...</source></trans-unit>
+      <trans-unit id="Local state rebuilt" xml:space="preserve"><source>Local state rebuilt</source></trans-unit>
+      <trans-unit id="Local state was cleared, but synchronization could not be completed." xml:space="preserve"><source>Local state was cleared, but synchronization could not be completed.</source></trans-unit>
+      <trans-unit id="Mark All as Read" xml:space="preserve"><source>Mark All as Read</source></trans-unit>
+      <trans-unit id="Mark All as Read &amp; Next" xml:space="preserve"><source>Mark All as Read &amp; Next</source></trans-unit>
+      <trans-unit id="Mark articles as read when scrolling past" xml:space="preserve"><source>Mark articles as read when scrolling past</source></trans-unit>
+      <trans-unit id="Mark as Read" xml:space="preserve"><source>Mark as Read</source></trans-unit>
+      <trans-unit id="Mark as Unread" xml:space="preserve"><source>Mark as Unread</source></trans-unit>
+      <trans-unit id="Mark read on scrollover" xml:space="preserve"><source>Mark read on scrollover</source></trans-unit>
+      <trans-unit id="Media" xml:space="preserve"><source>Media</source></trans-unit>
+      <trans-unit id="Media / Listening List" xml:space="preserve"><source>Media / Listening List</source></trans-unit>
+      <trans-unit id="Miniflux" xml:space="preserve"><source>Miniflux</source></trans-unit>
+      <trans-unit id="Miniflux found multiple subscriptions for this URL." xml:space="preserve"><source>Miniflux found multiple subscriptions for this URL.</source></trans-unit>
+      <trans-unit id="Miniflux Project" xml:space="preserve"><source>Miniflux Project</source></trans-unit>
+      <trans-unit id="Miniflux Server" xml:space="preserve"><source>Miniflux Server</source></trans-unit>
+      <trans-unit id="Mixed / Unchanged" xml:space="preserve"><source>Mixed / Unchanged</source></trans-unit>
+      <trans-unit id="More" xml:space="preserve"><source>More</source></trans-unit>
+      <trans-unit id="Mutation Delivery" xml:space="preserve"><source>Mutation Delivery</source></trans-unit>
+      <trans-unit id="Name" xml:space="preserve"><source>Name</source></trans-unit>
+      <trans-unit id="Navigation" xml:space="preserve"><source>Navigation</source></trans-unit>
+      <trans-unit id="Never" xml:space="preserve"><source>Never</source></trans-unit>
+      <trans-unit id="New articles available" xml:space="preserve"><source>New articles available</source></trans-unit>
+      <trans-unit id="Newest First" xml:space="preserve"><source>Newest First</source></trans-unit>
+      <trans-unit id="No article selected" xml:space="preserve"><source>No article selected</source></trans-unit>
+      <trans-unit id="No articles" xml:space="preserve"><source>No articles</source></trans-unit>
+      <trans-unit id="No bookmarks" xml:space="preserve"><source>No bookmarks</source></trans-unit>
+      <trans-unit id="No download information available." xml:space="preserve"><source>No download information available.</source></trans-unit>
+      <trans-unit id="No feeds available" xml:space="preserve"><source>No feeds available</source></trans-unit>
+      <trans-unit id="No feeds available." xml:space="preserve"><source>No feeds available.</source></trans-unit>
+      <trans-unit id="No Miniflux entries matched your search." xml:space="preserve"><source>No Miniflux entries matched your search.</source></trans-unit>
+      <trans-unit id="No results" xml:space="preserve"><source>No results</source></trans-unit>
+      <trans-unit id="No third-party integration is configured in Miniflux" xml:space="preserve"><source>No third-party integration is configured in Miniflux</source></trans-unit>
+      <trans-unit id="No unread news" xml:space="preserve"><source>No unread news</source></trans-unit>
+      <trans-unit id="Not played yet" xml:space="preserve"><source>Not played yet</source></trans-unit>
+      <trans-unit id="Off" xml:space="preserve"><source>Off</source></trans-unit>
+      <trans-unit id="Oldest First" xml:space="preserve"><source>Oldest First</source></trans-unit>
+      <trans-unit id="On" xml:space="preserve"><source>On</source></trans-unit>
+      <trans-unit id="Only downloaded media files are removed. Listening List items and playback progress are preserved." xml:space="preserve"><source>Only downloaded media files are removed. Listening List items and playback progress are preserved.</source></trans-unit>
+      <trans-unit id="Open" xml:space="preserve"><source>Open</source></trans-unit>
+      <trans-unit id="Open %arg in FluxNews" xml:space="preserve"><source>Open %arg in FluxNews</source></trans-unit>
+      <trans-unit id="Open article" xml:space="preserve"><source>Open article</source></trans-unit>
+      <trans-unit id="Open Comments" xml:space="preserve"><source>Open Comments</source></trans-unit>
+      <trans-unit id="Open Detail View" xml:space="preserve"><source>Open Detail View</source></trans-unit>
+      <trans-unit id="Open image" xml:space="preserve"><source>Open image</source></trans-unit>
+      <trans-unit id="Open in Miniflux" xml:space="preserve"><source>Open in Miniflux</source></trans-unit>
+      <trans-unit id="Open Link" xml:space="preserve"><source>Open Link</source></trans-unit>
+      <trans-unit id="Open Original" xml:space="preserve"><source>Open Original</source></trans-unit>
+      <trans-unit id="Open Source" xml:space="preserve"><source>Open Source</source></trans-unit>
+      <trans-unit id="Option-Command-F" xml:space="preserve"><source>Option-Command-F</source></trans-unit>
+      <trans-unit id="Optional" xml:space="preserve"><source>Optional</source></trans-unit>
+      <trans-unit id="Original link" xml:space="preserve"><source>Original link</source></trans-unit>
+      <trans-unit id="Password" xml:space="preserve"><source>Password</source></trans-unit>
+      <trans-unit id="Playback failed. Try again." xml:space="preserve"><source>Playback failed. Try again.</source></trans-unit>
+      <trans-unit id="Playback Speed" xml:space="preserve"><source>Playback Speed</source></trans-unit>
+      <trans-unit id="Playback timeline" xml:space="preserve"><source>Playback timeline</source></trans-unit>
+      <trans-unit id="Playback timeline unavailable" xml:space="preserve"><source>Playback timeline unavailable</source></trans-unit>
+      <trans-unit id="Presentation" xml:space="preserve"><source>Presentation</source></trans-unit>
+      <trans-unit id="Preview lines" xml:space="preserve"><source>Preview lines</source></trans-unit>
+      <trans-unit id="Preview Lines" xml:space="preserve"><source>Preview Lines</source></trans-unit>
+      <trans-unit id="Processing…" xml:space="preserve"><source>Processing…</source></trans-unit>
+      <trans-unit id="Publication Date" xml:space="preserve"><source>Publication Date</source></trans-unit>
+      <trans-unit id="Quit FluxNews" xml:space="preserve"><source>Quit FluxNews</source></trans-unit>
+      <trans-unit id="Read article retention controls how long synchronized read items remain in local history. The Reader detail limit controls how much article text the Core keeps when a feed uses truncated Reader content." xml:space="preserve"><source>Read article retention controls how long synchronized read items remain in local history. The Reader detail limit controls how much article text the Core keeps when a feed uses truncated Reader content.</source></trans-unit>
+      <trans-unit id="Reader" xml:space="preserve"><source>Reader</source></trans-unit>
+      <trans-unit id="Reader detail limit" xml:space="preserve"><source>Reader detail limit</source></trans-unit>
+      <trans-unit id="Reader Detail Limit" xml:space="preserve"><source>Reader Detail Limit</source></trans-unit>
+      <trans-unit id="Rebuild" xml:space="preserve"><source>Rebuild</source></trans-unit>
+      <trans-unit id="Rebuild Local State?" xml:space="preserve"><source>Rebuild Local State?</source></trans-unit>
+      <trans-unit id="Rebuild Local State..." xml:space="preserve"><source>Rebuild Local State...</source></trans-unit>
+      <trans-unit id="Recently Added" xml:space="preserve"><source>Recently Added</source></trans-unit>
+      <trans-unit id="Refresh" xml:space="preserve"><source>Refresh</source></trans-unit>
+      <trans-unit id="Refresh failed" xml:space="preserve"><source>Refresh failed</source></trans-unit>
+      <trans-unit id="Refresh Miniflux now" xml:space="preserve"><source>Refresh Miniflux now</source></trans-unit>
+      <trans-unit id="Reload Feed Settings" xml:space="preserve"><source>Reload Feed Settings</source></trans-unit>
+      <trans-unit id="Remove" xml:space="preserve"><source>Remove</source></trans-unit>
+      <trans-unit id="Remove article from list when marked read" xml:space="preserve"><source>Remove article from list when marked read</source></trans-unit>
+      <trans-unit id="Remove articles when read" xml:space="preserve"><source>Remove articles when read</source></trans-unit>
+      <trans-unit id="Remove completed items from Listening List" xml:space="preserve"><source>Remove completed items from Listening List</source></trans-unit>
+      <trans-unit id="Remove from Listening List" xml:space="preserve"><source>Remove from Listening List</source></trans-unit>
+      <trans-unit id="Remove from Listening List?" xml:space="preserve"><source>Remove from Listening List?</source></trans-unit>
+      <trans-unit id="Remove the configured account, API key, Core and Feed Settings, local data, and FluxNews preferences." xml:space="preserve"><source>Remove the configured account, API key, Core and Feed Settings, local data, and FluxNews preferences.</source></trans-unit>
+      <trans-unit id="Removes the item from Listening List after all of its audio has been completed." xml:space="preserve"><source>Removes the item from Listening List after all of its audio has been completed.</source></trans-unit>
+      <trans-unit id="Removes the local download after playback is completed. The item remains in Listening List." xml:space="preserve"><source>Removes the local download after playback is completed. The item remains in Listening List.</source></trans-unit>
+      <trans-unit id="Rendered" xml:space="preserve"><source>Rendered</source></trans-unit>
+      <trans-unit id="Replace" xml:space="preserve"><source>Replace</source></trans-unit>
+      <trans-unit id="Replace Playing Audio?" xml:space="preserve"><source>Replace Playing Audio?</source></trans-unit>
+      <trans-unit id="Reset" xml:space="preserve"><source>Reset</source></trans-unit>
+      <trans-unit id="Reset FluxNews?" xml:space="preserve"><source>Reset FluxNews?</source></trans-unit>
+      <trans-unit id="Reset FluxNews..." xml:space="preserve"><source>Reset FluxNews...</source></trans-unit>
+      <trans-unit id="Retention" xml:space="preserve"><source>Retention</source></trans-unit>
+      <trans-unit id="Rewrite Rules" xml:space="preserve"><source>Rewrite Rules</source></trans-unit>
+      <trans-unit id="Save" xml:space="preserve"><source>Save</source></trans-unit>
+      <trans-unit id="Save to Third-Party Service" xml:space="preserve"><source>Save to Third-Party Service</source></trans-unit>
+      <trans-unit id="Saved to third-party service" xml:space="preserve"><source>Saved to third-party service</source></trans-unit>
+      <trans-unit id="Scraper Rules" xml:space="preserve"><source>Scraper Rules</source></trans-unit>
+      <trans-unit id="Search failed" xml:space="preserve"><source>Search failed</source></trans-unit>
+      <trans-unit id="Search feeds" xml:space="preserve"><source>Search feeds</source></trans-unit>
+      <trans-unit id="Search log records" xml:space="preserve"><source>Search log records</source></trans-unit>
+      <trans-unit id="Search Miniflux" xml:space="preserve"><source>Search Miniflux</source></trans-unit>
+      <trans-unit id="Searching Miniflux..." xml:space="preserve"><source>Searching Miniflux...</source></trans-unit>
+      <trans-unit id="Select feeds above to edit their shared settings." xml:space="preserve"><source>Select feeds above to edit their shared settings.</source></trans-unit>
+      <trans-unit id="Select several feeds to change their shared settings. Mixed means the selected feeds have different values; only the property you change is updated." xml:space="preserve"><source>Select several feeds to change their shared settings. Mixed means the selected feeds have different values; only the property you change is updated.</source></trans-unit>
+      <trans-unit id="Selected category unavailable" xml:space="preserve"><source>Selected category unavailable</source></trans-unit>
+      <trans-unit id="Selected feed unavailable" xml:space="preserve"><source>Selected feed unavailable</source></trans-unit>
+      <trans-unit id="Settings..." xml:space="preserve"><source>Settings...</source></trans-unit>
+      <trans-unit id="Share" xml:space="preserve"><source>Share</source></trans-unit>
+      <trans-unit id="Share..." xml:space="preserve"><source>Share...</source></trans-unit>
+      <trans-unit id="Show All News" xml:space="preserve"><source>Show All News</source></trans-unit>
+      <trans-unit id="Show article count" xml:space="preserve"><source>Show article count</source></trans-unit>
+      <trans-unit id="Show Feed" xml:space="preserve"><source>Show Feed</source></trans-unit>
+      <trans-unit id="Show header value" xml:space="preserve"><source>Show header value</source></trans-unit>
+      <trans-unit id="Show navigation" xml:space="preserve"><source>Show navigation</source></trans-unit>
+      <trans-unit id="Show Notes" xml:space="preserve"><source>Show Notes</source></trans-unit>
+      <trans-unit id="Show Notes unavailable" xml:space="preserve"><source>Show Notes unavailable</source></trans-unit>
+      <trans-unit id="Show relative publication time" xml:space="preserve"><source>Show relative publication time</source></trans-unit>
+      <trans-unit id="Show Unread News Only" xml:space="preserve"><source>Show Unread News Only</source></trans-unit>
+      <trans-unit id="Sleep Timer" xml:space="preserve"><source>Sleep Timer</source></trans-unit>
+      <trans-unit id="Some content was simplified" xml:space="preserve"><source>Some content was simplified</source></trans-unit>
+      <trans-unit id="Some content was simplified and truncated" xml:space="preserve"><source>Some content was simplified and truncated</source></trans-unit>
+      <trans-unit id="Some content was truncated" xml:space="preserve"><source>Some content was truncated</source></trans-unit>
+      <trans-unit id="Something went wrong. Please try again." xml:space="preserve"><source>Something went wrong. Please try again.</source></trans-unit>
+      <trans-unit id="Sort" xml:space="preserve"><source>Sort</source></trans-unit>
+      <trans-unit id="Sort Order" xml:space="preserve"><source>Sort Order</source></trans-unit>
+      <trans-unit id="Star" xml:space="preserve"><source>Star</source></trans-unit>
+      <trans-unit id="Starred" xml:space="preserve"><source>Starred</source></trans-unit>
+      <trans-unit id="Startup category" xml:space="preserve"><source>Startup category</source></trans-unit>
+      <trans-unit id="Startup Category" xml:space="preserve"><source>Startup Category</source></trans-unit>
+      <trans-unit id="Startup feed" xml:space="preserve"><source>Startup feed</source></trans-unit>
+      <trans-unit id="Startup Feed" xml:space="preserve"><source>Startup Feed</source></trans-unit>
+      <trans-unit id="Startup scope" xml:space="preserve"><source>Startup scope</source></trans-unit>
+      <trans-unit id="Startup Scope" xml:space="preserve"><source>Startup Scope</source></trans-unit>
+      <trans-unit id="Storage &amp; Reader" xml:space="preserve"><source>Storage &amp; Reader</source></trans-unit>
+      <trans-unit id="Support Diagnostics" xml:space="preserve"><source>Support Diagnostics</source></trans-unit>
+      <trans-unit id="Sync" xml:space="preserve"><source>Sync</source></trans-unit>
+      <trans-unit id="Sync article changes" xml:space="preserve"><source>Sync article changes</source></trans-unit>
+      <trans-unit id="Sync on Start" xml:space="preserve"><source>Sync on Start</source></trans-unit>
+      <trans-unit id="Sync your Miniflux account to load feeds." xml:space="preserve"><source>Sync your Miniflux account to load feeds.</source></trans-unit>
+      <trans-unit id="Synchronized local content will be discarded and Miniflux will become authoritative again. FluxNews and Feed Settings are preserved." xml:space="preserve"><source>Synchronized local content will be discarded and Miniflux will become authoritative again. FluxNews and Feed Settings are preserved.</source></trans-unit>
+      <trans-unit id="System Notifications" xml:space="preserve"><source>System Notifications</source></trans-unit>
+      <trans-unit id="Text Only" xml:space="preserve"><source>Text Only</source></trans-unit>
+      <trans-unit id="The account could not be saved." xml:space="preserve"><source>The account could not be saved.</source></trans-unit>
+      <trans-unit id="The backup could not be imported. Please try again." xml:space="preserve"><source>The backup could not be imported. Please try again.</source></trans-unit>
+      <trans-unit id="The currently playing audio will be replaced." xml:space="preserve"><source>The currently playing audio will be replaced.</source></trans-unit>
+      <trans-unit id="The downloaded audio file will be deleted." xml:space="preserve"><source>The downloaded audio file will be deleted.</source></trans-unit>
+      <trans-unit id="The passwords do not match." xml:space="preserve"><source>The passwords do not match.</source></trans-unit>
+      <trans-unit id="The validated account could not be configured. Your previous account is still active." xml:space="preserve"><source>The validated account could not be configured. Your previous account is still active.</source></trans-unit>
+      <trans-unit id="There are no articles in this selection." xml:space="preserve"><source>There are no articles in this selection.</source></trans-unit>
+      <trans-unit id="This Miniflux server uses unencrypted HTTP. Account credentials and feed traffic are not protected by HTTPS." xml:space="preserve"><source>This Miniflux server uses unencrypted HTTP. Account credentials and feed traffic are not protected by HTTPS.</source></trans-unit>
+      <trans-unit id="This removes your account, API key, settings, Feed Settings, and local data. FluxNews will return to its first-run state." xml:space="preserve"><source>This removes your account, API key, settings, Feed Settings, and local data. FluxNews will return to its first-run state.</source></trans-unit>
+      <trans-unit id="Truncate Detail" xml:space="preserve"><source>Truncate Detail</source></trans-unit>
+      <trans-unit id="Unable to load article" xml:space="preserve"><source>Unable to load article</source></trans-unit>
+      <trans-unit id="Undo" xml:space="preserve"><source>Undo</source></trans-unit>
+      <trans-unit id="Unmetered Networks Only" xml:space="preserve"><source>Unmetered Networks Only</source></trans-unit>
+      <trans-unit id="unread" xml:space="preserve"><source>unread</source></trans-unit>
+      <trans-unit id="Unread" xml:space="preserve"><source>Unread</source></trans-unit>
+      <trans-unit id="Unstar" xml:space="preserve"><source>Unstar</source></trans-unit>
+      <trans-unit id="URL" xml:space="preserve"><source>URL</source></trans-unit>
+      <trans-unit id="Use Miniflux default" xml:space="preserve"><source>Use Miniflux default</source></trans-unit>
+      <trans-unit id="Used Storage" xml:space="preserve"><source>Used Storage</source></trans-unit>
+      <trans-unit id="User Agent" xml:space="preserve"><source>User Agent</source></trans-unit>
+      <trans-unit id="Username" xml:space="preserve"><source>Username</source></trans-unit>
+      <trans-unit id="Validating…" xml:space="preserve"><source>Validating…</source></trans-unit>
+      <trans-unit id="Value" xml:space="preserve"><source>Value</source></trans-unit>
+      <trans-unit id="Version" xml:space="preserve"><source>Version</source></trans-unit>
+      <trans-unit id="When enabled, FluxNews may refresh news in the background and when you return to the app. Manual Sync remains available at all times." xml:space="preserve"><source>When enabled, FluxNews may refresh news in the background and when you return to the app. Manual Sync remains available at all times.</source></trans-unit>
+    </body>
+  </file>
+</xliff>
