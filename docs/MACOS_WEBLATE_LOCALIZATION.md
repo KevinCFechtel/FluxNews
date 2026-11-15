@@ -4,11 +4,11 @@ The macOS host uses `apple/macos/FluxNews/Localizable.xcstrings` as the **author
 
 ## Weblate onboarding
 
-The five `apple/macos/Weblate/<locale>.xliff` files provide XLIFF 1.2 import scaffolding with source units and no target translations. Import each file into a Weblate component for its locale. Configure the source language as English. Do not enable an in-app language selector or mark any of these five locales translated before human review.
+The five `apple/macos/Weblate/<locale>.xliff` files provide XLIFF 1.2 import scaffolding with source units and no target translations. Hosted Weblate uses one **macOS** component with the file mask `apple/macos/Weblate/*.xliff`, source language English, no monolingual base file, and the **XLIFF 1.2 with Apple extensions** format. Adding new translations and source-key management are disabled. Do not enable an in-app language selector or mark any of these five locales translated before human review.
 
 Weblate supports XLIFF 1.2; the native Xcode string catalog stays the application source of truth. After reviewers supply translations, import reviewed target values into the matching locale entries of `Localizable.xcstrings`. Keep the source keys stable and check placeholders before committing. Do not blindly replace existing German translations with iOS translations, and never copy English strings into target values to make a locale appear complete.
 
-The XLIFF files are a handoff snapshot, not an automatic two-way sync. When the canonical catalog changes, regenerate XLIFF source units, preserving any independently reviewed targets in Weblate. A live Weblate integration/permissions setup is **not** performed by this PR.
+The XLIFF files are a handoff snapshot, not an automatic two-way sync. When the canonical catalog changes, regenerate XLIFF source units, preserving any independently reviewed targets in Weblate. The macOS component shares the existing FluxNews repository connection (`weblate://flux-news/android`) and the repository-wide GitHub Weblate webhook. Translation changes are delivered through reviewed pull requests.
 
 ## Validation
 
