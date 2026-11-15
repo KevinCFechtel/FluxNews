@@ -30,7 +30,9 @@ if [[ -z "${DESTINATION:-}" ]]; then
   echo "Testing on ${simulator_name} (${simulator_udid})"
 fi
 
-python3 "${SCRIPT_DIR}/weblate-xliff.py" check\n\n"${REPOSITORY_DIR}/apple/Build/build-uniffi.sh"
+python3 "${SCRIPT_DIR}/weblate-xliff.py" check
+
+"${REPOSITORY_DIR}/apple/Build/build-uniffi.sh"
 
 # The simulator test gate validates compilation and tests only. Signed device
 # artifacts belong to build-app.sh/archive.sh/export-appstore.sh.
