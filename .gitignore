@@ -59,6 +59,7 @@ android/productionBundle-signing.properties
 android/captures/
 android/**/*.apk
 android/**/*.aab
+android/key.properties
 
 # Keep canonical Android workflows despite case-insensitive filesystems.
 !android/Build/
