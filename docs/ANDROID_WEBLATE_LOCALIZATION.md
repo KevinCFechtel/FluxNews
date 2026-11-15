@@ -21,7 +21,7 @@ The German catalog contains translations of all 500 translatable source resource
 ## Weblate component configuration (when service is connected)
 
 - **Format:** Android String Resource (monolingual).
-- **Repository:** `KevinCFechtel/Flux`.
+- **Repository:** `KevinCFechtel/FluxNews`.
 - **Branch:** `main`, with Weblate changes delivered through reviewed commits/PRs.
 - **Source language:** English (`en`).
 - **Monolingual base:** `android/app/src/main/res/values/strings.xml`.
@@ -30,7 +30,7 @@ The German catalog contains translations of all 500 translatable source resource
 - **Template for new translations:** Empty.
 - **Translation workflow:** Translation reviewers own target catalogs; application changes own the English source catalog. No generated pseudo-translations or automatic writes to translation files as part of code changes.
 
-Weblate is **not connected or configured on a live instance** by this change. This document records setup inputs; the connection needs its own Weblate administrator action.
+The native Android component is configured on Hosted Weblate using this contract. Repository updates use the repository-wide GitHub Weblate webhook, and translation changes are delivered through reviewed pull requests.
 
 ## Developer rules
 
