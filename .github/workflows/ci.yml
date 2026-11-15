@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+
+concurrency:
+  group: ci-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Select impacted checks
+    runs-on: ubuntu-24.04
+    outputs:
+      rust: ${{ steps.select.outputs.rust }}
+      android: ${{ steps.select.outputs.android }}
+      apple: ${{ steps.select.outputs.apple }}
+      fdroid: ${{ steps.select.outputs.fdroid }}
+      contracts: ${{ steps.select.outputs.contracts }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Test CI selection and required gate contracts
+        run: python3 -m unittest discover -s Build -p test_ci_gate.py -v
+      - id: select
+        name: Detect changed paths (fail closed)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 Build/ci_gate.py detect --base "$BASE_SHA"
+
+  rust:
+    name: Rust
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
+    uses: ./.github/workflows/rust.yml
+
+  android:
+    name: Android
+    needs: changes
+    if: ${{ needs.changes.outputs.android == 'true' }}
+    uses: ./.github/workflows/android.yml
+
+  apple:
+    name: Apple
+    needs: changes
+    if: ${{ needs.changes.outputs.apple == 'true' }}
+    uses: ./.github/workflows/apple.yml
+
+  fdroid:
+    name: F-Droid
+    needs: changes
+    if: ${{ needs.changes.outputs.fdroid == 'true' }}
+    uses: ./.github/workflows/fdroid-native.yml
+    with:
+      source_sha: ${{ github.event.pull_request.head.sha }}
+
+  contracts:
+    name: Release contracts
+    needs: changes
+    if: ${{ needs.changes.outputs.contracts == 'true' }}
+    uses: ./.github/workflows/release-scripts.yml
+
+  gate:
+    name: CI Gate
+    needs: [changes, rust, android, apple, fdroid, contracts]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify all required checks (fail closed)
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 Build/ci_gate.py verify

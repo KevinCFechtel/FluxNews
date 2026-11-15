@@ -1,16 +1,6 @@
 name: F-Droid native build feasibility
 
 on:
-  pull_request:
-    paths:
-      - "Build/versions/android.properties"
-      - "Build/release.sh"
-      - "android/**"
-      - "core/**"
-      - ".gitmodules"
-      - "vendor/rustls-platform-verifier"
-      - ".github/workflows/fdroid-native.yml"
-      - "fdroid/**"
   workflow_dispatch:
   workflow_call:
     inputs:
