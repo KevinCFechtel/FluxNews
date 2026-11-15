@@ -125,9 +125,9 @@ jobs:
     needs: [fdroid, fdroid-repeat]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with: {name: fdroid-native-recipe-diagnostics, path: first}
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with: {name: fdroid-native-repeat, path: second}
       - name: Compare two independent builds
         run: |
@@ -150,7 +150,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: {ref: "${{ needs.preflight.outputs.sha }}"}
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with: {name: fdroid-native-recipe-diagnostics, path: unsigned}
       - uses: actions/setup-java@v6
         with: {distribution: temurin, java-version: '17'}
@@ -175,7 +175,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: {ref: "${{ needs.preflight.outputs.sha }}", fetch-depth: 0}
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         if: "${{ inputs.scope == 'android' || inputs.scope == 'all' }}"
         with: {name: flux-android-signed, path: artifacts}
       - name: Publish one release with immutable platform tags
