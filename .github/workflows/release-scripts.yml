@@ -1,16 +1,7 @@
 name: Release script contracts
 
 on:
-  pull_request:
-    paths:
-      - "Build/**"
-      - "android/Build/**"
-      - "apple/ios/Build/**"
-      - "apple/macos/Build/**"
-      - ".github/workflows/release-scripts.yml"
-      - ".github/workflows/release.yml"
-      - ".github/workflows/fdroid-native.yml"
-      - "fdroid/*.py"
+  workflow_call:
   push:
     branches: [main]
     paths:
@@ -47,6 +38,11 @@ jobs:
       - name: Validate release workflow syntax and expressions
         run: |
           actionlint -shellcheck= -pyflakes= \
+            .github/workflows/ci.yml \
+            .github/workflows/rust.yml \
+            .github/workflows/android.yml \
+            .github/workflows/apple.yml \
+            .github/workflows/dependency-security.yml \
             .github/workflows/release.yml \
             .github/workflows/fdroid-native.yml \
             .github/workflows/release-scripts.yml

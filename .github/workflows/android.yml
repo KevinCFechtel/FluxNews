@@ -1,14 +1,7 @@
 name: Android
 
 on:
-  pull_request:
-    paths:
-      - "android/**"
-      - "core/**"
-      - ".gitmodules"
-      - "vendor/rustls-platform-verifier"
-      - ".github/workflows/android.yml"
-      - "docs/ANDROID_WEBLATE_LOCALIZATION.md"
+  workflow_call:
   push:
     branches:
       - main
