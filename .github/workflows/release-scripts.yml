@@ -1,0 +1,65 @@
+name: Release script contracts
+
+on:
+  pull_request:
+    paths:
+      - "Build/**"
+      - "android/Build/**"
+      - "apple/ios/Build/**"
+      - "apple/macos/Build/**"
+      - ".github/workflows/release-scripts.yml"
+      - ".github/workflows/release.yml"
+      - ".github/workflows/fdroid-native.yml"
+      - "fdroid/*.py"
+  push:
+    branches: [main]
+    paths:
+      - "Build/**"
+      - "android/Build/**"
+      - "apple/ios/Build/**"
+      - "apple/macos/Build/**"
+      - ".github/workflows/release-scripts.yml"
+      - ".github/workflows/release.yml"
+      - ".github/workflows/fdroid-native.yml"
+      - "fdroid/*.py"
+
+permissions:
+  contents: read
+
+jobs:
+  shell-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned actionlint
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/actionlint.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$archive" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          printf '%s  %s\n' "$ACTIONLINT_SHA256" "$archive" | sha256sum --check -
+          tar -xzf "$archive" -C "$RUNNER_TEMP" actionlint
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Validate release workflow syntax and expressions
+        run: |
+          actionlint -shellcheck= -pyflakes= \
+            .github/workflows/release.yml \
+            .github/workflows/fdroid-native.yml \
+            .github/workflows/release-scripts.yml
+      - name: Check shell syntax
+        run: |
+          bash -n Build/release.sh Build/test-release-cli.sh
+          bash -n Build/check-release-candidate.sh Build/sign-release-apk.sh
+          bash -n android/Build/build-app.sh
+          bash -n apple/ios/Build/build-app.sh apple/ios/Build/archive.sh apple/ios/Build/export-appstore.sh
+          bash -n apple/macos/Build/build-app.sh apple/macos/Build/archive.sh apple/macos/Build/export-appstore.sh apple/macos/Build/release-developer-id.sh apple/macos/Build/verify-sandbox.sh
+      - name: Check release CLI contract
+        run: bash Build/test-release-cli.sh
+      - name: Check scoped release orchestration contract
+        run: python3 Build/test-release-workflow-contract.py
+      - name: Check F-Droid metadata preparation offline
+        run: python3 fdroid/test_prepare_native_recipe.py

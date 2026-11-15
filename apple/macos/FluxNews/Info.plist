@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>CFBundleDevelopmentRegion</key><string>en</string><key>CFBundleDisplayName</key><string>FluxNews</string><key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string><key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string><key>CFBundleIconName</key><string>AppIcon</string><key>CFBundleInfoDictionaryVersion</key><string>6.0</string><key>CFBundleLocalizations</key><array><string>en</string><string>de</string></array><key>CFBundleName</key><string>FluxNews</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>2.0.0</string><key>CFBundleURLTypes</key><array><dict><key>CFBundleURLName</key><string>dev.kevincfechtel.fluxNews.widget</string><key>CFBundleURLSchemes</key><array><string>fluxnews</string></array></dict></array><key>CFBundleVersion</key><string>2</string>	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Arbitrary user-supplied RSS media/image hosts require URLSession HTTP support.
+		     NSAllowsArbitraryLoadsForMedia would only cover AVFoundation; see
+		     docs/APPLE_HTTP_MEDIA_ATS.md for App Store review rationale. -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+<key>LSMinimumSystemVersion</key><string>15.0</string><key>LSUIElement</key><true/><key>NSHighResolutionCapable</key><true/></dict></plist>

@@ -1,0 +1,3713 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {},
+    "·": {},
+    "%@": {},
+    "%@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ articles marked as read": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Artikel als gelesen markiert"
+          }
+        }
+      }
+    },
+    "%@ new": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ neu"
+          }
+        }
+      }
+    },
+    "%@ results": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Ergebnisse"
+          }
+        }
+      }
+    },
+    "%@, new data available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, neue Daten verfügbar"
+          }
+        }
+      }
+    },
+    "%arg": {},
+    "%arg articles marked as read": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%arg Artikel als gelesen markiert"
+          }
+        }
+      }
+    },
+    "%arg new": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%arg neu"
+          }
+        }
+      }
+    },
+    "%arg new articles": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%arg neue Artikel"
+          }
+        }
+      }
+    },
+    "%arg results": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%arg Ergebnisse"
+          }
+        }
+      }
+    },
+    "%lld new articles": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld neue Artikel"
+          }
+        }
+      }
+    },
+    "%lld unread articles": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ungelesene Artikel"
+          }
+        }
+      }
+    },
+    "© 2023 Kevin Fechtel": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "© 2023 Kevin Fechtel"
+          }
+        }
+      }
+    },
+    "1 new article": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 neuer Artikel"
+          }
+        }
+      }
+    },
+    "1 unread article": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 ungelesener Artikel"
+          }
+        }
+      }
+    },
+    "10,000 characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10.000 Zeichen"
+          }
+        }
+      }
+    },
+    "180 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "180 Tage"
+          }
+        }
+      }
+    },
+    "2 lines": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 Zeilen"
+          }
+        }
+      }
+    },
+    "20,000 characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "20.000 Zeichen"
+          }
+        }
+      }
+    },
+    "3 lines": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 Zeilen"
+          }
+        }
+      }
+    },
+    "30 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 Tage"
+          }
+        }
+      }
+    },
+    "365 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "365 Tage"
+          }
+        }
+      }
+    },
+    "5 lines": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 Zeilen"
+          }
+        }
+      }
+    },
+    "5,000 characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5.000 Zeichen"
+          }
+        }
+      }
+    },
+    "60 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "60 Tage"
+          }
+        }
+      }
+    },
+    "90 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "90 Tage"
+          }
+        }
+      }
+    },
+    "About": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über"
+          }
+        }
+      }
+    },
+    "Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "Add": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Category": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Category...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie hinzufügen..."
+          }
+        }
+      }
+    },
+    "Add Feed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Feed...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed hinzufügen..."
+          }
+        }
+      }
+    },
+    "Add Header": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Header hinzufügen"
+          }
+        }
+      }
+    },
+    "Adding...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird hinzugefügt..."
+          }
+        }
+      }
+    },
+    "Advanced": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweitert"
+          }
+        }
+      }
+    },
+    "Advanced Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweiterte Einstellungen"
+          }
+        }
+      }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        }
+      }
+    },
+    "All Feeds": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Feeds"
+          }
+        }
+      }
+    },
+    "All locally downloaded audio files will be removed. Listening List entries and playback progress remain intact.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle lokal heruntergeladenen Audiodateien werden entfernt. Einträge in der Hörliste und Wiedergabefortschritte bleiben erhalten."
+          }
+        }
+      }
+    },
+    "All locally stored support records will be deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle lokal gespeicherten Support-Protokolle werden gelöscht."
+          }
+        }
+      }
+    },
+    "All News": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Nachrichten"
+          }
+        }
+      }
+    },
+    "Any Network": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedes Netzwerk"
+          }
+        }
+      }
+    },
+    "API Key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Schlüssel"
+          }
+        }
+      }
+    },
+    "API keys and custom header values are stored securely in the macOS Keychain.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Schlüssel und Werte benutzerdefinierter Header werden sicher im macOS-Schlüsselbund gespeichert."
+          }
+        }
+      }
+    },
+    "Article image": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikelbild"
+          }
+        }
+      }
+    },
+    "Article thumbnail": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikelvorschau"
+          }
+        }
+      }
+    },
+    "Articles": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel"
+          }
+        }
+      }
+    },
+    "Audio available": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio verfügbar"
+          }
+        }
+      }
+    },
+    "Audio News added to the Listening List will appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zur Hörliste hinzugefügte Audio-Nachrichten erscheinen hier."
+          }
+        }
+      }
+    },
+    "Automatic and manual downloads use the same network policy. Retention only removes media that is no longer protected by playback or other Core media state.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für automatische und manuelle Downloads gelten dieselben Netzwerkeinstellungen. Die Aufbewahrungsregel entfernt nur Medien, die nicht mehr durch Wiedergabe oder andere Core-Medienzustände geschützt sind."
+          }
+        }
+      }
+    },
+    "Automatically download audio from this feed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio aus diesem Feed automatisch herunterladen"
+          }
+        }
+      }
+    },
+    "Automatically download items added to Listening List": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zur Hörliste hinzugefügte Elemente automatisch herunterladen"
+          }
+        }
+      }
+    },
+    "Automatically download Listening List audio": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio aus der Hörliste automatisch herunterladen"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück"
+          }
+        }
+      }
+    },
+    "Background Sync": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hintergrundsynchronisierung"
+          }
+        }
+      }
+    },
+    "Backup imported successfully.": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sicherung wurde erfolgreich importiert."
+          }
+        }
+      }
+    },
+    "Backup imported successfully. Synchronization could not be completed and will be retried later.": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sicherung wurde erfolgreich importiert. Die Synchronisierung konnte nicht abgeschlossen werden und wird später erneut versucht."
+          }
+        }
+      }
+    },
+    "Backup Password": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sicherungspasswort"
+          }
+        }
+      }
+    },
+    "Blocklist Rules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sperrlistenregeln"
+          }
+        }
+      }
+    },
+    "bookmarked": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "markiert"
+          }
+        }
+      }
+    },
+    "Bookmarks": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiert"
+          }
+        }
+      }
+    },
+    "BSD 3-Clause License": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BSD-3-Klausel-Lizenz"
+          }
+        }
+      }
+    },
+    "Build": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Cancel Download": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download abbrechen"
+          }
+        }
+      }
+    },
+    "Category": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie"
+          }
+        }
+      }
+    },
+    "Category in FluxNews": {
+      "comment": "Spotlight category description",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie in FluxNews"
+          }
+        }
+      }
+    },
+    "Category name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategoriename"
+          }
+        }
+      }
+    },
+    "Chapters": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapitel"
+          }
+        }
+      }
+    },
+    "Choose a Feed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed auswählen"
+          }
+        }
+      }
+    },
+    "Choose audio to play": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio zur Wiedergabe auswählen"
+          }
+        }
+      }
+    },
+    "Choose the FluxNews content this widget shows.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie die FluxNews-Inhalte aus, die dieses Widget anzeigt."
+          }
+        }
+      }
+    },
+    "Choose which feeds may send macOS notifications.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie aus, welche Feeds macOS-Mitteilungen senden dürfen."
+          }
+        }
+      }
+    },
+    "Clear Logs": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokolle löschen"
+          }
+        }
+      }
+    },
+    "Clear Logs?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokolle löschen?"
+          }
+        }
+      }
+    },
+    "Clear search": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche löschen"
+          }
+        }
+      }
+    },
+    "Clear Selection": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswahl aufheben"
+          }
+        }
+      }
+    },
+    "Click on News": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klick auf Nachricht"
+          }
+        }
+      }
+    },
+    "Comments available": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommentare verfügbar"
+          }
+        }
+      }
+    },
+    "Completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgeschlossen"
+          }
+        }
+      }
+    },
+    "Configuration Backup": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationssicherung"
+          }
+        }
+      }
+    },
+    "Confirm Password": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort bestätigen"
+          }
+        }
+      }
+    },
+    "Content": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inhalt"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortfahren"
+          }
+        }
+      }
+    },
+    "Control-Option-F": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ctrl-Wahl-F"
+          }
+        }
+      }
+    },
+    "Copy Link": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link kopieren"
+          }
+        }
+      }
+    },
+    "Could not add category. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Kategorie konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
+          }
+        }
+      }
+    },
+    "Could not add feed. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Feed konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
+          }
+        }
+      }
+    },
+    "Could not discover feeds. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feeds konnten nicht gefunden werden. Bitte versuchen Sie es erneut."
+          }
+        }
+      }
+    },
+    "Credentials are stored securely in the macOS Keychain.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsdaten werden sicher im macOS-Schlüsselbund gespeichert."
+          }
+        }
+      }
+    },
+    "Credentials, URLs and local media paths are redacted before support records are stored or exported.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsdaten, URLs und lokale Medienpfade werden vor dem Speichern oder Exportieren von Support-Protokollen maskiert."
+          }
+        }
+      }
+    },
+    "Custom HTTP Headers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzerdefinierte HTTP-Header"
+          }
+        }
+      }
+    },
+    "Debug Logging": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debug-Protokollierung"
+          }
+        }
+      }
+    },
+    "Deferred": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verzögert"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        }
+      }
+    },
+    "Delete All Downloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Downloads löschen"
+          }
+        }
+      }
+    },
+    "Delete All Downloads?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Downloads löschen?"
+          }
+        }
+      }
+    },
+    "Delete download after playback": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download nach der Wiedergabe löschen"
+          }
+        }
+      }
+    },
+    "Delete download after playback completes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download nach Abschluss der Wiedergabe löschen"
+          }
+        }
+      }
+    },
+    "Delete Download pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download-Löschung ausstehend"
+          }
+        }
+      }
+    },
+    "Delete Download?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download löschen?"
+          }
+        }
+      }
+    },
+    "Destructive Operations": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschvorgänge"
+          }
+        }
+      }
+    },
+    "Detail Preview": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailvorschau"
+          }
+        }
+      }
+    },
+    "Detail Rendering": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detaildarstellung"
+          }
+        }
+      }
+    },
+    "Disabled": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktiviert"
+          }
+        }
+      }
+    },
+    "Discard synchronized local content. Miniflux becomes authoritative again; FluxNews and Feed Settings are preserved. Unsynchronized Read or Star changes may be lost.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisierte lokale Inhalte werden verworfen. Miniflux ist anschließend wieder maßgeblich; FluxNews und Feed-Einstellungen bleiben erhalten. Nicht synchronisierte Änderungen an Gelesen oder Markiert können verloren gehen."
+          }
+        }
+      }
+    },
+    "Discovering...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird gesucht..."
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        }
+      }
+    },
+    "Download": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herunterladen"
+          }
+        }
+      }
+    },
+    "Download Network": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download-Netzwerk"
+          }
+        }
+      }
+    },
+    "Downloaded audio for this item will also be deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das heruntergeladene Audio dieses Eintrags wird ebenfalls gelöscht."
+          }
+        }
+      }
+    },
+    "Downloaded Data": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heruntergeladene Daten"
+          }
+        }
+      }
+    },
+    "Downloaded Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heruntergeladene Dateien"
+          }
+        }
+      }
+    },
+    "Downloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads"
+          }
+        }
+      }
+    },
+    "Downloads audio automatically when an item is added to Listening List.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lädt Audio automatisch herunter, wenn ein Element zur Hörliste hinzugefügt wird."
+          }
+        }
+      }
+    },
+    "Duration": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dauer"
+          }
+        }
+      }
+    },
+    "Encrypt Configuration Backup": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationssicherung verschlüsseln"
+          }
+        }
+      }
+    },
+    "Enter a backup password.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie ein Sicherungspasswort ein."
+          }
+        }
+      }
+    },
+    "Enter a query and press Return.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie einen Suchbegriff ein und drücken Sie die Eingabetaste."
+          }
+        }
+      }
+    },
+    "Enter a website or feed URL. Flux asks Miniflux to discover available subscriptions.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie eine Website- oder Feed-URL ein. Flux bittet Miniflux, verfügbare Abonnements zu finden."
+          }
+        }
+      }
+    },
+    "entity.category.type": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
+    "entity.feed.type": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        }
+      }
+    },
+    "Export": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportieren"
+          }
+        }
+      }
+    },
+    "Export Configuration Backup...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationssicherung exportieren..."
+          }
+        }
+      }
+    },
+    "Export Diagnostics…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnosedaten exportieren…"
+          }
+        }
+      }
+    },
+    "Export or import your account, FluxNews settings, Feed Settings, and macOS preferences. Backups are password encrypted.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportieren oder importieren Sie Ihren Account, FluxNews-Einstellungen, Feed-Einstellungen und macOS-Einstellungen. Sicherungen werden mit einem Passwort verschlüsselt."
+          }
+        }
+      }
+    },
+    "Export or import your account, FluxNews settings, Feed Settings, and macOS preferences. Configuration backups are password encrypted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto, FluxNews-Einstellungen, Feed-Einstellungen und macOS-Einstellungen exportieren oder importieren. Konfigurationssicherungen werden mit einem Passwort verschlüsselt."
+          }
+        }
+      }
+    },
+    "Feed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        }
+      }
+    },
+    "Feed icon": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed-Symbol"
+          }
+        }
+      }
+    },
+    "Feed in FluxNews": {
+      "comment": "Spotlight feed description",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed in FluxNews"
+          }
+        }
+      }
+    },
+    "Feed Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed-Einstellungen"
+          }
+        }
+      }
+    },
+    "Feed Settings...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed-Einstellungen..."
+          }
+        }
+      }
+    },
+    "Feeds": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feeds"
+          }
+        }
+      }
+    },
+    "Filter by Feed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Feed filtern"
+          }
+        }
+      }
+    },
+    "Flux could not resolve the Miniflux entry URL.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flux konnte die Miniflux-URL für diesen Eintrag nicht ermitteln."
+          }
+        }
+      }
+    },
+    "Flux Development Repository": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flux-Entwicklungsrepository"
+          }
+        }
+      }
+    },
+    "Flux News": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flux News"
+          }
+        }
+      }
+    },
+    "Flux News is a newsreader and podcast client for the Miniflux backend.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flux News ist ein Newsreader- und Podcast-Client für das Miniflux-Backend."
+          }
+        }
+      }
+    },
+    "Flux News is open source. The Flux repository contains the native development history and shared Rust Core.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flux News ist Open Source. Das Flux-Repository enthält die Entwicklungshistorie der nativen Apps und den gemeinsamen Rust-Core."
+          }
+        }
+      }
+    },
+    "FluxNews cannot recover this password.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews kann dieses Passwort nicht wiederherstellen."
+          }
+        }
+      }
+    },
+    "FluxNews could not be fully reset.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews konnte nicht vollständig zurückgesetzt werden."
+          }
+        }
+      }
+    },
+    "FluxNews notification permission is disabled. Enable notifications in macOS System Settings to use System Notifications.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Mitteilungsberechtigung für FluxNews ist deaktiviert. Aktivieren Sie Mitteilungen in den macOS-Systemeinstellungen, um Systemmitteilungen zu verwenden."
+          }
+        }
+      }
+    },
+    "FluxNews Repository": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews-Repository"
+          }
+        }
+      }
+    },
+    "FluxNews Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews-Einstellungen"
+          }
+        }
+      }
+    },
+    "FluxNews was reset": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews wurde zurückgesetzt"
+          }
+        }
+      }
+    },
+    "General": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "Global shortcut": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Globales Tastenkürzel"
+          }
+        }
+      }
+    },
+    "Global Shortcut": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Globaler Kurzbefehl"
+          }
+        }
+      }
+    },
+    "Header Name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Header-Name"
+          }
+        }
+      }
+    },
+    "Hide empty feeds": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leere Feeds ausblenden"
+          }
+        }
+      }
+    },
+    "Hide Empty Feeds / Categories": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leere Feeds / Kategorien ausblenden"
+          }
+        }
+      }
+    },
+    "Hide header value": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Headerwert ausblenden"
+          }
+        }
+      }
+    },
+    "Hide navigation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigation ausblenden"
+          }
+        }
+      }
+    },
+    "https://example.com": {},
+    "Immediate delivery saves read/unread and star changes locally first and then sends them to Miniflux. Failed delivery remains pending for a later retry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim sofortigen Übertragen werden Änderungen am Lesestatus und an Markierungen zunächst lokal gespeichert und anschließend an Miniflux gesendet. Fehlgeschlagene Übertragungen werden später erneut versucht."
+          }
+        }
+      }
+    },
+    "Immediately": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sofort"
+          }
+        }
+      }
+    },
+    "Import": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importieren"
+          }
+        }
+      }
+    },
+    "Import Configuration Backup": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationssicherung importieren"
+          }
+        }
+      }
+    },
+    "Import Configuration Backup...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationssicherung importieren..."
+          }
+        }
+      }
+    },
+    "Info, warning and error records are always retained. Debug and trace records require Debug Logging.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Info-, Warn- und Fehlereinträge werden immer gespeichert. Debug- und Trace-Einträge erfordern aktivierte Debug-Protokollierung."
+          }
+        }
+      }
+    },
+    "intent.category.description": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine bestimmte Kategorie in FluxNews öffnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a specific category in FluxNews."
+          }
+        }
+      }
+    },
+    "intent.category.parameter": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
+    "intent.category.title": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Category"
+          }
+        }
+      }
+    },
+    "intent.feed.description": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen bestimmten Feed in FluxNews öffnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a specific feed in FluxNews."
+          }
+        }
+      }
+    },
+    "intent.feed.parameter": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        }
+      }
+    },
+    "intent.feed.title": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Feed"
+          }
+        }
+      }
+    },
+    "intent.open.description": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den FluxNews-Posteingang öffnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the FluxNews inbox."
+          }
+        }
+      }
+    },
+    "intent.open.title": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open FluxNews"
+          }
+        }
+      }
+    },
+    "intent.refresh.description": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews mit Miniflux aktualisieren."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh FluxNews from Miniflux."
+          }
+        }
+      }
+    },
+    "intent.refresh.title": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews aktualisieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh FluxNews"
+          }
+        }
+      }
+    },
+    "intent.starred.description": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markierte Artikel in FluxNews öffnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open starred articles in FluxNews."
+          }
+        }
+      }
+    },
+    "intent.starred.title": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markierte anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Starred"
+          }
+        }
+      }
+    },
+    "Keep Downloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads behalten"
+          }
+        }
+      }
+    },
+    "Keep read articles": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelesene Artikel behalten"
+          }
+        }
+      }
+    },
+    "Keeplist Rules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Positivlistenregeln"
+          }
+        }
+      }
+    },
+    "Last sync:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Synchronisierung:"
+          }
+        }
+      }
+    },
+    "Last sync: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Synchronisierung: %@"
+          }
+        }
+      }
+    },
+    "Launch automatically at login": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Anmelden automatisch starten"
+          }
+        }
+      }
+    },
+    "Layout": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
+          }
+        }
+      }
+    },
+    "Level": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stufe"
+          }
+        }
+      }
+    },
+    "Listening List": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hörliste"
+          }
+        }
+      }
+    },
+    "Listening List is Empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hörliste ist leer"
+          }
+        }
+      }
+    },
+    "Listening List unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hörliste nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Live": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sofort"
+          }
+        }
+      }
+    },
+    "Loading article...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel wird geladen..."
+          }
+        }
+      }
+    },
+    "Loading Miniflux...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux wird geladen..."
+          }
+        }
+      }
+    },
+    "Local state rebuilt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokaler Zustand wurde neu aufgebaut"
+          }
+        }
+      }
+    },
+    "Local state was cleared, but synchronization could not be completed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der lokale Zustand wurde gelöscht, aber die Synchronisierung konnte nicht abgeschlossen werden."
+          }
+        }
+      }
+    },
+    "Mark All as Read": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle als gelesen markieren"
+          }
+        }
+      }
+    },
+    "Mark All as Read & Next": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle als gelesen markieren und weiter"
+          }
+        }
+      }
+    },
+    "Mark articles as read when scrolling past": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel beim Vorbeiscrollen als gelesen markieren"
+          }
+        }
+      }
+    },
+    "Mark as Read": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als gelesen markieren"
+          }
+        }
+      }
+    },
+    "Mark as Unread": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als ungelesen markieren"
+          }
+        }
+      }
+    },
+    "Mark read on scrollover": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Vorbeiscrollen als gelesen markieren"
+          }
+        }
+      }
+    },
+    "Media": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medien"
+          }
+        }
+      }
+    },
+    "Media / Listening List": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medien / Hörliste"
+          }
+        }
+      }
+    },
+    "Miniflux": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux"
+          }
+        }
+      }
+    },
+    "Miniflux found multiple subscriptions for this URL.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux hat mehrere Abonnements für diese URL gefunden."
+          }
+        }
+      }
+    },
+    "Miniflux Project": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux-Projekt"
+          }
+        }
+      }
+    },
+    "Miniflux Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux-Server"
+          }
+        }
+      }
+    },
+    "Mixed / Unchanged": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemischt / Unverändert"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr"
+          }
+        }
+      }
+    },
+    "Mutation Delivery": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übermittlung von Änderungen"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "Navigation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigation"
+          }
+        }
+      }
+    },
+    "Never": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie"
+          }
+        }
+      }
+    },
+    "New articles available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Artikel verfügbar"
+          }
+        }
+      }
+    },
+    "Newest First": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neueste zuerst"
+          }
+        }
+      }
+    },
+    "No article selected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Artikel ausgewählt"
+          }
+        }
+      }
+    },
+    "No articles": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Artikel"
+          }
+        }
+      }
+    },
+    "No bookmarks": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Markierungen"
+          }
+        }
+      }
+    },
+    "No download information available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Download-Informationen verfügbar."
+          }
+        }
+      }
+    },
+    "No feeds available": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Feeds verfügbar"
+          }
+        }
+      }
+    },
+    "No feeds available.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Feeds verfügbar."
+          }
+        }
+      }
+    },
+    "No Miniflux entries matched your search.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Miniflux-Einträge entsprechen Ihrer Suche."
+          }
+        }
+      }
+    },
+    "No results": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Ergebnisse"
+          }
+        }
+      }
+    },
+    "No third-party integration is configured in Miniflux": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Miniflux ist keine Drittanbieterintegration eingerichtet"
+          }
+        }
+      }
+    },
+    "No unread news": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine ungelesenen Nachrichten"
+          }
+        }
+      }
+    },
+    "Not played yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nicht angehört"
+          }
+        }
+      }
+    },
+    "Off": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        }
+      }
+    },
+    "Oldest First": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Älteste zuerst"
+          }
+        }
+      }
+    },
+    "On": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein"
+          }
+        }
+      }
+    },
+    "Only downloaded media files are removed. Listening List items and playback progress are preserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es werden nur heruntergeladene Mediendateien entfernt. Einträge in der Hörliste und Wiedergabefortschritte bleiben erhalten."
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen"
+          }
+        }
+      }
+    },
+    "Open %arg in FluxNews": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%arg in FluxNews öffnen"
+          }
+        }
+      }
+    },
+    "Open article": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel öffnen"
+          }
+        }
+      }
+    },
+    "Open Comments": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommentare öffnen"
+          }
+        }
+      }
+    },
+    "Open Detail View": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailansicht öffnen"
+          }
+        }
+      }
+    },
+    "Open image": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild öffnen"
+          }
+        }
+      }
+    },
+    "Open in Miniflux": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Miniflux öffnen"
+          }
+        }
+      }
+    },
+    "Open Link": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link öffnen"
+          }
+        }
+      }
+    },
+    "Open Original": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original öffnen"
+          }
+        }
+      }
+    },
+    "Open Source": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Source"
+          }
+        }
+      }
+    },
+    "Option-Command-F": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wahl-Befehl-F"
+          }
+        }
+      }
+    },
+    "Optional": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        }
+      }
+    },
+    "Original link": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original-Link"
+          }
+        }
+      }
+    },
+    "Password": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort"
+          }
+        }
+      }
+    },
+    "Playback failed. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabe fehlgeschlagen. Bitte erneut versuchen."
+          }
+        }
+      }
+    },
+    "Playback Speed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabegeschwindigkeit"
+          }
+        }
+      }
+    },
+    "Playback timeline": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabeverlauf"
+          }
+        }
+      }
+    },
+    "Playback timeline unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabeverlauf nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Presentation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darstellung"
+          }
+        }
+      }
+    },
+    "Preview lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschauzeilen"
+          }
+        }
+      }
+    },
+    "Preview Lines": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschauzeilen"
+          }
+        }
+      }
+    },
+    "Processing…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird verarbeitet…"
+          }
+        }
+      }
+    },
+    "Publication Date": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veröffentlichungsdatum"
+          }
+        }
+      }
+    },
+    "Quit FluxNews": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews beenden"
+          }
+        }
+      }
+    },
+    "Read article retention controls how long synchronized read items remain in local history. The Reader detail limit controls how much article text the Core keeps when a feed uses truncated Reader content.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Aufbewahrungsdauer legt fest, wie lange synchronisierte gelesene Artikel im lokalen Verlauf bleiben. Das Reader-Textlimit bestimmt, wie viel Artikeltext der Core behält, wenn ein Feed gekürzte Reader-Inhalte verwendet."
+          }
+        }
+      }
+    },
+    "Reader": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader"
+          }
+        }
+      }
+    },
+    "Reader detail limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader-Textlimit"
+          }
+        }
+      }
+    },
+    "Reader Detail Limit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader-Textlimit"
+          }
+        }
+      }
+    },
+    "Rebuild": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu aufbauen"
+          }
+        }
+      }
+    },
+    "Rebuild Local State?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalen Zustand neu aufbauen?"
+          }
+        }
+      }
+    },
+    "Rebuild Local State...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalen Zustand neu aufbauen..."
+          }
+        }
+      }
+    },
+    "Recently Added": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kürzlich hinzugefügt"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh failed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisierung fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Refresh Miniflux now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux jetzt aktualisieren"
+          }
+        }
+      }
+    },
+    "Reload Feed Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed-Einstellungen neu laden"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        }
+      }
+    },
+    "Remove article from list when marked read": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel aus der Liste entfernen, wenn er als gelesen markiert wird"
+          }
+        }
+      }
+    },
+    "Remove articles when read": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel nach dem Lesen entfernen"
+          }
+        }
+      }
+    },
+    "Remove completed items from Listening List": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgeschlossene Elemente aus der Hörliste entfernen"
+          }
+        }
+      }
+    },
+    "Remove from Listening List": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Hörliste entfernen"
+          }
+        }
+      }
+    },
+    "Remove from Listening List?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus der Hörliste entfernen?"
+          }
+        }
+      }
+    },
+    "Remove the configured account, API key, Core and Feed Settings, local data, and FluxNews preferences.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den eingerichteten Account, API-Schlüssel, Core- und Feed-Einstellungen, lokale Daten und FluxNews-Einstellungen entfernen."
+          }
+        }
+      }
+    },
+    "Removes the item from Listening List after all of its audio has been completed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernt das Element aus der Hörliste, nachdem alle Audios abgeschlossen wurden."
+          }
+        }
+      }
+    },
+    "Removes the local download after playback is completed. The item remains in Listening List.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löscht den lokalen Download nach Abschluss der Wiedergabe. Das Element bleibt in der Hörliste."
+          }
+        }
+      }
+    },
+    "Rendered": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formatiert"
+          }
+        }
+      }
+    },
+    "Replace": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzen"
+          }
+        }
+      }
+    },
+    "Replace Playing Audio?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laufende Wiedergabe ersetzen?"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset FluxNews?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews zurücksetzen?"
+          }
+        }
+      }
+    },
+    "Reset FluxNews...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FluxNews zurücksetzen..."
+          }
+        }
+      }
+    },
+    "Retention": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufbewahrung"
+          }
+        }
+      }
+    },
+    "Rewrite Rules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umschreibregeln"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern"
+          }
+        }
+      }
+    },
+    "Save to Third-Party Service": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Drittanbieterdienst speichern"
+          }
+        }
+      }
+    },
+    "Saved to third-party service": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Drittanbieterdienst gespeichert"
+          }
+        }
+      }
+    },
+    "Scraper Rules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scraper-Regeln"
+          }
+        }
+      }
+    },
+    "Search failed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Search feeds": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feeds durchsuchen"
+          }
+        }
+      }
+    },
+    "Search log records": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokolle durchsuchen"
+          }
+        }
+      }
+    },
+    "Search Miniflux": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux durchsuchen"
+          }
+        }
+      }
+    },
+    "Searching Miniflux...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux wird durchsucht..."
+          }
+        }
+      }
+    },
+    "Select feeds above to edit their shared settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle oben Feeds aus, um ihre gemeinsamen Einstellungen zu bearbeiten."
+          }
+        }
+      }
+    },
+    "Select several feeds to change their shared settings. Mixed means the selected feeds have different values; only the property you change is updated.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle mehrere Feeds aus, um ihre gemeinsamen Einstellungen zu ändern. „Gemischt“ bedeutet, dass die ausgewählten Feeds unterschiedliche Werte haben. Nur ausdrücklich geänderte Einstellungen werden aktualisiert."
+          }
+        }
+      }
+    },
+    "Selected category unavailable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählte Kategorie nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Selected feed unavailable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewählter Feed nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Settings...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen..."
+          }
+        }
+      }
+    },
+    "Share": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilen"
+          }
+        }
+      }
+    },
+    "Share...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilen..."
+          }
+        }
+      }
+    },
+    "Show All News": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Nachrichten anzeigen"
+          }
+        }
+      }
+    },
+    "Show article count": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikelanzahl anzeigen"
+          }
+        }
+      }
+    },
+    "Show Feed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed anzeigen"
+          }
+        }
+      }
+    },
+    "Show header value": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Headerwert anzeigen"
+          }
+        }
+      }
+    },
+    "Show navigation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigation einblenden"
+          }
+        }
+      }
+    },
+    "Show Notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shownotes"
+          }
+        }
+      }
+    },
+    "Show Notes unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shownotes nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Show relative publication time": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veröffentlichungszeit relativ anzeigen"
+          }
+        }
+      }
+    },
+    "Show Unread News Only": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur ungelesene Nachrichten anzeigen"
+          }
+        }
+      }
+    },
+    "Sleep Timer": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlaftimer"
+          }
+        }
+      }
+    },
+    "Some content was simplified": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Inhalte wurden vereinfacht"
+          }
+        }
+      }
+    },
+    "Some content was simplified and truncated": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Inhalte wurden vereinfacht und gekürzt"
+          }
+        }
+      }
+    },
+    "Some content was truncated": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Inhalte wurden gekürzt"
+          }
+        }
+      }
+    },
+    "Something went wrong. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+          }
+        }
+      }
+    },
+    "Sort": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortieren"
+          }
+        }
+      }
+    },
+    "Sort Order": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortierung"
+          }
+        }
+      }
+    },
+    "Star": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markieren"
+          }
+        }
+      }
+    },
+    "Starred": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiert"
+          }
+        }
+      }
+    },
+    "Startup category": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startkategorie"
+          }
+        }
+      }
+    },
+    "Startup Category": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startkategorie"
+          }
+        }
+      }
+    },
+    "Startup feed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startfeed"
+          }
+        }
+      }
+    },
+    "Startup Feed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startfeed"
+          }
+        }
+      }
+    },
+    "Startup scope": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startbereich"
+          }
+        }
+      }
+    },
+    "Startup Scope": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startbereich"
+          }
+        }
+      }
+    },
+    "Storage & Reader": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicher & Reader"
+          }
+        }
+      }
+    },
+    "Support Diagnostics": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support-Diagnose"
+          }
+        }
+      }
+    },
+    "Sync": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisieren"
+          }
+        }
+      }
+    },
+    "Sync article changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikeländerungen synchronisieren"
+          }
+        }
+      }
+    },
+    "Sync on Start": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Start synchronisieren"
+          }
+        }
+      }
+    },
+    "Sync your Miniflux account to load feeds.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisiere dein Miniflux-Konto, um die Feeds zu laden."
+          }
+        }
+      }
+    },
+    "Synchronized local content will be discarded and Miniflux will become authoritative again. FluxNews and Feed Settings are preserved.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisierte lokale Inhalte werden verworfen und Miniflux ist wieder maßgeblich. FluxNews und Feed-Einstellungen bleiben erhalten."
+          }
+        }
+      }
+    },
+    "System Notifications": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemmitteilungen"
+          }
+        }
+      }
+    },
+    "Text Only": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Text"
+          }
+        }
+      }
+    },
+    "The account could not be saved.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Account konnte nicht gesichert werden."
+          }
+        }
+      }
+    },
+    "The backup could not be imported. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Sicherung konnte nicht importiert werden. Bitte versuchen Sie es erneut."
+          }
+        }
+      }
+    },
+    "The currently playing audio will be replaced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das aktuell wiedergegebene Audio wird ersetzt."
+          }
+        }
+      }
+    },
+    "The downloaded audio file will be deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die heruntergeladene Audiodatei wird gelöscht."
+          }
+        }
+      }
+    },
+    "The passwords do not match.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Passwörter stimmen nicht überein."
+          }
+        }
+      }
+    },
+    "The validated account could not be configured. Your previous account is still active.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der geprüfte Account konnte nicht eingerichtet werden. Ihr bisheriger Account bleibt aktiv."
+          }
+        }
+      }
+    },
+    "There are no articles in this selection.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In dieser Auswahl sind keine Artikel vorhanden."
+          }
+        }
+      }
+    },
+    "This Miniflux server uses unencrypted HTTP. Account credentials and feed traffic are not protected by HTTPS.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Miniflux-Server verwendet unverschlüsseltes HTTP. Account-Zugangsdaten und Feed-Datenverkehr sind nicht durch HTTPS geschützt."
+          }
+        }
+      }
+    },
+    "This removes your account, API key, settings, Feed Settings, and local data. FluxNews will return to its first-run state.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dadurch werden Ihr Account, API-Schlüssel, Einstellungen, Feed-Einstellungen und lokale Daten entfernt. FluxNews kehrt zum Zustand beim ersten Start zurück."
+          }
+        }
+      }
+    },
+    "Truncate Detail": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailansicht kürzen"
+          }
+        }
+      }
+    },
+    "Unable to load article": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artikel kann nicht geladen werden"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückgängig"
+          }
+        }
+      }
+    },
+    "Unmetered Networks Only": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur nicht getaktete Netzwerke"
+          }
+        }
+      }
+    },
+    "unread": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ungelesen"
+          }
+        }
+      }
+    },
+    "Unread": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungelesen"
+          }
+        }
+      }
+    },
+    "Unstar": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markierung entfernen"
+          }
+        }
+      }
+    },
+    "URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL"
+          }
+        }
+      }
+    },
+    "Use Miniflux default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miniflux-Standard verwenden"
+          }
+        }
+      }
+    },
+    "Used Storage": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belegter Speicher"
+          }
+        }
+      }
+    },
+    "User Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-Agent"
+          }
+        }
+      }
+    },
+    "Username": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzername"
+          }
+        }
+      }
+    },
+    "Validating…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird überprüft…"
+          }
+        }
+      }
+    },
+    "Value": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert"
+          }
+        }
+      }
+    },
+    "Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "When enabled, FluxNews may refresh news in the background and when you return to the app. Manual Sync remains available at all times.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn aktiviert, kann FluxNews Nachrichten im Hintergrund und bei der Rückkehr zur App aktualisieren. Die manuelle Synchronisierung bleibt jederzeit verfügbar."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

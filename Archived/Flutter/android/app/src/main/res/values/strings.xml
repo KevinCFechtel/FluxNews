@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="flux_news_widget_description">Unread count and latest headlines from Flux News</string>
+    <string name="flux_news_widget_feed_icon">Feed icon</string>
+</resources>

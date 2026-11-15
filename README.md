@@ -1,6 +1,37 @@
 # Flux News & Podcasts
 
-<img src="assets/Flux_News_Starticon_Blue_Mac.png" width="150">
+<img src="Archived/Flutter/assets/Flux_News_Starticon_Blue_Mac.png" width="150">
+
+## Native development
+
+FluxNews is the development repository for the shared Rust core and native
+Android, iOS/iPadOS and macOS clients:
+
+- `core/` — Rust workspace and its single tracked `Cargo.lock`;
+- `android/` — native Kotlin/Jetpack Compose client;
+- `apple/` — native Apple clients and canonical UniFFI packaging;
+- `Build/` — platform version inputs and release tooling;
+- `docs/` and `AGENTS.md` — unchanged native documentation and agent instructions.
+
+Initialize the native source dependency with:
+
+```bash
+git submodule update --init --recursive -- vendor/rustls-platform-verifier
+```
+
+See [native development notes](NATIVE_DEVELOPMENT.md), the
+[native architecture](docs/ARCHITECTURE_DECISIONS.md), and the
+[migration record and remaining cutover requirements](MIGRATION.md).
+The repository migration is not an application release.
+
+## Published Flutter application
+
+The download links, screenshots, feature descriptions and limitations below
+describe the published Flutter application. They are retained as product history,
+not as a certification of native feature parity or a new native release.
+Its implementation and separately reviewed local documentation are preserved
+under [Archived/Flutter](Archived/Flutter/README.md). The Flutter SDK is no
+longer an active submodule; its exact revision is documented there.
 
 A privacy-first Newsreader and Podcast player for the Miniflux backend ([https://miniflux.app](https://miniflux.app)). 
 
@@ -26,7 +57,7 @@ Flux News requires Miniflux version >= [2.0.29](https://miniflux.app/releases/2.
 
 The unread articles should appear in the app.
 
-## Screenshots
+## Screenshots (published Flutter version)
 ### Phone
 <p float="left">
 <img src="metadata/en-US/images/phoneScreenshots/screenshot1.png" width="300">

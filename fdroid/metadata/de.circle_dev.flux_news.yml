@@ -1,0 +1,2914 @@
+Categories:
+  - Internet
+  - News
+  - Reading
+License: BSD-3-Clause
+AuthorName: Kevin Fechtel
+WebSite: https://github.com/KevinCFechtel/FluxNews
+SourceCode: https://github.com/KevinCFechtel/FluxNews
+IssueTracker: https://github.com/KevinCFechtel/FluxNews/issues
+
+AutoName: Flux News
+
+RepoType: git
+Repo: https://github.com/KevinCFechtel/FluxNews.git
+
+Builds:
+  - versionName: 1.3.1
+    versionCode: 2023112511
+    commit: v1.3.1
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.1
+    versionCode: 2023112512
+    commit: v1.3.1
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.1
+    versionCode: 2023112513
+    commit: v1.3.1
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.2
+    versionCode: 2023121511
+    commit: d5428ce4cea5af944401db15ee80359a0cd18661
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.2
+    versionCode: 2023121512
+    commit: d5428ce4cea5af944401db15ee80359a0cd18661
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.2
+    versionCode: 2023121513
+    commit: d5428ce4cea5af944401db15ee80359a0cd18661
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.3
+    versionCode: 2023122011
+    commit: eb66c39398bd1eca15863b0a59ad6de07d310154
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.3
+    versionCode: 2023122012
+    commit: eb66c39398bd1eca15863b0a59ad6de07d310154
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.3
+    versionCode: 2023122013
+    commit: eb66c39398bd1eca15863b0a59ad6de07d310154
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.4
+    versionCode: 2023123111
+    commit: 1309e801f56407d0e22c6627aca796db415eef4e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.4
+    versionCode: 2023123112
+    commit: 1309e801f56407d0e22c6627aca796db415eef4e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.4
+    versionCode: 2023123113
+    commit: 1309e801f56407d0e22c6627aca796db415eef4e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.5
+    versionCode: 2024010711
+    commit: 1e85be9d265900f60a1c4b96b0030839dcbc9338
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.5
+    versionCode: 2024010712
+    commit: 1e85be9d265900f60a1c4b96b0030839dcbc9338
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.5
+    versionCode: 2024010713
+    commit: 1e85be9d265900f60a1c4b96b0030839dcbc9338
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.6
+    versionCode: 2024022611
+    commit: 0e036efb870915566e1fe8083c3d7299d94b8162
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.6
+    versionCode: 2024022612
+    commit: 0e036efb870915566e1fe8083c3d7299d94b8162
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.6
+    versionCode: 2024022613
+    commit: 0e036efb870915566e1fe8083c3d7299d94b8162
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.7
+    versionCode: 2024032931
+    commit: 71493c35a788463a8fa9b95f5031ec120d8d7e9f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.7
+    versionCode: 2024032932
+    commit: 71493c35a788463a8fa9b95f5031ec120d8d7e9f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.7
+    versionCode: 2024032933
+    commit: 71493c35a788463a8fa9b95f5031ec120d8d7e9f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.3.8
+    versionCode: 2024033111
+    commit: f1ed74c54730e0c2d9a9e6a39489da5e23fb5161
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.3.8
+    versionCode: 2024033112
+    commit: f1ed74c54730e0c2d9a9e6a39489da5e23fb5161
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.3.8
+    versionCode: 2024033113
+    commit: f1ed74c54730e0c2d9a9e6a39489da5e23fb5161
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.4.1
+    versionCode: 2024040731
+    commit: 9ef19849b7b5289367952cb97d0c6f8b07b847ef
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.4.1
+    versionCode: 2024040732
+    commit: 9ef19849b7b5289367952cb97d0c6f8b07b847ef
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.4.1
+    versionCode: 2024040733
+    commit: 9ef19849b7b5289367952cb97d0c6f8b07b847ef
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.4.2
+    versionCode: 2024041111
+    commit: d0a4a7e9811c1bed8e8266b0f07ce2536fb4161d
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+
+  - versionName: 1.4.2
+    versionCode: 2024041112
+    commit: d0a4a7e9811c1bed8e8266b0f07ce2536fb4161d
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+
+  - versionName: 1.4.2
+    versionCode: 2024041113
+    commit: d0a4a7e9811c1bed8e8266b0f07ce2536fb4161d
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+
+  - versionName: 1.4.3
+    versionCode: 2024060811
+    commit: e07997f0d0ec0498731544649da6a74238412f42
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.4.3
+    versionCode: 2024060812
+    commit: e07997f0d0ec0498731544649da6a74238412f42
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.4.3
+    versionCode: 2024060813
+    commit: e07997f0d0ec0498731544649da6a74238412f42
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.1
+    versionCode: 2024061741
+    commit: d29ace20fc861bd483a9353f0f66f7f8fa0b1f8b
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.1
+    versionCode: 2024061742
+    commit: d29ace20fc861bd483a9353f0f66f7f8fa0b1f8b
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.1
+    versionCode: 2024061743
+    commit: d29ace20fc861bd483a9353f0f66f7f8fa0b1f8b
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.2
+    versionCode: 2024062511
+    commit: 626e1ed7ab39bdd6c0990ee3185885619c8b9917
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.2
+    versionCode: 2024062512
+    commit: 626e1ed7ab39bdd6c0990ee3185885619c8b9917
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.2
+    versionCode: 2024062513
+    commit: 626e1ed7ab39bdd6c0990ee3185885619c8b9917
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.3
+    versionCode: 2024070311
+    commit: 6d16e978e33ae8475da8cf78759699722bfa248e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.3
+    versionCode: 2024070312
+    commit: 6d16e978e33ae8475da8cf78759699722bfa248e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.3
+    versionCode: 2024070313
+    commit: 6d16e978e33ae8475da8cf78759699722bfa248e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-1.3.1/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.4
+    versionCode: 2024072111
+    commit: f92296c0f79dceea4e98c94c52becb9af99a00d0
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.4
+    versionCode: 2024072112
+    commit: f92296c0f79dceea4e98c94c52becb9af99a00d0
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.4
+    versionCode: 2024072113
+    commit: f92296c0f79dceea4e98c94c52becb9af99a00d0
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.5
+    versionCode: 2024081611
+    commit: b6f7b2371497ba575238a46ab0871ff8b60d2781
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.5
+    versionCode: 2024081612
+    commit: b6f7b2371497ba575238a46ab0871ff8b60d2781
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.5.5
+    versionCode: 2024081613
+    commit: b6f7b2371497ba575238a46ab0871ff8b60d2781
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.6.2
+    versionCode: 2024082631
+    commit: 14d0b37a6004b8eb02954243d1a1477eb0088f05
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.6.2
+    versionCode: 2024082632
+    commit: 14d0b37a6004b8eb02954243d1a1477eb0088f05
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.6.2
+    versionCode: 2024082633
+    commit: 14d0b37a6004b8eb02954243d1a1477eb0088f05
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.7.1
+    versionCode: 2024092311
+    commit: e981a43946bb0253cfde1ef5c57cdc92fc10ac43
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.7.1
+    versionCode: 2024092312
+    commit: e981a43946bb0253cfde1ef5c57cdc92fc10ac43
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.7.1
+    versionCode: 2024092313
+    commit: e981a43946bb0253cfde1ef5c57cdc92fc10ac43
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.7.3
+    versionCode: 2025051421
+    commit: 3feafd076c7ab313c3368dddc1b919fbae76558f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - android/app
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.7.3
+    versionCode: 2025051422
+    commit: 3feafd076c7ab313c3368dddc1b919fbae76558f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - android/app
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.7.3
+    versionCode: 2025051423
+    commit: 3feafd076c7ab313c3368dddc1b919fbae76558f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - android/app
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.8.1
+    versionCode: 2025092011
+    commit: cc41fd567762cf229f4f3f1362bbaea0f35a710f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.8.1
+    versionCode: 2025092012
+    commit: cc41fd567762cf229f4f3f1362bbaea0f35a710f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.8.1
+    versionCode: 2025092013
+    commit: cc41fd567762cf229f4f3f1362bbaea0f35a710f
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.9.1
+    versionCode: 2025101911
+    commit: d7a7675cd6e72087b8e9d538eb4056df43e5f4ba
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.9.1
+    versionCode: 2025101912
+    commit: d7a7675cd6e72087b8e9d538eb4056df43e5f4ba
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.9.1
+    versionCode: 2025101913
+    commit: d7a7675cd6e72087b8e9d538eb4056df43e5f4ba
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.9.2
+    versionCode: 2025102411
+    commit: eb335860c1dd1aeb9fb42ba77a2b7457bd6e7bec
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.9.2
+    versionCode: 2025102412
+    commit: eb335860c1dd1aeb9fb42ba77a2b7457bd6e7bec
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.9.2
+    versionCode: 2025102413
+    commit: eb335860c1dd1aeb9fb42ba77a2b7457bd6e7bec
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.10.1
+    versionCode: 2025110221
+    commit: e97f013b4f0ffdab37eaa586a0b7cd043e814676
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.10.1
+    versionCode: 2025110222
+    commit: e97f013b4f0ffdab37eaa586a0b7cd043e814676
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.10.1
+    versionCode: 2025110223
+    commit: e97f013b4f0ffdab37eaa586a0b7cd043e814676
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+      - sed -i -e 's/8.12.1/8.11.1/'
+        .pub-cache/hosted/pub.dev/{{path_provider,sqflite,url_launcher}_android,share_plus}-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+
+  - versionName: 1.11.1
+    versionCode: 2026011821
+    commit: d1c10ab8897461c989234e0636acd08909494030
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.11.1
+    versionCode: 2026011822
+    commit: d1c10ab8897461c989234e0636acd08909494030
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.11.1
+    versionCode: 2026011823
+    commit: d1c10ab8897461c989234e0636acd08909494030
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.11.2
+    versionCode: 2026012411
+    commit: e606543ac6fc49245d665143e2ebca4097b21bed
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.11.2
+    versionCode: 2026012412
+    commit: e606543ac6fc49245d665143e2ebca4097b21bed
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.11.2
+    versionCode: 2026012413
+    commit: e606543ac6fc49245d665143e2ebca4097b21bed
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.12.1
+    versionCode: 2026012711
+    commit: d8c7de66925c2ca19183b7ce3f56869285deacb4
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.12.1
+    versionCode: 2026012712
+    commit: d8c7de66925c2ca19183b7ce3f56869285deacb4
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.12.1
+    versionCode: 2026012713
+    commit: d8c7de66925c2ca19183b7ce3f56869285deacb4
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.13.1
+    versionCode: 2026020111
+    commit: 7c2c948a48c8e590e7abf5d5ef342dee56f9929e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.13.1
+    versionCode: 2026020112
+    commit: 7c2c948a48c8e590e7abf5d5ef342dee56f9929e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.13.1
+    versionCode: 2026020113
+    commit: 7c2c948a48c8e590e7abf5d5ef342dee56f9929e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.13.2
+    versionCode: 2026020521
+    commit: f0081bc5eb800e41171da739d9ef178ff85fe51c
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.13.2
+    versionCode: 2026020522
+    commit: f0081bc5eb800e41171da739d9ef178ff85fe51c
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.13.2
+    versionCode: 2026020523
+    commit: f0081bc5eb800e41171da739d9ef178ff85fe51c
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.14.2
+    versionCode: 2026030831
+    commit: 35c943bde61dc044f1338c8f784012877c8d35ed
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.14.2
+    versionCode: 2026030832
+    commit: 35c943bde61dc044f1338c8f784012877c8d35ed
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.14.2
+    versionCode: 2026030833
+    commit: 35c943bde61dc044f1338c8f784012877c8d35ed
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.15.1
+    versionCode: 2026031341
+    commit: 5e3693837a9037136fcd4731d82762c64becd017
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.15.1
+    versionCode: 2026031342
+    commit: 5e3693837a9037136fcd4731d82762c64becd017
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.15.1
+    versionCode: 2026031343
+    commit: 5e3693837a9037136fcd4731d82762c64becd017
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.15.2
+    versionCode: 2026032511
+    commit: 043544e966865e737278f85dee88477cae1305ab
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.15.2
+    versionCode: 2026032512
+    commit: 043544e966865e737278f85dee88477cae1305ab
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.15.2
+    versionCode: 2026032513
+    commit: 043544e966865e737278f85dee88477cae1305ab
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.16.0
+    versionCode: 2026040611
+    commit: fd61ba320e3cca0415da4336ecf414d45635291e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.16.0
+    versionCode: 2026040612
+    commit: fd61ba320e3cca0415da4336ecf414d45635291e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 1.16.0
+    versionCode: 2026040613
+    commit: fd61ba320e3cca0415da4336ecf414d45635291e
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.0.0
+    versionCode: 2026051311
+    commit: 7a17829753cbbee300f277c94c64f37e52eca5df
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.0.0
+    versionCode: 2026051312
+    commit: 7a17829753cbbee300f277c94c64f37e52eca5df
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.0.0
+    versionCode: 2026051313
+    commit: 7a17829753cbbee300f277c94c64f37e52eca5df
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.1.0
+    versionCode: 2026052911
+    commit: f021e36eb166660e02c033106944847959361f6c
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.1.0
+    versionCode: 2026052912
+    commit: f021e36eb166660e02c033106944847959361f6c
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.1.0
+    versionCode: 2026052913
+    commit: f021e36eb166660e02c033106944847959361f6c
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.1.1
+    versionCode: 2026060661
+    commit: 35b586a8a83cb1aa69227ae4510a6fa04106d9db
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.1.1
+    versionCode: 2026060662
+    commit: 35b586a8a83cb1aa69227ae4510a6fa04106d9db
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.1.1
+    versionCode: 2026060663
+    commit: 35b586a8a83cb1aa69227ae4510a6fa04106d9db
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.2
+    versionCode: 2026062902
+    commit: d4d0c3ab20f2c3ad64fff32179a66aac78f917d9
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.2
+    versionCode: 2026062903
+    commit: d4d0c3ab20f2c3ad64fff32179a66aac78f917d9
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.2
+    versionCode: 2026062904
+    commit: d4d0c3ab20f2c3ad64fff32179a66aac78f917d9
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.3
+    versionCode: 2026070502
+    commit: a279c703742660577137c7cc9408e59b41486bc1
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.3
+    versionCode: 2026070503
+    commit: a279c703742660577137c7cc9408e59b41486bc1
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.3
+    versionCode: 2026070504
+    commit: a279c703742660577137c7cc9408e59b41486bc1
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.4
+    versionCode: 2026071602
+    commit: 2d90c07a79749c608d8b132cbda546deca3fdbb3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.4
+    versionCode: 2026071603
+    commit: 2d90c07a79749c608d8b132cbda546deca3fdbb3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.4
+    versionCode: 2026071604
+    commit: 2d90c07a79749c608d8b132cbda546deca3fdbb3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.5
+    versionCode: 2026072202
+    commit: 0b25decdff574067928282550c6b34e9a07736b3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.5
+    versionCode: 2026072203
+    commit: 0b25decdff574067928282550c6b34e9a07736b3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.5
+    versionCode: 2026072204
+    commit: 0b25decdff574067928282550c6b34e9a07736b3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.6
+    versionCode: 2026072702
+    commit: 7bf13e3367f91ea574d8df5c4bd9f3b1af132e45
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.6
+    versionCode: 2026072703
+    commit: 7bf13e3367f91ea574d8df5c4bd9f3b1af132e45
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.2.6
+    versionCode: 2026072704
+    commit: 7bf13e3367f91ea574d8df5c4bd9f3b1af132e45
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.0
+    versionCode: 2026081103
+    commit: e257a383c768762293ba8a0efd2fa900a04a38b0
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.0
+    versionCode: 2026081104
+    commit: e257a383c768762293ba8a0efd2fa900a04a38b0
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.0
+    versionCode: 2026081105
+    commit: e257a383c768762293ba8a0efd2fa900a04a38b0
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.1
+    versionCode: 2026081602
+    commit: ee3e926d8aa496ef3ddf5cab9c2cbdc4b0322fb3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.1
+    versionCode: 2026081603
+    commit: ee3e926d8aa496ef3ddf5cab9c2cbdc4b0322fb3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.1
+    versionCode: 2026081604
+    commit: ee3e926d8aa496ef3ddf5cab9c2cbdc4b0322fb3
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.2
+    versionCode: 2026090502
+    commit: af028954d80df65ed03ce79c404aa10db709b1c9
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-x64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.2
+    versionCode: 2026090503
+    commit: af028954d80df65ed03ce79c404aa10db709b1c9
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+  - versionName: 2.3.2
+    versionCode: 2026090504
+    commit: af028954d80df65ed03ce79c404aa10db709b1c9
+    submodules: true
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    rm:
+      - ios
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - sed -i -e '/play-services-cronet/d' $PUB_CACHE/hosted/pub.dev/cronet_http-*/android/build.gradle
+    scanignore:
+      - vendor/flutter/bin/cache
+    scandelete:
+      - vendor/flutter
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - vendor/flutter/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+        --dart-define=cronetHttpNoPlay=true
+    ndk: r28c
+
+
+  # Native Flux 3.0 source-build candidate. CI substitutes the PR head SHA.
+  # Gradle orchestrates Rust/UniFFI once; fdroidserver handles the APK output.
+  - versionName: 3.0.0
+    versionCode: 2026101801
+    commit: FLUX_NATIVE_COMMIT
+    subdir: android
+    submodules: true
+    rm:
+      - Archived/Flutter
+    sudo:
+      - apt-get update
+      - apt-get install -y rustup
+    gradle:
+      - production
+    output: app/build/outputs/apk/production/release/app-production-release-unsigned.apk
+    prebuild:
+      - rustup default 1.99.1
+      - rustup target add aarch64-linux-android x86_64-linux-android armv7-linux-androideabi
+    gradleprops:
+      - fluxBuildVersionCode=2026101801
+      - fluxBuildVersionName=3.0.0
+      - fluxAndroidIncludeArmv7=1
+    ndk: 29.0.14206865
+
+AllowedAPKSigningKeys:
+  - fee5401bc9d59cf5a8a461ba9698c482e87ed8ffb9258786a3d01d0356ea2ebb
+  - d8e5c241fc3ed7e8b1fdcfb237e4b2680e763e3c2c1412c91ff568d6c57eabd7
+
+AutoUpdateMode: None
+UpdateCheckMode: None
+CurrentVersion: 2.3.2
+CurrentVersionCode: 2026090504

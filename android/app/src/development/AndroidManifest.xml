@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="androidx.car.app.MEDIA_TEMPLATES" />
+    <uses-feature
+        android:name="android.software.car.templates_host.media"
+        android:required="false" />
+
+    <application>
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="8" />
+        <meta-data
+            android:name="androidx.car.app.TintableAttributionIcon"
+            android:resource="@drawable/ic_fluxnews_logo" />
+
+        <service
+            android:name=".FluxCarAppService"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.MEDIA" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

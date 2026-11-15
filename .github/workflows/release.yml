@@ -1,0 +1,240 @@
+name: FluxNews scoped release
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        type: choice
+        options: [android, ios, macos, all]
+        required: true
+      version_name:
+        type: string
+        required: true
+      source_sha:
+        type: string
+        required: true
+      mode:
+        type: choice
+        default: validate
+        options: [validate, release]
+permissions:
+  contents: read
+concurrency:
+  group: flux-release-${{ inputs.scope }}-${{ inputs.source_sha }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
+      android_code: ${{ steps.check.outputs.android_code }}
+      ios_code: ${{ steps.check.outputs.ios_code }}
+      macos_code: ${{ steps.check.outputs.macos_code }}
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: main, fetch-depth: 0}
+      - id: check
+        env:
+          SHA: ${{ inputs.source_sha }}
+          SCOPE: ${{ inputs.scope }}
+          VERSION: ${{ inputs.version_name }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          if [[ "$GITHUB_REPOSITORY" != KevinCFechtel/FluxNews ]]; then
+            echo '::error::Native release orchestration belongs to KevinCFechtel/FluxNews' >&2
+            exit 1
+          fi
+          if [[ "$MODE" == release && "$GITHUB_REF" != refs/heads/main ]]; then
+            echo '::error::Release jobs must be dispatched from main' >&2
+            exit 1
+          fi
+          bash Build/check-release-candidate.sh "$SCOPE" "$VERSION" "$SHA" "$MODE" >> "$GITHUB_OUTPUT"
+
+  rust:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: "${{ needs.preflight.outputs.sha }}"}
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          components: rustfmt,clippy
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+      - run: |
+          cargo fmt --manifest-path core/Cargo.toml --all --check
+          cargo test --locked --manifest-path core/Cargo.toml --workspace
+          cargo clippy --locked --manifest-path core/Cargo.toml --workspace --all-targets
+  ios:
+    if: ${{ inputs.scope == 'ios' || inputs.scope == 'all' }}
+    needs: preflight
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: "${{ needs.preflight.outputs.sha }}"}
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with: {targets: "aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim"}
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+      - run: ./apple/ios/Build/test.sh
+  macos:
+    if: ${{ inputs.scope == 'macos' || inputs.scope == 'all' }}
+    needs: preflight
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: "${{ needs.preflight.outputs.sha }}"}
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with: {targets: "aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim"}
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+      - run: ./apple/macos/Build/test.sh
+  android-tests:
+    if: "${{ inputs.scope == 'android' || inputs.scope == 'all' }}"
+    needs: preflight
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: "${{ needs.preflight.outputs.sha }}", submodules: recursive}
+      - uses: actions/setup-java@v6
+        with: {distribution: temurin, java-version: '17'}
+      - uses: android-actions/setup-android@v4.0.4
+        with: {packages: platform-tools}
+      - name: Prepare SDK and NDK
+        run: |
+          cli="$ANDROID_HOME/cmdline-tools/22.0/bin/android"
+          "$cli" --sdk="$ANDROID_HOME" sdk install platforms/android-37.0
+          "$cli" --sdk="$ANDROID_HOME" sdk install build-tools/37.0.0
+          "$cli" --sdk="$ANDROID_HOME" sdk install ndk/29.0.14206865
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with: {targets: 'aarch64-linux-android,x86_64-linux-android'}
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+      - run: ./android/Build/test.sh
+
+  fdroid:
+    if: ${{ inputs.scope == 'android' || inputs.scope == 'all' }}
+    needs: preflight
+    uses: ./.github/workflows/fdroid-native.yml
+    with: {source_sha: "${{ needs.preflight.outputs.sha }}"}
+  fdroid-repeat:
+    if: "${{ inputs.mode == 'release' && (inputs.scope == 'android' || inputs.scope == 'all') }}"
+    needs: preflight
+    uses: ./.github/workflows/fdroid-native.yml
+    with:
+      source_sha: "${{ needs.preflight.outputs.sha }}"
+      artifact_name: fdroid-native-repeat
+  compare:
+    if: "${{ inputs.mode == 'release' && (inputs.scope == 'android' || inputs.scope == 'all') }}"
+    needs: [fdroid, fdroid-repeat]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: fdroid-native-recipe-diagnostics, path: first}
+      - uses: actions/download-artifact@v8
+        with: {name: fdroid-native-repeat, path: second}
+      - name: Compare two independent builds
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          a=(first/tmp/*.apk); b=(second/tmp/*.apk)
+          [[ ${#a[@]} -eq 1 && ${#b[@]} -eq 1 ]]
+          sha256sum "${a[0]}" "${b[0]}"
+          cmp -- "${a[0]}" "${b[0]}"
+  sign-android:
+    if: "${{ !cancelled() && inputs.mode == 'release' && (inputs.scope == 'android' || inputs.scope == 'all') && needs.rust.result == 'success' && needs.fdroid.result == 'success' && needs.android-tests.result == 'success' && needs.compare.result == 'success' }}"
+    needs: [preflight, rust, android-tests, fdroid, compare]
+    runs-on: ubuntu-24.04
+    environment: release-testing
+    env:
+      KEYSTORE_BASE64: "${{ secrets.KEYSTORE_BASE64 }}"
+      KEYSTORE_PASSWORD: "${{ secrets.KEYSTORE_PASSWORD }}"
+      KEY_PASSWORD: "${{ secrets.KEY_PASSWORD }}"
+      KEY_ALIAS: "${{ secrets.KEY_ALIAS }}"
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: "${{ needs.preflight.outputs.sha }}"}
+      - uses: actions/download-artifact@v8
+        with: {name: fdroid-native-recipe-diagnostics, path: unsigned}
+      - uses: actions/setup-java@v6
+        with: {distribution: temurin, java-version: '17'}
+      - uses: android-actions/setup-android@v4.0.4
+        with: {packages: "build-tools;37.0.0"}
+      - run: bash Build/sign-release-apk.sh "unsigned/tmp/de.circle_dev.flux_news_${{ needs.preflight.outputs.android_code }}.apk" "${{ inputs.version_name }}" "${{ needs.preflight.outputs.android_code }}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: flux-android-signed
+          path: dist/android/github/*
+          if-no-files-found: error
+  publish:
+    if: "${{ always() && !cancelled() && inputs.mode == 'release' && needs.preflight.result == 'success' && needs.rust.result == 'success' && (inputs.scope != 'android' && inputs.scope != 'all' || needs.android-tests.result == 'success' && needs.sign-android.result == 'success') && (inputs.scope != 'ios' && inputs.scope != 'all' || needs.ios.result == 'success') && (inputs.scope != 'macos' && inputs.scope != 'all' || needs.macos.result == 'success') }}"
+    needs: [preflight, rust, android-tests, ios, macos, fdroid, fdroid-repeat, compare, sign-android]
+    runs-on: ubuntu-24.04
+    permissions: {contents: write}
+    env:
+      GH_TOKEN: "${{ github.token }}"
+      SHA: "${{ needs.preflight.outputs.sha }}"
+      SCOPE: "${{ inputs.scope }}"
+      VERSION: "${{ inputs.version_name }}"
+    steps:
+      - uses: actions/checkout@v7
+        with: {ref: "${{ needs.preflight.outputs.sha }}", fetch-depth: 0}
+      - uses: actions/download-artifact@v8
+        if: "${{ inputs.scope == 'android' || inputs.scope == 'all' }}"
+        with: {name: flux-android-signed, path: artifacts}
+      - name: Publish one release with immutable platform tags
+        run: |
+          set -euo pipefail
+          if [[ "$SCOPE" == all ]]; then
+            tags=("android/v$VERSION" "ios/v$VERSION" "macos/v$VERSION" "v$VERSION")
+            tag="v$VERSION"
+          else
+            tags=("$SCOPE/v$VERSION")
+            tag="$SCOPE/v$VERSION"
+          fi
+          for item in "${tags[@]}"; do
+            remote="$(git ls-remote --tags origin "refs/tags/$item")" || {
+              echo "::error::Unable to verify immutable tag state for $item"
+              exit 1
+            }
+            if [[ -n "$remote" ]]; then
+              echo "::error::Existing immutable tag: $item"
+              exit 1
+            fi
+          done
+          promotion_started=0
+          report_partial_promotion() {
+            status=$?
+            if (( status != 0 && promotion_started == 1 )); then
+              echo "::error::Release promotion failed after immutable tag creation began. Inspect tags/releases manually; automation will not rewrite or delete tags."
+              for item in "${tags[@]}"; do
+                observed="$(git ls-remote --tags origin "refs/tags/$item" || true)"
+                [[ -z "$observed" ]] || echo "::error::Observed tag after failed promotion: $observed"
+              done
+            fi
+            trap - EXIT
+            exit "$status"
+          }
+          trap report_partial_promotion EXIT
+          {
+            printf '# FluxNews %s (%s)\n\nSource: %s\n\n' "$VERSION" "$SCOPE" "$SHA"
+            [[ "$SCOPE" != android && "$SCOPE" != all ]] || printf '## Android\n\nSigned APK. F-Droid scanner/source build and reproducibility passed. No automatic F-Droid submission.\n\n'
+            [[ "$SCOPE" != ios && "$SCOPE" != all ]] || printf '## iOS / iPadOS\n\nTest gate passed; distribution remains manual. No IPA attached.\n\n'
+            [[ "$SCOPE" != macos && "$SCOPE" != all ]] || printf '## macOS\n\nTest gate passed; distribution remains manual. No PKG attached.\n\n'
+          } > RELEASE_NOTES.md
+          if [[ "$SCOPE" == android || "$SCOPE" == all ]]; then
+            shopt -s nullglob
+            assets=(artifacts/*.apk artifacts/SHA256SUMS)
+            [[ ${#assets[@]} -eq 2 ]] || exit 1
+          else
+            assets=()
+          fi
+          promotion_started=1
+          if [[ "$SCOPE" == all ]]; then
+            for item in "${tags[@]:0:3}"; do
+              gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$item" -f sha="$SHA" >/dev/null
+            done
+          fi
+          gh release create "$tag" "${assets[@]}" --target "$SHA" --title "FluxNews $VERSION ($SCOPE)" --notes-file RELEASE_NOTES.md --latest=false
+          promotion_started=0
+          trap - EXIT
