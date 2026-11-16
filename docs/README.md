@@ -144,9 +144,8 @@ state at that time.
 
 ## Documentation tools
 
-[`tools/`](../tools/) contains supporting analysis tooling. Its measurements must
-be interpreted with the limitations documented by the corresponding analysis;
-tool output is not automatically a release gate.
+Supporting analysis scripts and records must be interpreted with the limitations
+of their corresponding documentation; tool output is not automatically a release gate.
 
 ## Working rule
 
