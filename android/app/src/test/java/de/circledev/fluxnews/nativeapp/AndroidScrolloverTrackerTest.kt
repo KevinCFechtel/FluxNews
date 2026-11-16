@@ -10,196 +10,207 @@ import org.junit.Test
 
 class AndroidScrolloverTrackerTest {
     @Test
-    fun firstArticleCommitsAtScrollEnd() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(0)
+    fun firstVisibleArticleQualifiesOnlyAfterObservedForwardCrossing() {
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
 
-        assertTrue(tracker.observe(sample(1), scrolling = true, enabled = true).isEmpty())
-        assertEquals(
-            listOf(1L),
-            tracker.observe(sample(1), scrolling = false, enabled = true),
-        )
+        assertTrue(tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true).isEmpty())
+        assertEquals(listOf(1L), tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true))
     }
 
     @Test
-    fun forwardBackwardForwardUsesHighestReachedIndex() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L, 4L))
-        tracker.synchronizeIdlePosition(0)
+    fun fastFlingDoesNotMarkSkippedAndUnobservedRows() {
+        val tracker = trackerWith(1L, 2L, 3L, 4L, 5L)
+        tracker.observe(sample(0, 0), scrolling = false, enabled = true)
 
-        assertTrue(tracker.observe(sample(1), scrolling = true, enabled = true).isEmpty())
-        assertTrue(tracker.observe(sample(0), scrolling = true, enabled = true).isEmpty())
-        assertTrue(tracker.observe(sample(2), scrolling = true, enabled = true).isEmpty())
+        // The LazyList jumped directly from the first article to the fifth.
+        tracker.observe(sample(4, 4), scrolling = true, enabled = true)
 
-        assertEquals(
-            listOf(1L, 2L),
-            tracker.observe(sample(1), scrolling = false, enabled = true),
-        )
+        assertEquals(listOf(1L), tracker.observe(sample(4, 4), scrolling = false, enabled = true))
     }
 
     @Test
-    fun reachingDatasetEndCommitsRemainingArticlesIncludingLastOne() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L, 4L))
-        tracker.synchronizeIdlePosition(1)
+    fun crossingWithoutPriorViewportExposureNeverQualifies() {
+        val tracker = trackerWith(1L, 2L, 3L, 4L)
+        tracker.synchronizeIdlePosition(0)
 
+        tracker.observe(sample(2, 2, 3), scrolling = true, enabled = true)
+        assertTrue(tracker.observe(sample(2, 2, 3), scrolling = false, enabled = true).isEmpty())
+    }
+
+    @Test
+    fun partialScrollDoesNotQualifyUntilRowCrossesTop() {
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+
+        tracker.observe(sample(0, 0, 1, firstVisibleOffset = 60), scrolling = true, enabled = true)
         assertTrue(
             tracker.observe(
-                AndroidScrolloverPositionSample(
-                    firstVisibleIndex = 2,
-                    atDatasetEnd = true,
-                ),
-                scrolling = true,
+                sample(0, 0, 1, firstVisibleOffset = 60),
+                scrolling = false,
                 enabled = true,
             ).isEmpty(),
         )
 
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        assertEquals(listOf(1L), tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true))
+    }
+
+    @Test
+    fun forwardBackwardForwardOnlyMarksPreviouslySeenForwardCrossings() {
+        val tracker = trackerWith(1L, 2L, 3L, 4L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        tracker.observe(sample(0, 0, 1), scrolling = true, enabled = true)
+        tracker.observe(sample(2, 2, 3), scrolling = true, enabled = true)
+
         assertEquals(
-            listOf(2L, 3L, 4L),
-            tracker.observe(
-                AndroidScrolloverPositionSample(
-                    firstVisibleIndex = 2,
-                    atDatasetEnd = true,
-                ),
-                scrolling = false,
-                enabled = true,
-            ),
+            listOf(1L, 2L),
+            tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true),
         )
     }
 
     @Test
-    fun temporaryPagingEndDoesNotCommitPastHighestReachedIndex() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L, 4L))
-        tracker.synchronizeIdlePosition(1)
+    fun reverseMovementAloneDoesNotMarkRead() {
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true)
+        tracker.observe(sample(0, 0, 1), scrolling = true, enabled = true)
+
+        assertTrue(tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true).isEmpty())
+    }
+
+    @Test
+    fun genuineForwardArrivalAtEndCompletesOnlyObservedTrailingRows() {
+        val tracker = trackerWith(1L, 2L, 3L, 4L)
+        tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true)
+
+        tracker.observe(sample(2, 2, 3, atDatasetEnd = true), scrolling = true, enabled = true)
+        assertEquals(
+            listOf(2L, 3L, 4L),
+            tracker.observe(sample(2, 2, 3, atDatasetEnd = true), scrolling = false, enabled = true),
+        )
+    }
+
+    @Test
+    fun jumpingToDatasetEndNeverMarksUnseenMiddleRows() {
+        val tracker = trackerWith(1L, 2L, 3L, 4L, 5L)
+        tracker.observe(sample(0, 0), scrolling = false, enabled = true)
+
+        tracker.observe(sample(4, 4, atDatasetEnd = true), scrolling = true, enabled = true)
+        assertEquals(
+            listOf(1L, 5L),
+            tracker.observe(sample(4, 4, atDatasetEnd = true), scrolling = false, enabled = true),
+        )
+    }
+
+    @Test
+    fun scrollingWhileAlreadyAtEndDoesNotCommitVisibleRows() {
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(2, 2, atDatasetEnd = true), scrolling = false, enabled = true)
 
         tracker.observe(
-            AndroidScrolloverPositionSample(
-                firstVisibleIndex = 2,
-                atDatasetEnd = false,
-            ),
+            sample(2, 2, firstVisibleOffset = 12, atDatasetEnd = true),
             scrolling = true,
             enabled = true,
         )
-
-        assertEquals(
-            listOf(2L),
+        assertTrue(
             tracker.observe(
-                AndroidScrolloverPositionSample(
-                    firstVisibleIndex = 2,
-                    atDatasetEnd = false,
-                ),
+                sample(2, 2, firstVisibleOffset = 12, atDatasetEnd = true),
                 scrolling = false,
                 enabled = true,
-            ),
+            ).isEmpty(),
         )
     }
 
     @Test
-    fun noForwardProgressCommitsNothing() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(1)
+    fun temporaryPagingEndDoesNotCompleteTrailingRows() {
+        val tracker = trackerWith(1L, 2L, 3L, 4L)
+        tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true)
 
-        tracker.observe(sample(0), scrolling = true, enabled = true)
-
-        assertTrue(tracker.observe(sample(0), scrolling = false, enabled = true).isEmpty())
+        tracker.observe(sample(2, 2, 3, atDatasetEnd = false), scrolling = true, enabled = true)
+        assertEquals(
+            listOf(2L),
+            tracker.observe(sample(2, 2, 3, atDatasetEnd = false), scrolling = false, enabled = true),
+        )
     }
 
     @Test
     fun programmaticScrollNeverCommitsCandidates() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(2)
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(2, 2), scrolling = false, enabled = true)
 
         tracker.beginProgrammaticScroll(2)
-        tracker.observe(sample(0), scrolling = true, enabled = true)
-        tracker.observe(sample(0), scrolling = false, enabled = true)
+        tracker.observe(sample(0, 0, 1), scrolling = true, enabled = true)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
         tracker.endProgrammaticScroll(0)
 
-        assertTrue(tracker.observe(sample(0), scrolling = false, enabled = true).isEmpty())
-
-        tracker.observe(sample(1), scrolling = true, enabled = true)
-        assertEquals(
-            listOf(1L),
-            tracker.observe(sample(1), scrolling = false, enabled = true),
-        )
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        assertEquals(listOf(1L), tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true))
     }
 
     @Test
     fun disabledTrackingSynchronizesIdleWithoutCommitting() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(0)
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
 
-        tracker.observe(sample(2), scrolling = true, enabled = false)
-        tracker.observe(sample(2), scrolling = false, enabled = false)
+        tracker.observe(sample(2, 2), scrolling = true, enabled = false)
+        tracker.observe(sample(2, 2), scrolling = false, enabled = false)
 
-        tracker.observe(sample(2), scrolling = true, enabled = true)
-        assertTrue(tracker.observe(sample(2), scrolling = false, enabled = true).isEmpty())
+        tracker.observe(sample(2, 2), scrolling = true, enabled = true)
+        assertTrue(tracker.observe(sample(2, 2), scrolling = false, enabled = true).isEmpty())
     }
 
     @Test
     fun rearmedArticleCanCommitAgain() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(0)
-
-        tracker.observe(sample(1), scrolling = true, enabled = true)
-        assertEquals(listOf(1L), tracker.observe(sample(1), scrolling = false, enabled = true))
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        assertEquals(listOf(1L), tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true))
 
         tracker.rearm(listOf(1L))
         tracker.synchronizeIdlePosition(0)
-        tracker.observe(sample(1), scrolling = true, enabled = true)
-
-        assertEquals(listOf(1L), tracker.observe(sample(1), scrolling = false, enabled = true))
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        assertEquals(listOf(1L), tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true))
     }
 
     @Test
-    fun appendOnlySnapshotKeepsActiveScrollProgress() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(0)
-
-        tracker.observe(sample(1), scrolling = true, enabled = true)
+    fun appendOnlySnapshotKeepsActiveVisibleCrossings() {
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
         tracker.updateSnapshot(listOf(1L, 2L, 3L, 4L, 5L))
-        tracker.observe(sample(2), scrolling = true, enabled = true)
+        tracker.observe(sample(2, 2, 3), scrolling = true, enabled = true)
 
         assertEquals(
             listOf(1L, 2L),
-            tracker.observe(sample(2), scrolling = false, enabled = true),
+            tracker.observe(sample(2, 2, 3), scrolling = false, enabled = true),
         )
     }
 
     @Test
     fun structuralSnapshotResetDropsActiveScrollProgress() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(0)
-        tracker.observe(sample(2), scrolling = true, enabled = true)
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(2, 2), scrolling = true, enabled = true)
 
         tracker.updateSnapshot(listOf(10L, 11L, 12L))
-
-        assertTrue(tracker.observe(sample(2), scrolling = false, enabled = true).isEmpty())
+        assertTrue(tracker.observe(sample(2, 2), scrolling = false, enabled = true).isEmpty())
     }
 
     @Test
     fun repeatedInteractionDoesNotReemitAlreadyReadCandidates() {
-        val tracker = AndroidScrolloverTracker()
-        tracker.updateSnapshot(listOf(1L, 2L, 3L))
-        tracker.synchronizeIdlePosition(0)
-
-        tracker.observe(sample(2), scrolling = true, enabled = true)
-        assertEquals(
-            listOf(1L, 2L),
-            tracker.observe(sample(2), scrolling = false, enabled = true),
-        )
+        val tracker = trackerWith(1L, 2L, 3L)
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        assertEquals(listOf(1L), tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true))
 
         tracker.synchronizeIdlePosition(0)
-        tracker.observe(sample(2), scrolling = true, enabled = true)
-
-        assertTrue(tracker.observe(sample(2), scrolling = false, enabled = true).isEmpty())
+        tracker.observe(sample(0, 0, 1), scrolling = false, enabled = true)
+        tracker.observe(sample(1, 1, 2), scrolling = true, enabled = true)
+        assertTrue(tracker.observe(sample(1, 1, 2), scrolling = false, enabled = true).isEmpty())
     }
 
     @Test
@@ -235,6 +246,19 @@ class AndroidScrolloverTrackerTest {
         assertEquals(listOf(listOf(1L), listOf(2L)), writes)
     }
 
-    private fun sample(firstVisibleIndex: Int) =
-        AndroidScrolloverPositionSample(firstVisibleIndex = firstVisibleIndex)
+
+    private fun trackerWith(vararg ids: Long): AndroidScrolloverTracker =
+        AndroidScrolloverTracker().also { it.updateSnapshot(ids.toList()) }
+
+    private fun sample(
+        firstVisibleIndex: Int,
+        vararg visibleIndices: Int,
+        firstVisibleOffset: Int = 0,
+        atDatasetEnd: Boolean = false,
+    ) = AndroidScrolloverPositionSample(
+        firstVisibleIndex = firstVisibleIndex,
+        firstVisibleOffset = firstVisibleOffset,
+        visibleArticleIndices = visibleIndices.toList(),
+        atDatasetEnd = atDatasetEnd,
+    )
 }
