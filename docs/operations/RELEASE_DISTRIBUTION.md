@@ -402,7 +402,7 @@ of R, not part of the B1 runtime sign-off.
 
 The primary macOS distribution should likewise be the Mac App Store.
 
-**Mac release prerequisite and approved decision:** The macOS app has **never been released**. Its host App Sandbox entitlement has been implemented but signed-app acceptance is still outstanding. The existing Developer ID/notarization path is not a Mac App Store export. Validate host Sandbox, outbound network access, actual file-dialog capabilities and App Group provisioning **before** Mac App Store archive/export scripting. The developer explicitly accepts losing all existing unsandboxed local development data on their machine. Initialize a fresh sandbox storage/credential environment: **no database/download/Keychain migration, `container-migration.plist`, legacy-location fallback or compatibility layer is required**. See B1 in [POST_REPLACEMENT_FOLLOWUP_PLAN.md](POST_REPLACEMENT_FOLLOWUP_PLAN.md).
+**Mac release prerequisite and approved decision:** The macOS app has **never been released**. Its host App Sandbox entitlement has been implemented but signed-app acceptance is still outstanding. The existing Developer ID/notarization path is not a Mac App Store export. Validate host Sandbox, outbound network access, actual file-dialog capabilities and App Group provisioning **before** Mac App Store archive/export scripting. The developer explicitly accepts losing all existing unsandboxed local development data on their machine. Initialize a fresh sandbox storage/credential environment: **no database/download/Keychain migration, `container-migration.plist`, legacy-location fallback or compatibility layer is required**. See the accepted B1 evidence in [MACOS_SANDBOX_ACCEPTANCE.md](../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
 
 The existing `apple/macos/Build/build-app.sh` is currently a build/validation
 script, not a complete App Store distribution path.
@@ -660,7 +660,7 @@ Implement in this order:
    Wrap the existing production AAB flow without changing its signing model.
 
 3. **Validate F-Droid build/scanner feasibility, then implement native preparation.**
-   Complete B2 in `POST_REPLACEMENT_FOLLOWUP_PLAN.md` first. Port only the still-
+   Complete the applicable FD-IDs in `FDROID_OPEN_GATES.md` first. Port only the still-
    required metadata/signing/reproducibility behavior from the old Flutter repository.
 
 4. **Add Android F-Droid build/publish GitHub Action.**
@@ -672,7 +672,7 @@ Implement in this order:
    release interface and rename TestFlight-specific naming where appropriate.
 
 6. **Enable and validate the macOS sandbox, then add macOS archive/export.**
-   Complete B1 in `POST_REPLACEMENT_FOLLOWUP_PLAN.md` first, with fresh developer
+   B1 is owner-accepted; use `../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md` as the evidence record, with fresh developer
    data (no migration), and only then create the missing App Store Connect/
    Transporter path with proper Mac App Store signing and entitlement validation.
 
