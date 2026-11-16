@@ -201,7 +201,7 @@ or durable playback state. Disconnecting the CarPlay scene destroys CarPlay
 presentation state only; the app-scoped media runtime remains authoritative.
 
 The detailed D7 ownership, API, entitlement, implementation, test and real-device
-acceptance contract is [IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+acceptance contract is [IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
 
 ### iOS/iPadOS Article Timeline — UIKit
 
@@ -338,7 +338,7 @@ This renderer decision is accepted without requiring a preliminary
 SwiftUI-versus-UIKit benchmark or optimization of the old renderer. Focused
 device profiling is acceptance of the new implementation. The implementation
 sequence and regression matrix are in
-[IOS_UIKIT_TIMELINE_IMPLEMENTATION.md](IOS_UIKIT_TIMELINE_IMPLEMENTATION.md).
+[IOS_UIKIT_TIMELINE_IMPLEMENTATION.md](../../archive/phases/ios/IOS_UIKIT_TIMELINE_IMPLEMENTATION.md).
 
 #### Current UIKit Timeline amendment status — 22 September 2026
 
@@ -407,7 +407,7 @@ accepted. This covers the shared Apple Now Playing projection, iOS Now Playing
 adapter, remote commands, system playback acceptance, CarPlay scene/browsing,
 CarPlay playback integration, and final physical-device CarPlay acceptance.
 The detailed contract is
-[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
 The D7 architecture is frozen; changes require a new concrete regression or
 product requirement.
 
@@ -1424,7 +1424,7 @@ intact, while `needs_review` values are deferred to the planned
 Weblate/community localization workflow and do not block D9-D completion.
 
 The post-D9 source-usage audit is authoritative for catalog membership and
-runtime usage; see [analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md](analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md).
+runtime usage; see [analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md](../../analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md).
 Xcode `extractionState` must not be used as a standalone deletion signal.
 
 
