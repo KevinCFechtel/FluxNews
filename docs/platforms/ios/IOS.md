@@ -235,14 +235,18 @@ article routing, the accepted native scope-capsule navigation chrome, semantic
 scope resets, and persistent split navigation. Actions identify articles by stable ID, never a captured
 index path or a cell reference that may have been reused.
 
-Mark-as-Read-on-Scrollover uses actual UIKit scroll movement and resolved cell
-frames in one coordinate system, including effective viewport insets and
-occlusion. A non-observable detector consumes a coherent layout/movement sample
-from the controller. It emits an ID only when an observed visible unread row
-becomes completely above the effective upper boundary during a user-originated
-forward interaction or deceleration. Preparation/prefetch, `willDisplay`, or
-`didEndDisplaying` alone does not prove a valid crossing. Unseen rows skipped by
-a fast movement must not be manufactured as read candidates.
+The **currently implemented** Mark-as-Read-on-Scrollover detector uses actual UIKit
+scroll movement and resolved cell frames in one coordinate system, including
+effective viewport insets and occlusion. It currently emits an ID when an
+observed visible unread row becomes completely above the effective upper
+boundary during a user-originated forward interaction or deceleration.
+Preparation/prefetch, `willDisplay`, and `didEndDisplaying` are not treated
+as sufficient evidence by **this detector**. These details document the
+accepted implementation, **not a product requirement** to establish individual
+visual exposure: genuine user-driven forward scroll progression may also
+qualify passed articles, including unseen intermediate rows during fast flings,
+if a future reviewed implementation uses that policy. No change to the current
+UIKit algorithm is requested here.
 
 Candidate processing is bounded by currently/recently visible rows, not the
 complete snapshot or accumulated history. Preserve enough prior resolved
@@ -312,9 +316,10 @@ settings as the normal Article List, with Search-specific pagination and
 Scrollover disabled.
 Normal continuous scrolling and small forward jumps do not present Undo. Undo is
 an exceptional recovery mechanism: it activates only after at least 3 successful
-unread-to-read Scrollover mutations in a rolling one-second window. Visibility
-candidates, already-read rows, rejected candidates, failed mutations, and the
-former skipped-index qualification do not count. When the third success arrives,
+unread-to-read Scrollover mutations in a rolling one-second window.
+Detected-only candidates, already-read rows, rejected candidates, and failed
+mutations do not count. The current implementation does not generate
+skipped-index candidates; this is not a permanent product prohibition. When the third success arrives,
 the qualifying burst is retained together for Undo; later successes follow the
 existing rolling group. A success extends its 4-second inactivity window without
 extending the 15-second maximum group lifetime. Backward movement, initial baseline
@@ -784,12 +789,20 @@ production Timeline implementations in parallel.
 
 ### Geometry and read detection
 
-- Use scroll offset, effective viewport/insets, and resolved row frames in a
-  common coordinate system. Observe actual user movement and deceleration.
-- A normal read candidate was genuinely visible and then crossed completely
-  above the effective upper boundary during forward movement. A prefetched,
-  prepared, or merely skipped row is not qualified. Cell lifecycle callbacks
-  may maintain bookkeeping but are never the sole read signal.
+The following describes the **existing accepted UIKit geometry tracker** and
+its regression cases, not a mandatory visibility-based product policy. The
+product does **not** require proof that each read article was rendered on
+screen. A future reviewed implementation may instead mark crossed IDs during
+genuine forward scrolling even if intermediate rows were not observed.
+
+- The current tracker uses scroll offset, effective viewport/insets, and
+  resolved row frames in a common coordinate system, observing real user
+  movement and deceleration.
+- In the current tracker, a normal candidate was observed visible and crossed
+  completely above the effective upper boundary. Prefetched, prepared and
+  skipped rows are not qualified **by this implementation**; this is not a
+  permanent requirement for future Scrollover implementations. Cell lifecycle
+  callbacks alone do not drive the existing tracker.
 - Evaluate currently visible and just-exited rows from a consistent layout
   generation. Retain enough prior resolved geometry to handle a row that has
   already left the reuse/display set. Retire that geometry when no longer needed.
@@ -906,9 +919,12 @@ database/Miniflux implementation to make such a claim.
 Preserve the current iOS Undo rules: qualification after at least three
 successful unread-to-read mutations in the rolling one-second window; one
 rolling active group; four-second inactivity expiry and fifteen-second maximum
-lifetime. Detected candidates, already-read items, failed/stale operations, and
-skipped unseen IDs do not qualify a new group. Do not redefine Undo from batch
-size, candidate timing, or a new exposure timer. Preserve normal Core delivery
+lifetime. Detected-only candidates, already-read items, and failed/stale
+operations do not qualify a new group. For the **current visibility-based
+tracker**, skipped unseen IDs also do not become successful mutations; this
+does not prohibit a future forward-scroll qualification policy without visual
+proof. Do not redefine Undo from batch size, candidate timing, or a new
+exposure timer. Preserve normal Core delivery
 policy and local-success semantics; remote delivery is not a prerequisite for
 rendering a local read intent.
 

@@ -673,7 +673,7 @@ Preserve shared semantic ordering and the date/reading-time/accessory contracts 
 
 ### Scrollover
 
-Implement the shared Scrollover behavioral contract with Android/Compose-native scroll state. Do not port the UIKit geometry tracker line-for-line: Android intentionally commits one ID batch when scrolling becomes idle, using the interaction start index and highest reached first-visible index.
+Preserve the accepted Android/Compose **index-based scroll-session** contract described in E3-D above and in [the shared mobile semantics](../../MOBILE_PRODUCT_SEMANTICS.md#6-mark-as-read-on-scrollover). Do not port the UIKit geometry tracker line-for-line: Android intentionally commits one ID batch when scrolling becomes idle, using the interaction start index and highest reached first-visible index. This algorithm does **not** independently establish actual viewport exposure for each intervening article; fast index jumps can therefore include rows that were not visibly rendered. Changing that qualification rule requires an explicit new Android product/performance decision, not a documentation-only reconciliation.
 
 Known programmatic movement must be explicitly suppressed. Snapshot replacement clears in-flight Scrollover progress; append-only paging preserves it.
 
