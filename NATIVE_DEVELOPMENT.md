@@ -1,6 +1,6 @@
-# Flux
+# FluxNews
 
-Flux is a native-client RSS reader for [Miniflux](https://miniflux.app/) built around one shared Rust core. FluxNews is the current macOS client.
+FluxNews is a native RSS reader for [Miniflux](https://miniflux.app/) with a shared Rust core and native Android, iOS/iPadOS and macOS clients.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ the iOS device and Apple Silicon simulator Swift compile/link integration with:
 bash apple/Build/verify-ios-uniffi.sh
 ```
 
-Build the macOS app for normal development. The resulting ad-hoc-signed app is at `dist/FluxNews.app`:
+Build the macOS app for normal development. The resulting ad-hoc-signed app is at `dist/macos/FluxNews.app`:
 
 ```bash
 bash apple/macos/Build/build-app.sh
@@ -94,7 +94,7 @@ cp apple/macos/Build/.env.example apple/macos/Build/.env
 bash apple/macos/Build/release-developer-id.sh
 ```
 
-`apple/macos/Build/.env` is ignored by Git. `release-developer-id.sh` builds the Rust/UniFFI-backed app, signs it with hardened runtime, notarizes and staples it, then creates and validates `dist/release/FluxNews-<version>-macos-<architecture>.zip`.
+`apple/macos/Build/.env` is ignored by Git. `release-developer-id.sh` builds the Rust/UniFFI-backed app, signs it with hardened runtime, notarizes and staples it, then creates and validates `dist/macos/developer-id/FluxNews-<version>-macos-<architecture>.zip`.
 
 Changes should be covered by appropriate tests. Pull requests should focus on a clearly described problem or feature.
 
