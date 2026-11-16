@@ -394,7 +394,7 @@ PR #53 added signed-development-build verification and safe local installation.
 C3.1–C3.8 and the separate B1 signed runtime gate are **owner-accepted and
 closed**. [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/38934397341)
 remains source/CI evidence rather than proof of each individual runtime checklist
-item. See [MACOS_SANDBOX_ACCEPTANCE.md](MACOS_SANDBOX_ACCEPTANCE.md) for the
+item. See [MACOS_SANDBOX_ACCEPTANCE.md](acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md) for the
 accepted scope and evidence limits. Mac App Store provisioning, archive/export,
 Transporter validation and review remain separate release-track work. Before implementing
 the Mac App Store archive/export deliverable. That later Store export is part
