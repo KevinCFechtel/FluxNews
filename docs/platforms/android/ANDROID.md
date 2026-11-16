@@ -506,7 +506,7 @@ The larger `AndroidStoragePaths` ownership/lifecycle review remains deferred to 
 
 **Phase E2 is COMPLETE.**
 
-**Phase E3 is COMPLETE. E4 — Actions, Search, Sync and Mutations — is NEXT.**
+**Phase E3 and E4 are COMPLETE.** The following E3/E4 details are retained as accepted implementation context, not a current execution queue.
 
 ## 14. E3 — Native Article Timeline / Article Presentation
 
