@@ -248,11 +248,11 @@ internal fun AndroidArticleTimeline(
     LaunchedEffect(store, listState, scrolloverTracker) {
         store.scrollResetRequests.collect {
             if (listState.layoutInfo.totalItemsCount > 0) {
-                scrolloverTracker.beginProgrammaticScroll(listState.firstVisibleItemIndex)
+                scrolloverTracker.beginProgrammaticScroll(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
                 try {
                     listState.scrollToItem(0)
                 } finally {
-                    scrolloverTracker.endProgrammaticScroll(listState.firstVisibleItemIndex)
+                    scrolloverTracker.endProgrammaticScroll(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
                 }
             }
         }
@@ -275,23 +275,31 @@ internal fun AndroidArticleTimeline(
         state.queryGeneration,
     ) {
         if (!loadedArticlePreferences.markReadOnScrollover) {
-            scrolloverTracker.synchronizeIdlePosition(listState.firstVisibleItemIndex)
+            scrolloverTracker.synchronizeIdlePosition(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
             return@LaunchedEffect
         }
-        scrolloverTracker.synchronizeIdlePosition(listState.firstVisibleItemIndex)
+        scrolloverTracker.synchronizeIdlePosition(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
         snapshotFlow {
-            Triple(
-                listState.firstVisibleItemIndex,
-                listState.isScrollInProgress,
-                !listState.canScrollForward && state.nextCursor == null,
-            )
+            val layout = listState.layoutInfo
+            // Only rows actually intersecting the viewport qualify. Compose can
+            // skip over indices during a fling or precompose rows offscreen.
+            val exposedRows = layout.visibleItemsInfo
+                .filter { item ->
+                    item.index in articleIds.indices &&
+                        item.offset < layout.viewportEndOffset &&
+                        item.offset + item.size > layout.viewportStartOffset
+                }
+                .map { it.index }
+            AndroidScrolloverPositionSample(
+                firstVisibleIndex = listState.firstVisibleItemIndex,
+                firstVisibleOffset = listState.firstVisibleItemScrollOffset,
+                visibleArticleIndices = exposedRows,
+                atDatasetEnd = !listState.canScrollForward && state.nextCursor == null,
+            ) to listState.isScrollInProgress
         }
-            .collect { (firstVisibleIndex, scrolling, atDatasetEnd) ->
+            .collect { (sample, scrolling) ->
                 val candidates = scrolloverTracker.observe(
-                    sample = AndroidScrolloverPositionSample(
-                        firstVisibleIndex = firstVisibleIndex,
-                        atDatasetEnd = atDatasetEnd,
-                    ),
+                    sample = sample,
                     scrolling = scrolling,
                     enabled = true,
                 )
@@ -310,11 +318,11 @@ internal fun AndroidArticleTimeline(
         if (sameContext) return@LaunchedEffect
 
         if (listState.firstVisibleItemIndex != 0 || listState.firstVisibleItemScrollOffset != 0) {
-            scrolloverTracker.beginProgrammaticScroll(listState.firstVisibleItemIndex)
+            scrolloverTracker.beginProgrammaticScroll(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
             try {
                 listState.scrollToItem(0)
             } finally {
-                scrolloverTracker.endProgrammaticScroll(listState.firstVisibleItemIndex)
+                scrolloverTracker.endProgrammaticScroll(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
             }
         } else {
             scrolloverTracker.synchronizeIdlePosition(0)
