@@ -704,9 +704,23 @@ actual files
 - `NotDownloaded` + orphan file → delete it.
 - `DeleteRequested` → native deletes the physical file and confirms completion.
 
-### Apple V1 target
+### Apple transfer execution — platform-specific accepted scope
 
-Use a background `URLSession` with `URLSessionDownloadTask`.
+- **iOS/iPadOS:** The implemented D6 executor uses a persistent background
+  `URLSession` with stable per-build session identity, OS relaunch callbacks and
+  Core-owned intent reconciliation. The app-owned delegate and account-generation
+  lifecycle are defined in [`../platforms/ios/IOS.md`](../platforms/ios/IOS.md).
+- **macOS:** The implemented `MediaTransferCoordinator` uses **foreground
+  `URLSession` download tasks**, with recovery by requerying durable Core
+  `Requested`/`DeleteRequested` intent and checking local files on startup or
+  resume. An in-flight task is **not guaranteed to survive process termination**.
+  OS-persistent background `URLSession` downloads on macOS remain deferred; see
+  [`../platforms/macos/MACOS.md`](../platforms/macos/MACOS.md).
+
+The shared Core contract requires correct native reconciliation and durable
+Core ownership; it **does not require both Apple clients to use the same OS
+transfer session type**. The former generic Apple V1 background-session target
+is fulfilled specifically by iOS, not a macOS runtime or release gate.
 
 ### Android
 

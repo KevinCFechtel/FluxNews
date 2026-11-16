@@ -199,8 +199,11 @@ Add native playback-rate support without changing Core playback ownership.
 
 ### 3.2 Player navigation
 
-The Player is a dedicated presentation mode inside the existing menu-bar
-popover. There is no separate player window and no in-app mini-player.
+The full Player is a dedicated presentation mode inside the existing menu-bar
+popover, not a separate player window. The accepted C3 parity work also adds a
+compact **in-popover mini-player** with title/artwork/play-pause access while
+browsing. Both presentations use the same Core-backed playback coordinator and
+create no additional player or durable media state.
 
 Reserve a fixed toolbar slot beside Sync:
 
@@ -249,7 +252,7 @@ Unknown duration is shown as `--:--`.
 
 Final control set:
 
-**−30s · Play/Pause · Stop · +30s · Restart**
+**−15s · Play/Pause · Stop · +30s · Restart**
 
 Semantics:
 

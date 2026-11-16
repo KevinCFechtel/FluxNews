@@ -1056,14 +1056,17 @@ create a second sync path. Incoming widget URLs are parsed once and retained
 until app/Core configuration is ready, so cold and warm launches do not
 duplicate or drop actions.
 
-Supported data scopes include All, Starred, Category, and Feed. Widget
-queries support pagination; `limit = 0` allows the complete matching
-list where the platform can display it.
+Supported data scopes include All, Starred, Category, and Feed. **Main-app/Core
+projection queries** support pagination; `limit = 0` allows the complete
+matching list where the native platform can project it. The extension does not
+perform those queries or access Core directly.
 
-Widgets call the same standardized core operations and may trigger
-`sync(reason = Widget)`. If direct mutation/sync execution is unsuitable
-on a platform, the widget may open the main app with the required intent
-and let the normal app/core path execute it.
+Widget actions route an article/scope or Sync intent into the **main app**,
+which executes the existing standardized Core operation through its normal
+Core-session boundary (including `SyncReason::Widget` where supported). Widget
+extensions/providers are credential-free presentation and intent producers, not
+independent Core mutation, database, or Miniflux execution contexts. No platform
+may interpret this paragraph as permission for direct extension-side Core calls.
 
 ## 18. Opening, Reader navigation, and sharing articles
 
@@ -1308,16 +1311,19 @@ is directly visible in the Listening List.
 
 ### macOS Player semantics
 
-The macOS Player is a dedicated popover presentation mode, not a separate
-window and not an in-app mini-player. Native macOS Now Playing/Control Center
-provides remote playback presence while the popover is elsewhere.
+The macOS full Player is a dedicated presentation mode **inside the menu-bar
+popover**, not a separate window. The accepted macOS parity implementation
+additionally provides a **compact in-popover player** with title/artwork and
+play/pause access. Both surfaces use the same native player/Core media state;
+there is no second playback engine. System Now Playing/Control Center remains
+an additional OS-level remote playback surface.
 
 The Player remains available while a medium is loaded, including paused or
 stopped state.
 
 The primary controls are:
 
-**−30s · Play/Pause · Stop · +30s · Restart**
+**−15s · Play/Pause · Stop · +30s · Restart**
 
 Pause preserves loaded media and position. Stop checkpoints progress and keeps
 the medium loaded. Restart resets progress to `0:00` while keeping the medium
