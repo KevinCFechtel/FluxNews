@@ -9,7 +9,7 @@
 > implemented, extended, or superseded by later hardening and physical-device
 > experiments. Treat package descriptions and "next action" text as historical
 > sequencing unless the current Phase-D contract or
-> `IOS_UIKIT_TIMELINE_IMPLEMENTATION.md` explicitly carries the requirement
+> `docs/IOS_UIKIT_TIMELINE_IMPLEMENTATION.md` explicitly carries the requirement
 > forward.
 >
 > The UIKit Timeline amendment itself is still **IN PROGRESS**. Current physical-
@@ -247,7 +247,7 @@ not compiled into the production app.
 > **Note (18 September 2026):** the Frame Headroom section of Developer
 > Diagnostics was removed with the rest of the temporary instrumentation. The
 > procedure below is no longer executable; see
-> `IOS_TIMELINE_PERFORMANCE_DIAGNOSTIC_CLEANUP.md`.
+> `docs/analysis/ios/IOS_TIMELINE_PERFORMANCE_DIAGNOSTIC_CLEANUP.md`.
 
 In a diagnostic build, open **Settings → Developer Diagnostics**. **Reset
 Timeline Metrics** clears the Timeline, prepared-layout, and image-pipeline
@@ -467,7 +467,7 @@ been completed and is retained only to preserve the historical implementation
 sequence.
 
 For current work, use the authoritative Phase-D contract and
-`IOS_UIKIT_TIMELINE_IMPLEMENTATION.md`. Do not restart U3.6.5 or assume the
+`docs/IOS_UIKIT_TIMELINE_IMPLEMENTATION.md`. Do not restart U3.6.5 or assume the
 remaining task is acceptance-only. Continue from the current production code and
 current physical-device evidence; U3 remains open to deeper structural
 performance changes where justified.
