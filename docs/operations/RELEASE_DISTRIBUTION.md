@@ -394,7 +394,7 @@ PR #53 added signed-development-build verification and safe local installation.
 C3.1–C3.8 and the separate B1 signed runtime gate are **owner-accepted and
 closed**. [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/38934397341)
 remains source/CI evidence rather than proof of each individual runtime checklist
-item. See [MACOS_SANDBOX_ACCEPTANCE.md](acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md) for the
+item. See [MACOS_SANDBOX_ACCEPTANCE.md](../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md) for the
 accepted scope and evidence limits. Mac App Store provisioning, archive/export,
 Transporter validation and review remain separate release-track work. Before implementing
 the Mac App Store archive/export deliverable. That later Store export is part
@@ -402,7 +402,7 @@ of R, not part of the B1 runtime sign-off.
 
 The primary macOS distribution should likewise be the Mac App Store.
 
-**Mac release prerequisite and approved decision:** The macOS app has **never been released**. Its host App Sandbox entitlement has been implemented but signed-app acceptance is still outstanding. The existing Developer ID/notarization path is not a Mac App Store export. Validate host Sandbox, outbound network access, actual file-dialog capabilities and App Group provisioning **before** Mac App Store archive/export scripting. The developer explicitly accepts losing all existing unsandboxed local development data on their machine. Initialize a fresh sandbox storage/credential environment: **no database/download/Keychain migration, `container-migration.plist`, legacy-location fallback or compatibility layer is required**. See B1 in [POST_REPLACEMENT_FOLLOWUP_PLAN.md](POST_REPLACEMENT_FOLLOWUP_PLAN.md).
+**Mac release prerequisite and approved decision:** The macOS app has **never been released**. Its host App Sandbox entitlement has been implemented but signed-app acceptance is still outstanding. The existing Developer ID/notarization path is not a Mac App Store export. Validate host Sandbox, outbound network access, actual file-dialog capabilities and App Group provisioning **before** Mac App Store archive/export scripting. The developer explicitly accepts losing all existing unsandboxed local development data on their machine. Initialize a fresh sandbox storage/credential environment: **no database/download/Keychain migration, `container-migration.plist`, legacy-location fallback or compatibility layer is required**. See the accepted B1 evidence in [MACOS_SANDBOX_ACCEPTANCE.md](../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
 
 The existing `apple/macos/Build/build-app.sh` is currently a build/validation
 script, not a complete App Store distribution path.
@@ -660,7 +660,7 @@ Implement in this order:
    Wrap the existing production AAB flow without changing its signing model.
 
 3. **Validate F-Droid build/scanner feasibility, then implement native preparation.**
-   Complete B2 in `POST_REPLACEMENT_FOLLOWUP_PLAN.md` first. Port only the still-
+   Complete the applicable FD-IDs in `FDROID_OPEN_GATES.md` first. Port only the still-
    required metadata/signing/reproducibility behavior from the old Flutter repository.
 
 4. **Add Android F-Droid build/publish GitHub Action.**
@@ -672,7 +672,7 @@ Implement in this order:
    release interface and rename TestFlight-specific naming where appropriate.
 
 6. **Enable and validate the macOS sandbox, then add macOS archive/export.**
-   Complete B1 in `POST_REPLACEMENT_FOLLOWUP_PLAN.md` first, with fresh developer
+   B1 is owner-accepted; use `../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md` as the evidence record, with fresh developer
    data (no migration), and only then create the missing App Store Connect/
    Transporter path with proper Mac App Store signing and entitlement validation.
 
@@ -753,3 +753,35 @@ The macOS unpackaged app and both distribution artifacts live under `dist/macos/
 - `dist/macos/developer-id/FluxNews-<version>-macos-<architecture>.zip`: notarized Developer ID ZIP (moved from `dist/release/`).
 
 By default `install-local.sh` extracts the newest Developer ID ZIP from `dist/macos/developer-id/` and installs its verified app; `SOURCE_APP` can still select an unpackaged app explicitly; existing ZIP files in the legacy `dist/release/` directory and the former `dist/FluxNews.app` are not automatically moved or removed. Re-run the Developer ID release to create an artifact in the new directory.
+
+
+## 13. Current release-readiness ownership
+
+This section is the active owner for cross-platform release-readiness work that
+was previously duplicated in the completed repository-migration record.
+
+Before the first native 3.0.0 publication:
+
+- **iOS:** validate the production TestFlight/App Store archive/export path and
+  resulting App Store Connect/Transporter artifact with the owner's signing and
+  provisioning setup.
+- **macOS:** validate production Mac App Store provisioning, archive/export,
+  App Group/embedded-library signing and Transporter behavior. The previously
+  accepted B1 Sandbox/App Group runtime gate is not reopened by this work.
+- **Release/tag ordering:** the first FluxNews native Android tag
+  `android/v3.0.0` is created manually by the owner for the approved
+  candidate. Automation must not race or independently recreate that tag.
+- **Publication review:** review root `README.md`, `PRIVACY.md`, store
+  metadata and screenshots against actual native 3.0.0 behavior before
+  publication.
+- **F-Droid:** all remaining F-Droid acceptance and publication conditions are
+  owned only by [`FDROID_OPEN_GATES.md`](FDROID_OPEN_GATES.md); do not mirror
+  them here as an independent checklist.
+- **Dependencies/security:** current update and RustSec work is owned only by
+  [`DEPENDENCY_MAINTENANCE.md`](DEPENDENCY_MAINTENANCE.md).
+- **Saved Media bootstrap compatibility:** the retained historical bootstrap URL
+  is owned by
+  [`SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md`](SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md).
+
+No tag, GitHub Release, store upload or F-Droid submission is authorized by
+documentation completion alone.

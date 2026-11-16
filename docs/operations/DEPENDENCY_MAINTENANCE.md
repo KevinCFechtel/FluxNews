@@ -177,3 +177,24 @@ not be misread as a dependency freshness assessment.
 - A passing F-Droid recipe/build on a version is not a substitute for the
   AAR provenance, same-SHA reproducibility or Flutter-to-native signed
   upgrade acceptance gate.
+
+
+## Current maintenance ownership
+
+This document is the single operational owner for dependency/security work.
+The completed repository-migration record and historical post-replacement plans
+must not maintain parallel dependency task lists.
+
+Current maintenance rules include:
+
+- review Dependabot updates individually or in small compatible groups, with
+  security and unmaintained dependencies prioritized;
+- resolve every current strict RustSec vulnerability/unmaintained warning where
+  a maintained stable replacement or update is available;
+- do not use ignore lists or warning suppression to clear `ctutils`,
+  `libsqlite3-sys`, `basic-toml`, `rustix`, or successor findings;
+- determine the actual current blocker set from `core/Cargo.lock`, Dependabot
+  and the strict RustSec workflow rather than from historical inventories.
+
+Release readiness depends on the required dependency/security gates passing; it
+does not turn this policy into a release-publication authority.

@@ -18,16 +18,13 @@ owned by the documents linked below.
   native-mobile product semantics for iOS/iPadOS and Android.
 - [`NATIVE_DEVELOPMENT.md`](../NATIVE_DEVELOPMENT.md) — local native
   development entry point.
-- [`MIGRATION.md`](../MIGRATION.md) — completed Flux-to-FluxNews repository
+- [`archive/migration/FLUX_TO_FLUXNEWS.md`](archive/migration/FLUX_TO_FLUXNEWS.md) — completed Flux-to-FluxNews repository
   migration record and provenance. It is not evidence that the migration remains
   open.
 
 ## Current authoritative documentation
 
-These documents currently carry binding product or implementation contracts.
-Some still combine a completed implementation sequence with rules that remain
-valid. They stay active until those rules are explicitly transferred to smaller
-current contracts in a later documentation step.
+These documents carry the current binding product and implementation contracts. Completed phase sequencing has been separated into archive/evidence locations; current work should use the dedicated contracts below.
 
 | Area | Current authority | Scope |
 | --- | --- | --- |
@@ -50,26 +47,25 @@ contract is not an instruction to restart that phase.
 Open operational work has a specific owner. Do not duplicate these task lists in
 migration or historical phase documents.
 
-- [`RELEASE_DISTRIBUTION.md`](RELEASE_DISTRIBUTION.md) — cross-platform
+- [`operations/RELEASE_DISTRIBUTION.md`](operations/RELEASE_DISTRIBUTION.md) — cross-platform
   release and distribution policy and remaining channel-specific release work.
-- [`FDROID_OPEN_GATES.md`](FDROID_OPEN_GATES.md) — authoritative remaining
+- [`operations/FDROID_OPEN_GATES.md`](operations/FDROID_OPEN_GATES.md) — authoritative remaining
   native F-Droid gates. Normal developer-signing or production-upgrade evidence
   does not automatically close F-Droid-specific signature gates.
-- [`DEPENDENCY_MAINTENANCE.md`](DEPENDENCY_MAINTENANCE.md) — dependency,
+- [`operations/DEPENDENCY_MAINTENANCE.md`](operations/DEPENDENCY_MAINTENANCE.md) — dependency,
   vulnerability, maintenance, and CI-cost policy.
 - [`.github/DEPENDENCY_AUTOMATION.md`](../.github/DEPENDENCY_AUTOMATION.md) —
   Dependabot/RustSec automation procedure.
-- [`POST_REPLACEMENT_FOLLOWUP_PLAN.md`](POST_REPLACEMENT_FOLLOWUP_PLAN.md) —
-  completed post-replacement package history plus remaining follow-up references;
-  it is not a replacement for the dedicated release, F-Droid, or dependency
-  owners above.
+- [`operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md`](operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md) — retained historical bootstrap-URL compatibility decision; separate from migration/release work.
+- [`archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md`](archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md) — completed post-replacement package history; it no longer owns active work.
 
 ### Localization / Weblate
 
+- [Shared localization policy](operations/LOCALIZATION.md)
 - [Android localization](ANDROID_WEBLATE_LOCALIZATION.md)
-- [iOS localization](IOS_WEBLATE_LOCALIZATION.md)
-- [macOS localization](MACOS_WEBLATE_LOCALIZATION.md)
-- [Shared Weblate glossary](WEBLATE_GLOSSARY.md)
+- [iOS localization](operations/localization/IOS_WEBLATE_LOCALIZATION.md)
+- [macOS localization](operations/localization/MACOS_WEBLATE_LOCALIZATION.md)
+- [Shared Weblate glossary](operations/localization/WEBLATE_GLOSSARY.md)
 
 The platform runtime resources remain authoritative for application strings.
 Weblate handoff files and the glossary support the translation workflow; they do
