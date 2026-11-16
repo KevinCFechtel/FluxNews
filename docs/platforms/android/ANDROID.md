@@ -1228,3 +1228,99 @@ The following are decided unless implementation finds a concrete contradiction:
 - UniFFI as the only app/Core binding;
 - no second Kotlin domain or Miniflux layer;
 - one process-scoped Core/account session;
+
+
+## 28. Retained E1 storage and security invariants (completed)
+
+These are durable properties of the already implemented Android foundation, transferred from
+[`PHASE_E_NATIVE_ANDROID.md`](../../archive/phases/android/PHASE_E_NATIVE_ANDROID.md)
+(E1-E/E1-G). They do **not** restart E1 or prescribe a new credential implementation.
+
+- `FluxApplication` process-owns separate native credential and preference stores.
+  Sensitive account URL/API key and custom header values use a **versioned AES-256-GCM
+  credential envelope**, authenticated with contextual AAD and atomically stored under
+  app-private `noBackupFilesDir`. Its key remains in `AndroidKeyStore`, authorized for
+  GCM encryption/decryption, without per-use user authentication.
+- No API keys or sensitive custom-header values are placed in Preferences DataStore.
+  Credential clear removes **both** the encrypted envelope and its Keystore alias.
+  Background/headless access is supported after first device unlock, including while
+  the screen is locked; **Direct Boot secret access is not claimed**.
+- Non-secret presentation preferences use a distinct process-scoped Preferences
+  DataStore with typed asynchronous access. They do not become a second Core settings
+  authority.
+- `AndroidStoragePaths` separates Core data, media, logs and widget projection under
+  their own `noBackupFilesDir/flux-native/` children; regenerable Core cache uses
+  `cacheDir/flux-native/core-cache`. These paths remain disjoint from Flutter
+  `news_database.db`, `audio_cache`, legacy preferences/DataStore and backups.
+- Android automatic cloud backup and device transfer exclude the complete native
+  database/file/preference/external/root sandbox domains, including native state,
+  credentials, downloads, logs and widget projection. Explicit encrypted **Config
+  Backup/Restore** is the intended portable configuration mechanism, not system
+  backup or article/media backup.
+
+## 29. Retained E9 production migration invariants (completed)
+
+The following are the accepted production-upgrade rules from
+[`PHASE_E_NATIVE_ANDROID.md`](../../archive/phases/android/PHASE_E_NATIVE_ANDROID.md)
+(E9 and Playback Verification v2). They specify recovery and precedence for
+existing/legacy installs, **not** a new migration phase or device acceptance gate.
+
+### Account bootstrap, precedence and retry
+
+- Normal and headless bootstrap use the **same migration preflight before** consulting
+  native credentials. A valid existing native account wins without reading or
+  changing Flutter state. An unreadable or unavailable legacy secure-storage source
+  is **retryable**, not proof of an empty fresh installation.
+- When native credentials are absent and Flutter account data is readable, copy
+  account URL, API key and complete custom-header pairs into the native Keystore
+  envelope. Persist non-secret provisional account provenance **before** copying
+  credentials, so interruption cannot create an unmarked migrated account.
+  On copy failure clear the provisional marker and incomplete native copy, never
+  the Flutter source.
+- Migration is read-only toward legacy sources, copy/import-only into native roots,
+  idempotent and restart-safe. Explicit native/Core setting presence always wins,
+  including an explicit `false`; a serialized Flutter default zero does not prove
+  explicit user intent.
+- Compatible feed settings and positive per-feed Open in Miniflux overrides are
+  imported only for the migrated account, with feed-ID catalog validation and
+  independent retry markers when an ID is not yet available. Startup Category/Feed
+  restoration likewise waits for the matching authoritative Miniflux ID and does
+  not guess by name or URL. `syncReadStatusImmediately` does **not** map to
+  Core `DeliveryMode`.
+- Compatible local navigation, Reader, swipe, toolbar and widget defaults migrate
+  only where a direct semantic equivalent exists. Native per-widget configuration
+  wins over legacy widget defaults; retired widget styling/count and widget-specific
+  Miniflux-open settings are not restored.
+
+### Media identity, files and terminal failure evidence
+
+- Playback restoration uses positive article-keyed positions from legacy
+  SharedPreferences with secure-storage fallback. Zero is not a resumable position.
+  Core resolves a **unique** matching audio enclosure and retains existing native
+  playback state. Ambiguous identity, unavailable catalog/network, and incomplete
+  discovery are retryable.
+- Legacy download discovery uses both valid recorded paths and independent scanning
+  of Flutter `audio_cache` for validated
+  `audio_<enclosureId>_<timestamp>.*` files. The read-only legacy SQLite
+  enclosure-to-article relationship and targeted Core/Miniflux historical article
+  recovery verify identity before adoption. Stored absolute paths alone are
+  insufficient; Flutter files remain untouched.
+- An HTTP **404/410** is terminal *only* when the historical article fetch is
+  conclusively 404/410 **and** a complete read-only legacy download scan proves
+  there is no matching local audio. Such old playback may be recorded as visibly
+  discarded. A matching local download, incomplete scan, identity mismatch or
+  transport failure remains **retryable**, never silently discarded.
+- Verified audio is copied via a **staged file into the separate native media
+  root before Core adoption**. Existing Core downloads win. Missing enclosure
+  identities remain retryable. Versioned, non-destructive verification/repair can
+  re-evaluate previously skipped playback or downloaded media, including extracted
+  artwork, duration and chapters, without resetting unrelated migration stages.
+- Finalization distinguishes verified `completed` from
+  `completed_with_skipped_items`; skipped playback/download IDs and original
+  unresolved reasons persist. A user-confirmed partial finish preserves successful
+  imports and records the waived retries rather than claiming a fully imported
+  history. Versioned repair/completion markers prevent repeated reopening of
+  already verified stages.
+
+None of these rules substitutes for the separate F-Droid signed Flutter-to-native
+upgrade gate or authorizes publication.
