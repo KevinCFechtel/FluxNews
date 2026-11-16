@@ -621,10 +621,7 @@ Implementation status:
 
 ## 3. UIKit Timeline swipe actions — COMPLETE
 
-The fixed one-action-per-side implementation is incomplete relative to the
-authoritative mobile interaction contract.
-
-Implement the existing documented contract from `MOBILE_PRODUCT_SEMANTICS.md`:
+The native swipe implementation satisfies the configured-action contract in `MOBILE_PRODUCT_SEMANTICS.md`. The accepted interaction rules are:
 
 - zero, one, or two configured semantic actions per side;
 - inner-to-outer visual ordering;
@@ -1286,9 +1283,7 @@ D8 should only be reopened when there is a concrete product requirement for live
 3. does not duplicate D7 audio Now Playing behavior;
 4. can remain a projection over existing Core/native runtime ownership rather than becoming a new state authority.
 
-Until such a requirement exists, D8 is intentionally outside the active
-replacement roadmap rather than incomplete. D9 follows D8 as the final active
-native replacement-completion block.
+Until such a requirement exists, D8 remains deferred rather than incomplete. D9 replacement completion is already accepted; this section is retained for architecture context.
 
 
 ---
@@ -1449,8 +1444,8 @@ Implementation contract:
 - regression tests derive production usage from source rather than treating
   `extractionState: stale` as a usage signal, preserve locale structures, and
   verify translated variation paths/placeholders against the English source;
-- future Weblate integration manages this same native catalog/workflow. D9 does
-  not introduce a second localization store or resurrect Flutter localization
+- the integrated Weblate workflow manages this same native catalog. D9 did not
+  introduce a second localization store or resurrect Flutter localization
   files as runtime sources.
 
 ## 3. D9 Settings completion
