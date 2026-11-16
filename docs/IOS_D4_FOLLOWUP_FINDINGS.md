@@ -170,20 +170,20 @@ Implementation status:
 - Focused tests cover reading and writing both settings against the real Core.
 - 
 
-## 5. Configuration backup/restore — PHASE D, DEFERRED UNTIL SETTINGS STABILIZE
+## 5. Configuration backup/restore — COMPLETE IN LATER PHASE-D WORK
 
-Configuration backup/restore remains required native iOS product capability
-inside **Phase D**, but it does not need to block the current D4 follow-up
-implementation.
+At the time of this D4 follow-up, configuration backup/restore was deliberately
+deferred until the Settings surface stabilized. That deferral is historical.
 
-The Rust Core/UniFFI backup contract already supports iOS. Native iOS UI and
-platform orchestration are intentionally deferred to a late Phase-D completion
-step after the Settings surface has largely stabilized and before D10 final
-replacement validation. This avoids repeatedly revising export/restore mapping
-while D6-D8 and the remaining settings work still add product configuration.
+The later Phase-D/D9 implementation completed native iOS encrypted
+configuration export/import using the shared versioned Core backup envelope plus
+the platform-local settings payload. The production Settings surface exposes the
+backup flow, and the native replacement completion gate includes a tested
+backup/export + restore/import round trip.
 
-The eventual implementation must use the existing versioned Core backup format
-rather than inventing an iOS-only backup schema.
+Do not reopen this as unfinished D4 work. The current backup contract is owned by
+`MOBILE_PRODUCT_SEMANTICS.md`, `ARCHITECTURE_DECISIONS.md` and the completed
+D9 replacement contract.
 
 ## 6. Diagnostics, debug logging, and export — COMPLETE
 
@@ -245,9 +245,9 @@ The immediate D4 follow-up implementation set is complete and accepted:
 The canonical native iOS `./apple/ios/Build/test.sh` gate passed after the
 combined implementation and the iOS-17 SwiftUI Section compatibility fix.
 
-Configuration backup/restore and diagnostics export remain explicit **late
-Phase-D** completion items rather than D4 blockers. Curated feed onboarding is
-closed as intentionally removed.
+Configuration backup/restore and diagnostics export were explicit **late
+Phase-D** completion items rather than D4 blockers; both were subsequently
+implemented. Curated feed onboarding is closed as intentionally removed.
 
 ## Scope guard
 

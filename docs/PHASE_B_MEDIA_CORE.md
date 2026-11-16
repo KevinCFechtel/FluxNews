@@ -922,7 +922,7 @@ Native code owns:
 - play
 - pause
 - seek
-- ±30 second skipping
+- 15-second backward / 30-second forward skipping
 - playback speed
 - buffering
 - audio interruption handling

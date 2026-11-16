@@ -62,7 +62,7 @@ Before building, configure the Apple Developer portal for the same team:
 - Register the macOS App ID `dev.kevincfechtel.fluxNews` and the App Extension App ID `dev.kevincfechtel.fluxNews.widgets`.
 - Register App Group `group.dev.kevincfechtel.fluxNews` and associate it with both App IDs.
 - Enable the App Groups capability for both IDs and let Xcode Automatic Signing create or update the matching Apple Development provisioning profiles. If automatic signing cannot do so, create and download matching development profiles manually.
-- Keep Developer ID/notarization separate from this development setup; `release.sh` continues to perform that distribution flow.
+- Keep Developer ID/notarization separate from this development setup; `release-developer-id.sh` performs that outside-store distribution flow.
 
 ## Diagnostics
 
@@ -94,7 +94,7 @@ cp apple/macos/Build/.env.example apple/macos/Build/.env
 bash apple/macos/Build/release-developer-id.sh
 ```
 
-`apple/macos/Build/.env` is ignored by Git. `release.sh` builds the Rust/UniFFI-backed app, signs it with hardened runtime, notarizes and staples it, then creates and validates `dist/release/FluxNews-<version>-macos-<architecture>.zip`.
+`apple/macos/Build/.env` is ignored by Git. `release-developer-id.sh` builds the Rust/UniFFI-backed app, signs it with hardened runtime, notarizes and staples it, then creates and validates `dist/release/FluxNews-<version>-macos-<architecture>.zip`.
 
 Changes should be covered by appropriate tests. Pull requests should focus on a clearly described problem or feature.
 

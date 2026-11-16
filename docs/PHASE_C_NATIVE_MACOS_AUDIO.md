@@ -455,12 +455,14 @@ Complete appropriate `MPRemoteCommandCenter` handling for:
 - play;
 - pause;
 - toggle;
-- skip backward 30 seconds;
+- skip backward 15 seconds;
 - skip forward 30 seconds;
 - seek/change position.
 
-Validate macOS media keys and Control Center. Native Now Playing intentionally
-replaces an in-app mini-player.
+Validate macOS media keys and Control Center. System Now Playing remains the
+OS-level playback surface. The later accepted macOS parity work also adds a
+compact in-popover player for direct title/artwork/play-pause access; this does
+not create a second playback engine or duplicate media state.
 
 ## 6. C5 — Lifecycle, edge cases and acceptance
 

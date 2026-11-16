@@ -102,7 +102,7 @@ Initial supported commands:
 - Play: play/resume the currently loaded enclosure through `IOSMediaPlaybackCoordinator`.
 - Pause: coordinator pause; checkpoint semantics remain D6-owned.
 - Toggle: play/pause based on the shared live presentation status.
-- Skip backward/forward: coordinator skip, initially using the proven 30-second policy unless an existing product setting is discovered before implementation.
+- Skip backward/forward: coordinator skip using the accepted product policy of 15 seconds backward and 30 seconds forward.
 - Change playback position: validate/bound seconds and dispatch coordinator seek.
 
 `stopCommand` stays disabled initially. D6 Stop is a meaningful in-app lifecycle operation (checkpoint + retain resumable medium + release audio session), but exposing Stop as a general remote command is not required for standard spoken-audio control and would create a different external semantic from Pause. `nextTrackCommand`/`previousTrackCommand` also stay disabled until Flux has an explicit queue/episode-advance contract; D7 must not invent one.

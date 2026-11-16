@@ -467,7 +467,8 @@ been completed and is retained only to preserve the historical implementation
 sequence.
 
 For current work, use the authoritative Phase-D contract and
-`docs/IOS_UIKIT_TIMELINE_IMPLEMENTATION.md`. Do not restart U3.6.5 or assume the
-remaining task is acceptance-only. Continue from the current production code and
-current physical-device evidence; U3 remains open to deeper structural
-performance changes where justified.
+`docs/IOS_UIKIT_TIMELINE_IMPLEMENTATION.md`. Do not restart U3.6.5 or treat
+this historical plan as an open roadmap. U3 performance/correctness, U4 worker
+semantics and U5 cleanup/final acceptance are complete; any future performance
+change requires a new measured regression or product requirement rather than
+reopening U3.
