@@ -1,12 +1,12 @@
 # Unified Release and Distribution
 
-> **Status: PLANNED FOLLOW-UP / REPLACEMENT IMPLEMENTATION ALREADY COMPLETE**
+> **Status: RELEASE ORCHESTRATION IMPLEMENTED / CHANNEL-SPECIFIC RELEASE ACCEPTANCE STILL OPEN**
 >
-> This document defines the next repository-level release/distribution work after
-> the completed native macOS, iOS/iPadOS and Android replacement. It does not
-> reopen product implementation, migration acceptance, or frozen architecture.
-> The goal is to make release preparation predictable and consistent across all
-> native apps while preserving each store's real distribution model.
+> The native macOS, iOS/iPadOS and Android replacement is complete. The shared
+> release CLI and scoped GitHub release orchestration are implemented in
+> FluxNews; this document now owns the remaining channel-specific validation and
+> distribution rules. It does not reopen product implementation, migration
+> acceptance, or frozen architecture.
 
 ## 1. Goals
 
@@ -50,9 +50,9 @@ bash Build/release.sh macos --version-code 3002 --version-name 3.0.0
 bash Build/release.sh macos --target appstore --version-code 3002 --version-name 3.0.0
 ```
 
-The entry point delegates to the existing platform scripts. Apple App Store export creates an IPA for **manual** Transporter upload only. Play produces an AAB without uploading. Version inputs are mandatory for store targets. F-Droid targets intentionally fail until implemented. macOS App Store archive/export is now implemented provisionally and requires real signing/export validation on a Mac.
+The entry point delegates to the existing platform scripts. Apple App Store export creates an IPA for **manual** Transporter upload only. Play produces an AAB without uploading. Version inputs are mandatory for store targets. The shared CLI deliberately has no F-Droid target: native F-Droid candidate validation is owned by the dedicated F-Droid workflow and the gates in [FDROID_OPEN_GATES.md](FDROID_OPEN_GATES.md). macOS App Store archive/export is implemented provisionally and still requires real signing/export validation on a Mac.
 
-**R1 is partial:** full output normalization (Play AAB and iOS IPA now use stable `dist/android/play/` and `dist/ios/appstore/` paths), comprehensive signed distribution validation, macOS App Store signing/export validation on a real Mac, and CI orchestration are still to be implemented. `bash Build/test-release-cli.sh` checks argument validation without invoking Gradle or Xcode. Existing scripts' legacy invocation forms are preserved for compatibility. F-Droid-specific release validation remains B2.
+**R1 implementation status:** output normalization for Play AAB and iOS IPA is implemented, the shared CLI is covered by `bash Build/test-release-cli.sh`, and scoped candidate orchestration is implemented in `.github/workflows/release.yml`. Remaining work is channel-specific acceptance: Apple store signing/export/Transporter validation, final Android/F-Droid release-candidate gates, and the explicitly authorized publication steps. Existing scripts' legacy invocation forms remain for compatibility.
 
 ## 2. Target command model
 
@@ -133,10 +133,12 @@ All final scripts should print a concise release summary containing:
 
 ## Android release promotion policy (decision: 18 October 2026)
 
-> **Binding release policy; orchestration still to be implemented.** This policy
-> applies to Android/FluxNews releases. It does not imply that B2, F-Droid signing
-> continuity, the official F-Droid publication, or the new release workflow have
-> already passed acceptance.
+> **Binding release policy; orchestration implemented.** This policy applies to
+> Android/FluxNews releases. The scoped release workflow now performs candidate
+> checks, F-Droid source-build/reproducibility checks, Android signing and
+> immutable-tag/GitHub-Release promotion when explicitly dispatched in release
+> mode. It does **not** imply that the remaining F-Droid signature/upgrade gates
+> or an official F-Droid publication have passed acceptance.
 
 **Channel ownership and cadence**
 
@@ -248,10 +250,12 @@ must agree with the **Android** file, but historical F-Droid entries and
 signing fingerprints remain immutable. Do not introduce multiple manually
 maintained version authorities in Gradle, Xcode, F-Droid and Actions.
 
-**Implementation state:** The split and CLI selection are being developed
-in [PR #66](https://github.com/KevinCFechtel/Flux/pull/66); orchestration
-and automated F-Droid recipe generation remain follow-up work. Documenting
-this decision does not authorize any tag, store upload, or F-Droid submission.
+**Implementation state:** The per-platform version files, shared CLI selection,
+candidate checks, scoped release workflow and native F-Droid recipe generation
+are implemented in FluxNews. Historical PR #66 in the retired Flux repository
+records part of that implementation history only. No documentation change
+authorizes a tag, store upload or F-Droid submission; those remain explicit
+owner-controlled release actions.
 
 ## 4. Android — Google Play
 
@@ -280,18 +284,16 @@ release promotion policy above.
 
 ## 5. Android — F-Droid
 
-A native F-Droid path is still required.
+The native F-Droid **build/verify** path is implemented in FluxNews. It prepares
+candidate metadata from an explicit source SHA, runs F-Droid lint/scanner/source
+builds, verifies package/version/ABI contents and is reused by the scoped release
+workflow. The exact remaining publication gates are authoritative in
+[FDROID_OPEN_GATES.md](FDROID_OPEN_GATES.md).
 
-**Prerequisite:** Complete the reproducible source-build and scanner feasibility gate B2 in [POST_REPLACEMENT_FOLLOWUP_PLAN.md](POST_REPLACEMENT_FOLLOWUP_PLAN.md) before implementing the publication workflow. Pinned Cargo-derived AARs and JNA require provenance/build checks; scanner failure has not yet been established.
-
-The repository must gain both:
-
-1. canonical local F-Droid release preparation; and
-2. a GitHub Action that builds and publishes/submits the native F-Droid release
-   using the same underlying scripts.
-
-The new F-Droid path must replace the old Flutter-repository distribution
-ownership only after the native path is validated.
+What is still required is the **official publication/cutover acceptance**, not
+another independent native build implementation. In particular, FD-01, FD-04,
+FD-05 and FD-06 remain open as documented there, and FD-03 must be repeated for
+the actual FluxNews release candidate SHA.
 
 Requirements:
 
@@ -310,14 +312,16 @@ Requirements:
 
 ### F-Droid GitHub Actions
 
-Add a dedicated workflow, for example
-`.github/workflows/fdroid.yml`.
+The dedicated build/verify workflow is implemented as
+`.github/workflows/fdroid-native.yml` and is reused by the scoped release
+workflow.
 
-It should have two clearly separated responsibilities:
+The responsibilities remain deliberately separated:
 
-- **build/verify:** reproducible native F-Droid artifact + metadata validation;
-- **publish/submit:** explicit release/manual/tag-triggered submission step after
-  build/verify succeeds.
+- **build/verify:** implemented reproducible native F-Droid artifact + metadata
+  validation;
+- **publish/submit:** still requires a separate, explicitly authorized official
+  F-Droid submission after all gates succeed.
 
 Do not make every push to `main` publish an F-Droid release. The
 F-Droid recipe/source-build job is a **required, blocking pre-release gate**
