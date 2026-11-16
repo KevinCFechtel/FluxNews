@@ -2,29 +2,36 @@ package de.circledev.fluxnews.nativeapp
 
 internal data class AndroidScrolloverPositionSample(
     val firstVisibleIndex: Int,
+    val firstVisibleOffset: Int = 0,
+    /** Actual article rows intersecting the viewport, not prefetched/offscreen LazyList items. */
+    val visibleArticleIndices: List<Int> = emptyList(),
     val atDatasetEnd: Boolean = false,
 )
 
 /**
- * Lightweight Compose-native Scrollover detector.
+ * Tracks exposure before forward crossing, using Compose's observed visible rows.
  *
- * A scroll interaction is summarized by the first-visible index at its start and
- * the highest first-visible index reached before LazyList becomes idle again.
- * Candidates are emitted once, at interaction end. Reverse movement does not erase
- * forward progress, so slow forward/backward movement remains deterministic.
- *
- * Known programmatic scrolls explicitly suppress collection and synchronize the
- * idle baseline afterwards.
+ * A jump in first-visible index is not proof that intervening articles were seen:
+ * only rows actually observed in the viewport may become read candidates.
+ * Crossings are accumulated during the gesture and emitted once when it ends.
  */
 internal class AndroidScrolloverTracker(
     initialFirstVisibleIndex: Int = 0,
 ) {
     private val orderedIds = mutableListOf<Long>()
     private val emittedIds = mutableSetOf<Long>()
-    private var idleFirstVisibleIndex: Int = initialFirstVisibleIndex
-    private var sessionStartIndex: Int? = null
-    private var sessionMaxIndex: Int? = null
-    private var sessionReachedDatasetEnd = false
+
+    private var idleFirstVisibleIndex = initialFirstVisibleIndex.coerceAtLeast(0)
+    private var idleFirstVisibleOffset = 0
+    private var idleAtDatasetEnd = false
+    private val idleObservedIndices = mutableSetOf<Int>()
+
+    private var sessionActive = false
+    private var sessionStartedAtDatasetEnd = false
+    private var lastFirstVisibleIndex = 0
+    private var lastFirstVisibleOffset = 0
+    private val sessionObservedIndices = mutableSetOf<Int>()
+    private val sessionCrossedIds = mutableSetOf<Long>()
     private var programmaticScrollActive = false
 
     fun updateSnapshot(ids: List<Long>) {
@@ -35,34 +42,33 @@ internal class AndroidScrolloverTracker(
             (0 until previousSize).all { ids[it] == orderedIds[it] }
 
         if (appendOnly) {
-            for (index in previousSize until ids.size) {
-                orderedIds += ids[index]
-            }
+            for (index in previousSize until ids.size) orderedIds += ids[index]
             return
         }
 
         orderedIds.clear()
         orderedIds.addAll(ids)
         emittedIds.retainAll(ids.toSet())
-        sessionStartIndex = null
-        sessionMaxIndex = null
-        sessionReachedDatasetEnd = false
+        resetSession()
+        idleObservedIndices.clear()
+        idleAtDatasetEnd = false
     }
 
-    fun synchronizeIdlePosition(firstVisibleIndex: Int) {
-        sessionStartIndex = null
-        sessionMaxIndex = null
-        sessionReachedDatasetEnd = false
+    fun synchronizeIdlePosition(firstVisibleIndex: Int, firstVisibleOffset: Int = 0) {
+        resetSession()
         idleFirstVisibleIndex = firstVisibleIndex.coerceAtLeast(0)
+        idleFirstVisibleOffset = firstVisibleOffset.coerceAtLeast(0)
+        idleAtDatasetEnd = false
+        idleObservedIndices.clear()
     }
 
-    fun beginProgrammaticScroll(firstVisibleIndex: Int) {
+    fun beginProgrammaticScroll(firstVisibleIndex: Int, firstVisibleOffset: Int = 0) {
         programmaticScrollActive = true
-        synchronizeIdlePosition(firstVisibleIndex)
+        synchronizeIdlePosition(firstVisibleIndex, firstVisibleOffset)
     }
 
-    fun endProgrammaticScroll(firstVisibleIndex: Int) {
-        synchronizeIdlePosition(firstVisibleIndex)
+    fun endProgrammaticScroll(firstVisibleIndex: Int, firstVisibleOffset: Int = 0) {
+        synchronizeIdlePosition(firstVisibleIndex, firstVisibleOffset)
         programmaticScrollActive = false
     }
 
@@ -72,54 +78,78 @@ internal class AndroidScrolloverTracker(
         enabled: Boolean,
     ): List<Long> {
         val currentIndex = sample.firstVisibleIndex.coerceAtLeast(0)
+        val currentOffset = sample.firstVisibleOffset.coerceAtLeast(0)
+        val visibleIndices = sample.visibleArticleIndices.filter { it in orderedIds.indices }
 
         if (!enabled || programmaticScrollActive) {
             if (!scrolling && !programmaticScrollActive) {
-                synchronizeIdlePosition(currentIndex)
+                synchronizeIdlePosition(currentIndex, currentOffset)
             }
             return emptyList()
         }
 
-        if (scrolling) {
-            if (sessionStartIndex == null) {
-                sessionStartIndex = idleFirstVisibleIndex
-                sessionMaxIndex = maxOf(idleFirstVisibleIndex, currentIndex)
-            } else {
-                sessionMaxIndex = maxOf(sessionMaxIndex ?: currentIndex, currentIndex)
-            }
-            if (sample.atDatasetEnd) sessionReachedDatasetEnd = true
+        if (scrolling && !sessionActive) {
+            sessionActive = true
+            sessionStartedAtDatasetEnd = idleAtDatasetEnd
+            lastFirstVisibleIndex = idleFirstVisibleIndex
+            lastFirstVisibleOffset = idleFirstVisibleOffset
+            sessionObservedIndices.addAll(idleObservedIndices)
+        }
+
+        if (!sessionActive) {
+            recordIdle(sample, visibleIndices)
             return emptyList()
         }
 
-        val start = sessionStartIndex
-        val maxReached = sessionMaxIndex
-        val reachedDatasetEnd = sessionReachedDatasetEnd || sample.atDatasetEnd
-        sessionStartIndex = null
-        sessionMaxIndex = null
-        sessionReachedDatasetEnd = false
-        idleFirstVisibleIndex = currentIndex
+        val movingForward = currentIndex > lastFirstVisibleIndex ||
+            (currentIndex == lastFirstVisibleIndex && currentOffset > lastFirstVisibleOffset)
 
-        if (start == null || maxReached == null) return emptyList()
+        if (movingForward) {
+            // An article must have been observed BEFORE this crossing. Merely
+            // passing over indices in a fast fling never qualifies those rows.
+            for (index in sessionObservedIndices) {
+                if (index < currentIndex) sessionCrossedIds.add(orderedIds[index])
+            }
 
-        val startIndex = start.coerceIn(0, orderedIds.size)
-        val endExclusive = if (reachedDatasetEnd) {
-            orderedIds.size
-        } else {
-            maxReached.coerceIn(startIndex, orderedIds.size)
-        }
-        if (startIndex >= endExclusive) return emptyList()
-
-        val candidates = buildList {
-            for (index in startIndex until endExclusive) {
-                val id = orderedIds[index]
-                if (id !in emittedIds) add(id)
+            // At the genuine end, already visible trailing rows can complete
+            // without crossing the top boundary. Never include unseen rows.
+            if (sample.atDatasetEnd && !sessionStartedAtDatasetEnd) {
+                for (index in visibleIndices) sessionCrossedIds.add(orderedIds[index])
             }
         }
+
+        sessionObservedIndices.addAll(visibleIndices)
+        lastFirstVisibleIndex = currentIndex
+        lastFirstVisibleOffset = currentOffset
+
+        if (scrolling) return emptyList()
+
+        val candidates = orderedIds.filter { it in sessionCrossedIds && it !in emittedIds }
         emittedIds.addAll(candidates)
+        resetSession()
+        recordIdle(sample, visibleIndices)
         return candidates
     }
 
     fun rearm(articleIds: Collection<Long>) {
         emittedIds.removeAll(articleIds.toSet())
+    }
+
+    private fun recordIdle(
+        sample: AndroidScrolloverPositionSample,
+        visibleIndices: List<Int>,
+    ) {
+        idleFirstVisibleIndex = sample.firstVisibleIndex.coerceAtLeast(0)
+        idleFirstVisibleOffset = sample.firstVisibleOffset.coerceAtLeast(0)
+        idleAtDatasetEnd = sample.atDatasetEnd
+        idleObservedIndices.clear()
+        idleObservedIndices.addAll(visibleIndices)
+    }
+
+    private fun resetSession() {
+        sessionActive = false
+        sessionStartedAtDatasetEnd = false
+        sessionObservedIndices.clear()
+        sessionCrossedIds.clear()
     }
 }
