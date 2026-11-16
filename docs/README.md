@@ -11,11 +11,11 @@ This directory is intentionally small.
 - `PHASE_E_NATIVE_ANDROID.md` — authoritative Phase-E contract for the native Android replacement, including Kotlin/Compose/UniFFI foundation, production migration, adaptive UI, background work, widgets, media, Android Auto, testing, and E1–E9 sequencing.
 - `FDROID_OPEN_GATES.md` — authoritative remaining gates for native F-Droid publication; pre-release preparation may merge without claiming signed-upgrade or reproducibility acceptance.
 - `DEPENDENCY_MAINTENANCE.md` — agreed dependency update, vulnerability scan and CI-cost policy; audits must cover pinned Rust, Android and Apple tooling before release.
-- `APPLE_UNIFFI_0_32_MIGRATION.md` — local Apple integration record for UniFFI 0.32.2, including packaging invariants, architecture evidence, test results, and explicitly open runtime/signing checks.
+- `acceptance/apple/APPLE_UNIFFI_0_32_MIGRATION.md` — local Apple integration record for UniFFI 0.32.2, including packaging invariants, architecture evidence, test results, and explicitly open runtime/signing checks.
 - `RELEASE_DISTRIBUTION.md` — authoritative next-step plan for unified cross-platform release scripting and store-specific distribution for Android, iOS and macOS.
 - `POST_REPLACEMENT_FOLLOWUP_PLAN.md` — post-E9 stabilization and store-readiness plan; macOS is deliberately a clean-sandbox start with no migration. Signed Sandbox acceptance is deferred, **not completed**; see `MACOS_SANDBOX_ACCEPTANCE.md`.
 - `MACOS_C3_FEATURE_PARITY_ROADMAP.md` — approved macOS feature-parity inventory and C3.0–C3.8 implementation sequence, covering bulk feed settings, scoped Mark All actions, download management, diagnostics, settings, background operation and locale acceptance.
-- `PHASE_D_D1_STATUS.md` — historical snapshot of the completed/frozen D1 foundation and early D2.1 progress; it is not a current status authority.
+- `archive/phases/ios/PHASE_D_D1_STATUS.md` — historical snapshot of the completed/frozen D1 foundation and early D2.1 progress; it is not a current status authority.
 
 ## Phase status
 

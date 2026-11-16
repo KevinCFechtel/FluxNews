@@ -8,7 +8,7 @@
 > must not be used to determine the current implementation status.
 >
 > Current Phase-D status and binding architecture live in
-> `PHASE_D_NATIVE_IOS_IPADOS.md` and `ARCHITECTURE_DECISIONS.md`.
+> `docs/PHASE_D_NATIVE_IOS_IPADOS.md` and `docs/ARCHITECTURE_DECISIONS.md`.
 
 Historical status at this snapshot: **D1 COMPLETE AND FROZEN FOR CONTINUED DEVELOPMENT**
 

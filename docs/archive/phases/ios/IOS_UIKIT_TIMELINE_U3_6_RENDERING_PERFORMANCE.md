@@ -18,7 +18,7 @@
 ## 1. Why U3.6 exists
 
 The physical-device review in
-[`Flux_iPhone15_Scrolling_Review_2dbec0d.md`](Flux_iPhone15_Scrolling_Review_2dbec0d.md)
+[`Flux_iPhone15_Scrolling_Review_2dbec0d.md`](../../../analysis/ios/Flux_iPhone15_Scrolling_Review_2dbec0d.md)
 confirmed visible movement holds in an iPhone 15 screen recording and identified
 remaining synchronous work in the current UIKit Timeline. The review does not
 prove the millisecond cost of each individual code path, but the relevant work

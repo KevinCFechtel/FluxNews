@@ -18,7 +18,7 @@
 Geprüfter Stand: `892eeda` (`main`, 14. September 2026)
 Grundlage: `docs/ScreenRecording1.MP4` (45,81 s, 1180 × 2556, 60,09 fps, 2754 Frames) plus Quelltextprüfung.
 Gerät laut vorherigem Review: iPhone 15, iOS 26. **60 Hz ⇒ Frame-Budget 16,7 ms.**
-Vorgänger: `docs/Flux_iOS_Timeline_Stutter_Review_a40e377.md`. Dieses Dokument ersetzt dessen *Diagnose*, nicht dessen Befundliste.
+Vorgänger: `Flux_iOS_Timeline_Stutter_Review_a40e377.md`. Dieses Dokument ersetzt dessen *Diagnose*, nicht dessen Befundliste.
 
 ---
 

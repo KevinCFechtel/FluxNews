@@ -36,7 +36,7 @@ Read these files in order before editing code:
 
 This handoff is subordinate to those contracts. It must not introduce a second
 product specification. The older
-[Flux_iOS_Scrollover_Analyse.md](Flux_iOS_Scrollover_Analyse.md) is historical
+[Flux_iOS_Scrollover_Analyse.md](analysis/ios/Flux_iOS_Scrollover_Analyse.md) is historical
 evidence; its conditional migration advice and optional SwiftUI cell hosting
 are superseded. Required iOS Scrollover semantics are already decided in Phase D.
 
