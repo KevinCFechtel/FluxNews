@@ -21,8 +21,8 @@
 >   product contract below.
 >
 > This transfer does not reopen D1–D9, U1–U5 or production-upgrade acceptance.
-> K12 article-image/cache ownership is intentionally not resolved here; existing
-> wording is carried forward without choosing a new owner.
+> Article-image HTTP loading, decode and platform caching are explicitly
+> native-owned; the Core may provide discovery/URL/domain metadata only.
 >
 > Shared mobile semantics remain authoritative in
 > [`../../MOBILE_PRODUCT_SEMANTICS.md`](../../MOBILE_PRODUCT_SEMANTICS.md);
