@@ -57,7 +57,7 @@ Expansion state, drawer/sheet visibility, and similar presentation state remain 
 
 `Unread Only` and article sort direction are transient Article List presentation controls, not persistent global Settings.
 
-A semantic list reset caused by scope/filter/sort or another explicitly defined reset event returns the Article List to its natural starting position. The mechanism is platform-specific. iOS keeps the owned Timeline controller and moves its collection view to the natural scroll edge so the system navigation chrome follows its normal Large Title behavior; Android must use its own native list/navigation semantics rather than copying that implementation.
+A semantic list reset caused by scope/filter/sort or another explicitly defined reset event returns the Article List to its natural starting position. The mechanism is platform-specific. iOS keeps the owned Timeline controller and moves its current UIKit table-based Timeline to the natural scroll edge so the system navigation chrome follows its normal Large Title behavior; Android must use its own native list/navigation semantics rather than copying that implementation.
 
 Feed icons, including available normal/dark variants from Core, should be used by native clients rather than independently deriving another icon model.
 
