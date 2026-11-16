@@ -21,7 +21,7 @@ git submodule update --init --recursive -- vendor/rustls-platform-verifier
 
 See the [documentation index](docs/README.md), [native development notes](NATIVE_DEVELOPMENT.md),
 [native architecture](docs/ARCHITECTURE_DECISIONS.md), and the completed
-[repository migration record](MIGRATION.md).
+[repository migration record](docs/archive/migration/FLUX_TO_FLUXNEWS.md).
 The repository migration is complete; native release and distribution gates are tracked separately in the documentation index.
 
 ## Published Flutter application
