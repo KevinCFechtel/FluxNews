@@ -242,8 +242,8 @@ main thread. Rust owns durable state and delivery; do not add a Swift database
 or another Miniflux client.
 
 The detailed iOS behavior contract is in
-[Phase D](PHASE_D_NATIVE_IOS_IPADOS.md#iosipados-article-timeline--uikit).
-[UIKit Timeline implementation handoff](IOS_UIKIT_TIMELINE_IMPLEMENTATION.md)
+[Phase D](platforms/ios/IOS.md#iosipados-article-timeline--uikit).
+[UIKit Timeline implementation handoff](platforms/ios/IOS.md)
 records the rationale, work packages, and acceptance cases. This is a bounded
 amendment to the iOS Timeline, not a reopening of frozen Core/macOS architecture
 or the Flutter production-data migration contract.
