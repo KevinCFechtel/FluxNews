@@ -1700,3 +1700,126 @@ image path with bounded decoded-image caching, normal HTTP caching, memory
 pressure/eviction, and implementation-owned cache policy. Cache tuning is a
 native performance concern, not a product setting.
 
+
+## Retained D9-A migration recovery and precedence (completed)
+
+The following rules transfer already accepted D9-A production-upgrade behavior from
+[`IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md`](../../acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md).
+They are **current compatibility invariants**, not new migration implementation
+or fresh device-acceptance work.
+
+- Native/Core settings have field-specific precedence: **explicit native
+  presence, including `false`, wins**. Both exact legacy `true` and `false`
+  are meaningful for compatible booleans; serialized/default zero in Flutter
+  feed overrides is not proof of an intentional false decision.
+- Startup Category/Feed selection is resolved through real Miniflux IDs after
+  the authoritative catalog becomes available. Missing IDs stay retryable;
+  neither title nor URL guesses are permitted.
+- Only a positive `openMinifluxEntry: 1` under a numeric Flutter feed ID
+  imports to the corresponding Core `open_in_miniflux` preference, provided
+  there is no existing native/Core field decision. Missing, malformed and
+  zero-valued records are not imported as `false`.
+- `syncReadStatusImmediately` is **not** mapped to Core `DeliveryMode`,
+  whose scope extends beyond the Flutter read-status-only option.
+- Legacy `audio_cache` download files are independently discovered from
+  validated `audio_<enclosureId>_<timestamp>[.extension]` filenames,
+  even without usable `audio_download_path_<id>` Keychain entries.
+  File and Keychain candidates are deduplicated by enclosure identity;
+  stored absolute paths alone are not authoritative.
+- A read-only legacy SQLite enclosure→article relationship and targeted
+  Core/Miniflux historical article fetch can recover already-read articles
+  and matching audio enclosures for prior downloads or positive playback
+  positions. Ambiguous enclosure identity remains retryable; existing
+  native playback/download state is never overwritten.
+- A confirmed HTTP **404/410** is terminal stale history only when a complete
+  read-only download scan proves the absence of matching local audio.
+  Existing files, incomplete legacy evidence, ambiguous identity and
+  transport/connectivity failure remain retryable; do not silently classify
+  them as discarded progress.
+- A versioned, **non-destructive** verification marker may reopen only the
+  affected legacy download/playback stage after a previous false-positive
+  completion. An **empty-source guard** forbids marking a download import
+  complete while discoverable legacy audio is still unresolved. Previously
+  imported Core downloads may repair missing Listening List membership.
+  The separate one-time media repair can recover embedded artwork, duration
+  and chapter metadata without overwriting downloaded/playback state.
+- Preserve `completed` versus `completed_with_skipped_items` and each original
+  unresolved playback/download reason. Partial finalization requires explicit
+  user confirmation; imported successes and untouched Flutter sources survive.
+
+## Retained D5 widget and background-completion invariants (completed)
+
+The accepted D5 background-to-widget behavior is documented in
+[`IOS_D5_FINAL_ACCEPTANCE.md`](../../acceptance/ios/IOS_D5_FINAL_ACCEPTANCE.md).
+Successful background Sync must await the App Group widget snapshot update
+(and any required successful invalidation/fanout) **before** completing its
+BGTask. A successful snapshot write or invalidation requests best-effort
+WidgetKit timeline reload through the shared reloader. Each supported widget
+timeline additionally requests a **30-minute `.after(...)` fallback**; this
+is an OS-controlled request, not a guaranteed execution cadence or an
+independent network/Sync path.
+
+Supported Lock Screen families are `accessoryInline`,
+`accessoryCircular` and `accessoryRectangular`; the previously removed
+small Headlines widget stays retired. The WidgetKit extension reads only
+credential-free App Group snapshot/icon data: it never initializes Core,
+opens SQLite or Keychain, or contacts Miniflux. Article action routing belongs
+to the app, not the extension. A user force-quit can suppress background
+execution until relaunch; no unsupported background-mode workaround is required.
+
+## Retained D6 iOS background-transfer and account lifecycle (completed)
+
+These invariants come from
+[`IOS_D6_NATIVE_MEDIA_IMPLEMENTATION.md`](../../archive/phases/ios/IOS_D6_NATIVE_MEDIA_IMPLEMENTATION.md)
+and [`IOS_D6_FINAL_ACCEPTANCE.md`](../../acceptance/ios/IOS_D6_FINAL_ACCEPTANCE.md).
+They describe the **iOS** executor and must not silently impose persistent
+background transfers on macOS.
+
+- A long-lived app-owned background `URLSession` has a stable
+  configuration-specific identifier, distinct between Development and
+  Production/Upgrade Test. Its delegate owns task events and launch events;
+  after process relaunch the same identifier reconnects to OS-owned tasks.
+- Each transfer task carries versioned native metadata including enclosure ID
+  and an opaque **persisted account-execution generation**. The generation
+  survives relaunch for the same account but rolls before replacement.
+  Old-account tasks are cancelled/disowned before another Core can adopt them.
+  OS task IDs and transfer execution state are not Core SQLite domain state.
+- Before account replacement/removal, stop admitting Core work, checkpoint valid
+  playback, detach Core-facing callbacks, cancel/disown old account transfers,
+  and quiesce the app-wide Core session. A failed account replacement may
+  reattach the still-current Core. An exclusive Rebuild temporarily detaches
+  media Core calls; no callbacks may enter the quiesced Core.
+- Reconciliation compares Core requested transfer/deletion intent, recovered
+  OS tasks, native account generation, deterministic media files and active
+  playback. Stale tasks are cancelled; already completed deterministic files
+  may satisfy Core intent without redownloading. Active-playback files must
+  not be deleted; paused/stopped playback releases deletion deferrals and
+  triggers reconciliation.
+- `didFinishDownloadingTo` moves the temporary URLSession file
+  **synchronously** to its deterministic app media location before returning
+  to the OS; Core completion may follow when the Core becomes available.
+  Do not add a second durable Swift completion queue.
+- Background URLSession relaunch must use the **same single normal bootstrap
+  and Core session**. Call the system background-session completion handler
+  only after queued delegate events and task/Core ownership reconciliation
+  have completed.
+- The existing `IOSMediaTransferReconciliationHandoff` is the **only**
+  D5-success→D6 reconciliation bridge. Install exactly one handler for the
+  attached executor, coalesce pre-install requests and detach on session
+  retirement; do not invent another event bus or post-sync trigger.
+- A loaded but **idle** player adopts the reconciled Core position after
+  successful Sync. Actively playing audio is **never remote force-seeked**.
+  Preview artwork selects the Core-provided artwork source without preparing
+  playback. Show Notes use the established Reader document path; Listening
+  List, Player, multi-enclosure chooser and media actions reuse Core-backed
+  projections rather than separate Swift domain state.
+
+## Retained D7 remote-command registration lifetime (completed)
+
+The one app-scoped remote-command adapter registers supported
+play/pause/toggle, 15-second backward, 30-second forward and seek handlers
+**idempotently** against the existing playback coordinator. It removes
+registered command targets on cleanup and disables unsupported Stop and
+next/previous episode commands. Duplicate registration must never yield
+duplicate dispatch or a second player. These accepted rules are retained from
+[`IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md`](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
