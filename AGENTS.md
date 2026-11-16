@@ -83,6 +83,8 @@ For native Android work, `docs/platforms/android/ANDROID.md` is the authoritativ
 
 For native iOS/iPadOS work, `docs/platforms/ios/IOS.md` is the authoritative current platform contract together with `docs/MOBILE_PRODUCT_SEMANTICS.md`. The completed Phase-D/D1–D9 and UIKit U1–U5 implementation sequences are historical; acceptance records document evidence rather than current sequencing.
 
+For native macOS work, `docs/platforms/macos/MACOS.md` is the authoritative current platform contract together with `docs/current/MEDIA_CORE.md`. The completed Phase-C/C3 and B1 implementation sequences are historical; sandbox acceptance is evidence, while Mac App Store archive/export validation remains release work.
+
 Agents must:
 
 * keep Rust Core/UniFFI as the durable domain boundary; do not create a Kotlin Miniflux/domain/persistence duplicate;
