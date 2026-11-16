@@ -278,7 +278,7 @@ translatable base entries (including 11 plurals); the additional five locales
 are intentionally awaiting reviewed Weblate translations. Remaining
 unmapped/dynamic messages and actual alternate-locale device behavior have not
 been fully signed off. Historic scan findings are tracked in
-[ANDROID_LOCALIZATION_AUDIT.md](ANDROID_LOCALIZATION_AUDIT.md); do not confuse
+[analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md); do not confuse
 the source-level audit or green CI with runtime or Weblate completion.
 
 Extract user-visible Android text into resources (including settings, readers,
