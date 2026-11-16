@@ -74,7 +74,7 @@ separate focused PRs and run only the affected platform gates plus Rust gates.
 **Implemented:** Both Apple host Info.plists set
 `NSAppTransportSecurity/NSAllowsArbitraryLoads = true` and have structural
 tests. This is deliberately broad because arbitrary feed media uses both
-URLSession and AVFoundation; see [APPLE_HTTP_MEDIA_ATS.md](APPLE_HTTP_MEDIA_ATS.md)
+URLSession and AVFoundation; see [APPLE_HTTP_MEDIA_ATS.md](../../APPLE_HTTP_MEDIA_ATS.md)
 for the security trade-off and App Store rationale. Widget ATS is unchanged.
 **Acceptance (18 October 2026):** Owner marked A1 accepted. The previously listed iOS/macOS HTTP-only image/artwork, streaming, download and redirect checks remain historical test guidance, not independently verified evidence.
 The points below preserve the original verification contract.
@@ -184,7 +184,7 @@ independently of UniFFI compilation, while native tests remain intact.
 Sandbox entitlements and sandbox-local media paths. PR #53 added
 `verify-sandbox.sh`, signed development build validation and protected
 `install-local.sh` staging; [Apple CI #164](https://github.com/KevinCFechtel/Flux/actions/runs/38924332033)
-passed. The project owner reported successful macOS tests and explicitly closed both B1 and C3.8 on 17 October 2026. This is owner-reported sign-off, not independently captured evidence for each signed fresh-container check. Mac App Store archive/export and Transporter verification remain part of release track R. See [MACOS_SANDBOX_ACCEPTANCE.md](acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
+passed. The project owner reported successful macOS tests and explicitly closed both B1 and C3.8 on 17 October 2026. This is owner-reported sign-off, not independently captured evidence for each signed fresh-container check. Mac App Store archive/export and Transporter verification remain part of release track R. See [MACOS_SANDBOX_ACCEPTANCE.md](../../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
 
 The implementation-oriented steps below are historical requirements; only
 items not yet proven by the signed-app checklist remain release-open.
@@ -278,7 +278,7 @@ translatable base entries (including 11 plurals); the additional five locales
 are intentionally awaiting reviewed Weblate translations. Remaining
 unmapped/dynamic messages and actual alternate-locale device behavior have not
 been fully signed off. Historic scan findings are tracked in
-[analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md); do not confuse
+[analysis/android/ANDROID_LOCALIZATION_AUDIT.md](../../analysis/android/ANDROID_LOCALIZATION_AUDIT.md); do not confuse
 the source-level audit or green CI with runtime or Weblate completion.
 
 Extract user-visible Android text into resources (including settings, readers,
@@ -311,7 +311,7 @@ cases are handled.
 **Implementation / acceptance status (17 October):** C3.1–C3.7 were merged via PRs #49–#52.
 [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/38934397341)
 passed on combined `main` `2edc6537`. The project owner accepted C3.8 real-Mac testing and B1 on 17 October 2026. PR #61 has since been merged into `main`.
-See [MACOS_C3_FEATURE_PARITY_ROADMAP.md](archive/phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md).
+See [MACOS_C3_FEATURE_PARITY_ROADMAP.md](../phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md).
 
 **Decision (12 October 2026):** Functional parity with iOS/Android is the
 default; macOS retains native menu-bar/window controls rather than copying
@@ -320,7 +320,7 @@ Mark All as Read & Next are explicitly in scope**, not optional follow-ups.
 
 The controlled source-based inventory, order of work, per-PR quality gates and
 real-Mac acceptance checklist are in
-[MACOS_C3_FEATURE_PARITY_ROADMAP.md](archive/phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md).
+[MACOS_C3_FEATURE_PARITY_ROADMAP.md](../phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md).
 Work packages cover: scope bulk-read and Starred filter; multi-feed editing;
 download totals, cancellation, policy and retention; diagnostics/redaction;
 HTTP account warning, About and player 15/30-second controls; background-sync
