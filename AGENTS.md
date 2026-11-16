@@ -18,6 +18,8 @@ For non-trivial work, use this order of authority:
 
 If reference material conflicts with `ARCHITECTURE_DECISIONS.md`, the architecture decisions win.
 
+Operational ownership is separate from product architecture: use `docs/operations/RELEASE_DISTRIBUTION.md` for release/store/tag work, `docs/operations/FDROID_OPEN_GATES.md` for remaining F-Droid gates, `docs/operations/DEPENDENCY_MAINTENANCE.md` for dependency/security maintenance, and `docs/operations/LOCALIZATION.md` for cross-platform localization/Weblate policy. Archived migration and post-replacement plans are evidence only and must not be used as active taskboards.
+
 The former Go core is retired and out of scope. Do not preserve Go compatibility, Go ABI behavior, Go database interoperability, or Go migration phases unless a task explicitly asks for historical analysis.
 
 ## Binding Decision
