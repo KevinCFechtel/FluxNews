@@ -88,9 +88,27 @@ class CISelectionTests(unittest.TestCase):
             {"android", "fdroid", "contracts"},
         )
 
-    def test_native_localization_contract(self):
+    def test_markdown_never_selects_technical_jobs(self):
+        markdown_paths = (
+            "README.md",
+            "docs/ANDROID_WEBLATE_LOCALIZATION.md",
+            "android/app/src/androidTest/README.md",
+            "apple/macos/FluxNews/Assets/AppIconSource/README.md",
+            "core/README.md",
+            "fdroid/README.md",
+            "Build/README.md",
+            ".github/DEPENDENCY_AUTOMATION.md",
+        )
+        self.assertEqual(selected(*markdown_paths), set())
+        self.assertFalse(any(selectors(*markdown_paths).values()))
+
+    def test_markdown_does_not_mask_real_technical_changes(self):
         self.assertEqual(
-            selected("docs/ANDROID_WEBLATE_LOCALIZATION.md"), {"android"}
+            selected(
+                "android/app/src/androidTest/README.md",
+                "android/app/src/main/example.kt",
+            ),
+            {"android"},
         )
 
     def test_ci_control_always_exercises_all_jobs(self):
