@@ -295,7 +295,7 @@ intact, while `needs_review` values are deferred to the planned
 Weblate/community localization workflow and do not block D9-D completion.
 
 The post-D9 source-usage audit is authoritative for catalog membership and
-runtime usage; see [analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md](analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md).
+runtime usage; see [analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md](../../analysis/ios/IOS_LOCALIZATION_USAGE_AUDIT.md).
 Xcode `extractionState` must not be used as a standalone deletion signal.
 
 
