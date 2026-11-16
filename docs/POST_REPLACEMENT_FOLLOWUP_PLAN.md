@@ -184,7 +184,7 @@ independently of UniFFI compilation, while native tests remain intact.
 Sandbox entitlements and sandbox-local media paths. PR #53 added
 `verify-sandbox.sh`, signed development build validation and protected
 `install-local.sh` staging; [Apple CI #164](https://github.com/KevinCFechtel/Flux/actions/runs/38924332033)
-passed. The project owner reported successful macOS tests and explicitly closed both B1 and C3.8 on 17 October 2026. This is owner-reported sign-off, not independently captured evidence for each signed fresh-container check. Mac App Store archive/export and Transporter verification remain part of release track R. See [MACOS_SANDBOX_ACCEPTANCE.md](MACOS_SANDBOX_ACCEPTANCE.md).
+passed. The project owner reported successful macOS tests and explicitly closed both B1 and C3.8 on 17 October 2026. This is owner-reported sign-off, not independently captured evidence for each signed fresh-container check. Mac App Store archive/export and Transporter verification remain part of release track R. See [MACOS_SANDBOX_ACCEPTANCE.md](acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
 
 The implementation-oriented steps below are historical requirements; only
 items not yet proven by the signed-app checklist remain release-open.
@@ -311,7 +311,7 @@ cases are handled.
 **Implementation / acceptance status (17 October):** C3.1–C3.7 were merged via PRs #49–#52.
 [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/38934397341)
 passed on combined `main` `2edc6537`. The project owner accepted C3.8 real-Mac testing and B1 on 17 October 2026. PR #61 has since been merged into `main`.
-See [MACOS_C3_FEATURE_PARITY_ROADMAP.md](MACOS_C3_FEATURE_PARITY_ROADMAP.md).
+See [MACOS_C3_FEATURE_PARITY_ROADMAP.md](archive/phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md).
 
 **Decision (12 October 2026):** Functional parity with iOS/Android is the
 default; macOS retains native menu-bar/window controls rather than copying
@@ -320,7 +320,7 @@ Mark All as Read & Next are explicitly in scope**, not optional follow-ups.
 
 The controlled source-based inventory, order of work, per-PR quality gates and
 real-Mac acceptance checklist are in
-[MACOS_C3_FEATURE_PARITY_ROADMAP.md](MACOS_C3_FEATURE_PARITY_ROADMAP.md).
+[MACOS_C3_FEATURE_PARITY_ROADMAP.md](archive/phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md).
 Work packages cover: scope bulk-read and Starred filter; multi-feed editing;
 download totals, cancellation, policy and retention; diagnostics/redaction;
 HTTP account warning, About and player 15/30-second controls; background-sync
