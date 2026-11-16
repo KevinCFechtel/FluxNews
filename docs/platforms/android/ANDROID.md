@@ -589,9 +589,9 @@ Status: **COMPLETE**
 
 Implemented on 2 October 2026:
 
-- Compose-native Scrollover detection uses only LazyList scroll progress plus the first-visible item index; no per-frame row geometry or visibility qualification is required;
-- each scroll interaction records the first-visible index at interaction start and the highest first-visible index reached before the list becomes idle;
-- reverse movement never erases forward progress; candidates are emitted once, at interaction end, for the stable Article IDs in [startIndex, highestReachedIndex);
+- Compose-native Scrollover uses LazyList viewport-intersection samples and scroll position to establish **actual article exposure** before a user-driven forward crossing. It does not treat an index jump or an offscreen-prefetched row as exposure;
+- each scroll interaction retains previously observed stable Article IDs and qualifies them only when a later forward sample places them completely past the viewport's upper boundary;
+- reverse movement does not independently mark read or erase genuinely completed forward crossings; a genuine forward arrival at the final dataset end may additionally complete only **currently observed visible trailing articles**. Candidates are emitted once, at interaction end, never for unseen skipped indices;
 - known programmatic scrolls explicitly suppress Scrollover tracking and synchronize the idle baseline afterwards;
 - Scrollover read mutations use the existing Core bulk read API and are bound to the active Core-session generation;
 - optimistic read presentation remains non-structural: only the affected per-ID presentation state changes, while the ordered structural Timeline snapshot remains untouched;
@@ -673,7 +673,7 @@ Preserve shared semantic ordering and the date/reading-time/accessory contracts 
 
 ### Scrollover
 
-Implement the shared Scrollover behavioral contract with Android/Compose-native scroll state. Do not port the UIKit geometry tracker line-for-line: Android intentionally commits one ID batch when scrolling becomes idle, using the interaction start index and highest reached first-visible index.
+Implement the shared Scrollover behavioral contract with Android/Compose-native scroll state. Do not port the UIKit geometry tracker line-for-line: Android commits one ID batch when scrolling becomes idle, using observed viewport exposure and genuine forward crossings rather than assuming every index passed during a fling was seen.
 
 Known programmatic movement must be explicitly suppressed. Snapshot replacement clears in-flight Scrollover progress; append-only paging preserves it.
 
