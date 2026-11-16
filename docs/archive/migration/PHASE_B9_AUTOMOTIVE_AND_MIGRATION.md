@@ -4,7 +4,7 @@
 
 The inventory below is based on `KevinCFechtel/FluxNews` `main` at commit
 `481eb08` (`update depenedencies`). It is source evidence only; the new Core
-schema and ownership rules in `PHASE_B_MEDIA_CORE.md` remain authoritative.
+schema and ownership rules in `../../current/MEDIA_CORE.md` remains authoritative for the current media contract.
 
 ## Proven legacy persistence
 
