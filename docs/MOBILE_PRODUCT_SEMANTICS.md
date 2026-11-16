@@ -107,21 +107,29 @@ product/performance decision requiring explicit approval and new acceptance.
 
 See [Android E3-D and Scrollover](platforms/android/ANDROID.md#e3-d--native-android-scrollover).
 
-### iOS/iPadOS — accepted UIKit exposure-and-crossing semantics
+### iOS/iPadOS — accepted UIKit execution, flexible read qualification
 
-The iOS/iPadOS UIKit contract remains unchanged:
+The existing UIKit Timeline currently uses resolved row geometry and observed
+visibility for its Scrollover detection. **This is an implementation choice,
+not a mandatory product requirement or an acceptance gate.** A native client
+may mark articles read on genuine user-initiated forward scroll progress without
+individually proving that each article was visually displayed. Fast scrolling
+may include articles passed between observed viewport samples. This is
+acceptable product behavior; do not change the accepted implementation solely
+to enforce or remove an exposure test.
 
-- an unread article must first have been **observably visible** before it can
-  qualify for marking read;
-- genuine **user-initiated forward** crossing past the upper boundary marks
-  qualified articles; reverse movement alone does not;
-- qualification survives direction reversal while crossing geometry is rebased;
-- programmatic movement, scope changes, layout changes and structural removals
-  must not create false crossings;
-- a fast movement may process several **previously qualified** articles but
-  cannot qualify unseen skipped rows merely because their indices were passed;
-- a genuine forward arrival at the content bottom may complete **observed
-  visible** trailing rows, but not unseen skipped rows.
+Preserve the established operational safeguards: user-initiated forward
+scrolling rather than reverse-only or known programmatic movement, stable
+article identities, safe session-bound read mutations, non-structural Timeline
+updates, and the existing iOS Undo mechanism. Undo remains the recovery path
+when users want to restore read status, under its existing qualification and
+expiry rules; it is not a promise that every single Scrollover read will
+display an Undo action.
+
+The current UIKit geometry implementation, including its direction-reversal
+and end-of-list behavior, remains valid. Its precise exposure-tracking
+algorithm can evolve through a separate reviewed implementation change without
+reopening an alleged product obligation to prove visual exposure.
 
 See [iOS/iPadOS UIKit Timeline](platforms/ios/IOS.md#iosipados-article-timeline--uikit).
 
