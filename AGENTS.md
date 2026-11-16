@@ -81,6 +81,8 @@ Only escalate genuine contract contradictions. Normal implementation details exp
 
 For native Android work, `docs/platforms/android/ANDROID.md` is the authoritative current Android contract and `docs/MOBILE_PRODUCT_SEMANTICS.md` is the shared mobile product contract. The completed Phase-E E1–E9 implementation sequence is historical.
 
+For native iOS/iPadOS work, `docs/platforms/ios/IOS.md` is the authoritative current platform contract together with `docs/MOBILE_PRODUCT_SEMANTICS.md`. The completed Phase-D/D1–D9 and UIKit U1–U5 implementation sequences are historical; acceptance records document evidence rather than current sequencing.
+
 Agents must:
 
 * keep Rust Core/UniFFI as the durable domain boundary; do not create a Kotlin Miniflux/domain/persistence duplicate;
