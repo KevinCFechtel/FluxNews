@@ -39,4 +39,4 @@ RustSec advisory check daily and whenever the Rust manifests/lockfile change.
   authoritative development/release repository. The old Flux repository is
   retired and must not be treated as the place to configure current automation.
 
-Policy detail: `docs/DEPENDENCY_MAINTENANCE.md` (documentation PR #67).
+Policy detail: `docs/operations/DEPENDENCY_MAINTENANCE.md`.
