@@ -24,10 +24,7 @@ owned by the documents linked below.
 
 ## Current authoritative documentation
 
-These documents currently carry binding product or implementation contracts.
-Some still combine a completed implementation sequence with rules that remain
-valid. They stay active until those rules are explicitly transferred to smaller
-current contracts in a later documentation step.
+These documents carry the current binding product and implementation contracts. Completed phase sequencing has been separated into archive/evidence locations; current work should use the dedicated contracts below.
 
 | Area | Current authority | Scope |
 | --- | --- | --- |
@@ -59,6 +56,7 @@ migration or historical phase documents.
   vulnerability, maintenance, and CI-cost policy.
 - [`.github/DEPENDENCY_AUTOMATION.md`](../.github/DEPENDENCY_AUTOMATION.md) —
   Dependabot/RustSec automation procedure.
+- [`operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md`](operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md) — retained historical bootstrap-URL compatibility decision; separate from migration/release work.
 - [`archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md`](archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md) — completed post-replacement package history; it no longer owns active work.
 
 ### Localization / Weblate
