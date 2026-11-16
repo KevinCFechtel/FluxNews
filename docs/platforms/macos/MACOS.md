@@ -832,3 +832,21 @@ deletion idempotence/playback protection, and network policy mapping.
 Generated UniFFI bindings remain build artifacts. The macOS test target hosts
 the app so it can test app-internal coordinator types.
 
+
+## Retained C3 Visual Compact hover behavior (completed)
+
+The accepted C3 Visual Compact hover treatment from
+[`MACOS_C3_FEATURE_PARITY_ROADMAP.md`](../../archive/phases/macos/MACOS_C3_FEATURE_PARITY_ROADMAP.md)
+is a current macOS presentation rule, **not** a new C3.8 acceptance gate:
+
+- Read/Star/More actions appear as a hover overlay anchored to the **lower-right
+  of the article preview** rather than changing the row's stable layout.
+- Articles without a preview retain a usable action fallback; long or short
+  titles must not obscure access to controls.
+- **Row height remains unchanged** when hovering or revealing actions, and
+  other display styles remain unaffected.
+- Clicking, keyboard focus and VoiceOver keep the actions reachable and
+  semantically labelled.
+
+C3.8 and B1 remain accepted. This retained UI rule does not reopen a
+physical-Mac acceptance checklist.
