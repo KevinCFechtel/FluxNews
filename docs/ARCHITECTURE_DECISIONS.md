@@ -847,13 +847,11 @@ Core media root.
 
 Account/server replacement, Rebuild, and Full Reset intentionally have
 different FeedPreferences policies: account replacement and Full Reset remove
-them; Rebuild preserves them. Backup Import remains a separate future
-transactional configuration-replace operation.
+them; Rebuild preserves them. Backup Import is implemented as a separate transactional configuration-replace operation. The platform-specific restore contracts own its current behavior.
 
 ## 15. Phase B — Shared Podcast / Media Core
 
-Phase B is the next development phase. It extends the shared Rust architecture
-without reopening Phase A Newsreader scope. The dependency guide is:
+Phase B is complete. The following is retained as the historical dependency guide for the shared media architecture, not a new implementation sequence:
 
 ```text
 Enclosures
