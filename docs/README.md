@@ -33,7 +33,7 @@ current contracts in a later documentation step.
 | --- | --- | --- |
 | Architecture | [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md) | Rust/Core–native ownership, platform boundaries, durable architecture decisions |
 | Shared mobile behavior | [`MOBILE_PRODUCT_SEMANTICS.md`](MOBILE_PRODUCT_SEMANTICS.md) | Product semantics shared by Android and iOS/iPadOS |
-| Shared media core | [`PHASE_B_MEDIA_CORE.md`](PHASE_B_MEDIA_CORE.md) | Media/Core contract; implementation sequence is historical where marked complete |
+| Shared media core | [`current/MEDIA_CORE.md`](current/MEDIA_CORE.md) | Current shared media/Core contract; completed Phase-B sequencing is archived |
 | macOS media | [`PHASE_C_NATIVE_MACOS_AUDIO.md`](PHASE_C_NATIVE_MACOS_AUDIO.md) | Native macOS audio/media contract |
 | iOS/iPadOS | [`PHASE_D_NATIVE_IOS_IPADOS.md`](PHASE_D_NATIVE_IOS_IPADOS.md) | Native iOS/iPadOS contract; replacement implementation is complete |
 | iOS Timeline | [`IOS_UIKIT_TIMELINE_IMPLEMENTATION.md`](IOS_UIKIT_TIMELINE_IMPLEMENTATION.md) | Accepted UIKit Timeline contract and frozen implementation boundaries |

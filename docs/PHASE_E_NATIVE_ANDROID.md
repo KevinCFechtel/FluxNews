@@ -246,7 +246,7 @@ At the audit baseline its production Android state includes:
 - an Android media browser/audio service for Android Auto;
 - cleartext HTTP allowed and system plus user certificate anchors trusted.
 
-The established media migration contract in PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md remains authoritative:
+The established media migration contract in archive/migration/PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md remains authoritative:
 
 - article/enclosure identity comes from the legacy database;
 - article-keyed playback progress imports only when exactly one audio enclosure resolves;

@@ -56,11 +56,11 @@ If a requested change requires a product/architecture decision not already cover
 
 ## Phase B — Shared Podcast / Media Core
 
-For all Phase B media, podcast, enclosure, playback, download, SavedMedia, media metadata, automotive media, and related synchronization work, `docs/PHASE_B_MEDIA_CORE.md` is the authoritative implementation contract.
+For all shared media, podcast, enclosure, playback, download, SavedMedia, media metadata, automotive media, and related synchronization work, `docs/current/MEDIA_CORE.md` is the authoritative current contract. The completed Phase-B implementation sequence is historical.
 
 Agents must:
 
-* follow `docs/PHASE_B_MEDIA_CORE.md` as frozen architecture;
+* follow `docs/current/MEDIA_CORE.md` as the current frozen media architecture;
 * implement only the requested Phase B step or sub-step;
 * reuse existing Flux architecture, storage, sync, mutation, retention, and UniFFI patterns where applicable;
 * not redesign or re-open frozen Phase B decisions during implementation;
