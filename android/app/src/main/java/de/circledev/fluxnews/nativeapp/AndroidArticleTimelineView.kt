@@ -285,7 +285,9 @@ internal fun AndroidArticleTimeline(
             // skip over indices during a fling or precompose rows offscreen.
             val exposedRows = layout.visibleItemsInfo
                 .filter { item ->
-                    item.index in articleIds.indices &&
+                    // Article keys are Long; paging/loading/error footer keys are String.
+                    // Do not capture an old articleIds list across append-only paging.
+                    item.key is Long &&
                         item.offset < layout.viewportEndOffset &&
                         item.offset + item.size > layout.viewportStartOffset
                 }
@@ -294,7 +296,7 @@ internal fun AndroidArticleTimeline(
                 firstVisibleIndex = listState.firstVisibleItemIndex,
                 firstVisibleOffset = listState.firstVisibleItemScrollOffset,
                 visibleArticleIndices = exposedRows,
-                atDatasetEnd = !listState.canScrollForward && state.nextCursor == null,
+                atDatasetEnd = !listState.canScrollForward && store.contentState.value.nextCursor == null,
             ) to listState.isScrollInProgress
         }
             .collect { (sample, scrolling) ->
