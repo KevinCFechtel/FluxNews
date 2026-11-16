@@ -48,9 +48,10 @@ prepared to preserve original reference targets:
   `archive/flux/other/opencode/pr78`: 30 references, including stale local
   remote-tracking history and the extra commit reference.
 
-These archive references are provenance only, not active development branches.
-Before removing any local backup refs, create a durable Git bundle or equivalent
-offline archive.
+These archive references were temporary migration-safety refs, not active
+development branches. The old local repository directories that contained these
+refs have since been removed. No further archive-ref backup action remains open;
+this item is retained here only as migration provenance.
 
 ## File ownership
 
@@ -255,11 +256,9 @@ Before the first native application release:
 6. Decide the exact release/tag ordering. The user creates
    `android/v3.0.0` manually; automation must not independently create the same
    tag.
-7. Create a durable backup of the 38 local historical archive refs before any
-   cleanup.
-8. Review `README.md`, `PRIVACY.md`, store metadata and screenshots against
+7. Review `README.md`, `PRIVACY.md`, store metadata and screenshots against
    the native 3.0.0 behavior before publication.
-9. Revisit the Saved Media bootstrap compatibility URL separately.
+8. Revisit the Saved Media bootstrap compatibility URL separately.
 
 No tag, GitHub Release, store upload or F-Droid submission is authorized merely
 by completion of this migration document.
