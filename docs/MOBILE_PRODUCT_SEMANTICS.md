@@ -99,7 +99,7 @@ Required invariants:
 Each platform should implement these semantics using its native scroll/geometry facilities. SwiftUI/UIKit tracker details are not part of the Android contract.
 
 For iOS/iPadOS, the accepted details in
-[Phase D](PHASE_D_NATIVE_IOS_IPADOS.md#iosipados-article-timeline--uikit) define
+[Phase D](platforms/ios/IOS.md#iosipados-article-timeline--uikit) define
 qualification as observed visibility, without a minimum exposure duration, and
 define the narrow terminal exception: a genuine forward arrival at the content
 bottom may complete observed visible trailing rows. This is not permission to
