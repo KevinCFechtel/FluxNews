@@ -34,7 +34,6 @@ These documents carry the current binding product and implementation contracts. 
 | macOS media | [`platforms/macos/MACOS.md`](platforms/macos/MACOS.md) | Native macOS audio/media contract |
 | iOS/iPadOS | [`platforms/ios/IOS.md`](platforms/ios/IOS.md) | Native iOS/iPadOS contract; replacement implementation is complete |
 | iOS Timeline | [`platforms/ios/IOS.md`](platforms/ios/IOS.md) | Accepted UIKit Timeline contract and frozen implementation boundaries |
-| iOS replacement completion | [`acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md`](acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md) | Retained/retired behavior and production-upgrade acceptance |
 | Android | [`platforms/android/ANDROID.md`](platforms/android/ANDROID.md) | Current native Android product/platform contract; E1–E9 chronology is archived |
 | macOS parity | [`platforms/macos/MACOS.md`](platforms/macos/MACOS.md) | Approved C3 decisions and completed parity scope |
 
@@ -145,7 +144,7 @@ state at that time.
 
 ## Documentation tools
 
-[`tools/`](tools/) contains supporting analysis tooling. Its measurements must
+[`tools/`](../tools/) contains supporting analysis tooling. Its measurements must
 be interpreted with the limitations documented by the corresponding analysis;
 tool output is not automatically a release gate.
 
