@@ -57,7 +57,7 @@ already accepted iOS/Android in-place Flutter-to-native upgrade guarantees.
 | A4 | P0 | CI | **Implemented and Rust CI green** (PR #62 merged); blocking `cargo fmt --check` | Required-check branch protection remains a separate repository setting to verify if desired | — |
 | B1 | P0 before Mac App Store release | macOS | **Owner-accepted 17 Oct 2026** after successful Mac testing; entitlements/verifier/installer implemented (#38, #53) | Closed by owner sign-off; distribution validation belongs to R | A1/A2 validation as applicable |
 | B2 | P0 before F-Droid workflow | Android/F-Droid | No source-build/scanner gate proven | Reproducible build, scanner, signing/upgrade feasibility | A4 recommended |
-| C1 | P1 | Android | **Owner-accepted 17 Oct 2026**; Android localization closed for this roadmap | Weblate is a separate future cross-platform workstream; subsequent localization defects are bugs | — |
+| C1 | P1 | Android | **Owner-accepted 17 Oct 2026**; Android localization closed for this roadmap | Cross-platform Weblate integration has since been implemented for Android, iOS, macOS and the shared glossary; subsequent localization defects and translation review are maintenance work | — |
 | C2 | P1 | Android | **Owner-accepted 17 Oct 2026**; native add-feed/add-category flows and policy tests implemented | Closed by owner sign-off; subsequent defects are regressions | — |
 | C3 | P1 | macOS | C3.1–C3.8 merged; **C3.8 owner-accepted 17 Oct 2026** (PR #61 merged) | Closed; subsequent defects are regressions | — |
 | C4 | P2 | Shared/clients | Selective maintenance | Evidence-driven tasks only | Earlier relevant gates |
@@ -360,31 +360,34 @@ changes include real-device or signed-artifact acceptance as appropriate.
 
 **Sequencing with release work:**
 
-- A1/A2/A3: implementation work exists; close actual per-platform runtime and
-  lifecycle regression gaps before the corresponding release. A4 Rust tests/
-  Clippy exist, but formatting is not yet a blocking check.
-- B1 must finish **before** the macOS App Store build/export deliverable
-  described in `RELEASE_DISTRIBUTION.md` section 7.
-- B2 must finish **before** the native F-Droid publication workflow described
-  in `RELEASE_DISTRIBUTION.md` section 5.
+- A1/A2/A3 are owner-accepted as recorded above; their original runtime and
+  lifecycle checklists remain regression guidance rather than open roadmap gates.
+- A4 is implemented: Rust tests, Clippy and blocking `cargo fmt --check` are in
+  the Rust workflow. Repository required-check configuration remains a separate
+  repository setting.
+- B1 and C3.8 are owner-accepted/closed. Mac App Store provisioning,
+  archive/export and Transporter validation remain separate release-track work
+  in `RELEASE_DISTRIBUTION.md`.
+- B2 must finish **before** native F-Droid publication as defined by
+  `FDROID_OPEN_GATES.md` and `RELEASE_DISTRIBUTION.md`.
 - Existing iOS/Android migration acceptance remains closed; no additional
   Flutter migration project is created.
-- C1/C2 are explicit post-E9 Android product work, not claims that the
-  historical E9 replacement-acceptance decision was never completed.
+- C1/C2 are owner-accepted/closed post-E9 Android milestones. Weblate,
+  translation review and later defects are separate maintenance/regression work.
 - No release script or workflow may publish by default.
 
 ## 7. Plan completion
 
-This follow-up is complete only when P0 fixes are tested and merged, the macOS
-sandbox passes a fresh-install acceptance without a migration, F-Droid build
-feasibility is demonstrated, and the accepted C1/C2/C3 items are either
-implemented with tests or explicitly deferred as separate decisions.
-The separate release/distribution acceptance criteria still live in
-`RELEASE_DISTRIBUTION.md`.
+The accepted A1–A4, B1, C1, C2 and C3 milestones are closed as recorded in
+this document. Remaining work is no longer a single post-replacement acceptance
+gate: F-Droid-specific items are owned by `FDROID_OPEN_GATES.md`, release and
+store-distribution work by `RELEASE_DISTRIBUTION.md`, and Weblate/translation
+work by the localization documentation. Historical checklists below remain
+evidence and regression guidance rather than a reason to reopen accepted items.
 
 ## 17 October 2026 — C1 owner acceptance and Weblate scope
 
-The owner considers Android localization (C1) complete for this roadmap. Weblate integration and further translations will be tracked separately as a cross-platform effort for all apps, rather than as a remaining Android C1 gate. Subsequent defects in existing Android localization are handled as bugs.
+The owner considers Android localization (C1) complete for this roadmap. Weblate integration was tracked separately as a cross-platform effort and has since been implemented for Android, iOS, macOS and the shared glossary. Further translation/review work is maintenance rather than a remaining Android C1 gate. Subsequent defects in existing Android localization are handled as bugs.
 
 ## 17 October 2026 — C2 owner acceptance and merged PR reconciliation
 
