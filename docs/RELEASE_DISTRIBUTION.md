@@ -384,13 +384,15 @@ replace a reliable Transporter-based release process.
 
 ## 7. macOS — App Store Connect / Transporter
 
-**Implementation/acceptance distinction (16 October 2026):** PR #38
+**Implementation/acceptance distinction (updated 17 October 2026):** PR #38
 implemented host Sandbox entitlements and sandbox-local media storage, and
 PR #53 added signed-development-build verification and safe local installation.
-C3.1–C3.7 are now implemented and merged; C3.8 and the **separate B1 signed
-fresh-container runtime acceptance are still open**. [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/38934397341)
-passed on the combined `main`, but does not close B1. Finish
-[MACOS_SANDBOX_ACCEPTANCE.md](MACOS_SANDBOX_ACCEPTANCE.md) **before implementing**
+C3.1–C3.8 and the separate B1 signed runtime gate are **owner-accepted and
+closed**. [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/38934397341)
+remains source/CI evidence rather than proof of each individual runtime checklist
+item. See [MACOS_SANDBOX_ACCEPTANCE.md](MACOS_SANDBOX_ACCEPTANCE.md) for the
+accepted scope and evidence limits. Mac App Store provisioning, archive/export,
+Transporter validation and review remain separate release-track work. Before implementing
 the Mac App Store archive/export deliverable. That later Store export is part
 of R, not part of the B1 runtime sign-off.
 
