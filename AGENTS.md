@@ -12,7 +12,7 @@ The human developer owns product and architecture decisions. Do not silently int
 For non-trivial work, use this order of authority:
 
 1. `docs/ARCHITECTURE_DECISIONS.md` — authoritative target architecture and explicitly agreed product/core boundaries.
-2. The active platform/phase contract for the requested work, including `docs/MOBILE_PRODUCT_SEMANTICS.md` for shared native-mobile behavior and `docs/PHASE_E_NATIVE_ANDROID.md` for Phase E Android sequencing/mechanics.
+2. The active platform contract for the requested work, including `docs/MOBILE_PRODUCT_SEMANTICS.md` for shared native-mobile behavior and `docs/platforms/android/ANDROID.md` for current Android product/platform rules.
 3. Current Rust/native implementation and tests — evidence of what is implemented today, not permission to override the target architecture.
 4. `docs/reference/` — historical product and feature evidence used to avoid losing valuable behavior.
 
@@ -79,17 +79,17 @@ Only escalate genuine contract contradictions. Normal implementation details exp
 
 ## Phase E — Native Android
 
-For native Android work, `docs/PHASE_E_NATIVE_ANDROID.md` is the authoritative Phase-E implementation/sequencing contract and `docs/MOBILE_PRODUCT_SEMANTICS.md` is the shared mobile product contract.
+For native Android work, `docs/platforms/android/ANDROID.md` is the authoritative current Android contract and `docs/MOBILE_PRODUCT_SEMANTICS.md` is the shared mobile product contract. The completed Phase-E E1–E9 implementation sequence is historical.
 
 Agents must:
 
 * keep Rust Core/UniFFI as the durable domain boundary; do not create a Kotlin Miniflux/domain/persistence duplicate;
-* begin Phase E with the E1 foundation/migration gates before productive feature UI;
+* do not reopen the completed E1/E9 foundation, migration or production-upgrade gates unless a concrete regression requires it;
 * treat Flutter FluxNews only as behavioral and production-migration evidence;
 * use Kotlin/Jetpack Compose as the initial native UI baseline and make Android renderer/performance changes from measurements rather than Apple implementation history;
 * keep Android lifecycle, credentials, background work, notifications, widgets, media execution and Android Auto platform-native while preserving Core ownership;
 * preserve the production application identity and copy/import-only migration contract for production-upgrade work;
-* not reopen UniFFI, frozen Phase A-D ownership, or shared product semantics without a concrete technical contradiction.
+* not reopen UniFFI, frozen shared ownership, the completed Phase-E migration sequence, or shared product semantics without a concrete technical contradiction.
 
 
 ## Validation
