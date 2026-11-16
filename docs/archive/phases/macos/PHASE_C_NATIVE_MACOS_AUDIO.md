@@ -19,7 +19,7 @@
 > window behavior. PR #29 passed Apple CI before merge.
 >
 > Release/distribution scripting is tracked separately in
-> [RELEASE_DISTRIBUTION.md](RELEASE_DISTRIBUTION.md). macOS distribution should
+> [RELEASE_DISTRIBUTION.md](../../../operations/RELEASE_DISTRIBUTION.md). macOS distribution should
 > ultimately use the same release interface as iOS, producing a validated
 > App Store Connect artifact suitable for Transporter/manual upload while keeping
 > App Store distribution as the primary channel.
