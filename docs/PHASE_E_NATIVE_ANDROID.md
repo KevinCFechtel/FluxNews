@@ -1033,7 +1033,7 @@ The initial E6 foundation is implemented on branch `android-e6-media-runtime`:
 - `AndroidMediaPlaybackService` is the single long-lived playback container, configured for spoken media, Android audio focus and becoming-noisy handling;
 - the service is registered as a media-playback foreground service so later E6 background playback and E7 system/Android Auto integration build on the same player rather than introducing a temporary Activity-owned runtime;
 - productive playback now resolves Core `PlaybackPreparation`, prefers a validated local media reference under the configured media root, falls back to HTTP(S), restores in-progress position and projects chapters/artwork source;
-- Play/Pause/Stop, seek, ±30-second skip, 0.5x–3.0x playback rate, 20-second Core checkpoints, duration observation, natural completion/restart and the 30–180 minute sleep timer are implemented in the process-scoped playback coordinator;
+- Play/Pause/Stop, seek, 15-second backward / 30-second forward skip, 0.5x–3.0x playback rate, 20-second Core checkpoints, duration observation, natural completion/restart and the 30–180 minute sleep timer are implemented in the process-scoped playback coordinator;
 - the playback coordinator controls the service through a Media3 `MediaController`, preserving the single-player service boundary needed by E7;
 - the native Listening List destination is now backed by `listeningListFeeds()` + `listeningList(feedId:sort:)`, with feed filtering, sorting, progress presentation, multi-enclosure selection and direct control of the process-scoped Media3 playback coordinator;
 - the Listening List includes a compact native playback surface over the same service-owned player, so playback state is not duplicated in Compose;
@@ -1045,7 +1045,7 @@ The initial E6 foundation is implemented on branch `android-e6-media-runtime`:
 - Timeline and Search now retain the batched Core enclosure/download projection and expose article-level Download Audio as Download/Cancel/Retry/Delete semantics; multiple audio enclosures use one native chooser rather than per-row Core queries;
 - worker completion/failure/deletion and every successful Core sync publish only an in-memory media revision signal so Timeline, Search and Listening List re-read authoritative Core state without introducing a second persisted transfer state;
 - currently loaded playback remains live from Media3 at runtime cadence, while non-Now-Playing Listening List progress is refreshed from Core immediately after sync so remote Miniflux progress updates become visible without reopening the screen;
-- the rich native Player surface is now implemented over the same service-owned Media3 player: local Core artwork bytes and remote HTTP(S) artwork, seek timeline, Play/Pause/Stop/±30 seconds, visible playback-rate and sleep-timer controls, completion Restart, active-chapter presentation/navigation and expandable Show Notes;
+- the rich native Player surface is now implemented over the same service-owned Media3 player: local Core artwork bytes and remote HTTP(S) artwork, seek timeline, Play/Pause/Stop, 15 seconds back / 30 seconds forward, visible playback-rate and sleep-timer controls, completion Restart, active-chapter presentation/navigation and expandable Show Notes;
 - Show Notes reuse `readerDocument(articleId:)` and the existing Android Reader renderer; the Player does not fetch or render article HTML through a parallel path;
 - opening Player from a Listening List row prepares the selected enclosure without auto-starting playback, while the compact mini-player opens the same rich surface for the active item;
 - media presentation now follows the accepted iOS D6 hierarchy while using Material 3 interaction patterns: artwork/header, seek, icon-based transport controls, compact rate/sleep status controls, chapter/show-notes cards and adaptive side-by-side layout on wide Android screens;
@@ -1074,7 +1074,7 @@ Required product scope:
 - playback preparation;
 - local or remote source chosen by Core;
 - Play/Pause/Stop;
-- seek and ±30-second skip;
+- seek and 15-second backward / 30-second forward skip;
 - playback rate;
 - sleep timer;
 - chapters/show notes/artwork;
