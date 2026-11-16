@@ -921,7 +921,7 @@ stable enough for D7 to begin. Ordinary Player/Listening-List presentation
 polish may continue during the observation window, but later phases must consume
 the existing app-wide playback runtime rather than depend on the mutable SwiftUI
 layout. The authoritative acceptance matrix and closure evidence are recorded in
-[IOS_D6_FINAL_ACCEPTANCE.md](IOS_D6_FINAL_ACCEPTANCE.md).
+[IOS_D6_FINAL_ACCEPTANCE.md](../../../acceptance/ios/IOS_D6_FINAL_ACCEPTANCE.md).
 
 Validate at least:
 
