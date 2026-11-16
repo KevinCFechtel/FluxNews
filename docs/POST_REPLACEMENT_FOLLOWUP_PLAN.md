@@ -360,27 +360,30 @@ changes include real-device or signed-artifact acceptance as appropriate.
 
 **Sequencing with release work:**
 
-- A1/A2/A3: implementation work exists; close actual per-platform runtime and
-  lifecycle regression gaps before the corresponding release. A4 Rust tests/
-  Clippy exist, but formatting is not yet a blocking check.
-- B1 must finish **before** the macOS App Store build/export deliverable
-  described in `RELEASE_DISTRIBUTION.md` section 7.
-- B2 must finish **before** the native F-Droid publication workflow described
-  in `RELEASE_DISTRIBUTION.md` section 5.
+- A1/A2/A3 are owner-accepted as recorded above; their original runtime and
+  lifecycle checklists remain regression guidance rather than open roadmap gates.
+- A4 is implemented: Rust tests, Clippy and blocking `cargo fmt --check` are in
+  the Rust workflow. Repository required-check configuration remains a separate
+  repository setting.
+- B1 and C3.8 are owner-accepted/closed. Mac App Store provisioning,
+  archive/export and Transporter validation remain separate release-track work
+  in `RELEASE_DISTRIBUTION.md`.
+- B2 must finish **before** native F-Droid publication as defined by
+  `FDROID_OPEN_GATES.md` and `RELEASE_DISTRIBUTION.md`.
 - Existing iOS/Android migration acceptance remains closed; no additional
   Flutter migration project is created.
-- C1/C2 are explicit post-E9 Android product work, not claims that the
-  historical E9 replacement-acceptance decision was never completed.
+- C1/C2 are owner-accepted/closed post-E9 Android milestones. Weblate,
+  translation review and later defects are separate maintenance/regression work.
 - No release script or workflow may publish by default.
 
 ## 7. Plan completion
 
-This follow-up is complete only when P0 fixes are tested and merged, the macOS
-sandbox passes a fresh-install acceptance without a migration, F-Droid build
-feasibility is demonstrated, and the accepted C1/C2/C3 items are either
-implemented with tests or explicitly deferred as separate decisions.
-The separate release/distribution acceptance criteria still live in
-`RELEASE_DISTRIBUTION.md`.
+The accepted A1–A4, B1, C1, C2 and C3 milestones are closed as recorded in
+this document. Remaining work is no longer a single post-replacement acceptance
+gate: F-Droid-specific items are owned by `FDROID_OPEN_GATES.md`, release and
+store-distribution work by `RELEASE_DISTRIBUTION.md`, and Weblate/translation
+work by the localization documentation. Historical checklists below remain
+evidence and regression guidance rather than a reason to reopen accepted items.
 
 ## 17 October 2026 — C1 owner acceptance and Weblate scope
 
