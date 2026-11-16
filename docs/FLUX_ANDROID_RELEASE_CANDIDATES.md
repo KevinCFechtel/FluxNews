@@ -1,5 +1,8 @@
 # Flux: Unified release process (Android, iOS, macOS)
 
+> **Status: HISTORICAL RELEASE EVIDENCE — NOT CURRENT RELEASE AUTHORITY.**
+> This file records the pre-cutover Flux release process and candidate validation. Its historic SHAs, workflow behavior and signature findings remain evidence, not present-day FluxNews instructions. Use [current release operations](operations/RELEASE_DISTRIBUTION.md) and [F-Droid open gates](operations/FDROID_OPEN_GATES.md) for outstanding work.
+
 The manual `.github/workflows/release.yml` runs in **Flux**, prior to the FluxNews repository cutover. It accepts the exact `scope` (android, ios, macos, all), `version_name`, immutable full `source_sha` on main, and `mode` (validate or release). Selected version names must match the respective committed `Build/versions/<platform>.properties`; existing date-based versionCodes remain unchanged.
 
 - validate: run the Rust workspace regression gate once, iOS/macOS tests for selected platforms, and for Android the existing F-Droid recipe/scanner/unsigned source-build gate.
