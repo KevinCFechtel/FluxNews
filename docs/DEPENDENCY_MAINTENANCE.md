@@ -1,22 +1,22 @@
 # Dependency maintenance and security policy
 
-> **Decision: 18 October 2026.** Applies to native Flux development now and
-> to **FluxNews after repository migration**. This policy does not approve a
-> release, merge, dependency major-version upgrade, or official F-Droid submission.
+> **Decision: 18 October 2026; status refreshed after FluxNews cutover.**
+> This policy applies to the active **FluxNews** repository. The old Flux
+> repository is retired. This policy does not by itself approve a release,
+> merge, dependency major-version upgrade, or official F-Droid submission.
 
 ## Why this is necessary
 
 Green unit/integration tests are **not** an assertion that dependencies are
-up-to-date or free of disclosed vulnerabilities. In the 18 October inventory,
-the Cargo workspace still pins `rustls-platform-verifier = "=0.5.3"`,
-`jni = "0.21"`, `ureq = "2.12"`, `rusqlite = "0.37"`, `uniffi = "0.29"`
-and other older API generations. Unlike most of the recent Android Gradle
-dependencies, these versions had not received an independently recorded
-freshness/compatibility assessment.
+up-to-date or free of disclosed vulnerabilities. The dependency set has moved
+substantially since the 18 October baseline (for example UniFFI and ureq are on
+newer generations), so old inventory tables below must not be read as the
+current resolved graph.
 
-Do **not** declare all such versions vulnerable: `Cargo.lock` shows the
-versions actually built, and a RustSec advisory check plus investigation of
-each finding is required before making security claims.
+Use the current `core/Cargo.lock`, current Dependabot PRs and the strict
+RustSec workflow as the source for present dependency status. Do **not** infer
+that a crate is vulnerable merely because an old baseline listed it; investigate
+the advisory and the actually resolved current version.
 
 ## Update-first maintenance policy
 
@@ -64,19 +64,19 @@ result is actionable and must remain visible until the dependency is replaced.
 Passing this check is necessary for release readiness, not sufficient
 proof of complete security or up-to-date dependencies.
 
-**Current blocking findings (18 October 2026):**
+**Historical blocking findings (18 October 2026):** the then-resolved graph
+contained `paste`, `rustls-pemfile`, `rustybuzz` and `ttf-parser` through
+the dependency chains documented in the original audit. Those four findings
+are **not the current baseline** and must not be used to describe today's
+`Cargo.lock`.
 
-| Unmaintained crate | Locked version | Direct dependency chain |
-| --- | --- | --- |
-| `paste` | 1.0.15 | `lofty 0.22.4` |
-| `rustls-pemfile` | 2.2.0 | `ureq 2.12.1` → `rustls-native-certs 0.7.3` |
-| `rustybuzz` | 0.20.1 | `usvg 0.45.1` |
-| `ttf-parser` | 0.25.1 | `usvg 0.45.1` → `fontdb 0.23.0` and `rustybuzz 0.20.1` |
-
-These **must actually disappear from `core/Cargo.lock`** after upgrading or
-replacing `lofty`, `ureq`, `usvg`, or transitive dependencies. Updating a
-manifest constraint without rebuilding and verifying the lockfile does not
-satisfy the gate.
+The strict gate remains unchanged: every current RustSec vulnerability or
+unmaintained-warning finding must actually disappear from the resolved
+`core/Cargo.lock`; changing only a manifest constraint is insufficient.
+At the current FluxNews baseline, the outstanding strict-RustSec work is tracked
+against the resolved occurrences including `ctutils`, `libsqlite3-sys`,
+`basic-toml` and `rustix`. The exact advisory chain must be taken from the
+current RustSec output rather than copied forward from this historical table.
 
 **One-time transition:** landing the strict policy/CI into `main` makes
 already-present findings visible and can initially create an expected red
@@ -137,7 +137,12 @@ necessary temporary pin, require a reproducible blocker, a concrete follow-up
 and a dated review; keep its owner-visible status current. Release promotion
 must not rely on a skipped, missing, or failed required gate.
 
-## Baseline findings to investigate (inventory, not accepted upgrades)
+## Historical 18 October dependency inventory
+
+The following table records the B2-branch inventory that motivated the update
+work. It is **historical evidence, not the current dependency list**. Current
+versions and blockers must be read from `core/Cargo.lock`, Dependabot and the
+strict RustSec result.
 
 | Component | `Cargo.lock` on B2 branch, 18 October | Initial decision |
 | --- | --- | --- |
@@ -154,12 +159,12 @@ The original pinned verifier was accepted for **Android TLS behavior**,
 not for being the newest version. A documented compatibility proof must
 not be misread as a dependency freshness assessment.
 
-## Implementation and migration boundaries
+## Implementation and repository boundaries
 
-- Prepare the policy, Dependabot configuration and lightweight security CI
-  in `Flux`; carry them over during the non-publishing migration.
-- After cutover, all dependency monitoring and security/release CI run in
-  `FluxNews` (and can no longer be controlled from `Flux`).
+- The policy, Dependabot configuration and strict security CI have been carried
+  into **FluxNews**; the repository cutover is complete.
+- All active dependency monitoring and security/release CI now run in FluxNews.
+  The retired Flux repository is historical reference only.
 - Keep documentation separate from source version changes so docs-only
   commits do not trigger costly Rust/Apple/F-Droid CI.
 - Carry out a tracked series of compatibility-focused current-stable updates:
