@@ -39,7 +39,7 @@ A UI interaction may call a core domain operation, but the core API must not be 
 
 The shared Rust workspace lives under `core/`. `core/Cargo.toml` is the authoritative workspace manifest and `core/Cargo.lock` is the single tracked lockfile for that workspace. Platform clients live alongside the shared core under `apple/macos/`, `apple/ios/`, and the Phase-E `android/` client when implementation creates it. Do not move the Rust workspace back to the repository root or introduce duplicate workspace/lockfile layouts without a concrete requirement.
 
-For Apple platforms, the canonical UniFFI packaging path is `apple/Build/build-uniffi.sh`; it produces the macOS and iOS XCFramework slices plus the generated Swift binding source. For macOS, `apple/macos/Build/build-uniffi.sh` consumes that package for the established `build-app.sh` and `release.sh` build/release path. Preserve this validated path unless a concrete implementation requirement makes a change necessary; do not replace it with parallel or temporary build/release mechanisms.
+For Apple platforms, the canonical UniFFI packaging path is `apple/Build/build-uniffi.sh`; it produces the macOS and iOS XCFramework slices plus the generated Swift binding source. For macOS, `apple/macos/Build/build-uniffi.sh` consumes that package for the established `build-app.sh` development path; outside-store Developer ID distribution uses `release-developer-id.sh`, while App Store distribution uses the dedicated archive/export scripts. Preserve these validated paths unless a concrete implementation requirement makes a change necessary; do not replace them with parallel or temporary build/release mechanisms.
 
 ## Implementation Rules
 
