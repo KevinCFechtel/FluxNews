@@ -5,8 +5,8 @@
 > This document preserves the original feasibility/probe contract. The final
 > productive Flutter-to-native TestFlight upgrade was later accepted under D9;
 > current migration behavior and acceptance status live in
-> `IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md` and
-> `PHASE_D_NATIVE_IOS_IPADOS.md`.
+> `docs/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md` and
+> `docs/PHASE_D_NATIVE_IOS_IPADOS.md`.
 
 ## Verified legacy contract
 
