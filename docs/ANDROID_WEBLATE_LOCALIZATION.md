@@ -9,14 +9,14 @@ The established `MOBILE_PRODUCT_SEMANTICS.md` contract calls for seven native-mo
 | Language | Android resource folder | Translation status |
 | --- | --- | --- |
 | English (source) | `values/strings.xml` | Canonical English |
-| German | `values-de/strings.xml` | 500/500 translatable source entries translated; device review pending |
+| German | `values-de/strings.xml` | Source-resource coverage complete; device review pending |
 | Spanish | `values-es/strings.xml` | Review/translation pending |
 | Galician | `values-gl/strings.xml` | Review/translation pending |
 | Dutch | `values-nl/strings.xml` | Review/translation pending |
 | Tamil | `values-ta/strings.xml` | Review/translation pending |
 | Turkish | `values-tr/strings.xml` | Review/translation pending |
 
-The German catalog contains translations of all 500 translatable source resources and awaits on-device review. The other five target catalogs are intentionally empty until reviewed translations exist. Android uses canonical English defaults for missing entries. **Empty language catalogs are scaffolding, not translated UI.** Do not turn on an in-app language picker or advertise complete translation coverage for these five languages before review.
+The German catalog has completed the accepted source-resource coverage milestone and awaits on-device review. Exact resource counts change as source strings evolve. The other five target catalogs are intentionally empty until reviewed translations exist. Android uses canonical English defaults for missing entries. **Empty language catalogs are scaffolding, not translated UI.** Do not turn on an in-app language picker or advertise complete translation coverage for these five languages before review.
 
 ## Weblate component configuration (when service is connected)
 

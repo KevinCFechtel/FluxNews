@@ -68,8 +68,7 @@ existing repository connection through `weblate://flux-news/android`.
 
 Detailed platform procedures remain in their operational guides:
 
-- [Android localization](../ANDROID_WEBLATE_LOCALIZATION.md) — kept at this
-  path because CI explicitly selects it.
+- [Android localization](../ANDROID_WEBLATE_LOCALIZATION.md) — the established Android localization guide; its location is not a requirement of CI path selection.
 - [iOS Weblate handoff](localization/IOS_WEBLATE_LOCALIZATION.md)
 - [macOS Weblate handoff](localization/MACOS_WEBLATE_LOCALIZATION.md)
 - [Shared glossary](localization/WEBLATE_GLOSSARY.md)

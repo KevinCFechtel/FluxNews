@@ -1,5 +1,8 @@
 # Phase B7 — UniFFI Media API
 
+> **Status: HISTORICAL PHASE-B7 EVIDENCE — NOT THE CURRENT API CONTRACT.**
+> This document records the B7-era native-facing API design. It is not an independent authoritative description of today's UniFFI surface. See [current shared media/Core contract](current/MEDIA_CORE.md) and the actual UniFFI definitions for current behavior.
+
 The existing `Flux` UniFFI object exposes the Phase B media domain without
 moving playback or transfer execution into the core.
 
