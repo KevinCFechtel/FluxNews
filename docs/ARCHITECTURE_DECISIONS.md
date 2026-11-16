@@ -1231,7 +1231,7 @@ implementation decision depends on the answer, defer the analysis.
 >
 > Add the following authoritative section to the repository architecture
 > decisions. It records durable Phase-C decisions; detailed UX and implementation
-> sequencing remain in `docs/PHASE_C_NATIVE_MACOS_AUDIO.md`.
+> sequencing remain in `docs/platforms/macos/MACOS.md`.
 
 ## Phase C — macOS audio and Listening List
 
@@ -1330,4 +1330,4 @@ pipeline and exposes Core-owned chapters. Visible Player artwork is not
 required; artwork is used for native Now Playing where available.
 
 For complete Phase-C UX, contract, sequencing and acceptance criteria, see
-`docs/PHASE_C_NATIVE_MACOS_AUDIO.md`.
+`docs/platforms/macos/MACOS.md`.
