@@ -768,9 +768,11 @@ Before the first native 3.0.0 publication:
 - **macOS:** validate production Mac App Store provisioning, archive/export,
   App Group/embedded-library signing and Transporter behavior. The previously
   accepted B1 Sandbox/App Group runtime gate is not reopened by this work.
-- **Release/tag ordering:** the first FluxNews native Android tag
-  `android/v3.0.0` is created manually by the owner for the approved
-  candidate. Automation must not race or independently recreate that tag.
+- **Release/tag ordering:** final release tags, including the first native
+  Android tag `android/v3.0.0`, are created **only by the manually triggered
+  release workflow** in `mode=release`, after all mandatory checks pass for
+  the explicitly selected source SHA. `mode=validate` creates no tags or
+  GitHub Releases. The owner must not create final release tags manually.
 - **Publication review:** review root `README.md`, `PRIVACY.md`, store
   metadata and screenshots against actual native 3.0.0 behavior before
   publication.
