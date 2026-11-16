@@ -48,9 +48,10 @@ prepared to preserve original reference targets:
   `archive/flux/other/opencode/pr78`: 30 references, including stale local
   remote-tracking history and the extra commit reference.
 
-These archive references are provenance only, not active development branches.
-Before removing any local backup refs, create a durable Git bundle or equivalent
-offline archive.
+These archive references were temporary migration-safety refs, not active
+development branches. The old local repository directories that contained these
+refs have since been removed. No further archive-ref backup action remains open;
+this item is retained here only as migration provenance.
 
 ## File ownership
 
@@ -109,10 +110,11 @@ The migration and CI cutover have been completed.
 - Android, Apple, Rust, F-Droid and release-contract checks are selected by
   changed paths rather than running every platform on every change.
 
-The selective CI still requires a final coverage audit for ordinary `core/**`
-changes, especially whether F-Droid/ABI validation is triggered wherever it is
-actually required. The goal is to close gaps without reintroducing unnecessary
-CI fan-out.
+The selective CI coverage audit for ordinary `core/**` changes is complete.
+PR #165 added a lightweight ARMv7 UniFFI compatibility check to the existing
+Android job for ordinary Core changes, while suppressing that duplicate check
+when the full F-Droid job is already selected. This closes the F-Droid ABI
+coverage gap without reintroducing unnecessary CI fan-out.
 
 The native verifier Gitlink triggers Android and F-Droid validation where
 required. Android localization checks use the imported native source as the
@@ -136,8 +138,9 @@ permissions, reproducibility checks and immutable-tag checks.
 
 The FluxNews `release-testing` environment exists and is restricted to
 `main`. Signing credentials remain repository/environment configuration and
-were not copied through Git history. A real isolated signing run is still
-required before release acceptance.
+were not copied through Git history. The isolated Android signing diagnostic
+has been run successfully on `main`; the resulting APK was signed and verified
+with the expected production-upgrade certificate fingerprint.
 
 The first native Android tag is intentionally a manual operation:
 `android/v3.0.0` is not present yet. The release workflow must therefore be
@@ -223,6 +226,13 @@ The remote cutover is no longer pending. Relevant completed milestones include:
 - Weblate Android/iOS/macOS components completed
 - shared Weblate glossary added
 - German macOS translations exposed to Weblate
+- selective CI coverage audit completed, including lightweight ARMv7 coverage
+  for ordinary Core changes
+- isolated Android signing diagnostic completed with the expected certificate
+  fingerprint
+- signed production-identity Flutter-to-native Android upgrade accepted on
+  physical hardware during E9; this does not close the separate F-Droid
+  signature/upgrade gate
 
 ## Remaining release-readiness work
 
@@ -230,31 +240,25 @@ The remaining work is no longer repository migration; it is release readiness.
 
 Before the first native application release:
 
-1. Audit selective CI coverage for `core/**`, including appropriate
-   F-Droid/ABI coverage, without broadening CI unnecessarily.
-2. Review and merge current Dependabot updates one by one, prioritizing security
+1. Review and merge current Dependabot updates one by one, prioritizing security
    and maintained dependencies.
-3. Resolve the strict RustSec baseline where fixes are available. Do not add
+2. Resolve the strict RustSec baseline where fixes are available. Do not add
    ignore lists or suppressions for `ctutils`, `libsqlite3-sys`,
    `basic-toml` or `rustix`.
-4. Run an isolated Android signing verification and confirm the expected signing
-   fingerprint without exposing secret values.
-5. Test upgrade/signature compatibility from the last published Flutter Android
-   build to the native Android build.
-6. Complete the native F-Droid acceptance gates in
-   `docs/FDROID_OPEN_GATES.md`, including reproducibility and fdroiddata
-   cutover.
-7. Validate iOS TestFlight/App Store archive/export behavior.
-8. Validate macOS App Sandbox/App Group/signing and Mac App Store
+3. Complete the native F-Droid acceptance gates in
+   `docs/FDROID_OPEN_GATES.md`, including the F-Droid-specific signature/
+   upgrade paths, reproducibility and fdroiddata cutover. The normal signed
+   production Flutter-to-native Android upgrade was already accepted during E9
+   and must not be treated as an open general migration gate.
+4. Validate iOS TestFlight/App Store archive/export behavior.
+5. Validate macOS App Sandbox/App Group/signing and Mac App Store
    archive/export/Transporter behavior.
-9. Decide the exact release/tag ordering. The user creates
+6. Decide the exact release/tag ordering. The user creates
    `android/v3.0.0` manually; automation must not independently create the same
    tag.
-10. Create a durable backup of the 38 local historical archive refs before any
-    cleanup.
-11. Review `README.md`, `PRIVACY.md`, store metadata and screenshots against
-    the native 3.0.0 behavior before publication.
-12. Revisit the Saved Media bootstrap compatibility URL separately.
+7. Review `README.md`, `PRIVACY.md`, store metadata and screenshots against
+   the native 3.0.0 behavior before publication.
+8. Revisit the Saved Media bootstrap compatibility URL separately.
 
 No tag, GitHub Release, store upload or F-Droid submission is authorized merely
 by completion of this migration document.

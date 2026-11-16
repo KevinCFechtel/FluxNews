@@ -46,7 +46,7 @@
 | FD-01 – Android-TLS-Laufzeitabnahme | Der Quellbuild, die Versions-/SHA-Prüfung sowie die Migration auf JNI 0.22 sind implementiert und kompilieren. Offen bleibt die erneute Laufzeitabnahme der aktualisierten Bibliotheken auf einem Gerät/Emulator mit dem reproduzierbaren Zweiphasentest `android/Build/test-transport-runtime.sh`. | Öffentliche System-CA erfolgreich; dieselbe private Test-CA ohne Installation abgelehnt und nach Installation im Android-Benutzerspeicher akzeptiert; falscher Hostname und nicht vertrauenswürdige Kette weiterhin abgelehnt |
 | FD-03 – Reproduzierbarkeit | **Für den Flux-Kandidaten 3.0.0 / SHA `75022c00` technisch nachgewiesen:** zwei unabhängige Builds derselben SHA und erfolgreicher APK-Bytevergleich im Release-Workflow [#39410044142](https://github.com/KevinCFechtel/Flux/actions/runs/39410044142). | Für spätere FluxNews-/offizielle F-Droid-Kandidaten erneut an deren exakter Release-SHA prüfen; offizieller F-Droid-Build und historische Update-Signaturen sind dadurch nicht abgenommen |
 | FD-04 – Signatur & Upgrade | Bestehende Flutter-F-Droid-Installationen beider überlieferten Signaturpfade identifizieren; native Upgrade-Pfade auf Geräten prüfen. | Update mit gleicher Package-ID, monotonem `versionCode`, passendem Signaturschlüssel und erhaltenen Nutzerdaten für jeden tatsächlich unterstützten Kanal nachgewiesen |
-| FD-05 – Repository-Cutover | Nach nativer Übernahme von Flux nach **FluxNews** die alte Flutter-Workflows ersetzen und das endgültige F-Droid-`Repo` auf FluxNews umstellen. Import-Commit ist **kein Release-Commit**. | Historische Flutter-Tags/Builds bleiben erreichbar; neues Rezept baut die **spätere** explizit freigegebene FluxNews-Release-SHA |
+| FD-05 – FluxNews-Release-SHA / finaler F-Droid-Cutover | Der Repository-Cutover von Flux nach **FluxNews** und die Ablösung der aktiven Flutter-Workflows sind abgeschlossen. Offen ist nur noch, die erste native F-Droid-Veröffentlichung auf die **explizit freigegebene FluxNews-Release-SHA** festzulegen und die finalen Metadaten darauf auszurichten. Der frühere Import-/Migrations-Commit ist **kein Release-Commit**. | Historische Flutter-Tags/Builds bleiben erreichbar; das finale Rezept und die F-Droid-Metadaten referenzieren ausschließlich die freigegebene FluxNews-Release-SHA |
 | FD-06 – Release-Gate/Publish | Erst nach FD-01 bis FD-05 finale Android-Version, F-Droid-Quellbuild und Release-SHA freigeben. | Die Release-Orchestrierung läuft **nur in FluxNews**; separater autorisierter Publikationsschritt. Kein vorzeitiger Tag, Store-Upload oder automatischer GitLab-MR |
 
 ## In dieser lokalen Phase ausdrücklich nicht ausgeführt
@@ -61,10 +61,12 @@
 - Keine Apple-Builds oder Apple-Tests, keine vollständige GitHub-Actions-
   Matrix und keine Veröffentlichung.
 
-FD-03 ist für den genannten Flux-Release-Kandidaten technisch erfüllt, nicht pauschal für künftige FluxNews-/offizielle F-Droid-Releases. FD-04 bleibt eine reale Abnahmeprüfung und werden
+FD-03 ist für den genannten Flux-Release-Kandidaten technisch erfüllt, nicht pauschal für künftige FluxNews-/offizielle F-Droid-Releases. FD-04 bleibt eine reale Abnahmeprüfung und wird
 nicht durch `cargo audit`, `cargo test`, Scanner oder einen einzelnen
-F-Droid-Rezept-Build ersetzt. FD-05/06 folgen erst beim expliziten
-FluxNews-Cutover beziehungsweise einer später genehmigten Veröffentlichung.
+F-Droid-Rezept-Build ersetzt. Der Repository-Cutover nach FluxNews ist bereits
+abgeschlossen. FD-05 bezeichnet daher nur noch die Festlegung der finalen
+FluxNews-Release-SHA und der darauf verweisenden F-Droid-Metadaten; FD-06 bleibt
+der spätere explizit autorisierte Veröffentlichungs-Gate.
 
 Ressourcen:
 [F-Droid-Plan](POST_REPLACEMENT_FOLLOWUP_PLAN.md),
