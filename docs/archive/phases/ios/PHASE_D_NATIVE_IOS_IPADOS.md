@@ -23,7 +23,7 @@
 > behavior, or the frozen UIKit architecture. PR #28 passed Apple CI before merge.
 >
 > Release/distribution scripting is tracked separately in
-> [RELEASE_DISTRIBUTION.md](RELEASE_DISTRIBUTION.md). iOS already has archive and
+> [RELEASE_DISTRIBUTION.md](../../../RELEASE_DISTRIBUTION.md). iOS already has archive and
 > export building blocks, but they should be normalized into the shared release
 > interface and continue to prepare App Store Connect artifacts for Transporter
 > rather than making CI publication the primary distribution path.
@@ -212,7 +212,7 @@ or durable playback state. Disconnecting the CarPlay scene destroys CarPlay
 presentation state only; the app-scoped media runtime remains authoritative.
 
 The detailed D7 ownership, API, entitlement, implementation, test and real-device
-acceptance contract is [IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+acceptance contract is [IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
 
 ### iOS/iPadOS Article Timeline — UIKit
 
@@ -418,7 +418,7 @@ accepted. This covers the shared Apple Now Playing projection, iOS Now Playing
 adapter, remote commands, system playback acceptance, CarPlay scene/browsing,
 CarPlay playback integration, and final physical-device CarPlay acceptance.
 The detailed contract is
-[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
 The D7 architecture is frozen; changes require a new concrete regression or
 product requirement.
 
@@ -571,7 +571,7 @@ runtime for Now Playing, remote commands and CarPlay. D7-A through D7-G are
 automated-test validated and real-device accepted, including CarPlay Listening
 List/feed filtering/navigation/Now Playing and system Now Playing, Dynamic
 Island, and Lock Screen behavior. See
-[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
 
 ### D8 — Live Activities & Dynamic Island
 
@@ -603,7 +603,7 @@ D9 therefore has no remaining iOS feature or physical-upgrade blocker. The
 canonical Apple/Rust regression gate remains mandatory whenever later shared
 changes touch the iOS path. D9 also records the intentionally retired/replaced
 behaviors so they are not reintroduced later as accidental parity work. See
-[IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md](IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md).
+[IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md](../../../acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md).
 
 ## 11. Release/acceptance invariants
 

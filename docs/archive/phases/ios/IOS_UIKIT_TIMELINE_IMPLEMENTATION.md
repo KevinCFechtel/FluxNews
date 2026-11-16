@@ -27,8 +27,8 @@ correctness and scrolling quality must be verified on the selected implementatio
 
 Read these files in order before editing code:
 
-1. [AGENTS.md](../AGENTS.md).
-2. [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md), especially sections
+1. [AGENTS.md](../../../../AGENTS.md).
+2. [ARCHITECTURE_DECISIONS.md](../../../ARCHITECTURE_DECISIONS.md), especially sections
    2, 4, 4.1, and 5; this remains the highest architecture authority.
 3. [PHASE_D_NATIVE_IOS_IPADOS.md](PHASE_D_NATIVE_IOS_IPADOS.md), especially the
    UIKit Timeline contract in section 5 and the D4.4 acceptance requirements.
@@ -36,7 +36,7 @@ Read these files in order before editing code:
 
 This handoff is subordinate to those contracts. It must not introduce a second
 product specification. The older
-[Flux_iOS_Scrollover_Analyse.md](analysis/ios/Flux_iOS_Scrollover_Analyse.md) is historical
+[Flux_iOS_Scrollover_Analyse.md](../../../analysis/ios/Flux_iOS_Scrollover_Analyse.md) is historical
 evidence; its conditional migration advice and optional SwiftUI cell hosting
 are superseded. Required iOS Scrollover semantics are already decided in Phase D.
 

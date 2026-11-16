@@ -547,6 +547,7 @@ Implemented on 2 October 2026:
 - shared accessory ordering for unread, star, comments and audio;
 - page-level batched Core audio projection without per-row Core calls;
 - one app-wide Coil 3.6.3 image loader with bounded memory and disk caches;
+- article-image HTTP loading, decode and platform caching are Android-native responsibilities; Core may provide discovery/URL/domain metadata but does not own the image HTTP/disk-cache pipeline;
 - Compact performs no article-image work, while visual modes request images at presentation constraints;
 - the Timeline's Core total is used for the Settings-controlled article-count presentation;
 - the Android build/toolchain baseline was modernized to current stable components where available: AGP 9.4.0, Gradle 9.7.1, Kotlin/Compose compiler 2.4.20, current stable AndroidX/Material/Coil libraries, NDK r29, and compile SDK 37 with stable runtime target SDK 36;

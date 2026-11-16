@@ -53,7 +53,7 @@ phases.
 Owns domain models; SQLite/local persistence and durable data state; Miniflux
 networking; sync/reconciliation; durable offline mutations; article/feed/category
 data; account/server configuration semantics; core settings; article/Reader
-content processing; feed-icon acquisition/cache; article-image discovery/cache;
+content processing; feed-icon acquisition/cache; article-image discovery;
 search requests; notification candidate/domain data; widget projection/domain
 data; queries; structured errors/events; and the completed shared media domain,
 persistence, download policies, playback progress, and media-retention
@@ -242,8 +242,8 @@ main thread. Rust owns durable state and delivery; do not add a Swift database
 or another Miniflux client.
 
 The detailed iOS behavior contract is in
-[Phase D](PHASE_D_NATIVE_IOS_IPADOS.md#iosipados-article-timeline--uikit).
-[UIKit Timeline implementation handoff](IOS_UIKIT_TIMELINE_IMPLEMENTATION.md)
+[Phase D](platforms/ios/IOS.md#iosipados-article-timeline--uikit).
+[UIKit Timeline implementation handoff](platforms/ios/IOS.md)
 records the rationale, work packages, and acceptance cases. This is a bounded
 amendment to the iOS Timeline, not a reopening of frozen Core/macOS architecture
 or the Flutter production-data migration contract.
@@ -636,9 +636,12 @@ is only a fallback when the source icon does not provide a suitable
 adaptive appearance. This behavior is automatic and has no user-facing
 setting.
 
-Article image discovery/download/disk cache belongs to the core; native
-UI triggers lazy loading, decodes/renders images, and may maintain a
-memory cache. Background sync does not preload article images.
+Article-image presentation is native-owned. The Core may discover and expose
+article-image URLs or other domain-level image metadata, but native clients own
+HTTP fetching, request policy, decode/downsampling, platform HTTP caching,
+bounded memory/disk image caches, cancellation/prefetch, memory-pressure
+handling and rendering. Article-image bytes/cache state are not Core or sync
+state. Background sync does not preload article images.
 
 Feed-domain preferences are represented as one typed per-feed preference
 model rather than separate preference tables for every feature. The
@@ -740,9 +743,10 @@ Automatic icon contrast handling is implementation behavior, not a user
 preference, and there is no per-feed icon-contrast override. Feed icons are
 regenerable cache; there is no user-facing "delete feed icons only" control.
 
-Article-image cache age is not a user preference. Native clients own bounded
-decoded-image caching, normal platform HTTP caching, memory-pressure handling
-and eviction/tuning. The legacy user-selectable image-cache duration is retired.
+Article-image cache age is not a user preference. Native clients own the
+article-image HTTP/download path plus bounded decoded-image and disk caching,
+normal platform HTTP caching, memory-pressure handling and eviction/tuning.
+The legacy user-selectable image-cache duration is retired.
 
 The following FluxNews legacy concepts are intentionally not carried
 into the shared Flux settings model: fixed stored-article/starred
