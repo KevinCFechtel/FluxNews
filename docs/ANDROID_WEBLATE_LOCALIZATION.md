@@ -56,13 +56,13 @@ The CI step uses full Git history and the pull-request base SHA (or the previous
 
 ## Latest C1 audit
 
-See [ANDROID_LOCALIZATION_AUDIT.md](ANDROID_LOCALIZATION_AUDIT.md) for confirmed remaining Kotlin UI literals, the blocking incremental guard versus the informational full inventory, and release closeout criteria. C1 remains in progress; green CI does not imply complete localization or reviewed translations.
+See [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md) for confirmed remaining Kotlin UI literals, the blocking incremental guard versus the informational full inventory, and release closeout criteria. C1 remains in progress; green CI does not imply complete localization or reviewed translations.
 
 ### Expanded source-level audit (2026-10-12)
 
-A follow-up audit of the 71 production Kotlin files identified additional English fallback labels, snackbar text, error states and settings labels after PR #46. Findings and categories are documented in [ANDROID_LOCALIZATION_AUDIT.md](ANDROID_LOCALIZATION_AUDIT.md). The CI scanner now checks more literal forms; it remains an incremental guard, not evidence of full extraction. C1 is not technically complete until these findings are fixed and locale runtime behavior is verified.
+A follow-up audit of the 71 production Kotlin files identified additional English fallback labels, snackbar text, error states and settings labels after PR #46. Findings and categories are documented in [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md). The CI scanner now checks more literal forms; it remains an incremental guard, not evidence of full extraction. C1 is not technically complete until these findings are fixed and locale runtime behavior is verified.
 
-Android Auto/MediaTransfer follow-up: user-visible Media3 browse/command labels and foreground download notification copy are now supplied through resources; see [ANDROID_LOCALIZATION_AUDIT.md](ANDROID_LOCALIZATION_AUDIT.md). Validate host-side locale changes and original fallback behavior on Android Auto separately.
+Android Auto/MediaTransfer follow-up: user-visible Media3 browse/command labels and foreground download notification copy are now supplied through resources; see [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md). Validate host-side locale changes and original fallback behavior on Android Auto separately.
 
 
 ## Android Lint and staged Weblate locales (2026-10-12)
