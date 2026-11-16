@@ -753,3 +753,35 @@ The macOS unpackaged app and both distribution artifacts live under `dist/macos/
 - `dist/macos/developer-id/FluxNews-<version>-macos-<architecture>.zip`: notarized Developer ID ZIP (moved from `dist/release/`).
 
 By default `install-local.sh` extracts the newest Developer ID ZIP from `dist/macos/developer-id/` and installs its verified app; `SOURCE_APP` can still select an unpackaged app explicitly; existing ZIP files in the legacy `dist/release/` directory and the former `dist/FluxNews.app` are not automatically moved or removed. Re-run the Developer ID release to create an artifact in the new directory.
+
+
+## 13. Current release-readiness ownership
+
+This section is the active owner for cross-platform release-readiness work that
+was previously duplicated in the completed repository-migration record.
+
+Before the first native 3.0.0 publication:
+
+- **iOS:** validate the production TestFlight/App Store archive/export path and
+  resulting App Store Connect/Transporter artifact with the owner's signing and
+  provisioning setup.
+- **macOS:** validate production Mac App Store provisioning, archive/export,
+  App Group/embedded-library signing and Transporter behavior. The previously
+  accepted B1 Sandbox/App Group runtime gate is not reopened by this work.
+- **Release/tag ordering:** the first FluxNews native Android tag
+  `android/v3.0.0` is created manually by the owner for the approved
+  candidate. Automation must not race or independently recreate that tag.
+- **Publication review:** review root `README.md`, `PRIVACY.md`, store
+  metadata and screenshots against actual native 3.0.0 behavior before
+  publication.
+- **F-Droid:** all remaining F-Droid acceptance and publication conditions are
+  owned only by [`FDROID_OPEN_GATES.md`](FDROID_OPEN_GATES.md); do not mirror
+  them here as an independent checklist.
+- **Dependencies/security:** current update and RustSec work is owned only by
+  [`DEPENDENCY_MAINTENANCE.md`](DEPENDENCY_MAINTENANCE.md).
+- **Saved Media bootstrap compatibility:** the retained historical bootstrap URL
+  is owned by
+  [`operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md`](operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md).
+
+No tag, GitHub Release, store upload or F-Droid submission is authorized by
+documentation completion alone.
