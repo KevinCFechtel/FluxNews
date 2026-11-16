@@ -69,7 +69,7 @@ FluxNews-Release-SHA und der darauf verweisenden F-Droid-Metadaten; FD-06 bleibt
 der spätere explizit autorisierte Veröffentlichungs-Gate.
 
 Ressourcen:
-[F-Droid-Plan](POST_REPLACEMENT_FOLLOWUP_PLAN.md),
+[Historischer F-Droid-Plan](../archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md),
 [Release-Architektur](RELEASE_DISTRIBUTION.md),
 [Dependency-Policy](DEPENDENCY_MAINTENANCE.md),
 [Ruffle rustls-Quellbuild](https://github.com/ruffle-rs/ruffle-android/pull/866).
