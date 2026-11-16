@@ -1044,11 +1044,15 @@ unavailable. Widget Sync activates the app, which performs the normal Core
 Miniflux, credential, and Keychain-free.
 
 After a successful snapshot write or successful stale-snapshot invalidation,
-the app reloads the two stable kinds, `FluxNewsHeadlinesWidget` and
-`FluxNewsCompactStatusWidget`, with targeted `reloadTimelines(ofKind:)` calls.
-There is no delayed reload workaround or `reloadAllTimelines()` call. Incoming
-widget URLs are parsed once and retained until app/Core configuration is ready,
-so cold and warm launches do not duplicate or drop actions.
+the app requests a WidgetKit reload through the shared
+`WidgetTimelineReloader`, whose accepted implementation uses
+`reloadAllTimelines()`. Each native iOS widget timeline also requests a
+30-minute `.after(...)` fallback refresh so an already-written App Group
+snapshot is eventually re-read if the immediate reload is deferred by WidgetKit.
+The fallback performs no Miniflux/Core/database/credential work and does not
+create a second sync path. Incoming widget URLs are parsed once and retained
+until app/Core configuration is ready, so cold and warm launches do not
+duplicate or drop actions.
 
 Supported data scopes include All, Starred, Category, and Feed. Widget
 queries support pagination; `limit = 0` allows the complete matching
