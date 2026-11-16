@@ -16,6 +16,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 JOBS = ("rust", "android", "apple", "fdroid", "contracts")
+SELECTORS = JOBS + ("armv7",)
 CONTROL_FILES = {
     ".github/workflows/ci.yml",
     "Build/ci_gate.py",
@@ -37,9 +38,9 @@ FDROID_BUILD_FILES = {
 
 
 def select_jobs(paths: list[str]) -> dict[str, bool]:
-    result = {name: False for name in JOBS}
+    result = {name: False for name in SELECTORS}
     if any(path in CONTROL_FILES for path in paths):
-        return {name: True for name in JOBS}
+        return {name: True for name in SELECTORS}
 
     for path in paths:
         core = path.startswith("core/")
@@ -50,6 +51,7 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
         gitmodules = path == ".gitmodules"
 
         result["rust"] |= core or path == ".github/workflows/rust.yml"
+        result["armv7"] |= core
         result["android"] |= (
             android or core or verifier or gitmodules
             or path == ".github/workflows/android.yml"
@@ -86,6 +88,10 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
             or (path.startswith("fdroid/") and path.endswith(".py"))
         )
 
+    # The full F-Droid job already builds armeabi-v7a. Avoid duplicating that
+    # expensive architecture build in Android when F-Droid is selected.
+    if result["fdroid"]:
+        result["armv7"] = False
     return result
 
 
@@ -144,7 +150,7 @@ def main() -> int:
             return 1
         chosen = select_jobs(paths)
         print(f"CI changed files: {len(paths)}")
-        for name in JOBS:
+        for name in SELECTORS:
             value = "true" if chosen[name] else "false"
             print(f"{name}={value}")
             if "GITHUB_OUTPUT" in os.environ:

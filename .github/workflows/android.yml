@@ -2,6 +2,11 @@ name: Android
 
 on:
   workflow_call:
+    inputs:
+      include_armv7:
+        required: false
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -65,7 +70,7 @@ jobs:
           echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "${GITHUB_ENV}"
       - uses: dtolnay/rust-toolchain@1.99.1
         with:
-          targets: aarch64-linux-android,x86_64-linux-android
+          targets: ${{ inputs.include_armv7 && 'aarch64-linux-android,x86_64-linux-android,armv7-linux-androideabi' || 'aarch64-linux-android,x86_64-linux-android' }}
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '
       - name: Run Android CI gate
@@ -81,6 +86,11 @@ jobs:
             echo "productionBundle unexpectedly accepted a missing versionName" >&2
             exit 1
           fi
+      - name: Verify ARMv7 UniFFI compatibility for core changes
+        if: ${{ inputs.include_armv7 }}
+        env:
+          FLUX_ANDROID_INCLUDE_ARMV7: "1"
+        run: ./android/Build/build-uniffi.sh debug
       - name: Upload Android Lint reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
