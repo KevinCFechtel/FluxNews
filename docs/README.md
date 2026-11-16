@@ -38,7 +38,7 @@ current contracts in a later documentation step.
 | iOS/iPadOS | [`PHASE_D_NATIVE_IOS_IPADOS.md`](PHASE_D_NATIVE_IOS_IPADOS.md) | Native iOS/iPadOS contract; replacement implementation is complete |
 | iOS Timeline | [`IOS_UIKIT_TIMELINE_IMPLEMENTATION.md`](IOS_UIKIT_TIMELINE_IMPLEMENTATION.md) | Accepted UIKit Timeline contract and frozen implementation boundaries |
 | iOS replacement completion | [`IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md`](IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md) | Retained/retired behavior and production-upgrade acceptance |
-| Android | [`PHASE_E_NATIVE_ANDROID.md`](PHASE_E_NATIVE_ANDROID.md) | Native Android contract; E1–E9 implementation and production-upgrade acceptance are complete |
+| Android | [`platforms/android/ANDROID.md`](platforms/android/ANDROID.md) | Current native Android product/platform contract; E1–E9 chronology is archived |
 | macOS parity | [`MACOS_C3_FEATURE_PARITY_ROADMAP.md`](MACOS_C3_FEATURE_PARITY_ROADMAP.md) | Approved C3 decisions and completed parity scope |
 
 A completed phase does not make its still-binding product or architecture rules
