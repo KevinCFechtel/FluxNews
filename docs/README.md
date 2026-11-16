@@ -34,12 +34,12 @@ current contracts in a later documentation step.
 | Architecture | [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md) | Rust/Core–native ownership, platform boundaries, durable architecture decisions |
 | Shared mobile behavior | [`MOBILE_PRODUCT_SEMANTICS.md`](MOBILE_PRODUCT_SEMANTICS.md) | Product semantics shared by Android and iOS/iPadOS |
 | Shared media core | [`current/MEDIA_CORE.md`](current/MEDIA_CORE.md) | Current shared media/Core contract; completed Phase-B sequencing is archived |
-| macOS media | [`PHASE_C_NATIVE_MACOS_AUDIO.md`](PHASE_C_NATIVE_MACOS_AUDIO.md) | Native macOS audio/media contract |
+| macOS media | [`platforms/macos/MACOS.md`](platforms/macos/MACOS.md) | Native macOS audio/media contract |
 | iOS/iPadOS | [`platforms/ios/IOS.md`](platforms/ios/IOS.md) | Native iOS/iPadOS contract; replacement implementation is complete |
 | iOS Timeline | [`platforms/ios/IOS.md`](platforms/ios/IOS.md) | Accepted UIKit Timeline contract and frozen implementation boundaries |
 | iOS replacement completion | [`acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md`](acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md) | Retained/retired behavior and production-upgrade acceptance |
 | Android | [`platforms/android/ANDROID.md`](platforms/android/ANDROID.md) | Current native Android product/platform contract; E1–E9 chronology is archived |
-| macOS parity | [`MACOS_C3_FEATURE_PARITY_ROADMAP.md`](MACOS_C3_FEATURE_PARITY_ROADMAP.md) | Approved C3 decisions and completed parity scope |
+| macOS parity | [`platforms/macos/MACOS.md`](platforms/macos/MACOS.md) | Approved C3 decisions and completed parity scope |
 
 A completed phase does not make its still-binding product or architecture rules
 historical. Conversely, historical implementation sequencing in a current
@@ -114,7 +114,7 @@ candidate, device, or owner decision. They are evidence, not general roadmaps.
 - [`acceptance/ios/IOS_D6_FINAL_ACCEPTANCE.md`](acceptance/ios/IOS_D6_FINAL_ACCEPTANCE.md)
 - [`acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md`](acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md)
 - [`acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md`](acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md)
-- [`MACOS_SANDBOX_ACCEPTANCE.md`](MACOS_SANDBOX_ACCEPTANCE.md)
+- [`acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md`](acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md)
 
 Owner acceptance, automated CI, local tests, and physical-device validation are
 different evidence types. Do not infer that every historical matrix item was run
