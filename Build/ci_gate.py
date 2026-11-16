@@ -39,10 +39,11 @@ FDROID_BUILD_FILES = {
 
 def select_jobs(paths: list[str]) -> dict[str, bool]:
     result = {name: False for name in SELECTORS}
-    if any(path in CONTROL_FILES for path in paths):
+    technical_paths = [path for path in paths if not path.lower().endswith(".md")]
+    if any(path in CONTROL_FILES for path in technical_paths):
         return {name: True for name in SELECTORS}
 
-    for path in paths:
+    for path in technical_paths:
         core = path.startswith("core/")
         android = path.startswith("android/")
         apple = path.startswith("apple/")
@@ -55,7 +56,6 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
         result["android"] |= (
             android or core or verifier or gitmodules
             or path == ".github/workflows/android.yml"
-            or path == "docs/ANDROID_WEBLATE_LOCALIZATION.md"
             or path == "Build/versions/android.properties"
         )
         result["apple"] |= (
