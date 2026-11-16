@@ -1172,7 +1172,7 @@ When no enclosure is loaded, clear Now Playing info and use unknown playback sta
 Pause retains Now Playing metadata and elapsed position so external surfaces can
 resume the same item. In-app Stop checkpoints playback, releases the
 AVAudioSession for deactivation, retains the prepared/loaded media state for
-resume, clears system Now Playing, and hides the Article List Now Playing action.
+resume, clears system Now Playing, and hides the adaptive in-app mini-player.
 While playing, publish the configured playback rate; while not playing,
 effective rate is zero while the default/configured rate remains available.
 
@@ -1184,13 +1184,15 @@ Add a CarPlay scene delegate/coordinator that owns only CarPlay presentation obj
 
 Disconnecting CarPlay destroys CarPlay UI state only. Playback may continue through the app-scoped runtime according to existing D6 semantics.
 
-### Article List Now Playing access
+### Adaptive Article List Now Playing access
 
-The Article List provides a configurable Action Bar access point while a player
-is actively running. It presents the existing player rather than creating a
-second player context, and reuses the Listening List context, including Show
-Notes whenever the current `ListeningListItem` is available. Stop hides this
-access point; Pause retains Now Playing presentation.
+The Article List provides the accepted **adaptive mini-player**, not a configurable
+Action Bar `Now Playing` item. It opens the existing full player rather than
+creating a second player context and reuses the Listening List context, including
+Show Notes whenever the current `ListeningListItem` is available. Its placement
+follows the compact bottom dock/top chrome or iPad sidebar-footer contract above.
+Stop hides this in-app mini-player; Pause retains it for loaded media. System
+Now Playing/remote commands remain separate OS-level surfaces.
 
 ## 5. CarPlay API contract
 
@@ -1351,7 +1353,6 @@ The configurable priority list contains:
 - Mark All as Read;
 - Mark All as Read and Continue;
 - Listening List;
-- Now Playing;
 - Settings.
 
 The persisted order is the priority for direct presentation. Each adaptive
@@ -1359,8 +1360,8 @@ chrome mode exposes a bounded number of configurable direct actions; selected
 actions that do not fit move into **More**. Relevant configurable actions that
 the user did not select for direct presentation also remain available under
 **More**. Contextually invalid actions are omitted rather than shown disabled:
-Now Playing requires active loaded media, Mark All as Read is limited to article
-scopes that support it, and Mark All as Read and Continue additionally requires
+Mark All as Read is limited to article scopes that support it, and Mark All as
+Read and Continue additionally requires
 a following visible feed/category scope.
 
 Action Bar Settings use an explicit Edit mode: selected actions may only be
