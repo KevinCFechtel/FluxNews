@@ -735,7 +735,7 @@ assertion that a source-only comparison proves exhaustive parity.
 
 ## Not implemented
 
-No old data, Keychain, download or account migration. The existing Developer ID/notarization script remains separate from the future Mac App Store export script. No claim of successful App Store provisioning or review is made.
+No old data, Keychain, download or account migration. The existing Developer ID/notarization script remains separate from the **implemented** Mac App Store archive/export scripts (`apple/macos/Build/archive.sh` and `export-appstore.sh`). Production App Store provisioning/export with owner credentials, Transporter acceptance and store review remain unverified; the existence of scripts does not establish release acceptance.
 
 
 ## B1 signed macOS development build acceptance
@@ -744,8 +744,8 @@ On a Mac with Apple Development signing and App Groups provisioned for both targ
 
 ```bash
 CONFIGURATION=Debug DEVELOPMENT_SIGNING=1 ./apple/macos/Build/build-app.sh
-./apple/macos/Build/verify-sandbox.sh ./dist/FluxNews.app development
-./apple/macos/Build/install-local.sh
+./apple/macos/Build/verify-sandbox.sh ./dist/macos/FluxNews.app development
+INSTALL_MODE=development SOURCE_APP="$PWD/dist/macos/FluxNews.app" ./apple/macos/Build/install-local.sh
 ```
 
 The verifier checks actual signatures, host/widget IDs and versions, Sandbox and App Group entitlements, signing team and embedded development provisioning. The installer validates both source and staged copy **before** replacing the application; no app container or Keychain data is deleted. A truly fresh-container test requires a clean macOS user or separately approved manual cleanup. The project owner has explicitly accepted B1 as complete following device testing; the individual fresh-container checks above were not separately documented here. Unsigned CI checks alone do not establish signed Sandbox acceptance. Developer ID and Mac App Store distribution remain separate.

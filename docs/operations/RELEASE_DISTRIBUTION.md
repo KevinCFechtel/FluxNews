@@ -54,54 +54,24 @@ The entry point delegates to the existing platform scripts. Apple App Store expo
 
 **R1 implementation status:** output normalization for Play AAB and iOS IPA is implemented, the shared CLI is covered by `bash Build/test-release-cli.sh`, and scoped candidate orchestration is implemented in `.github/workflows/release.yml`. Remaining work is channel-specific acceptance: Apple store signing/export/Transporter validation, final Android/F-Droid release-candidate gates, and the explicitly authorized publication steps. Existing scripts' legacy invocation forms remain for compatibility.
 
-## 2. Target command model
+## 2. Implemented release command interface
 
-Prefer a small repository-level release entry point, for example:
+The supported entry point is `bash Build/release.sh`; the executable
+argument contract and examples are recorded above under **R1 implementation**
+and in `bash Build/release.sh --help`. It accepts a platform followed by
+named options such as `--target`, `--version-code`, `--version-name`
+and `--debug`; it does **not** accept the former positional
+`android play N V` or `ios appstore N V` design.
 
-```text
-Build/release.sh android play <versionCode> <versionName>
-Build/release.sh android fdroid <versionCode> <versionName>
-Build/release.sh ios appstore <buildNumber> <versionName>
-Build/release.sh macos appstore <buildNumber> <versionName>
-```
+The historical proposal for `Build/release.sh android fdroid N V` was
+**not implemented**. Native F-Droid build validation and publication gates
+belong to the dedicated workflow and
+[FDROID_OPEN_GATES.md](FDROID_OPEN_GATES.md). No shared CLI F-Droid
+`--target` is supported.
 
-The exact file name may change during implementation, but the public contract
-should remain narrow and consistent:
-
-- platform;
-- distribution target;
-- build/version;
-- optional output directory;
-- no implicit publication unless the command explicitly says `publish`.
-
-The top-level script should delegate to platform-owned scripts rather than
-embedding Gradle/Xcode behavior itself.
-
-A preferred shape is:
-
-```text
-Build/
-  release.sh
-
-android/Build/
-  build-app.sh
-  prepare-play-release.sh
-  prepare-fdroid-release.sh
-  publish-fdroid.sh
-
-apple/ios/Build/
-  build-app.sh
-  archive.sh
-  export-appstore.sh
-
-apple/macos/Build/
-  build-app.sh
-  archive.sh
-  export-appstore.sh
-```
-
-Names are illustrative; implementation should reuse and rename current scripts
-only where that genuinely improves consistency.
+Release preparation delegates to platform-owned scripts. Commands do not
+implicitly publish to stores. The optional macOS `--target developer-id`
+channel produces a separate notarized outside-store artifact.
 
 ## 3. Common release contract
 
@@ -396,20 +366,23 @@ closed**. [Apple CI #167](https://github.com/KevinCFechtel/Flux/actions/runs/389
 remains source/CI evidence rather than proof of each individual runtime checklist
 item. See [MACOS_SANDBOX_ACCEPTANCE.md](../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md) for the
 accepted scope and evidence limits. Mac App Store provisioning, archive/export,
-Transporter validation and review remain separate release-track work. Before implementing
-the Mac App Store archive/export deliverable. That later Store export is part
-of R, not part of the B1 runtime sign-off.
+Transporter validation and review remain separate release-track work. The
+Mac App Store archive/export scripts were subsequently implemented as part of
+release work R; their existence is not evidence of real-owner signing/export
+acceptance and does not reopen the B1 runtime sign-off.
 
 The primary macOS distribution should likewise be the Mac App Store.
 
-**Mac release prerequisite and approved decision:** The macOS app has **never been released**. Its host App Sandbox and signed-development runtime acceptance (B1) are implemented and owner-accepted. The existing Developer ID/notarization path is not a Mac App Store export. Production Mac App Store provisioning, archive/export and Transporter validation remain open release-track work; they do not reopen B1. The developer explicitly accepts losing existing unsandboxed local development data: no database/download/Keychain migration, `container-migration.plist`, legacy-location fallback or compatibility layer is required. See the accepted B1 evidence and its limits in [MACOS_SANDBOX_ACCEPTANCE.md](../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
+**Mac release prerequisite and approved decision:** The macOS app has **never been released**. Its host App Sandbox and signed-development runtime acceptance (B1) are implemented and owner-accepted. The existing Developer ID/notarization path is not a Mac App Store export. Mac App Store archive/export scripts now exist. Real-owner production provisioning, archive/export validation and Transporter acceptance remain open release-track work; they do not reopen B1. The developer explicitly accepts losing existing unsandboxed local development data: no database/download/Keychain migration, `container-migration.plist`, legacy-location fallback or compatibility layer is required. See the accepted B1 evidence and its limits in [MACOS_SANDBOX_ACCEPTANCE.md](../acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md).
 
-The existing `apple/macos/Build/build-app.sh` is currently a build/validation
-script, not a complete App Store distribution path.
+The existing `apple/macos/Build/build-app.sh` builds and verifies a local app;
+actual Mac App Store archive/export scripts are separately implemented in
+`apple/macos/Build/archive.sh` and `export-appstore.sh` and called through
+`Build/release.sh macos --target appstore`. The implemented scripts prepare
+an artifact but have **not** passed final real-owner distribution acceptance.
 
-Add macOS equivalents to the iOS archive/export flow.
-
-The final macOS App Store path should:
+The following are final Mac App Store distribution acceptance requirements,
+not missing scripts or a claim that the existing export was accepted:
 
 - use the production Xcode configuration;
 - build/archive the host app and Widget extension;
@@ -648,9 +621,18 @@ Release workflows should generally be manual or release/tag-driven and should:
 - never publish from arbitrary pull requests;
 - never silently derive a production signing identity from development config.
 
-## 10. Implementation order
+## 10. Historical R implementation order (completed work and pending gates)
 
-Implement in this order:
+The numbered steps below preserve the original release-scripting plan as
+**historical implementation sequence**, not a list of scripts or migration
+features still missing. The shared CLI, Android build preparation, F-Droid
+candidate workflow, iOS and macOS archive/export scripts, and release
+orchestration are implemented. The remaining candidate-specific checks and
+real-owner store signing/export/Transporter acceptance are tracked in the
+respective current operational sections; no accepted platform migration or
+sandbox phase is reopened.
+
+The original plan listed:
 
 1. **Define common version/CLI conventions.**
    Document exact argument names and artifact paths before changing platform
@@ -684,9 +666,15 @@ Implement in this order:
    artifacts for all four targets: Play, F-Droid, iOS App Store and macOS App
    Store.
 
-## 11. Definition of done
+## 11. Historical definition of done and remaining release acceptance
 
-This release-scripting follow-up is complete when:
+This checklist records the original scope and acceptance intent of the
+release-scripting follow-up. Many implementation deliverables already exist;
+remaining release candidate, F-Droid upgrade and real-owner store validation
+must be evaluated separately in their owning sections. Do not interpret each
+item below as an unimplemented feature or a reason to restart completed work.
+
+The original success criteria were:
 
 - one documented top-level interface can prepare each supported distribution
   target;
@@ -725,7 +713,7 @@ This follow-up does not:
 
 ## R2 macOS App Store export implementation (17 October 2026)
 
-`bash Build/release.sh macos --target appstore --version-code N --version-name V` invokes `apple/macos/Build/archive.sh` and `export-appstore.sh`. The archive uses the Release configuration, explicit host/widget version settings, automatic provisioning and Apple Distribution signing; `verify-sandbox.sh ... distribution` checks the signed host/widget bundle IDs, version parity, Sandbox and App Group entitlements, signature chain and Apple Distribution team. Export uses Xcode's App Store Connect export method, expects a non-empty `.pkg` in `dist/macos/appstore/`, and never uploads automatically.
+`bash Build/release.sh macos --target appstore --version-code N --version-name V` invokes `apple/macos/Build/archive.sh` and `export-appstore.sh`. The archive uses the Release configuration, explicit host/widget version settings and automatic provisioning; `verify-sandbox.sh ... archive` validates the archived host/widget bundle IDs, version parity, Sandbox and App Group entitlements, signatures and archive team. The archive verification mode does **not** assert Apple Distribution signing authority. Export invokes Xcode's App Store Connect export method, first re-checks the archive in `archive` mode, then requires a non-empty `.pkg` in `dist/macos/appstore/`. Neither script uploads anything. Actual exported-artifact distribution signing/provisioning and Transporter compatibility remain subject to the owner's real-Mac release acceptance.
 
 **Not yet accepted:** This flow has not been exercised with the owner's Apple Distribution certificates/profiles or Transporter. Xcode/macOS export compatibility, provisioning, App Group and embedded Rust library signing must be validated on the owner's Mac before calling R2 complete. Store signing credentials must remain outside Git.
 

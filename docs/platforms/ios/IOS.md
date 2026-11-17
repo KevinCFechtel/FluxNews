@@ -200,8 +200,7 @@ must not create another Core, `IOSMediaRuntime`, AVPlayer, AVAudioSession owner,
 or durable playback state. Disconnecting the CarPlay scene destroys CarPlay
 presentation state only; the app-scoped media runtime remains authoritative.
 
-The detailed D7 ownership, API, entitlement, implementation, test and real-device
-acceptance contract is [IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+The accepted D7 ownership and runtime rules are maintained in this iOS platform contract. The [D7 acceptance record](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md) provides detailed implementation history, test coverage and device evidence; it is not a separate current contract.
 
 ### iOS/iPadOS Article Timeline — UIKit
 
@@ -411,8 +410,8 @@ D7-A through D7-G are complete, automated-test validated, and real-device
 accepted. This covers the shared Apple Now Playing projection, iOS Now Playing
 adapter, remote commands, system playback acceptance, CarPlay scene/browsing,
 CarPlay playback integration, and final physical-device CarPlay acceptance.
-The detailed contract is
-[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md).
+The detailed historical acceptance evidence is
+[IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md](../../acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md); the current contract is this document.
 The D7 architecture is frozen; changes require a new concrete regression or
 product requirement.
 

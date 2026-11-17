@@ -253,7 +253,7 @@ At the audit baseline its production Android state includes:
 - an Android media browser/audio service for Android Auto;
 - cleartext HTTP allowed and system plus user certificate anchors trusted.
 
-The established media migration contract in archive/migration/PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md remains authoritative:
+The active legacy media migration compatibility contract is in [the current Media Core contract](../../current/MEDIA_CORE.md#legacy-migration-compatibility-and-safety). The archived [B9 migration record](../../archive/migration/PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md) documents the original acceptance and provenance, not a second authoritative specification. Its retained invariants are:
 
 - article/enclosure identity comes from the legacy database;
 - article-keyed playback progress imports only when exactly one audio enclosure resolves;
