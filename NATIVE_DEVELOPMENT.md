@@ -97,11 +97,16 @@ Limit output to Core diagnostics with:
 log stream --style compact --predicate 'process == "FluxNews" AND subsystem == "dev.kevincfechtel.fluxNews"'
 ```
 
-Use the same production configuration without signing or notarization to prepare a release build:
+For an unsigned-for-distribution local Release-configuration build (still
+signed with Apple Development by default), use:
 
 ```bash
 CONFIGURATION=Release bash apple/macos/Build/build-app.sh
 ```
+
+This is not a Mac App Store or Developer ID distribution artifact. To avoid
+Apple Development signing deliberately, supply `DEVELOPMENT_SIGNING=0`; that
+produces an ad-hoc local artifact instead.
 
 ## Create a Release
 
