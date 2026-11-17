@@ -33,36 +33,55 @@ the iOS device and Apple Silicon simulator Swift compile/link integration with:
 bash apple/Build/verify-ios-uniffi.sh
 ```
 
-Build the macOS app for normal development. The resulting ad-hoc-signed app is at `dist/macos/FluxNews.app`:
+Build the macOS app for normal development. The script defaults to the
+`Release` configuration **with Apple Development signing**
+(`DEVELOPMENT_SIGNING=1`). The app is written to
+`dist/macos/FluxNews.app`. Use `CONFIGURATION=Debug` when needed. This
+signed build requires the Xcode-managed Apple Development identity and the
+configured team/provisioning for the host and WidgetKit extension:
 
 ```bash
 bash apple/macos/Build/build-app.sh
 ```
 
-Install that exact build into `/Applications` and launch it, including its embedded WidgetKit extension:
+Install **that exact Development build** (rather than the default Developer ID
+release ZIP) with an explicit source and installation mode:
 
 ```bash
-bash apple/macos/Build/install-local.sh
+INSTALL_MODE=development SOURCE_APP="$PWD/dist/macos/FluxNews.app" \
+  bash apple/macos/Build/install-local.sh
 ```
 
-For WidgetKit and App Group testing, use Xcode automatic Apple Development signing rather than ad-hoc signing. This requires a local Apple Development certificate and a signed-in Xcode account that belongs to the supplied team:
+`install-local.sh` otherwise defaults to `INSTALL_MODE=developer-id` and
+selects the newest Developer ID ZIP from `dist/macos/developer-id/`. That
+default is intended for the separate notarized outside-store release path,
+**not** for installing the ordinary development build. In both modes the
+installer verifies its source and staged app and preserves application data.
+
+Only when deliberately producing an ad-hoc signed artifact, opt out of Xcode
+Development signing:
 
 ```bash
-DEVELOPMENT_SIGNING=1 \
-DEVELOPMENT_TEAM=<TEAM_ID> \
-bash apple/macos/Build/build-app.sh
-
-bash apple/macos/Build/install-local.sh
+DEVELOPMENT_SIGNING=0 bash apple/macos/Build/build-app.sh
 ```
 
-Set `DEVELOPMENT_SIGNING_IDENTITY` only when Xcode must use a specific Apple Development identity; it defaults to `Apple Development`. The Development build retains Xcode's target-specific signatures and validates Apple Development authority, the supplied team identifier, both App Group entitlements, the widget sandbox, and recursive code signing. The default remains the fast ad-hoc build.
+Ad-hoc signing is **not** a valid B1 signed Development runtime acceptance or
+a supported `INSTALL_MODE=development` installer input. The build script uses
+its Xcode-configured team and Apple Development identity in Development mode;
+it does not consume `DEVELOPMENT_TEAM` or
+`DEVELOPMENT_SIGNING_IDENTITY` as configurable signing inputs.
 
-Before building, configure the Apple Developer portal for the same team:
+Before signed Development builds, configure the Apple Developer portal for the
+matching team:
 
-- Register the macOS App ID `dev.kevincfechtel.fluxNews` and the App Extension App ID `dev.kevincfechtel.fluxNews.widgets`.
-- Register App Group `group.dev.kevincfechtel.fluxNews` and associate it with both App IDs.
-- Enable the App Groups capability for both IDs and let Xcode Automatic Signing create or update the matching Apple Development provisioning profiles. If automatic signing cannot do so, create and download matching development profiles manually.
-- Keep Developer ID/notarization separate from this development setup; `release-developer-id.sh` performs that outside-store distribution flow.
+- Register the macOS App ID `dev.kevincfechtel.fluxNews` and WidgetKit
+  extension App ID `dev.kevincfechtel.fluxNews.FluxNewsWidgets`.
+- Register App Group `group.dev.kevincfechtel.fluxNews` and associate it
+  with both App IDs.
+- Enable App Groups for both IDs and provide matching Apple Development
+  provisioning profiles through Xcode automatic signing.
+- Keep Developer ID/notarization separate; the outside-store channel is owned
+  by `apple/macos/Build/release-developer-id.sh`.
 
 ## Diagnostics
 
