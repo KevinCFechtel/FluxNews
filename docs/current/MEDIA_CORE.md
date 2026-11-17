@@ -1470,7 +1470,7 @@ Phase B architecture is considered complete.
 
 > Do not perform another full media architecture analysis before implementation.
 
-Implementation starts with **B1 — Enclosure Domain & Persistence** and proceeds through B9.
+The completed Phase B implementation historically proceeded from **B1 — Enclosure Domain & Persistence** through B9. This is a record of implementation order, not an instruction to restart the phases.
 
 New architectural decisions should only be introduced when implementation reveals a concrete previously unknown platform, API, persistence, or compatibility constraint that conflicts with this contract.
 
@@ -1486,8 +1486,7 @@ Flutter-to-native media import behavior; they are not an open migration phase.
 ## Legacy source
 
 The inventory below is based on `KevinCFechtel/FluxNews` `main` at commit
-`481eb08` (`update depenedencies`). It is source evidence only; the new Core
-schema and ownership rules in `PHASE_B_MEDIA_CORE.md` remain authoritative.
+`481eb08` (`update depenedencies`). It is source evidence only; the current Core schema and ownership rules in this `MEDIA_CORE.md` contract remain authoritative. The archived `PHASE_B_MEDIA_CORE.md` is implementation history and provenance only.
 
 ## Proven legacy persistence
 
@@ -1582,11 +1581,14 @@ copying its implicit completion convention:
 - existing playback state wins, and repeated imports are harmless;
 - `import_legacy_playback()` does not write a global completion marker, including
   for empty or partial batches;
-- the future native platform migration coordinator owns final completion because
-  only it can know whether Keychain, SharedPreferences, files, and other legacy
-  sources were fully evaluated. No explicit completion API is currently needed.
+- final completion is owned by the native platform migration coordinator,
+  which evaluates its platform-specific legacy sources (including Keychain,
+  SharedPreferences, and files where applicable). The original B9 design did
+  not require a separate Core-level completion API.
 
-The unresolved case is platform extraction and verification of Keychain,
-SharedPreferences, and files. It does not block Core automotive browsing or
-Continue Listening, which use the current Core models directly.
+At the historical B9 design checkpoint, platform extraction and verification
+of Keychain, SharedPreferences, and files still needed platform implementation.
+That work was subsequently completed within the accepted Android E9 and iOS D9
+migration implementations. This historical statement does not reopen those
+phases or qualify the current Core automotive and Continue Listening behavior.
 
