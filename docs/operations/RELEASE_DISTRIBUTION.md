@@ -381,7 +381,8 @@ actual Mac App Store archive/export scripts are separately implemented in
 `Build/release.sh macos --target appstore`. The implemented scripts prepare
 an artifact but have **not** passed final real-owner distribution acceptance.
 
-The final Mac App Store distribution acceptance must verify that the exported artifact:
+The following are final Mac App Store distribution acceptance requirements,
+not missing scripts or a claim that the existing export was accepted:
 
 - use the production Xcode configuration;
 - build/archive the host app and Widget extension;
