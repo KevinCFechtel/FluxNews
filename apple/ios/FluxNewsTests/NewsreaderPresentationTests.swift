@@ -808,6 +808,8 @@ final class NewsreaderPresentationTests: XCTestCase {
 
     func testFloatingActionGroupUsesStableCapsuleMetrics() {
         XCTAssertEqual(IOSArticleListActionChromeMetrics.legacyIPadMinimumHitTarget, 44)
+        XCTAssertEqual(IOSArticleListActionChromeMetrics.legacyIPadIconPointSize, 26)
+        XCTAssertEqual(IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize, 28)
         XCTAssertEqual(IOSArticleListTitleCapsuleMetrics.legacyIPadMinimumTitleHeight, 44)
         XCTAssertEqual(IOSArticleListActionChromeMetrics.floatingHorizontalPadding, 8)
         XCTAssertEqual(IOSArticleListActionChromeMetrics.floatingVerticalPadding, 5)
@@ -1239,37 +1241,15 @@ final class NewsreaderPresentationTests: XCTestCase {
         )
     }
 
-    func testIPadRegularModesUseDetachedLegacyChromeAndModernNativeToolbar() {
+    func testIPadRegularModesKeepActionsInTopToolbar() {
         for mode in [IOSArticleListChromeMode.persistentSplit, .persistentSplitCollapsed] {
             XCTAssertEqual(
-                IOSArticleListChromePresentation.iPadActionPlacement(
-                    for: mode,
-                    supportsNativeGroupedToolbar: false
-                ),
-                .floatingTopTrailing
-            )
-            XCTAssertEqual(
-                IOSArticleListChromePresentation.iPadActionPlacement(
-                    for: mode,
-                    supportsNativeGroupedToolbar: true
-                ),
+                mode == .persistentSplit || mode == .persistentSplitCollapsed
+                    ? IOSArticleListActionPlacement.topBarTrailing
+                    : IOSArticleListChromePresentation.actionPlacement(for: mode),
                 .topBarTrailing
             )
         }
-        XCTAssertEqual(
-            IOSArticleListChromePresentation.iPadActionPlacement(
-                for: .compactPortrait,
-                supportsNativeGroupedToolbar: false
-            ),
-            .bottomBar
-        )
-        XCTAssertEqual(
-            IOSArticleListChromePresentation.iPadActionPlacement(
-                for: .compactLandscape,
-                supportsNativeGroupedToolbar: false
-            ),
-            .topBarTrailing
-        )
     }
 
     func testIPadLegacyActionLabelsExpandTheirOwnHitTargets() throws {
@@ -1283,6 +1263,20 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertTrue(source.contains("minimumHitTarget: legacyIPadMinimumHitTarget"))
         XCTAssertTrue(source.contains(".frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)"))
         XCTAssertTrue(source.contains("articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)"))
+        XCTAssertTrue(source.contains("size: IOSArticleListActionChromeMetrics.legacyIPadIconPointSize"))
+    }
+
+    func testLegacyIPadCollapsedTitleIsProminentWithoutMovingToolbar() throws {
+        let testsDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+        let iosDirectory = testsDirectory.deletingLastPathComponent()
+        let chrome = try String(
+            contentsOf: iosDirectory.appendingPathComponent("FluxNews/IOSArticleListChrome.swift"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(chrome.contains("prominentLegacyIPad: prominentLegacyIPadTitle"))
+        XCTAssertTrue(chrome.contains("minimumHeight: prominentLegacyIPadTitle"))
+        XCTAssertTrue(chrome.contains(".font(prominentLegacyIPad ? .headline"))
     }
 
     func testIPadRegularToolbarUsesOneHorizontalPathIndependentOfVerticalToolbarCapability() throws {
