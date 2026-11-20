@@ -782,30 +782,32 @@ struct ContentView: View {
         systemUsesAdaptiveToolbar: Bool,
         systemPrefersVerticalToolbar: Bool
     ) -> some View {
-        let actionPlacement: IOSArticleListActionPlacement
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            if #available(iOS 26.0, *) {
-                actionPlacement = IOSArticleListChromePresentation.iPadActionPlacement(
-                    for: articleListChromeMode,
-                    supportsNativeGroupedToolbar: true
-                )
-            } else {
-                actionPlacement = IOSArticleListChromePresentation.iPadActionPlacement(
-                    for: articleListChromeMode,
-                    supportsNativeGroupedToolbar: false
-                )
-            }
+        // Keep iPad actions in their established native navigation-bar position.
+        // Only the pre-iPadOS-26 custom group needs explicit visual/hit sizing.
+        let actionPlacement: IOSArticleListActionPlacement = if
+            UIDevice.current.userInterfaceIdiom == .pad,
+            articleListChromeMode == .persistentSplit
+                || articleListChromeMode == .persistentSplitCollapsed
+        {
+            .topBarTrailing
         } else {
-            actionPlacement = IOSArticleListChromePresentation.actionPlacement(
+            IOSArticleListChromePresentation.actionPlacement(
                 for: articleListChromeMode,
                 systemPrefersVerticalToolbar: systemPrefersVerticalToolbar,
                 systemUsesAdaptiveToolbar: systemUsesAdaptiveToolbar
             )
         }
-        let legacyIPadMinimumHitTarget: CGFloat? =
-            UIDevice.current.userInterfaceIdiom == .pad && actionPlacement == .floatingTopTrailing
-                ? IOSArticleListActionChromeMetrics.legacyIPadMinimumHitTarget
-                : nil
+        let legacyIPadMinimumHitTarget: CGFloat?
+        if UIDevice.current.userInterfaceIdiom == .pad,
+           actionPlacement == .topBarTrailing {
+            if #available(iOS 26.0, *) {
+                legacyIPadMinimumHitTarget = nil
+            } else {
+                legacyIPadMinimumHitTarget = IOSArticleListActionChromeMetrics.legacyIPadMinimumHitTarget
+            }
+        } else {
+            legacyIPadMinimumHitTarget = nil
+        }
         let usesNativeTopEdgeEffect = IOSArticleListChromePresentation.usesNativeTopEdgeEffect(
             for: articleListChromeMode,
             systemPrefersVerticalToolbar: systemPrefersVerticalToolbar
@@ -912,10 +914,20 @@ struct ContentView: View {
                     } else {
                         ToolbarItem(placement: .topBarTrailing) {
                             HStack(spacing: IOSArticleListActionChromeMetrics.floatingSpacing) {
-                                articleListActionButtons(directCapacity: directActionCapacity)
+                                articleListActionButtons(
+                                    directCapacity: directActionCapacity,
+                                    minimumHitTarget: legacyIPadMinimumHitTarget
+                                )
                             }
+                            .labelStyle(.iconOnly)
+                            .font(legacyIPadMinimumHitTarget == nil
+                                ? nil
+                                : .system(size: IOSArticleListActionChromeMetrics.legacyIPadIconPointSize,
+                                          weight: .medium))
                             .padding(.horizontal, IOSArticleListActionChromeMetrics.floatingHorizontalPadding)
-                            .padding(.vertical, IOSArticleListActionChromeMetrics.floatingVerticalPadding)
+                            .padding(.vertical, legacyIPadMinimumHitTarget == nil
+                                ? IOSArticleListActionChromeMetrics.floatingVerticalPadding
+                                : 0)
                             .background(.regularMaterial, in: Capsule())
                         }
                     }
@@ -1035,7 +1047,10 @@ struct ContentView: View {
         minimumHitTarget: CGFloat?
     ) -> some View {
         Image(systemName: symbolName)
-            .frame(width: 24, height: 24)
+            .frame(
+                width: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize,
+                height: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize
+            )
             .frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)
             .contentShape(Rectangle())
     }
@@ -2008,7 +2023,10 @@ private struct IOSSyncToolbarButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: IOSSyncButtonPresentation.symbolName(for: state))
-                .frame(width: 24, height: 24)
+                .frame(
+                    width: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize,
+                    height: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize
+                )
                 .frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)
                 .contentShape(Rectangle())
         }
