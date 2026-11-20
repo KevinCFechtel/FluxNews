@@ -61,20 +61,6 @@ enum IOSArticleListChromePresentation {
         }
     }
 
-    /// iPadOS 17–25 keeps custom actions outside the compressed navigation bar;
-    /// iPadOS 26+ retains its native grouped toolbar.
-    static func iPadActionPlacement(
-        for mode: IOSArticleListChromeMode,
-        supportsNativeGroupedToolbar: Bool
-    ) -> IOSArticleListActionPlacement {
-        switch mode {
-        case .persistentSplit, .persistentSplitCollapsed:
-            supportsNativeGroupedToolbar ? .topBarTrailing : .floatingTopTrailing
-        case .compactPortrait, .compactLandscape:
-            actionPlacement(for: mode)
-        }
-    }
-
     static func configurableDirectActionCapacity(
         for mode: IOSArticleListChromeMode,
         systemPrefersVerticalToolbar: Bool = false
@@ -153,6 +139,8 @@ enum IOSArticleListChromePresentation {
 
 enum IOSArticleListActionChromeMetrics {
     static let legacyIPadMinimumHitTarget: CGFloat = 44
+    static let legacyIPadIconPointSize: CGFloat = 26
+    static let legacyIPadIconFrameSize: CGFloat = 28
     static let floatingHorizontalPadding: CGFloat = 8
     static let floatingVerticalPadding: CGFloat = 5
     static let floatingSpacing: CGFloat = 6
@@ -286,6 +274,7 @@ private struct ArticleListTitleCapsule: View {
     var reservesInlineMinimumWidth = true
     var usesSystemToolbarGlass = false
     var minimumHeight: CGFloat? = nil
+    var prominentLegacyIPad = false
     // Read so the derived glyph height is recomputed when the text size changes.
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -298,8 +287,13 @@ private struct ArticleListTitleCapsule: View {
             let titleHeight = UIFont.preferredFont(forTextStyle: .headline).lineHeight
             guard subtitle != nil else { return titleHeight }
             return titleHeight + 1 + UIFont.preferredFont(forTextStyle: .caption1).lineHeight
-        case .compactStacked, .regularToolbar:
+        case .compactStacked:
             return UIFont.preferredFont(forTextStyle: .subheadline).lineHeight
+        case .regularToolbar:
+            return prominentLegacyIPad
+                ? max(IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize,
+                      UIFont.preferredFont(forTextStyle: .headline).lineHeight)
+                : UIFont.preferredFont(forTextStyle: .subheadline).lineHeight
         case .inline:
             return UIFont.preferredFont(forTextStyle: .headline).lineHeight
         }
@@ -313,6 +307,7 @@ private struct ArticleListTitleCapsule: View {
         if layout == .compactStacked {
             return IOSArticleListTitleCapsuleMetrics.compactStackedHorizontalPadding
         }
+        if layout == .regularToolbar && prominentLegacyIPad { return 20 }
         return action == nil ? 16 : 12
     }
 
@@ -384,7 +379,8 @@ private struct ArticleListTitleCapsule: View {
     private var verticalPadding: CGFloat {
         switch layout {
         case .stacked: IOSArticleListTitleCapsuleMetrics.stackedVerticalPadding
-        case .compactStacked, .regularToolbar: IOSArticleListTitleCapsuleMetrics.compactStackedVerticalPadding
+        case .compactStacked: IOSArticleListTitleCapsuleMetrics.compactStackedVerticalPadding
+        case .regularToolbar: prominentLegacyIPad ? 6 : IOSArticleListTitleCapsuleMetrics.compactStackedVerticalPadding
         case .inline: 5
         }
     }
@@ -446,7 +442,7 @@ private struct ArticleListTitleCapsule: View {
         case .regularToolbar:
             HStack(spacing: 4) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(prominentLegacyIPad ? .headline : .subheadline.weight(.semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .foregroundStyle(.primary)
@@ -457,7 +453,7 @@ private struct ArticleListTitleCapsule: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         Text(subtitle)
-                            .font(.caption2)
+                            .font(prominentLegacyIPad ? .subheadline : .caption2)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .foregroundStyle(.secondary)
@@ -715,6 +711,14 @@ struct ArticleListNavigationChrome<Content: View, TopActions: View, TopAccessory
         // does not make the compact landscape capsule breathe horizontally.
         let landscapeWidthReservationSubtitle = store.isSyncing ? landscapeCountLabel : syncingLabel
 
+        let prominentLegacyIPadTitle: Bool
+        if #available(iOS 26.0, *) {
+            prominentLegacyIPadTitle = false
+        } else {
+            prominentLegacyIPadTitle = UIDevice.current.userInterfaceIdiom == .pad
+                && chromeMode == .persistentSplitCollapsed
+        }
+
         let capsulePlacement = IOSArticleListChromePresentation.titleCapsulePlacement(
             for: chromeMode,
             systemPrefersVerticalToolbar: systemPrefersVerticalToolbar,
@@ -827,7 +831,11 @@ struct ArticleListNavigationChrome<Content: View, TopActions: View, TopAccessory
                                 showsBrandMark: chromeMode == .persistentSplitCollapsed,
                                 reservesInlineMinimumWidth: chromeMode != .persistentSplitCollapsed,
                                 // Native leading toolbar items receive Liquid Glass.
-                                usesSystemToolbarGlass: true
+                                usesSystemToolbarGlass: true,
+                                minimumHeight: prominentLegacyIPadTitle
+                                    ? IOSArticleListTitleCapsuleMetrics.legacyIPadMinimumTitleHeight
+                                    : nil,
+                                prominentLegacyIPad: prominentLegacyIPadTitle
                             )
                             if chromeMode == .compactLandscape
                                 || (UIDevice.current.userInterfaceIdiom == .pad
