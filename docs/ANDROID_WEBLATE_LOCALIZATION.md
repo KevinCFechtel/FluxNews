@@ -1,6 +1,6 @@
 # Android localization: Weblate-ready resource contract
 
-Status: **German source-resource coverage is complete and pending device review; other Weblate locales still fall back to English.**
+Status: **Android C1 was owner-accepted and closed for the post-replacement roadmap on 17 October 2026. German source-resource coverage is complete; Weblate review and additional target-language translations continue separately.**
 
 ## Product languages
 
@@ -9,14 +9,14 @@ The established `MOBILE_PRODUCT_SEMANTICS.md` contract calls for seven native-mo
 | Language | Android resource folder | Translation status |
 | --- | --- | --- |
 | English (source) | `values/strings.xml` | Canonical English |
-| German | `values-de/strings.xml` | 500/500 translatable source entries translated; device review pending |
+| German | `values-de/strings.xml` | Source-resource coverage complete; device review pending |
 | Spanish | `values-es/strings.xml` | Review/translation pending |
 | Galician | `values-gl/strings.xml` | Review/translation pending |
 | Dutch | `values-nl/strings.xml` | Review/translation pending |
 | Tamil | `values-ta/strings.xml` | Review/translation pending |
 | Turkish | `values-tr/strings.xml` | Review/translation pending |
 
-The German catalog contains translations of all 500 translatable source resources and awaits on-device review. The other five target catalogs are intentionally empty until reviewed translations exist. Android uses canonical English defaults for missing entries. **Empty language catalogs are scaffolding, not translated UI.** Do not turn on an in-app language picker or advertise complete translation coverage for these five languages before review.
+The German catalog has completed the accepted source-resource coverage milestone and awaits on-device review. Exact resource counts change as source strings evolve. The other five target catalogs are intentionally empty until reviewed translations exist. Android uses canonical English defaults for missing entries. **Empty language catalogs are scaffolding, not translated UI.** Do not turn on an in-app language picker or advertise complete translation coverage for these five languages before review.
 
 ## Weblate component configuration (when service is connected)
 
@@ -39,11 +39,13 @@ The native Android component is configured on Hosted Weblate using this contract
 3. Format arguments must be positional and typed: `%1$s`, `%2$d`; preserve exact placeholders across languages. Do not concatenate fragments into sentences or assume identical plural rules.
 4. Use `translatable="false"` for literal product/technical values, URLs, identifiers and tokens; do not translate user/server-provided feed titles or category names.
 5. Do not fabricate machine translations to make the directory look complete. Weblate translations should be reviewed before they become release-supported.
-6. Resource extraction is incremental: C1.1 covers navigation/feed creation, C1.2 covers settings destinations and selected timeline controls, and C1.3 covers additional settings, download management and Reader controls, and C1.4 covers Listening List and Player menus, actions and accessibility labels, plus Search, bulk feed settings and diagnostics surfaces. New dynamic selection and log counts use Android plural resources. C1.5 also extracts common Account, Flutter migration, backup/restore, About, feed settings and background/core settings labels. C1.6 extracts Search snackbar/error/empty-state strings and the complete Widget configuration UI. Remaining lower-level dynamic and background messages still require an exhaustive audit. **Remaining Kotlin hardcoded strings must still be extracted** in settings, timeline, Reader, player, listening list, sync states, widgets, notifications and accessibility labels before C1 is declared complete.
+6. The C1.1–C1.6 extraction sequence below is retained as implementation history: navigation/feed creation; settings and Timeline controls; settings/download/Reader surfaces; Listening List/Player/Search/bulk-feed/diagnostics; common Account/migration/backup/About/background settings; and Search plus Widget configuration. **C1 is already owner-accepted and must not be reopened by this historical sequence.** Newly discovered user-visible hardcoded strings remain localization defects and should be fixed through the normal resource/Weblate workflow.
 7. Locale formatting belongs to Android's locale-aware date/number APIs, not English-only string concatenation. Validate all seven locales for truncated text, RTL where applicable, correct plurals, accessibility and fallback.
 8. Add or update tests for placeholders and source/translation parity when target catalogs are populated.
 
-Do not count this repository preparation as a completed C1 translation rollout.
+C1 closure does not mean every Weblate target language is fully translated or
+linguistically reviewed. Translation completeness and future locale work remain
+separate from the closed Android C1 implementation milestone.
 
 
 ## Continuous localization guard
@@ -56,11 +58,11 @@ The CI step uses full Git history and the pull-request base SHA (or the previous
 
 ## Latest C1 audit
 
-See [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md) for confirmed remaining Kotlin UI literals, the blocking incremental guard versus the informational full inventory, and release closeout criteria. C1 remains in progress; green CI does not imply complete localization or reviewed translations.
+See [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md) for the dated source-level findings and the distinction between the blocking incremental guard and informational full inventory. That audit is historical evidence and does **not** reopen accepted C1. Green CI still does not imply complete linguistic review or translation coverage.
 
 ### Expanded source-level audit (2026-10-12)
 
-A follow-up audit of the 71 production Kotlin files identified additional English fallback labels, snackbar text, error states and settings labels after PR #46. Findings and categories are documented in [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md). The CI scanner now checks more literal forms; it remains an incremental guard, not evidence of full extraction. C1 is not technically complete until these findings are fixed and locale runtime behavior is verified.
+A follow-up audit of the 71 production Kotlin files identified additional English fallback labels, snackbar text, error states and settings labels after PR #46. Findings and categories are documented in [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md). The CI scanner now checks more literal forms; it remains an incremental guard, not evidence of complete linguistic review. These findings are retained as dated implementation evidence; subsequent defects are handled without reopening owner-accepted C1.
 
 Android Auto/MediaTransfer follow-up: user-visible Media3 browse/command labels and foreground download notification copy are now supplied through resources; see [analysis/android/ANDROID_LOCALIZATION_AUDIT.md](analysis/android/ANDROID_LOCALIZATION_AUDIT.md). Validate host-side locale changes and original fallback behavior on Android Auto separately.
 

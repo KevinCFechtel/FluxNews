@@ -1,46 +1,158 @@
-# Flux Documentation
+# FluxNews documentation
 
-This directory is intentionally small.
+FluxNews is the active development repository for the shared Rust core and the
+native Android, iOS/iPadOS, and macOS clients. The repository migration and the
+Flutter-to-native replacement are complete. The previous Flutter implementation
+is preserved only under [`Archived/Flutter/`](../Archived/Flutter/README.md).
 
-## Authoritative target architecture
+This index is navigation, not a second roadmap. Current status and open work are
+owned by the documents linked below.
 
-- `ARCHITECTURE_DECISIONS.md` — explicitly agreed target architecture for the shared Rust core and native macOS/iOS/Android clients. This is the primary architecture authority.
-- `MOBILE_PRODUCT_SEMANTICS.md` — shared native-mobile behavior contract for iOS/iPadOS and Android. It captures product semantics that must not be rediscovered per platform while deliberately leaving SwiftUI/UIKit/Compose and OS-integration mechanics platform-specific.
-- `PHASE_D_NATIVE_IOS_IPADOS.md` — authoritative Phase-D contract and roadmap for the native iOS/iPadOS replacement, including Apple sharing boundaries, development/production identities, migration safety, mobile UX, system integrations, and the active D1–D9 sequencing.
-- `IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md` — final native replacement-completion contract: retained Flutter migration/parity release gates, Settings/widget completion work, and explicit retired/replaced legacy behaviors.
-- `PHASE_E_NATIVE_ANDROID.md` — authoritative Phase-E contract for the native Android replacement, including Kotlin/Compose/UniFFI foundation, production migration, adaptive UI, background work, widgets, media, Android Auto, testing, and E1–E9 sequencing.
-- `FDROID_OPEN_GATES.md` — authoritative remaining gates for native F-Droid publication; pre-release preparation may merge without claiming signed-upgrade or reproducibility acceptance.
-- `DEPENDENCY_MAINTENANCE.md` — agreed dependency update, vulnerability scan and CI-cost policy; audits must cover pinned Rust, Android and Apple tooling before release.
-- `acceptance/apple/APPLE_UNIFFI_0_32_MIGRATION.md` — local Apple integration record for UniFFI 0.32.2, including packaging invariants, architecture evidence, test results, and explicitly open runtime/signing checks.
-- `RELEASE_DISTRIBUTION.md` — authoritative next-step plan for unified cross-platform release scripting and store-specific distribution for Android, iOS and macOS.
-- `POST_REPLACEMENT_FOLLOWUP_PLAN.md` — post-E9 stabilization and store-readiness plan; macOS is deliberately a clean-sandbox start with no migration. Signed Sandbox acceptance is deferred, **not completed**; see `MACOS_SANDBOX_ACCEPTANCE.md`.
-- `MACOS_C3_FEATURE_PARITY_ROADMAP.md` — approved macOS feature-parity inventory and C3.0–C3.8 implementation sequence, covering bulk feed settings, scoped Mark All actions, download management, diagnostics, settings, background operation and locale acceptance.
-- `archive/phases/ios/PHASE_D_D1_STATUS.md` — historical snapshot of the completed/frozen D1 foundation and early D2.1 progress; it is not a current status authority.
+## Start here
 
-## Phase status
+- [`AGENTS.md`](../AGENTS.md) — repository working rules and documentation
+  authority hierarchy.
+- [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md) — primary
+  cross-platform architecture authority.
+- [`MOBILE_PRODUCT_SEMANTICS.md`](MOBILE_PRODUCT_SEMANTICS.md) — shared
+  native-mobile product semantics for iOS/iPadOS and Android.
+- [`NATIVE_DEVELOPMENT.md`](../NATIVE_DEVELOPMENT.md) — local native
+  development entry point.
+- [`archive/migration/FLUX_TO_FLUXNEWS.md`](archive/migration/FLUX_TO_FLUXNEWS.md) — completed Flux-to-FluxNews repository
+  migration record and provenance. It is not evidence that the migration remains
+  open.
 
-- **Phase A — Newsreader Completion:** complete and architecture-frozen.
-- **Phase B — Shared Podcast / Media Core:** complete and architecture-frozen.
-- **Phase C — Native macOS Audio Experience:** complete and architecture-frozen. The native macOS client implements the Phase-C Listening List, playback, transfer, settings and system-media contract; `PHASE_C_NATIVE_MACOS_AUDIO.md` is the completed contract.
-- **Phase D — Native iOS/iPadOS:** implementation complete. D7 is architecture-frozen; D8 is deferred and not required for replacement; D9 production Flutter-to-native migration is real-device accepted as of 10 October 2026, including recovered legacy downloads and terminal handling of stale playback positions with no local download and confirmed 404/410. The final replacement regression gate is green, and the later iOS structural-refactor validation also passed Apple CI #125 on main. Future shared changes must continue to pass the canonical gate. `PHASE_D_NATIVE_IOS_IPADOS.md` remains authoritative.
-- **Phase E — Native Android:** E1 through E9 are complete and real-device accepted. The signed production Flutter-to-native upgrade path and Playback Verification v2 both completed successfully on 10 October 2026; the v2 pass correctly re-opened only the previously manually skipped playback stage and completed green while identifying stale historical positions with no local download and confirmed 404/410. Android CI #486 closed the replacement acceptance and the later Android structural-refactor gate also passed Android CI #487. `PHASE_E_NATIVE_ANDROID.md` is the Phase-E implementation/sequencing authority.
+## Current authoritative documentation
 
-There is no remaining known replacement-blocking implementation or migration-acceptance gap across macOS, iOS/iPadOS, or Android. Follow-up stabilization and store-readiness tasks are tracked in `POST_REPLACEMENT_FOLLOWUP_PLAN.md`; the approved macOS feature-parity completion is tracked in `MACOS_C3_FEATURE_PARITY_ROADMAP.md`; unified release scripting and the Apple/Play/F-Droid distribution deliverables remain tracked in `RELEASE_DISTRIBUTION.md`. These follow-ups do not invalidate the completed E9 implementation/migration acceptance.
+These documents carry the current binding product and implementation contracts. Completed phase sequencing has been separated into archive/evidence locations; current work should use the dedicated contracts below.
 
-## Reference evidence
+| Area | Current authority | Scope |
+| --- | --- | --- |
+| Architecture | [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md) | Rust/Core–native ownership, platform boundaries, durable architecture decisions |
+| Shared mobile behavior | [`MOBILE_PRODUCT_SEMANTICS.md`](MOBILE_PRODUCT_SEMANTICS.md) | Product semantics shared by Android and iOS/iPadOS |
+| Shared media core | [`current/MEDIA_CORE.md`](current/MEDIA_CORE.md) | Current shared media/Core contract; completed Phase-B sequencing is archived |
+| macOS media | [`platforms/macos/MACOS.md`](platforms/macos/MACOS.md) | Native macOS audio/media contract |
+| iOS/iPadOS | [`platforms/ios/IOS.md`](platforms/ios/IOS.md) | Native iOS/iPadOS contract; replacement implementation is complete |
+| iOS Timeline | [`platforms/ios/IOS.md`](platforms/ios/IOS.md) | Accepted UIKit Timeline contract and frozen implementation boundaries |
+| Android | [`platforms/android/ANDROID.md`](platforms/android/ANDROID.md) | Current native Android product/platform contract; E1–E9 chronology is archived |
+| macOS parity | [`platforms/macos/MACOS.md`](platforms/macos/MACOS.md) | Approved C3 decisions and completed parity scope |
 
-`reference/` contains historical FluxBar and FluxNews material that can help preserve useful product behavior and identify feature gaps. These documents are **not** implementation roadmaps and are **not** authoritative when they conflict with the architecture decisions or the active Phase-D contract.
+A completed phase does not make its still-binding product or architecture rules
+historical. Conversely, historical implementation sequencing in a current
+contract is not an instruction to restart that phase.
 
-For Phase D, the current native macOS implementation is the primary native reference. Flutter FluxNews is consulted only for mobile-specific capability and legacy-migration evidence; it is not a parity checklist and intentionally removed behavior must not be reintroduced without a product decision.
+## Operational / release documentation
 
-Shared native-mobile behavior that should survive across iOS/iPadOS and Android belongs in `MOBILE_PRODUCT_SEMANTICS.md`. Platform-specific fixes and framework workarounds remain in their platform implementation and must not be promoted into shared requirements unless they reveal a genuine shared product/Core semantic.
+Open operational work has a specific owner. Do not duplicate these task lists in
+migration or historical phase documents.
 
-Old Go-core compatibility contracts, Go-to-Rust migration plans, temporary mobile runtime-proof plans/status files, differential-testing plans, and superseded shared-core roadmaps have deliberately been removed from the active documentation set. The Go core is retired; new work targets the Rust architecture directly.
+- [`operations/RELEASE_DISTRIBUTION.md`](operations/RELEASE_DISTRIBUTION.md) — cross-platform
+  release and distribution policy and remaining channel-specific release work.
+- [`operations/FDROID_OPEN_GATES.md`](operations/FDROID_OPEN_GATES.md) — authoritative remaining
+  native F-Droid gates. Normal developer-signing or production-upgrade evidence
+  does not automatically close F-Droid-specific signature gates.
+- [`operations/DEPENDENCY_MAINTENANCE.md`](operations/DEPENDENCY_MAINTENANCE.md) — dependency,
+  vulnerability, maintenance, and CI-cost policy.
+- [`.github/DEPENDENCY_AUTOMATION.md`](../.github/DEPENDENCY_AUTOMATION.md) —
+  Dependabot/RustSec automation procedure.
+- [`operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md`](operations/SAVED_MEDIA_BOOTSTRAP_COMPATIBILITY.md) — retained historical bootstrap-URL compatibility decision; separate from migration/release work.
+- [`archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md`](archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md) — completed post-replacement package history; it no longer owns active work.
+
+### Localization / Weblate
+
+- [Shared localization policy](operations/LOCALIZATION.md)
+- [Android localization](ANDROID_WEBLATE_LOCALIZATION.md)
+- [iOS localization](operations/localization/IOS_WEBLATE_LOCALIZATION.md)
+- [macOS localization](operations/localization/MACOS_WEBLATE_LOCALIZATION.md)
+- [Shared Weblate glossary](operations/localization/WEBLATE_GLOSSARY.md)
+
+The platform runtime resources remain authoritative for application strings.
+Weblate handoff files and the glossary support the translation workflow; they do
+not create a second product specification.
+
+### Publication-facing documents
+
+- [`PRIVACY.md`](../PRIVACY.md) — public privacy statement.
+- Root [`README.md`](../README.md), store metadata, screenshots, and privacy
+  copy require their own native-release review before publication. That review
+  is release work, not an unfinished repository migration.
+
+## Current status at a glance
+
+This is a derived orientation only; the linked owner documents remain
+authoritative.
+
+- **Flutter-to-native replacement:** complete.
+- **Flux-to-FluxNews repository cutover:** complete.
+- **Native Android E1–E9:** complete, including the signed production
+  Flutter-to-native upgrade acceptance.
+- **Native iOS/iPadOS replacement:** complete, including D9 production-upgrade
+  acceptance.
+- **macOS native implementation and approved parity work:** complete at the
+  documented accepted scopes.
+- **Distribution:** still has channel- and candidate-specific release gates,
+  especially F-Droid and Apple/store distribution.
+- **Maintenance:** dependency/security and translation work continue as normal
+  project maintenance.
+
+Do not turn this section into an independent checklist. Update the owning
+document first when operational status changes.
+
+## Acceptance evidence
+
+Acceptance records document exactly what was checked for a particular scope,
+candidate, device, or owner decision. They are evidence, not general roadmaps.
+
+- [`acceptance/`](acceptance/) — acceptance records already separated from
+  active plans, including the Apple UniFFI integration record.
+- [`acceptance/ios/IOS_D5_FINAL_ACCEPTANCE.md`](acceptance/ios/IOS_D5_FINAL_ACCEPTANCE.md)
+- [`acceptance/ios/IOS_D6_FINAL_ACCEPTANCE.md`](acceptance/ios/IOS_D6_FINAL_ACCEPTANCE.md)
+- [`acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md`](acceptance/ios/IOS_D7_NOW_PLAYING_REMOTE_COMMANDS_CARPLAY.md)
+- [`acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md`](acceptance/ios/IOS_D9_FLUTTER_REPLACEMENT_COMPLETION.md)
+- [`acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md`](acceptance/macos/MACOS_SANDBOX_ACCEPTANCE.md)
+
+Owner acceptance, automated CI, local tests, and physical-device validation are
+different evidence types. Do not infer that every historical matrix item was run
+merely because a broader replacement phase is complete.
+
+## Historical plans and analyses
+
+- [`analysis/`](analysis/) — dated performance, localization, and parity
+  investigations. Findings remain useful, but recommendations are not
+  automatically current backlog.
+- [`archive/`](archive/) — completed plans, phase snapshots, and migration
+  records that no longer own current work.
+- [`reference/`](reference/) — historical FluxBar and FluxNews product
+  evidence. It is not an implementation roadmap.
+- [`Archived/Flutter/`](../Archived/Flutter/README.md) — complete archived
+  Flutter implementation and its historical documentation.
+
+Historical commit SHAs, failed experiments, old test counts, and superseded
+implementation descriptions should remain intact when they are evidence of the
+state at that time.
+
+## How to read status and authority
+
+- **Completed** does not mean **published**.
+- **Implemented** does not mean **accepted for every distribution channel**.
+- **Deferred** is not an open mandatory implementation task.
+- **Historical analysis** is not the current backlog.
+- Code can demonstrate the implementation that exists, but it does not silently
+  override an explicit architecture or product decision.
+- A newer document is not automatically more authoritative; use its stated
+  scope and the authority hierarchy.
+
+## Documentation tools
+
+Supporting analysis scripts and records must be interpreted with the limitations
+of their corresponding documentation; tool output is not automatically a release gate.
 
 ## Working rule
 
-Use documentation to answer a concrete implementation question or preserve an existing feature. Do not start broad compatibility or possibility-analysis work unless an unresolved decision blocks durable implementation.
+Use current authoritative documentation to answer implementation questions and
+the operational owner documents to track open work. Preserve historical evidence
+without promoting old plans, gaps, or recommendations into new tasks.
 
-For Phase D specifically, inspect the current Rust Core and native macOS implementation before treating a Flutter behavior as a missing requirement. Extract Apple-shared Swift code only on first real reuse rather than through a speculative up-front refactor.
-
-For Phase E, use `PHASE_E_NATIVE_ANDROID.md` together with `ARCHITECTURE_DECISIONS.md` and `MOBILE_PRODUCT_SEMANTICS.md`. Preserve shared Core/product behavior, but derive navigation, lifecycle, gestures, background work, credentials, browser, notifications, widgets, media, and automotive integration from native Android capabilities rather than copying the Apple implementation. Flutter FluxNews remains behavioral/migration evidence only.
+When a historical document conflicts with a current authority, keep the
+historical record intact and correct or clarify the current authority through a
+separate reviewed change.

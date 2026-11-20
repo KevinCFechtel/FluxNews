@@ -251,8 +251,10 @@ Before the first native application release:
    production Flutter-to-native Android upgrade was already accepted during E9
    and must not be treated as an open general migration gate.
 4. Validate iOS TestFlight/App Store archive/export behavior.
-5. Validate macOS App Sandbox/App Group/signing and Mac App Store
-   archive/export/Transporter behavior.
+5. Validate the remaining macOS **Mac App Store distribution** path:
+   production provisioning, archive/export and Transporter behavior. B1 App
+   Sandbox/App Group runtime acceptance is already owner-accepted and must not
+   be reopened by this release-readiness item.
 6. Decide the exact release/tag ordering. The user creates
    `android/v3.0.0` manually; automation must not independently create the same
    tag.

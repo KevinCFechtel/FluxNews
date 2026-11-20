@@ -2,8 +2,8 @@
 
 > **Historische Analyse; Architekturentscheidung am 11.09.2026 ersetzt.**
 > Verbindlich sind jetzt [ARCHITECTURE_DECISIONS.md](../../ARCHITECTURE_DECISIONS.md),
-> der [Phase-D-Vertrag](../../PHASE_D_NATIVE_IOS_IPADOS.md) und die daraus abgeleitete
-> [UIKit-Übergabedatei](../../IOS_UIKIT_TIMELINE_IMPLEMENTATION.md).
+> der [Phase-D-Vertrag](../../archive/phases/ios/PHASE_D_NATIVE_IOS_IPADOS.md) und die daraus abgeleitete
+> [UIKit-Übergabedatei](../../archive/phases/ios/IOS_UIKIT_TIMELINE_IMPLEMENTATION.md).
 > Die UIKit-Timeline mit nativen UIKit-Zellen ist beschlossen. Die unten
 > vorgeschlagene vorgelagerte Vergleichsmessung, weitere Optimierung der alten
 > SwiftUI-List und optionale Wiederverwendung gehosteter SwiftUI-Timeline-Zellen

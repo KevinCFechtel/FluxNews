@@ -30,17 +30,21 @@ No old data, Keychain, download or account migration. The existing Developer ID/
 ## Decision history — signed acceptance deferred on 12 October 2026
 
 The owner previously **deferred signed, real-device Sandbox acceptance** until
-after feature-parity implementation. That work (C3.1–C3.7) has since merged.
-PRs #38 and #53 establish source, signature and installation checks, but do
-**not** prove that a provisioned/signed app can start, access Keychain and the
-App Group, sync, play, download or export/import backups. B1 is **now the next
-real-Mac acceptance gate**, not waived or already passed.
+after feature-parity implementation. That work (C3.1–C3.7) subsequently merged.
+PRs #38 and #53 established source, signature and installation checks, but those
+CI/source checks alone did **not** prove that a provisioned/signed app could
+start, access Keychain and the App Group, sync, play, download or export/import
+backups.
 
-C3.8 functional acceptance may use the same signed test installation, but
-each phase must have its own pass/fail evidence.
-Before any Mac App Store production export, submission or release-readiness
-claim, complete and record the signed-app checklist below. No migration from
-the unreleased, unsandboxed macOS development app is required.
+That deferral is historical: on **17 October 2026** the project owner accepted
+the real-Mac B1 and C3.8 testing and explicitly closed both gates. The checklist
+below is retained as the original acceptance/regression guidance; individual
+fresh-container results were not supplied as separate evidence and must not be
+invented after the fact.
+
+Mac App Store production provisioning, archive/export, Transporter validation
+and review remain separate release-track work. No migration from the unreleased,
+unsandboxed macOS development app is required.
 
 ## Signed-app acceptance checklist (owner sign-off recorded 17 October 2026)
 
@@ -57,8 +61,9 @@ the unreleased, unsandboxed macOS development app is required.
 
 CI compilation and source-plist tests alone **do not prove** end-to-end sandbox behavior.
 
-**Gate separation:** Sign off **B1** after a signed development build passes
-the fresh-container runtime checklist and relevant denials are resolved.
+**Gate separation:** **B1 is owner-accepted and closed as of 17 October 2026.**
+The fresh-container checklist above remains the historical acceptance/regression
+contract, but its individual results are not separately documented here.
 Mac App Store provisioning, archive/export and Transporter validation are a
 **subsequent R deliverable**, not an unfulfilled condition inside B1.
 The existing Developer ID/notarization script is also separate.

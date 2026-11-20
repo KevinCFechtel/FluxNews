@@ -69,7 +69,7 @@ FluxNews-Release-SHA und der darauf verweisenden F-Droid-Metadaten; FD-06 bleibt
 der spätere explizit autorisierte Veröffentlichungs-Gate.
 
 Ressourcen:
-[F-Droid-Plan](POST_REPLACEMENT_FOLLOWUP_PLAN.md),
+[Historischer F-Droid-Plan](../archive/migration/POST_REPLACEMENT_FOLLOWUP_PLAN.md),
 [Release-Architektur](RELEASE_DISTRIBUTION.md),
 [Dependency-Policy](DEPENDENCY_MAINTENANCE.md),
 [Ruffle rustls-Quellbuild](https://github.com/ruffle-rs/ruffle-android/pull/866).
@@ -81,4 +81,4 @@ Vorarbeit in einem dauerhaft offenen F-Droid-Branch zu halten.**
 
 Der [Release-Workflow #39410044142](https://github.com/KevinCFechtel/Flux/actions/runs/39410044142) für Android 3.0.0 / Build `2026101801` / Quell-SHA `75022c001b5ad0d0f3935c0846fb5c59f5faac87` ist vollständig grün: Rust- und Android-Tests, zwei unabhängige F-Droid-Rezept-Builds, APK-Bytevergleich, Entwickler-Signierung und [GitHub-Release `android/v3.0.0`](https://github.com/KevinCFechtel/Flux/releases/tag/android/v3.0.0). Dies belegt die Reproduzierbarkeit **dieses** Kandidaten. Es erfolgte **keine** offizielle F-Droid-Einreichung und **kein** FluxNews-Cutover. Die historische Signatur-/Upgrade-Abnahme (FD-04) und weitere oben genannte Schritte bleiben separat.
 
-Der temporäre Signierungsdiagnose-Workflow wurde mit Commit [`1e51a6e`](https://github.com/KevinCFechtel/Flux/commit/1e51a6e96ff43f09d84d25de0c8723815cc07153) entfernt. Details zum fehlgeschlagenen Versuch mit veralteter Source-SHA und zum erfolgreichen Release stehen in [FLUX_ANDROID_RELEASE_CANDIDATES.md](FLUX_ANDROID_RELEASE_CANDIDATES.md).
+Der temporäre Signierungsdiagnose-Workflow wurde mit Commit [`1e51a6e`](https://github.com/KevinCFechtel/Flux/commit/1e51a6e96ff43f09d84d25de0c8723815cc07153) entfernt. Details zum fehlgeschlagenen Versuch mit veralteter Source-SHA und zum erfolgreichen Release stehen in [FLUX_ANDROID_RELEASE_CANDIDATES.md](../FLUX_ANDROID_RELEASE_CANDIDATES.md).

@@ -1,13 +1,21 @@
-# Flux Phase B — Shared Podcast / Media Core
+# FluxNews Shared Media Core Contract
 
-**Status:** Architecture frozen / implementation-ready  
-**Scope:** Phase B — Shared Podcast / Media Core  
-**Authority:** This document is the canonical implementation contract for Phase B.
-
-> Phase B extends the shared Rust core with a cross-platform media and podcast domain.  
-> Existing Phase A architecture remains authoritative. Phase B must integrate with the existing sync, persistence, mutation, and native-boundary architecture rather than introducing parallel systems.
-
----
+> **Status: ACTIVE / AUTHORITATIVE**
+>
+> This document carries forward the durable shared-media contract from the
+> completed Phase B implementation. The ordered B1–B9 implementation roadmap is
+> historical and is preserved in
+> [`../archive/phases/core/PHASE_B_MEDIA_CORE.md`](../archive/phases/core/PHASE_B_MEDIA_CORE.md).
+> The legacy migration source inventory is preserved in
+> [`../archive/migration/PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md`](../archive/migration/PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md).
+>
+> Transfer mapping:
+> - `PHASE_B_MEDIA_CORE.md` sections 1–30 → sections below with the same headings.
+> - `PHASE_B_MEDIA_CORE.md` “Frozen Phase B Decisions” and “Intentionally Open Implementation Details” → sections below with the same wording.
+> - `PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md` durable legacy-persistence and migration-boundary rules → “Legacy migration compatibility and safety”.
+>
+> This transfer changes documentation ownership only. It does not create a new
+> media architecture or reopen completed Phase B work.
 
 ## 1. Core Architectural Boundary
 
@@ -696,9 +704,23 @@ actual files
 - `NotDownloaded` + orphan file → delete it.
 - `DeleteRequested` → native deletes the physical file and confirms completion.
 
-### Apple V1 target
+### Apple transfer execution — platform-specific accepted scope
 
-Use a background `URLSession` with `URLSessionDownloadTask`.
+- **iOS/iPadOS:** The implemented D6 executor uses a persistent background
+  `URLSession` with stable per-build session identity, OS relaunch callbacks and
+  Core-owned intent reconciliation. The app-owned delegate and account-generation
+  lifecycle are defined in [`../platforms/ios/IOS.md`](../platforms/ios/IOS.md).
+- **macOS:** The implemented `MediaTransferCoordinator` uses **foreground
+  `URLSession` download tasks**, with recovery by requerying durable Core
+  `Requested`/`DeleteRequested` intent and checking local files on startup or
+  resume. An in-flight task is **not guaranteed to survive process termination**.
+  OS-persistent background `URLSession` downloads on macOS remain deferred; see
+  [`../platforms/macos/MACOS.md`](../platforms/macos/MACOS.md).
+
+The shared Core contract requires correct native reconciliation and durable
+Core ownership; it **does not require both Apple clients to use the same OS
+transfer session type**. The former generic Apple V1 background-session target
+is fulfilled specifically by iOS, not a macOS runtime or release gate.
 
 ### Android
 
@@ -922,7 +944,7 @@ Native code owns:
 - play
 - pause
 - seek
-- ±30 second skipping
+- 15-second backward / 30-second forward skipping
 - playback speed
 - buffering
 - audio interruption handling
@@ -1362,199 +1384,6 @@ New Phase B functionality must not be differentially mirrored against the deprec
 
 ---
 
-# Phase B Implementation Roadmap
-
-## B1 — Enclosure Domain & Persistence
-
-Implement:
-
-- `Enclosure` domain model
-- `MediaKind`
-- full Miniflux enclosure mapping
-- SQLite persistence
-- Article ↔ Enclosure relationship
-- multiple enclosures per article
-- remote-presence / remote-removal semantics
-
-Do not implement playback or downloads yet.
-
-**Exit condition:** Enclosures are complete durable core-domain entities.
-
----
-
-## B2 — Saved Media / Episode Library
-
-Implement:
-
-- `SavedMedia`
-- `save_media`
-- `unsave_media`
-- `saved_playable_media`
-- feed-scoped saved-media query/read model
-- retention protection for saved enclosures/articles
-- episode-library read model including playback/download projections
-- deterministic ordering suitable for native next/previous queue construction
-
-Keep the local episode library independent of synchronization.
-
-Also implement the optional, explicitly enabled Miniflux Saved Media replication adapter:
-
-- canonical repository-hosted bootstrap `init.xml`
-- capability gating for supported Miniflux versions
-- automatic setup after explicit approval
-- manual setup with user-created feed
-- canonical `feed_url` discovery and verification
-- reuse of an existing sync feed across devices
-- disabled technical feed after bootstrap
-- durable `sync_feed_id`
-- versioned Saved Media marker identity
-- save/unsave marker semantics
-- failure isolation so local SavedMedia remains usable
-
-Do not couple Saved Media to article starring or media progression, and do not introduce a Flux-hosted user-data sync service.
-
-**Exit condition:** Flux has a durable local episode library independent of downloads, native clients can use it as the basis for episode browsing and temporary feed-scoped playback queues, and supported Miniflux accounts can optionally replicate Saved Media through a user-approved technical sync feed.
-
----
-
-## B3 — Playback State & Miniflux Progress
-
-Implement:
-
-- `PlaybackState`
-- `checkpoint_playback`
-- `restart_playback`
-- `playback_completed`
-- `observe_media_duration`
-- `MediaProgressMutation`
-- per-enclosure last-value coalescing
-- Miniflux progression PUT
-- `MediaProgressSync` capability
-- local/remote progress reconciliation
-
-**Exit condition:** Playback progress works offline-first locally and synchronizes across devices when supported by Miniflux.
-
----
-
-## B4 — Download Domain State Machine
-
-Implement:
-
-- `MediaDownload`
-- `DownloadOrigin`
-- `request_download`
-- `cancel_download`
-- `retry_download`
-- `delete_download`
-- `download_finished`
-- `download_failed`
-- delete confirmation
-- Search → durable download materialization
-
-Do not implement real OS transfers yet.
-
-**Exit condition:** The complete durable download lifecycle is testable entirely inside the core.
-
----
-
-## B5 — Auto-Download & Cleanup Policies
-
-Implement:
-
-- feed-level `auto_download_audio`
-- `AutoDownloadSuppression`
-- `DownloadNetworkPolicy`
-- `DownloadRetention`
-- `delete_after_playback`
-- media-related article protection
-- `evaluate_media_cleanup`
-
-**Exit condition:** Media download/cleanup policy is centralized in the shared core.
-
----
-
-## B6 — Media Metadata
-
-Implement:
-
-- duration
-- chapters
-- embedded artwork
-- article timestamp chapters
-- artwork priority
-- complete local-file metadata analysis
-
-Then, as an optional sub-step:
-
-- bounded remote HTTP Range metadata probing
-
-Remote probing is not a blocker for the rest of Phase B.
-
-**Exit condition:** The core can determine durable podcast/media metadata independently of platform UI/player implementations.
-
----
-
-## B7 — UniFFI Media API
-
-Expose the stable core domain API required by native clients, including:
-
-- playback preparation
-- playback checkpoints
-- completion / restart
-- download commands
-- playback/download read models
-- `downloaded_playable_media`
-- `continue_listening`
-- required media settings/policies
-
-Do not redesign the architecture at this stage.
-
-**Exit condition:** Native clients have a small domain-oriented interface with low round-trip overhead.
-
----
-
-## B8 — Native Playback & Transfers
-
-### Apple
-
-Implement:
-
-- AVFoundation playback
-- audio session
-- background `URLSession`
-- native transfer registry
-- file coordination
-- Now Playing integration
-
-### Android
-
-Implement:
-
-- Media3
-- MediaSession
-- `MediaTransferCoordinator`
-- appropriate system transfer backend(s)
-- audio focus
-- notifications
-
-Both platforms must consume the same core contract even when their OS mechanisms differ.
-
-**Exit condition:** Native playback and long-running transfers operate through the shared media core.
-
----
-
-## B9 — Automotive & Legacy Migration
-
-Implement:
-
-- CarPlay
-- Android Auto
-- downloaded-media browsing
-- Continue Listening
-- system-media polish
-- optional one-time Flutter legacy import
-
-**Exit condition:** Native system/automotive integration uses the shared core without duplicate media caches or legacy-domain leakage.
 
 ---
 
@@ -1641,6 +1470,125 @@ Phase B architecture is considered complete.
 
 > Do not perform another full media architecture analysis before implementation.
 
-Implementation starts with **B1 — Enclosure Domain & Persistence** and proceeds through B9.
+The completed Phase B implementation historically proceeded from **B1 — Enclosure Domain & Persistence** through B9. This is a record of implementation order, not an instruction to restart the phases.
 
 New architectural decisions should only be introduced when implementation reveals a concrete previously unknown platform, API, persistence, or compatibility constraint that conflicts with this contract.
+
+
+---
+
+## Legacy migration compatibility and safety
+
+The following compatibility rules are transferred from the completed B9 legacy
+migration contract. They remain relevant when maintaining or testing legacy
+Flutter-to-native media import behavior; they are not an open migration phase.
+
+## Legacy source
+
+The inventory below is based on `KevinCFechtel/FluxNews` `main` at commit
+`481eb08` (`update depenedencies`). It is source evidence only; the current Core schema and ownership rules in this `MEDIA_CORE.md` contract remain authoritative. The archived `PHASE_B_MEDIA_CORE.md` is implementation history and provenance only.
+
+## Proven legacy persistence
+
+The legacy SQLite database is `news_database.db`, schema version 12. Its media
+tables are:
+
+```text
+news(newsID, feedID, title, ..., publishedAt, ...)
+feeds(feedID, title, ...)
+categories(categoryID, title)
+attachments(attachmentID, newsID, attachmentURL, attachmentMimeType,
+            mediaProgression)
+```
+
+`attachments.attachmentID` is the Miniflux attachment identity and
+`attachments.newsID` is the article relationship. Audio is selected from the
+attachment MIME type. The implementation permits multiple attachments, so a
+legacy article-keyed playback value is imported only when exactly one audio
+attachment resolves for that article.
+
+Playback progress uses `AudioProgressStore`:
+
+- SharedPreferences key: `audio_progress_<newsID>`.
+- Value: decimal milliseconds stored as a string.
+- Keychain fallback uses the same key through `flutter_secure_storage`.
+- A stored `0` is explicit reset/completion state; absent is different from
+  zero and permits the server position to be used.
+- The legacy player may upload progress in whole seconds to Miniflux.
+
+Download metadata uses Keychain, not SQLite:
+
+- `audio_download_path_<attachmentID>` and URL fallback key
+  `audio_download_path_url_<base64UrlEncodedURL>`.
+- `audio_download_ts_<attachmentID>` stores the download timestamp.
+- `audio_download_skipped_<attachmentID>` stores the literal `true` for user
+  suppression.
+- `flux_download_title_<attachmentID>` and
+  `flux_download_feed_title_<attachmentID>` store automotive display metadata.
+- Files are scanned from `getApplicationSupportDirectory()/audio_cache`.
+- The filename convention is `audio_<attachmentID>_<millisecondsSinceEpoch>`
+  followed by the source URL extension. The file name is not the identity.
+
+Podcast settings are stored in Keychain:
+
+- `autoDownloadAudioAfterSync`
+- `downloadAudioOnlyOnWifi`
+- `deleteAudioAfterPlayback`
+- `audioDownloadRetentionDays`
+- `openAudioItemsInPlayer`
+
+The source also stores transient/background and debug state in Keychain, but
+those values are not media-domain state and are not imported into Core.
+
+## Automotive behavior
+
+The legacy CarPlay service enumerates downloaded files, uses cached attachment
+title/feed metadata, and starts playback with the attachment ID and article ID
+in extras. Its item identity is the file URI. Android Auto is provided through
+the audio-service media browser and uses the same downloaded-file catalog.
+These are presentation/runtime caches, not durable domain entities, and are
+therefore rebuilt from Core read models by native clients.
+
+## Migration boundary
+
+The source is sufficient to define the mappings and safe rejection rules. A
+native importer still needs access to the platform-owned Keychain,
+SharedPreferences, and application-support files. No such iOS or Android
+client exists in this repository, and macOS cannot access another platform's
+app sandbox. Accordingly:
+
+- article/enclosure identity and the exact database schema are migration-ready;
+- playback is importable only for one resolvable audio enclosure per article;
+- ambiguous articles are skipped and reported, never guessed;
+- downloaded-file import requires a native platform adapter to verify the file,
+  resolve its attachment, and call the Core download finalization operation;
+- legacy settings map to Core policies only after explicit account/install
+  association; UI-only and runtime-only settings are dropped;
+- legacy data is never deleted by the migration.
+
+Core migration semantics deliberately adapt this legacy behavior rather than
+copying its implicit completion convention:
+
+- explicit legacy zero does not become `Completed`;
+- explicit legacy zero does not become resumable `InProgress` and is excluded
+  from `continue_listening()`;
+- positive legacy progress may become `InProgress` and queues normal Core media
+  progression delivery;
+- a legacy source without a historical timestamp is retained with Core's
+  explicit oldest-sortable migration timestamp, never the import time, so it
+  cannot falsely outrank known playback in Continue Listening;
+- zero does not queue remote progression or overwrite existing Core playback;
+- existing playback state wins, and repeated imports are harmless;
+- `import_legacy_playback()` does not write a global completion marker, including
+  for empty or partial batches;
+- final completion is owned by the native platform migration coordinator,
+  which evaluates its platform-specific legacy sources (including Keychain,
+  SharedPreferences, and files where applicable). The original B9 design did
+  not require a separate Core-level completion API.
+
+At the historical B9 design checkpoint, platform extraction and verification
+of Keychain, SharedPreferences, and files still needed platform implementation.
+That work was subsequently completed within the accepted Android E9 and iOS D9
+migration implementations. This historical statement does not reopen those
+phases or qualify the current Core automotive and Continue Listening behavior.
+

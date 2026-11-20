@@ -19,7 +19,7 @@
 > window behavior. PR #29 passed Apple CI before merge.
 >
 > Release/distribution scripting is tracked separately in
-> [RELEASE_DISTRIBUTION.md](RELEASE_DISTRIBUTION.md). macOS distribution should
+> [RELEASE_DISTRIBUTION.md](../../../operations/RELEASE_DISTRIBUTION.md). macOS distribution should
 > ultimately use the same release interface as iOS, producing a validated
 > App Store Connect artifact suitable for Transporter/manual upload while keeping
 > App Store distribution as the primary channel.
@@ -455,12 +455,14 @@ Complete appropriate `MPRemoteCommandCenter` handling for:
 - play;
 - pause;
 - toggle;
-- skip backward 30 seconds;
+- skip backward 15 seconds;
 - skip forward 30 seconds;
 - seek/change position.
 
-Validate macOS media keys and Control Center. Native Now Playing intentionally
-replaces an in-app mini-player.
+Validate macOS media keys and Control Center. System Now Playing remains the
+OS-level playback surface. The later accepted macOS parity work also adds a
+compact in-popover player for direct title/artwork/play-pause access; this does
+not create a second playback engine or duplicate media state.
 
 ## 6. C5 — Lifecycle, edge cases and acceptance
 

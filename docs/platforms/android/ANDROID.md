@@ -1,20 +1,27 @@
-# Phase E — Native Android
+# FluxNews Android Contract
 
-> **Status: E1 THROUGH E9 COMPLETE / REAL-DEVICE ACCEPTED — PRODUCTION FLUTTER→NATIVE UPGRADE AND PLAYBACK VERIFICATION V2 ACCEPTED**
+> **Status: ACTIVE / AUTHORITATIVE**
 >
-> Repository-first audit baseline: main at 558d883cc88a966e3e6abc8e39adffdbb18cd1eb (28 September 2026); current closure work is recorded on `phase-e9-flutter-replacement` in October 2026.
+> This document carries forward the durable Android product/platform contract
+> from the completed Phase E implementation. The complete E1–E9 implementation,
+> migration and production-acceptance chronology is preserved in
+> [`../../archive/phases/android/PHASE_E_NATIVE_ANDROID.md`](../../archive/phases/android/PHASE_E_NATIVE_ANDROID.md).
 >
-> Phase A, Phase B and Phase C are complete and architecture-frozen. Phase D implementation and the physical Flutter-to-native iOS production upgrade are complete/accepted as of 10 October 2026. Phase E replacement implementation and migration acceptance are also complete; Android CI #486 is green and the later shared Apple gate is green on main (Apple #123, attempt 2). Remaining Play/F-Droid work is distribution, not E9 implementation acceptance. The follow-up release plan, including a native F-Droid build/publish action and unified cross-platform release scripting, is authoritative in [RELEASE_DISTRIBUTION.md](RELEASE_DISTRIBUTION.md).
+> Transfer mapping:
+> - Phase E sections 1–11 → current Android foundations and ownership below.
+> - Phase E sections E2–E8 → current Android UI, lifecycle, widget, media and
+>   platform-integration contracts below.
+> - Phase E sections 21–27 → current localization, diagnostics, validation,
+>   risk/ownership and frozen-decision rules below.
+> - E1 and E9 remain historical migration/acceptance evidence only.
 >
-> Post-completion structural cleanup was merged on 11 October 2026. The large
-> `AndroidArticleTimeline.kt` and `AdaptiveAppShell.kt` sources were split into
-> focused Timeline, row, shell, model/policy and navigation files without changing
-> Compose lifecycle, Timeline/store ownership, paging, Scrollover, navigation,
-> Core/UniFFI, persistence or migration semantics. Baseline and Startup Profiles
-> were regenerated with the canonical generator after the Kotlin top-level moves.
-> PR #30 passed Android CI #487 before merge.
+> This transfer changes documentation ownership only. It does not reopen E1–E9,
+> migration acceptance, signing, F-Droid gates or product behavior.
 >
-> This document is the authoritative implementation contract for the native Android replacement. ARCHITECTURE_DECISIONS.md remains the primary architecture authority and MOBILE_PRODUCT_SEMANTICS.md remains the shared native-mobile product contract. Where this document describes Android mechanisms, those mechanisms implement the shared contracts rather than redefining the product domain.
+> Shared product semantics remain authoritative in
+> [`../../MOBILE_PRODUCT_SEMANTICS.md`](../../MOBILE_PRODUCT_SEMANTICS.md);
+> shared media/Core semantics remain authoritative in
+> [`../../current/MEDIA_CORE.md`](../../current/MEDIA_CORE.md).
 
 ## 1. Goal and non-goals
 
@@ -246,7 +253,7 @@ At the audit baseline its production Android state includes:
 - an Android media browser/audio service for Android Auto;
 - cleartext HTTP allowed and system plus user certificate anchors trusted.
 
-The established media migration contract in PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md remains authoritative:
+The active legacy media migration compatibility contract is in [the current Media Core contract](../../current/MEDIA_CORE.md#legacy-migration-compatibility-and-safety). The archived [B9 migration record](../../archive/migration/PHASE_B9_AUTOMOTIVE_AND_MIGRATION.md) documents the original acceptance and provenance, not a second authoritative specification. Its retained invariants are:
 
 - article/enclosure identity comes from the legacy database;
 - article-keyed playback progress imports only when exactly one audio enclosure resolves;
@@ -330,123 +337,10 @@ Android must preserve at least:
 
 Android may express each behavior with different native chrome, navigation or gestures.
 
-## 12. E1 — Android Foundation & Production Migration Spike
 
-E1 is the next implementation step.
+---
 
-### E1-A — Project skeleton
-
-Create android/ with the minimum native application structure, Kotlin and Compose baseline, Gradle wrapper/build, development identity and a production-identity configuration path.
-
-Implemented on 28 September 2026 with Android SDK API 36, AGP 8.9.2, Kotlin/Compose compiler 2.0.21, and a Compose Material 3 baseline. `android/Build/build-app.sh` and `android/Build/test.sh` are the canonical Android build and validation entry points.
-
-Do not begin product UI beyond what is required to prove startup/runtime.
-
-### E1-B — Rust/UniFFI build and smoke test
-
-E1-B is complete. E1-B1 implements `android/Build/build-uniffi.sh`, which builds and verifies the existing `flux-uniffi` cdylib for `arm64-v8a` (`aarch64-linux-android`) and `x86_64` (`x86_64-linux-android`) in Debug and Release modes. E1-B2a resolves the minimal Kotlin-safe UniFFI surface naming while retaining UniFFI 0.29 and the unchanged Core domain. E1-B2 generates Kotlin bindings, compiles them with JNA 5.13.0 and packages variant-specific native libraries. Its crate-local `uniffi.toml` uses the official UniFFI 0.29 Android configuration with `disable_java_cleaner = true`, retaining minSdk 29 through the generated JNA Cleaner fallback without a Lint suppression. E1-B3 adds a `developmentDebug`-only Android instrumentation smoke test for library loading, Flux/Core construction, a local query, typed error propagation, and event-subscription cleanup; `android/Build/test-uniffi-runtime.sh` selects one explicit device and runs only that test target.
-
-Runtime acceptance on 28 September 2026 passed the same three-test suite on an API 29 / Android 10 `arm64-v8a` emulator with 4 KB pages and on an API 37 `arm64-v8a` emulator with 16 KB pages. Both runs completed 3/3 tests successfully, proving the generated Kotlin/JNA/UniFFI path, native library loading, Flux/Core construction, local SQLite-backed querying, typed Rust-to-Kotlin error propagation and event-subscription cleanup across the compatibility floor and a contemporary 16 KB-page runtime. The `x86_64` path remains cross-build/APK-package validated. The later E9 productive physical-device upgrade acceptance additionally proved the packaged native/Core runtime on real replacement hardware; a separate E1-B physical smoke is no longer an outstanding release gate.
-
-Prove:
-
-- Rust Android targets;
-- Kotlin binding generation;
-- native library packaging/loading;
-- Flux/Core construction;
-- a minimal local Core query;
-- typed error propagation;
-- Core event subscription/cleanup;
-- Debug and Release build paths.
-
-### E1-C — TLS/account transport proof
-
-E1-C is complete. The pinned `rustls-platform-verifier` 0.5.3 is now the Android TLS verifier for the Core transport. `flux-core` declares it for `cfg(target_os = "android")` next to the existing Apple target and applies it through one shared `platform_tls_config()`; Apple keeps its previous semantics unchanged and every other target keeps the `ureq` default. Without this the Android build fell back to `rustls-native-certs`, which probes Unix trust-store paths that do not exist on Android and therefore resolved an empty root store.
-
-The verifier needs JVM handles before the first Rust TLS handshake, so `flux-uniffi` exposes the narrow Android initialization hook this contract permits: a single JNI entry point that hands over the JVM, the application `Context` and the class loader and carries no domain, Miniflux or Core surface. Kotlin calls it once from `Application.onCreate` through `AndroidPlatformTrust`, which is idempotent for the process; the underlying crate initialization is idempotent as well. The Kotlin verifier component is resolved from the `rustls-platform-verifier-android` crate that `core/Cargo.lock` already selects — Gradle reads both the on-disk Maven repository and the component version from `cargo metadata`, so the AAR can never drift from the crate. R8 keep rules cover the JNI-reached verifier classes and the bootstrap entry point.
-
-Miniflux networking stays entirely in Rust/`ureq`; no Kotlin HTTP client exists. The app declares `INTERNET` and a network security configuration that preserves the legacy Android product policy of permitted cleartext HTTP plus system and user certificate anchors.
-
-Proven behavior over the production `validate_miniflux_account` path:
-
-- plain HTTP Miniflux installations remain supported;
-- custom HTTP headers reach the server on the real Rust request;
-- public/system trust anchors complete the handshake and reach the HTTP layer;
-- invalid and untrusted certificates are rejected as a transport failure and never validate as a Miniflux server;
-- user-installed CA anchors are trusted, matching the legacy Flutter client; the same server is rejected before the anchor is installed and accepted afterwards.
-
-Runtime acceptance on 28 September 2026 passed the full transport suite on an API 29 / Android 10 `arm64-v8a` emulator and on an API 37 `arm64-v8a` emulator with 16 KB pages. `android/Build/test-transport-runtime.sh` is the canonical entry point; it selects one explicit device, runs only the E1-C instrumentation tests and drives both user-CA phases. The public/system CA gate is a deliberate online integration test and is not part of the offline `android/Build/test.sh` gate.
-
-### E1-D — Android Core runtime ownership
-
-E1-D is complete. `FluxApplication` owns one process-scoped `AndroidCoreRuntime`, which owns zero or one active Core session including its `Flux` object and event subscription. It uses bounded local and remote execution lanes so synchronous Core work stays off-main and slow remote work cannot head-of-line-block local reads. Activity recreation does not create a Core session; process death recreates an empty runtime that later account state bootstraps. Close and replacement stop new work and wait for active calls before closing the subscription and Core. One-emulator acceptance covers owner recreation, off-main local/remote calls, lane isolation, clean close and replacement.
-
-No feature-domain duplication is allowed in this layer.
-
-### E1-E — Credential and preference storage proof
-
-E1-E is complete. `FluxApplication` process-owns the separate credential and preference stores. Credentials use a versioned AES-256-GCM envelope with context AAD, atomically stored in app-private `noBackupFilesDir`; the AES key is an `AndroidKeyStore` key authorized only for GCM encrypt/decrypt and never requires per-use user authentication. API keys and custom headers never enter DataStore, and clearing credentials removes both envelope and key alias. This supports normal locked-screen/background access after first unlock, but declares no Direct-Boot secret storage.
-
-Non-secret native preferences use one process-scoped Preferences DataStore (1.2.1) with typed asynchronous access. API-29 runtime acceptance proves encrypted relaunch access, tamper/corruption failure, no plaintext in the envelope, Keystore metadata, preference persistence and background access without an Activity.
-
-### E1-F — Production-upgrade migration feasibility
-
-E1-F is implemented. Its physical production-upgrade acceptance was deliberately deferred at this E1 checkpoint and was later completed through the E9 real-device production-upgrade pass. The isolated production-identity Migration Probe has a read-only native reader for the exact Flutter secure-storage format and for legacy database, playback, media, widget, and auto-backup discovery. It writes only a redacted cache report, compares legacy-source fingerprints and relevant Keystore aliases before/after, and has a signer/version-guarded in-place upgrade script. It performs no migration or new-Core/store write.
-
-On a production-identity test build installed over the current Flutter app, prove read-only access to:
-
-- legacy account URL/API key;
-- custom headers and selected compatible settings;
-- news_database.db;
-- SharedPreferences playback progress;
-- legacy downloaded media and metadata;
-- widget SharedPreferences/configuration evidence;
-- any legacy auto-backup artifact that is intentionally retained.
-
-The test build must not delete or convert those sources in place.
-
-### E1-G — Durable native paths and backup exclusions
-
-E1-G is complete. `AndroidStoragePaths` is the canonical native path layout: Core data,
-media, logs and widget projection use separate `noBackupFilesDir/flux-native/` children;
-regenerable Core cache uses `cacheDir/flux-native/core-cache`. This is disjoint from
-`news_database.db`, `audio_cache`, legacy SharedPreferences/DataStore and legacy backup
-artifacts. Android automatic cloud backup and device transfer explicitly exclude every
-database, file, shared-preference, external and root sandbox domain; `noBackupFilesDir`
-also excludes the native roots by platform contract. Configuration backup/restore remains
-the only intended portable configuration handoff.
-
-E1-A through E1-G are complete. E1-H is next. At this historical checkpoint the
-E1-F physical production-upgrade acceptance was deferred to E9; it has since
-been completed by the E9 real-device production-upgrade pass.
-
-### E1-H — CI and test gate
-
-E1-H COMPLETE. The canonical local gate is `android/Build/test.sh`; GitHub Actions runs
-it together with `android/Build/build-app.sh productionRelease` and shell syntax validation
-on Linux. The baseline pins JDK 17, Android SDK platform 36, Build Tools 36.0.0, NDK
-27.0.12077973, Rust 1.98.0 and the `aarch64-linux-android`/`x86_64-linux-android` targets.
-It does not start an emulator or run targeted E1-B through E1-F platform acceptance suites.
-Those remain targeted proofs. The physical E1-F production-upgrade requirement was
-subsequently satisfied by the E9 real-device upgrade pass.
-
-Phase E1 COMPLETE. All nine E1 exit conditions are met: the production-identity emulator
-proof satisfies the read-only migration-spike condition, while the production-upgrade physical-device repetition was subsequently
-completed in E9. E2 NEXT.
-
-### E1 exit conditions
-
-E2 may begin only when:
-
-1. native Android Debug builds through the repository;
-2. Kotlin successfully calls the current UniFFI Core;
-3. Core calls are off-main and one process-scoped Core owner is proven;
-4. TLS/platform trust is characterized and acceptable or a narrow corrective plan is committed;
-5. development and production identities are explicitly separated;
-6. a production-identity upgrade spike can read the required legacy Android sources without mutating them;
-7. Core/new-native paths are isolated from legacy paths;
-8. production signing/update prerequisites are known;
-9. no unresolved E1 issue requires replacing UniFFI or the shared Core architecture.
+## Current Android feature and platform contracts
 
 ## 13. E2 — Adaptive App Shell, Account and Settings Foundation
 
@@ -612,7 +506,7 @@ The larger `AndroidStoragePaths` ownership/lifecycle review remains deferred to 
 
 **Phase E2 is COMPLETE.**
 
-**Phase E3 is COMPLETE. E4 — Actions, Search, Sync and Mutations — is NEXT.**
+**Phase E3 and E4 are COMPLETE.** The following E3/E4 details are retained as accepted implementation context, not a current execution queue.
 
 ## 14. E3 — Native Article Timeline / Article Presentation
 
@@ -653,6 +547,7 @@ Implemented on 2 October 2026:
 - shared accessory ordering for unread, star, comments and audio;
 - page-level batched Core audio projection without per-row Core calls;
 - one app-wide Coil 3.6.3 image loader with bounded memory and disk caches;
+- article-image HTTP loading, decode and platform caching are Android-native responsibilities; Core may provide discovery/URL/domain metadata but does not own the image HTTP/disk-cache pipeline;
 - Compact performs no article-image work, while visual modes request images at presentation constraints;
 - the Timeline's Core total is used for the Settings-controlled article-count presentation;
 - the Android build/toolchain baseline was modernized to current stable components where available: AGP 9.4.0, Gradle 9.7.1, Kotlin/Compose compiler 2.4.20, current stable AndroidX/Material/Coil libraries, NDK r29, and compile SDK 37 with stable runtime target SDK 36;
@@ -778,7 +673,7 @@ Preserve shared semantic ordering and the date/reading-time/accessory contracts 
 
 ### Scrollover
 
-Implement the shared Scrollover behavioral contract with Android/Compose-native scroll state. Do not port the UIKit geometry tracker line-for-line: Android intentionally commits one ID batch when scrolling becomes idle, using the interaction start index and highest reached first-visible index.
+Preserve the accepted Android/Compose **index-based scroll-session** contract described in E3-D above and in [the shared mobile semantics](../../MOBILE_PRODUCT_SEMANTICS.md#6-mark-as-read-on-scrollover). Do not port the UIKit geometry tracker line-for-line: Android intentionally commits one ID batch when scrolling becomes idle, using the interaction start index and highest reached first-visible index. This algorithm does **not** independently establish actual viewport exposure for each intervening article; fast index jumps can therefore include rows that were not visibly rendered. Changing that qualification rule requires an explicit new Android product/performance decision, not a documentation-only reconciliation.
 
 Known programmatic movement must be explicitly suppressed. Snapshot replacement clears in-flight Scrollover progress; append-only paging preserves it.
 
@@ -1033,7 +928,7 @@ The initial E6 foundation is implemented on branch `android-e6-media-runtime`:
 - `AndroidMediaPlaybackService` is the single long-lived playback container, configured for spoken media, Android audio focus and becoming-noisy handling;
 - the service is registered as a media-playback foreground service so later E6 background playback and E7 system/Android Auto integration build on the same player rather than introducing a temporary Activity-owned runtime;
 - productive playback now resolves Core `PlaybackPreparation`, prefers a validated local media reference under the configured media root, falls back to HTTP(S), restores in-progress position and projects chapters/artwork source;
-- Play/Pause/Stop, seek, ±30-second skip, 0.5x–3.0x playback rate, 20-second Core checkpoints, duration observation, natural completion/restart and the 30–180 minute sleep timer are implemented in the process-scoped playback coordinator;
+- Play/Pause/Stop, seek, 15-second backward / 30-second forward skip, 0.5x–3.0x playback rate, 20-second Core checkpoints, duration observation, natural completion/restart and the 30–180 minute sleep timer are implemented in the process-scoped playback coordinator;
 - the playback coordinator controls the service through a Media3 `MediaController`, preserving the single-player service boundary needed by E7;
 - the native Listening List destination is now backed by `listeningListFeeds()` + `listeningList(feedId:sort:)`, with feed filtering, sorting, progress presentation, multi-enclosure selection and direct control of the process-scoped Media3 playback coordinator;
 - the Listening List includes a compact native playback surface over the same service-owned player, so playback state is not duplicated in Compose;
@@ -1045,7 +940,7 @@ The initial E6 foundation is implemented on branch `android-e6-media-runtime`:
 - Timeline and Search now retain the batched Core enclosure/download projection and expose article-level Download Audio as Download/Cancel/Retry/Delete semantics; multiple audio enclosures use one native chooser rather than per-row Core queries;
 - worker completion/failure/deletion and every successful Core sync publish only an in-memory media revision signal so Timeline, Search and Listening List re-read authoritative Core state without introducing a second persisted transfer state;
 - currently loaded playback remains live from Media3 at runtime cadence, while non-Now-Playing Listening List progress is refreshed from Core immediately after sync so remote Miniflux progress updates become visible without reopening the screen;
-- the rich native Player surface is now implemented over the same service-owned Media3 player: local Core artwork bytes and remote HTTP(S) artwork, seek timeline, Play/Pause/Stop/±30 seconds, visible playback-rate and sleep-timer controls, completion Restart, active-chapter presentation/navigation and expandable Show Notes;
+- the rich native Player surface is now implemented over the same service-owned Media3 player: local Core artwork bytes and remote HTTP(S) artwork, seek timeline, Play/Pause/Stop, 15 seconds back / 30 seconds forward, visible playback-rate and sleep-timer controls, completion Restart, active-chapter presentation/navigation and expandable Show Notes;
 - Show Notes reuse `readerDocument(articleId:)` and the existing Android Reader renderer; the Player does not fetch or render article HTML through a parallel path;
 - opening Player from a Listening List row prepares the selected enclosure without auto-starting playback, while the compact mini-player opens the same rich surface for the active item;
 - media presentation now follows the accepted iOS D6 hierarchy while using Material 3 interaction patterns: artwork/header, seek, icon-based transport controls, compact rate/sleep status controls, chapter/show-notes cards and adaptive side-by-side layout on wide Android screens;
@@ -1074,7 +969,7 @@ Required product scope:
 - playback preparation;
 - local or remote source chosen by Core;
 - Play/Pause/Stop;
-- seek and ±30-second skip;
+- seek and 15-second backward / 30-second forward skip;
 - playback rate;
 - sleep timer;
 - chapters/show notes/artwork;
@@ -1165,108 +1060,10 @@ Do not create an Android feature merely to mirror the Phase-D numbering or the d
 
 A future Android-specific capability may occupy E8 only after a distinct product requirement and architecture decision. No current Phase-E release gate depends on E8.
 
-## 20. E9 — Flutter Replacement Completion and Production Acceptance
 
-**Status: E9 COMPLETE / REAL-DEVICE ACCEPTED — production upgrade and Playback Verification v2 accepted on 10 October 2026.**
+---
 
-E9 is a closure phase, not a dumping ground for features that belong in E2-E7.
-
-Current E9 implementation status:
-
-### October 2026 — production upgrade acceptance and playback verification v2
-
-The signed production-identity Flutter-to-native Android upgrade path has already
-been exercised successfully on physical hardware in an earlier E9 acceptance
-pass. That pass verified the retained production identity, access to the old
-Flutter state, native account/settings/media migration and continued operation
-after the upgrade. At that time unresolved historical playback positions could
-still be explicitly finalized through **Finish with unresolved items**.
-
-The current playback semantics are stricter and more useful. Positive legacy
-positions are retried against Core/Miniflux. A confirmed HTTP 404/410 is treated
-as terminal stale history only when a complete read-only legacy download scan
-proves that no matching local audio file exists. Such entries are shown as old
-playback positions that were discarded, and the Playback stage may still finish
-green. If a local legacy download exists, if download evidence is incomplete,
-or if identity/network resolution fails, the item remains retryable.
-
-Android download discovery now mirrors the iOS production finding that old
-absolute secure-storage paths are not sufficient evidence: the reader also scans
-the legacy `audio_cache` for validated `audio_<enclosureId>_<timestamp>.*`
-files and maps them through the read-only Flutter SQLite enclosure/article
-relationship. Flutter files remain read-only and are never deleted by migration.
-
-Because the already-upgraded physical test device had previously used the manual
-partial-completion path, Playback Verification v2 reopens only that previously
-skipped Playback stage once. It clears neither account/settings/feed/widget nor
-download completion state, and Core's existing native playback state still wins.
-After the v2 pass the migration summary is surfaced once again; a successful run
-sets the v2 completion marker and cannot loop.
-
-This v2 flow was verified successfully on the already production-upgraded
-physical Android device on 10 October 2026. The migration completed green and
-correctly identified the stale historical playback positions as old/discarded
-because no matching local download existed and Miniflux returned confirmed
-404/410. That closes the final focused E9 migration-acceptance gap without
-requiring a fabricated fresh Flutter state.
-
-Automated tests cover the v2 reopening predicate, durable discarded-ID encoding,
-404-without-download discard, download-backed retry behavior, incomplete-download
-evidence safety, direct legacy audio-cache discovery and the green migration
-summary containing discarded-old-progress details.
-
-### Play production bundle and F-Droid release handoff
-
-Build the production Google Play AAB with `./android/Build/build-app.sh productionBundle <versionCode> <versionName>`. Provide the gitignored `android/productionBundle-signing.properties`, containing `keyAlias`, `keyPassword`, `storeFile` (relative to `android/`) and `storePassword`. The upload key must match the key accepted by the existing Google Play application. The Play upload certificate is not necessarily the installed app signing certificate; this AAB does not validate an APK-side in-place Flutter upgrade. The normal `productionRelease` APK keeps its separate signing contract. Verify the bundle manifest's application ID and versions, upload-signing certificate and Play Console acceptance before release. Do not commit secrets or keystores.
-
-**F-Droid transition (post-E9 distribution work):** Flutter's current F-Droid distribution and signature submission tooling live in `KevinCFechtel/FluxNews` (`.github/workflows/build-and-release.yml`, `.github/workflows/submit-fdroid-signatures.yml`, `.github/scripts/prepare_fdroid_metadata.py`). This is a distinct distribution pipeline, not the Play AAB. The native `Flux` repository still needs its own F-Droid build and publish GitHub Action. That action must use the same canonical release/version inputs as the local Android release script, keep F-Droid signing separate from Play signing, prepare reproducible/offline-compatible metadata and artifacts, and validate an installed signed update over the existing Flutter F-Droid variant before the old pipeline is retired. See [RELEASE_DISTRIBUTION.md](RELEASE_DISTRIBUTION.md) for the authoritative cross-platform release plan.
-
-
-- Android release versionName/versionCode now accept explicit parameters through `android/Build/build-app.sh <variant> <versionCode> <versionName>` with `--help` documentation; existing CI builds without parameters and the old developmentBundle versionCode-only form remain compatible. Production release signing/version metadata and Play Console upload acceptance remain release-distribution checks rather than migration-implementation blockers;
-
-- the audited E1 FlutterSecureStorage/legacy-state reader now lives in the production source set and remains read-only;
-- normal and headless account bootstrap run the same migration preflight before reading native credentials;
-- an existing native account wins without reading or changing Flutter state;
-- production upgrades with readable Flutter credentials copy URL, API key and complete custom-header pairs into the native Keystore-backed credential envelope;
-- unavailable legacy secure storage is treated as retryable rather than as an empty/fresh installation;
-- account migration writes non-secret provenance before the native credential copy, so termination cannot leave an unmarked migrated account; failed copies clear the provisional marker and partial native copy while leaving Flutter sources untouched;
-- parser/coordinator regression tests cover credential requirements, custom-header extraction, native-wins behavior, retryable unreadable storage and failed-copy cleanup;
-- the E9 post-sync adapter now imports compatible Core policy/media settings and positive per-feed Open in Miniflux overrides exclusively for the migrated account. Separate completion flags make a missing feed retry on subsequent successful syncs; explicit native/Core state retains precedence;
-- E9 playback imports positive article-keyed positions from Flutter SharedPreferences with secure-storage fallback; zero is omitted and Core owns unique-enclosure resolution, precedence and import outcomes. Ambiguous identity, transient failures and any record backed by a local legacy download remain retryable;
-- E9 reads the read-only Flutter SQLite enclosure→article relationship and uses a targeted Core/UniFFI Miniflux article fetch to hydrate historical read articles and matching audio attachments before download adoption. For playback, Core now reserves a `false` restore result for confirmed HTTP 404/410; identity mismatch or non-unique audio is an error rather than stale evidence. A confirmed 404/410 with no matching local legacy download is terminal stale progress and is visibly discarded without failing the migration. Successfully imported native state wins and legacy source files remain unchanged;
-- E9 media analysis now probes the actual audio bytes, including migrated `.audio` files. A separate durable one-time repair pass re-extracts missing embedded artwork, duration and chapters from previously imported Flutter downloads without changing downloaded/playback state, then marks metadata repair complete only after successful processing; Support Diagnostics report scan and recovered-artwork counts;
-- E9 download migration logs summary counters and missing/failed enclosure IDs to Support Diagnostics under `migration.downloads` at Info/Warning level (no file paths, URLs or secrets), allowing troubleshooting after a successful sync without enabling Debug Logging;
-- E9 media migration validates legacy enclosure identity against the cloned read-only SQLite catalog and accepts verified source audio from either valid stored path metadata or the legacy `audio_cache` filename convention used by Flutter. It copies into a disjoint native media root using a staged file and only then asks Core to adopt it. Existing Core downloads win; missing enclosures remain retryable; original Flutter media is never removed;
-- E9 local presentation follow-up now imports compatible navigation visibility, article-count/read-on-scroll/remove-on-read, reader-opening and swipe semantics, and Android floating-toolbar actions using atomic native-presence-first DataStore writes;
-- startup category/feed imports are catalog-validated and remain independently retryable until the first successful sync contains the requested ID;
-- Flutter global widget scope/read-filter/sort values now seed only unconfigured native widgets; an existing per-widget native configuration remains authoritative. Obsolete item-limit/styling and widget-specific Miniflux-open preferences remain retired;
-- E9 finalization now records a durable `completed` or `completed_with_skipped_items` status, with the original unresolved playback/download reasons preserved separately. Manual partial finalization atomically stores skipped details, stage markers and acknowledgment; ordinary `Done` sets the verified completion status. Successful imports are never discarded, and the UI marks skipped stages as completed with skipped items rather than claiming a full import;
-- Users may explicitly finish with unresolved media only after the settings/catalog steps have completed and the playback/download attempts have returned recorded retry reasons. Successfully imported positions/files are retained; pending media retries are then waived and the dialog is acknowledged. Without confirmation the existing retry-on-sync and dialog-on-relaunch behavior remains unchanged;
-- E9 presents an optional, non-blocking first-upgrade migration dialog after account restoration, using persisted completion markers for account, local/Core settings, feeds/start view, playback, downloads and widgets. It shows only categorical statuses (no URLs, secrets, filenames or article titles), offers an explicit sync action, remains retryable after dismissal, and is permanently acknowledged only once all stages complete;
-- the signed production-identity physical Flutter-to-native upgrade path has been accepted on real hardware, including retained legacy-state access and coexistence with untouched Flutter source data;
-- the versioned Playback Verification v2 recheck has been accepted on the already-upgraded physical installation and replaced the earlier manual skip result with the new automatic stale-404 classification;
-- canonical Rust + Android + affected Apple regression CI remains mandatory for later shared Core/UniFFI changes, but there is no remaining E9 physical migration-acceptance blocker.
-
-By the start of E9, the productive native Android feature set must already include Settings, backup/restore, localization, logging/support diagnostics, widget configuration, media/downloads and system integrations.
-
-E9 performs:
-
-- full current-Flutter behavioral/migration gap audit;
-- verification that deliberately retired/replaced Flutter behavior remains retired;
-- completion of the production Flutter-to-native migration coordinator using the E1-proven readers;
-- Android-specific legacy settings mapping not already consumed earlier;
-- legacy widget/default/component migration closure;
-- legacy playback/download migration closure;
-- production signing/package/manifest validation;
-- upgrade installation over the latest production Flutter build;
-- first launch and migration interruption/retry tests;
-- post-upgrade sync and offline tests;
-- final feature/accessibility/localization audit;
-- canonical Rust + Android + affected Apple regression gate;
-- confirm productive UniFFI/Core execution on physical replacement hardware (satisfied by the accepted E9 production-upgrade run; the targeted E1-B smoke remains optional diagnostic coverage);
-- physical production-upgrade acceptance (completed, including the later Playback Verification v2 semantic recheck on the already-upgraded production-path device).
-
-Flutter is not a parity checklist. E9 imports only retained semantic state and validates only retained/current product capabilities.
+## Current localization, diagnostics, validation and frozen decisions
 
 ## 21. Localization and user-facing baseline
 
@@ -1431,3 +1228,99 @@ The following are decided unless implementation finds a concrete contradiction:
 - UniFFI as the only app/Core binding;
 - no second Kotlin domain or Miniflux layer;
 - one process-scoped Core/account session;
+
+
+## 28. Retained E1 storage and security invariants (completed)
+
+These are durable properties of the already implemented Android foundation, transferred from
+[`PHASE_E_NATIVE_ANDROID.md`](../../archive/phases/android/PHASE_E_NATIVE_ANDROID.md)
+(E1-E/E1-G). They do **not** restart E1 or prescribe a new credential implementation.
+
+- `FluxApplication` process-owns separate native credential and preference stores.
+  Sensitive account URL/API key and custom header values use a **versioned AES-256-GCM
+  credential envelope**, authenticated with contextual AAD and atomically stored under
+  app-private `noBackupFilesDir`. Its key remains in `AndroidKeyStore`, authorized for
+  GCM encryption/decryption, without per-use user authentication.
+- No API keys or sensitive custom-header values are placed in Preferences DataStore.
+  Credential clear removes **both** the encrypted envelope and its Keystore alias.
+  Background/headless access is supported after first device unlock, including while
+  the screen is locked; **Direct Boot secret access is not claimed**.
+- Non-secret presentation preferences use a distinct process-scoped Preferences
+  DataStore with typed asynchronous access. They do not become a second Core settings
+  authority.
+- `AndroidStoragePaths` separates Core data, media, logs and widget projection under
+  their own `noBackupFilesDir/flux-native/` children; regenerable Core cache uses
+  `cacheDir/flux-native/core-cache`. These paths remain disjoint from Flutter
+  `news_database.db`, `audio_cache`, legacy preferences/DataStore and backups.
+- Android automatic cloud backup and device transfer exclude the complete native
+  database/file/preference/external/root sandbox domains, including native state,
+  credentials, downloads, logs and widget projection. Explicit encrypted **Config
+  Backup/Restore** is the intended portable configuration mechanism, not system
+  backup or article/media backup.
+
+## 29. Retained E9 production migration invariants (completed)
+
+The following are the accepted production-upgrade rules from
+[`PHASE_E_NATIVE_ANDROID.md`](../../archive/phases/android/PHASE_E_NATIVE_ANDROID.md)
+(E9 and Playback Verification v2). They specify recovery and precedence for
+existing/legacy installs, **not** a new migration phase or device acceptance gate.
+
+### Account bootstrap, precedence and retry
+
+- Normal and headless bootstrap use the **same migration preflight before** consulting
+  native credentials. A valid existing native account wins without reading or
+  changing Flutter state. An unreadable or unavailable legacy secure-storage source
+  is **retryable**, not proof of an empty fresh installation.
+- When native credentials are absent and Flutter account data is readable, copy
+  account URL, API key and complete custom-header pairs into the native Keystore
+  envelope. Persist non-secret provisional account provenance **before** copying
+  credentials, so interruption cannot create an unmarked migrated account.
+  On copy failure clear the provisional marker and incomplete native copy, never
+  the Flutter source.
+- Migration is read-only toward legacy sources, copy/import-only into native roots,
+  idempotent and restart-safe. Explicit native/Core setting presence always wins,
+  including an explicit `false`; a serialized Flutter default zero does not prove
+  explicit user intent.
+- Compatible feed settings and positive per-feed Open in Miniflux overrides are
+  imported only for the migrated account, with feed-ID catalog validation and
+  independent retry markers when an ID is not yet available. Startup Category/Feed
+  restoration likewise waits for the matching authoritative Miniflux ID and does
+  not guess by name or URL. `syncReadStatusImmediately` does **not** map to
+  Core `DeliveryMode`.
+- Compatible local navigation, Reader, swipe, toolbar and widget defaults migrate
+  only where a direct semantic equivalent exists. Native per-widget configuration
+  wins over legacy widget defaults; retired widget styling/count and widget-specific
+  Miniflux-open settings are not restored.
+
+### Media identity, files and terminal failure evidence
+
+- Playback restoration uses positive article-keyed positions from legacy
+  SharedPreferences with secure-storage fallback. Zero is not a resumable position.
+  Core resolves a **unique** matching audio enclosure and retains existing native
+  playback state. Ambiguous identity, unavailable catalog/network, and incomplete
+  discovery are retryable.
+- Legacy download discovery uses both valid recorded paths and independent scanning
+  of Flutter `audio_cache` for validated
+  `audio_<enclosureId>_<timestamp>.*` files. The read-only legacy SQLite
+  enclosure-to-article relationship and targeted Core/Miniflux historical article
+  recovery verify identity before adoption. Stored absolute paths alone are
+  insufficient; Flutter files remain untouched.
+- An HTTP **404/410** is terminal *only* when the historical article fetch is
+  conclusively 404/410 **and** a complete read-only legacy download scan proves
+  there is no matching local audio. Such old playback may be recorded as visibly
+  discarded. A matching local download, incomplete scan, identity mismatch or
+  transport failure remains **retryable**, never silently discarded.
+- Verified audio is copied via a **staged file into the separate native media
+  root before Core adoption**. Existing Core downloads win. Missing enclosure
+  identities remain retryable. Versioned, non-destructive verification/repair can
+  re-evaluate previously skipped playback or downloaded media, including extracted
+  artwork, duration and chapters, without resetting unrelated migration stages.
+- Finalization distinguishes verified `completed` from
+  `completed_with_skipped_items`; skipped playback/download IDs and original
+  unresolved reasons persist. A user-confirmed partial finish preserves successful
+  imports and records the waived retries rather than claiming a fully imported
+  history. Versioned repair/completion markers prevent repeated reopening of
+  already verified stages.
+
+None of these rules substitutes for the separate F-Droid signed Flutter-to-native
+upgrade gate or authorizes publication.
