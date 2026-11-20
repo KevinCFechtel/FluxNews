@@ -208,7 +208,7 @@ private struct IOSFluxNewsHeadlinesView: View {
         switch entry.model.state {
         case .ready, .empty:
             if entry.model.articles.isEmpty { Text(emptyStateText).foregroundStyle(.secondary) }
-            else { articleColumn(entry.model.latestArticles(limit: HeadlinesPresentation.capacity(for: family))) }
+            else { articleColumn(entry.model.latestArticles(limit: HeadlinesPresentation.iOSCapacity(for: family))) }
         case .noAccount: fallback("Open FluxNews to configure")
         case .awaitingSuccessfulSync: fallback("Waiting for first successful sync")
         case .missingSnapshot, .corruptSnapshot: fallback("No widget data available")
