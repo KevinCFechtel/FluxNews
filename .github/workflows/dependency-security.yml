@@ -1,15 +1,18 @@
 name: Dependency security (RustSec)
 
 on:
+  workflow_call:
+    inputs:
+      source_sha:
+        required: true
+        type: string
+      base_sha:
+        required: false
+        type: string
+        default: ""
   schedule:
     - cron: "13 6 * * *"
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "core/Cargo.lock"
-      - "core/Cargo.toml"
-      - "core/crates/**/Cargo.toml"
-      - ".github/workflows/dependency-security.yml"
   push:
     branches: [main]
     paths:
@@ -17,21 +20,29 @@ on:
       - "core/Cargo.toml"
       - "core/crates/**/Cargo.toml"
       - ".github/workflows/dependency-security.yml"
+      - "Build/rustsec_gate.py"
+      - "Build/test_rustsec_gate.py"
 
 permissions:
   contents: read
 
 concurrency:
-  group: dependency-security-${{ github.ref }}
+  group: dependency-security-${{ github.workflow }}-${{ inputs.source_sha != '' && github.run_id || github.ref }}
   cancel-in-progress: true
 
 jobs:
   rustsec:
-    name: Scan committed Cargo.lock for advisories
+    name: ${{ inputs.base_sha != '' && 'RustSec regression gate' || 'Strict RustSec audit' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test audit parsing, comparison and fail-closed behavior
+        run: python3 -m unittest discover -s Build -p test_rustsec_gate.py -v
       - uses: dtolnay/rust-toolchain@1.99.1
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '
@@ -39,11 +50,23 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: false
-          key: cargo-audit-v1
+          key: cargo-audit-0.23.0
       - name: Install locked cargo-audit
-        run: cargo install cargo-audit --locked
-      # Both vulnerabilities and ecosystem warnings (including unmaintained
-      # crates) block dependency acceptance and production releases.
-      # Do not ignore or suppress advisories merely to make this job green.
-      - name: Check committed Rust dependency tree (strict)
-        run: cargo audit --file core/Cargo.lock --deny warnings
+        run: |
+          cargo install cargo-audit --version 0.23.0 --locked
+          cargo audit --version | grep -F '0.23.0'
+      - name: Audit immutable source (regression for PRs, strict otherwise)
+        env:
+          BASE_SHA: ${{ inputs.base_sha }}
+        run: |
+          args=(--output "$RUNNER_TEMP/rustsec-report")
+          if [[ -n "$BASE_SHA" ]]; then args+=(--base "$BASE_SHA"); fi
+          python3 Build/rustsec_gate.py "${args[@]}"
+      - name: Preserve full audit reports and comparison
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rustsec-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/rustsec-report/
+          if-no-files-found: warn
+          retention-days: 14

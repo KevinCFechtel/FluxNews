@@ -12,6 +12,7 @@ on:
       - ".github/workflows/release-scripts.yml"
       - ".github/workflows/release.yml"
       - ".github/workflows/fdroid-native.yml"
+      - ".github/workflows/dependency-security.yml"
       - "fdroid/*.py"
 
 permissions:
@@ -57,5 +58,7 @@ jobs:
         run: bash Build/test-release-cli.sh
       - name: Check scoped release orchestration contract
         run: python3 Build/test-release-workflow-contract.py
+      - name: Check RustSec regression and fail-closed contracts offline
+        run: python3 -m unittest discover -s Build -p test_rustsec_gate.py -v
       - name: Check F-Droid metadata preparation offline
         run: python3 fdroid/test_prepare_native_recipe.py
