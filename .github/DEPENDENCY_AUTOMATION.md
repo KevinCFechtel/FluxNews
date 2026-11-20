@@ -17,6 +17,9 @@ daily/main-push/manual scans and strict exact-SHA release checks.
   upgrade PR or a concrete, dated blocker; do not rely on green CI as proof
   that using an old version is acceptable. Dependabot security updates
   may have independent behavior and must be reviewed immediately.
+- `resvg` and `usvg` share the `svg-rendering` Cargo group for every update
+  type, including breaking 0.x updates. They exchange `usvg::Tree` directly
+  and must be upgraded together; the routine Cargo group excludes both.
 - PRs compare base and proposed merge lockfiles against the **same** current
   advisory-database checkout. Existing findings remain visible but do not block
   independent improvements; new findings, additional affected versions, changed

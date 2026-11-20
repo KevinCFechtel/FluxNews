@@ -9,7 +9,15 @@ updates:
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 8
     groups:
+      # Parser and renderer exchange usvg::Tree; keep all update types together.
+      svg-rendering:
+        patterns:
+          - "resvg"
+          - "usvg"
       cargo-routine:
+        exclude-patterns:
+          - "resvg"
+          - "usvg"
         update-types:
           - "minor"
           - "patch"

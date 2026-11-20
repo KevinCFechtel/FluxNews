@@ -94,6 +94,7 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
                 ".github/workflows/release.yml",
                 ".github/workflows/fdroid-native.yml",
                 ".github/workflows/dependency-security.yml",
+                ".github/dependabot.yml",
             }
             or (path.startswith("fdroid/") and path.endswith(".py"))
         )
