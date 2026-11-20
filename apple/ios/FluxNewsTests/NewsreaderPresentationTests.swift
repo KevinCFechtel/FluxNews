@@ -7044,6 +7044,24 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertFalse(WidgetFamilyPolicy.headlineFamilies.contains(.systemSmall))
     }
 
+    func testIPadExtraLargeHeadlinesWidgetUsesSameArticleLimitAsLarge() throws {
+        XCTAssertEqual(HeadlinesPresentation.iOSCapacity(for: .systemMedium), 3)
+        XCTAssertEqual(HeadlinesPresentation.iOSCapacity(for: .systemLarge), 7)
+        XCTAssertEqual(HeadlinesPresentation.iOSCapacity(for: .systemExtraLarge), 7)
+        XCTAssertEqual(HeadlinesPresentation.capacity(for: .systemExtraLarge), 12)
+
+        let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let widgetSource = try String(
+            contentsOf: testsDirectory
+                .deletingLastPathComponent()
+                .appendingPathComponent("FluxNewsWidgets/FluxNewsWidgets.swift"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(widgetSource.contains(
+            "entry.model.latestArticles(limit: HeadlinesPresentation.iOSCapacity(for: family))"
+        ))
+    }
+
     func testWidgetSyncTimestampAcceptsCoreSQLiteAndISOFormats() throws {
         let sqlite = try XCTUnwrap(WidgetSyncTimestamp.date(from: "2026-09-23 18:42:15"))
         let iso = try XCTUnwrap(WidgetSyncTimestamp.date(from: "2026-09-23T18:42:15Z"))
