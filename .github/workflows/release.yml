@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: {ref: "${{ needs.preflight.outputs.sha }}"}
-      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@1.120.0
         with:
           components: rustfmt,clippy
       - name: Verify pinned Rust compiler
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: {ref: "${{ needs.preflight.outputs.sha }}"}
-      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@1.120.0
         with: {targets: "aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim"}
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '
@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: {ref: "${{ needs.preflight.outputs.sha }}"}
-      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@1.120.0
         with: {targets: "aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim"}
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '
@@ -112,7 +112,7 @@ jobs:
           "$cli" --sdk="$ANDROID_HOME" sdk install build-tools/37.0.0
           "$cli" --sdk="$ANDROID_HOME" sdk install ndk/29.0.14206865
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
-      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@1.120.0
         with: {targets: 'aarch64-linux-android,x86_64-linux-android'}
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '

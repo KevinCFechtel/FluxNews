@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
       - name: Test audit parsing, comparison and fail-closed behavior
         run: python3 -m unittest discover -s Build -p test_rustsec_gate.py -v
-      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@1.120.0
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '
       - name: Cache cargo audit binary and registry
