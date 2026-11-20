@@ -56,6 +56,12 @@ enum HeadlinesPresentation {
         default: 1
         }
     }
+
+    /// iPad's extra-large headlines widget must not show more articles than
+    /// the regular large widget. macOS retains its separate two-column capacity.
+    static func iOSCapacity(for family: WidgetFamily) -> Int {
+        min(capacity(for: family), capacity(for: .systemLarge))
+    }
 }
 
 enum WidgetContentScope: String, CaseIterable {
