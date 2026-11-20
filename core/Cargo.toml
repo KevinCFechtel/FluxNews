@@ -15,7 +15,7 @@ base64 = "0.23.1"
 html5ever = "0.40.1"
 jni = { version = "0.22.4", default-features = false }
 image = { version = "0.25.10", default-features = false, features = ["bmp", "gif", "ico", "jpeg", "png", "webp"] }
-resvg = { version = "0.48.1", default-features = false }
+resvg = { version = "0.49.0", default-features = false }
 rusqlite = { version = "0.43.0", features = ["bundled"] }
 rand = "0.10.3"
 serde = { version = "1.0.229", features = ["derive"] }
