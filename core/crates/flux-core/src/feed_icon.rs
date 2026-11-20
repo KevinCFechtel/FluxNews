@@ -632,6 +632,25 @@ mod tests {
         ));
     }
     #[test]
+    fn svg_inherited_current_color_reaches_the_rendered_icon() {
+        let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" color="#2468ac"><g color="inherit"><rect width="10" height="10" fill="currentColor"/></g></svg>"##;
+        let icon = render_svg(svg).unwrap();
+        assert_eq!(*icon.get_pixel(16, 16), image::Rgba([36, 104, 172, 255]));
+    }
+    #[test]
+    fn svg_css_after_xml_comments_and_mixed_case_type_is_preserved() {
+        let svg = br#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><style type="TEXT/CSS">rect { fill: red; }<!-- keep following rules -->rect { fill: blue; }</style><rect width="10" height="10"/></svg>"#;
+        let icon = render_svg(svg).unwrap();
+        assert_eq!(*icon.get_pixel(16, 16), image::Rgba([0, 0, 255, 255]));
+    }
+    #[test]
+    fn cyclic_svg_gradient_references_do_not_prevent_other_content_rendering() {
+        let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10"><defs><linearGradient id="start" xlink:href="#cycle-a"/><linearGradient id="cycle-a" xlink:href="#cycle-b"/><linearGradient id="cycle-b" xlink:href="#cycle-a"/></defs><rect width="5" height="10" fill="url(#start)"/><rect x="5" width="5" height="10" fill="blue"/></svg>"##;
+        let icon = render_svg(svg).unwrap();
+        assert_eq!(icon.dimensions(), (32, 32));
+        assert_eq!(*icon.get_pixel(24, 16), image::Rgba([0, 0, 255, 255]));
+    }
+    #[test]
     fn raster_icons_keep_existing_dark_fallback() {
         let mut png = Vec::new();
         DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, image::Rgba([0, 0, 0, 255])))

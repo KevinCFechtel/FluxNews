@@ -119,6 +119,9 @@ class CISelectionTests(unittest.TestCase):
     def test_leaf_workflow_change_only_affects_itself(self):
         self.assertEqual(selected(".github/workflows/rust.yml"), {"rust"})
 
+    def test_dependabot_group_changes_require_cheap_contracts(self):
+        self.assertEqual(selected(".github/dependabot.yml"), {"contracts"})
+
     def test_security_tooling_selects_audit_and_cheap_contracts_only(self):
         for path in ("Build/rustsec_gate.py", "Build/test_rustsec_gate.py",
                      ".github/workflows/dependency-security.yml"):

@@ -12,6 +12,7 @@ CONTRACT_CI = (ROOT / ".github/workflows/release-scripts.yml").read_text()
 GRADLE_WRAPPER = (ROOT / "android/gradle/wrapper/gradle-wrapper.properties").read_text()
 SECURITY = (ROOT / ".github/workflows/dependency-security.yml").read_text()
 CI = (ROOT / ".github/workflows/ci.yml").read_text()
+DEPENDABOT = (ROOT / ".github/dependabot.yml").read_text()
 
 def fail(message: str) -> None:
     print(f"release workflow contract: FAIL: {message}", file=sys.stderr)
@@ -20,6 +21,26 @@ def fail(message: str) -> None:
 def require(condition: bool, message: str) -> None:
     if not condition:
         fail(message)
+
+# Dependabot's breaking 0.x updates must use the same compatibility group as
+# routine SVG updates; the catch-all routine group must never claim either crate.
+cargo_updates = DEPENDABOT.split('package-ecosystem: "cargo"', 1)[-1].split(
+    '  - package-ecosystem:', 1
+)[0]
+svg_group = re.search(r"^      svg-rendering:\n((?:        .*\n)+)", cargo_updates, re.MULTILINE)
+routine_group = re.search(r"^      cargo-routine:\n((?:        .*\n)+)", cargo_updates, re.MULTILINE)
+require(svg_group is not None and routine_group is not None, "Cargo SVG/routine update groups are required")
+require("patterns:" in svg_group.group(1) and "update-types:" not in svg_group.group(1),
+        "SVG compatibility group must include every update type, including breaking 0.x changes")
+exclusions = re.search(
+    r"^        exclude-patterns:\n((?:          .*\n)+)", routine_group.group(1), re.MULTILINE
+)
+require(exclusions is not None, "Routine Cargo updates must exclude the coupled SVG crates")
+for package in ("resvg", "usvg"):
+    require(f'- "{package}"' in svg_group.group(1),
+            f"{package} must belong to the SVG compatibility group")
+    require(f'- "{package}"' in exclusions.group(1),
+            f"{package} must not be claimed by the routine group")
 
 def job_blocks(source: str) -> dict[str, str]:
     marker = "\njobs:\n"
