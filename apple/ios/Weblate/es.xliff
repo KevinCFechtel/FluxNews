@@ -1,0 +1,1974 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
+  <file original="Localizable.xcstrings" source-language="en" target-language="es" datatype="plaintext">
+    <header>
+      <tool tool-id="dev.kevincfechtel.fluxnews.weblate-handoff" tool-name="FluxNews Weblate handoff" tool-version="1" />
+    </header>
+    <body>
+      <trans-unit id=", starred" xml:space="preserve">
+        <source>, starred</source>
+        <target state="needs-l10n">, starred</target>
+      </trans-unit>
+      <trans-unit id="·" xml:space="preserve">
+        <source>·</source>
+        <target state="translated">·</target>
+      </trans-unit>
+      <trans-unit id="%@ · %@" xml:space="preserve">
+        <source>%1$@ · %2$@</source>
+        <target state="translated">%1$@ · %2$@</target>
+      </trans-unit>
+      <trans-unit id="%lld article
+|==|plural.one" xml:space="preserve">
+        <source>%lld article</source>
+        <target state="translated">%lld artículo</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld article
+|==|plural.other" xml:space="preserve">
+        <source>%lld articles</source>
+        <target state="translated">%lld artículos</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld article marked as read
+|==|plural.one" xml:space="preserve">
+        <source>%lld article marked as read</source>
+        <target state="needs-l10n">%lld article marked as read</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld article marked as read
+|==|plural.other" xml:space="preserve">
+        <source>%lld articles marked as read</source>
+        <target state="needs-l10n">%lld articles marked as read</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld audio
+|==|plural.one" xml:space="preserve">
+        <source>%lld audio</source>
+        <target state="translated">%lld audio</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld audio
+|==|plural.other" xml:space="preserve">
+        <source>%lld audio</source>
+        <target state="translated">%lld audios</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld downloaded" xml:space="preserve">
+        <source>%lld downloaded</source>
+        <target state="translated">%lld descargados</target>
+      </trans-unit>
+      <trans-unit id="%lld items
+|==|plural.one" xml:space="preserve">
+        <source>%lld item</source>
+        <target state="needs-l10n">%lld item</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld items
+|==|plural.other" xml:space="preserve">
+        <source>%lld items</source>
+        <target state="needs-l10n">%lld items</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld lines" xml:space="preserve">
+        <source>%lld lines</source>
+        <target state="needs-l10n">%lld lines</target>
+      </trans-unit>
+      <trans-unit id="%lld min" xml:space="preserve">
+        <source>%lld min</source>
+        <target state="translated">%lld min</target>
+      </trans-unit>
+      <trans-unit id="%lld new articles" xml:space="preserve">
+        <source>%lld new articles</source>
+        <target state="translated">%lld artículos nuevos</target>
+      </trans-unit>
+      <trans-unit id="%lld pending" xml:space="preserve">
+        <source>%lld pending</source>
+        <target state="translated">%lld pendientes</target>
+      </trans-unit>
+      <trans-unit id="%lld unread
+|==|plural.one" xml:space="preserve">
+        <source>%lld unread</source>
+        <target state="translated">%lld sin leer</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld unread
+|==|plural.other" xml:space="preserve">
+        <source>%lld unread</source>
+        <target state="translated">%lld sin leer</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld unread article
+|==|plural.one" xml:space="preserve">
+        <source>%lld unread article</source>
+        <target state="translated">%lld artículo sin leer</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld unread article
+|==|plural.other" xml:space="preserve">
+        <source>%lld unread articles</source>
+        <target state="translated">%lld artículos sin leer</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld visible records
+|==|plural.one" xml:space="preserve">
+        <source>%lld visible record</source>
+        <target state="needs-l10n">%lld visible record</target>
+        <note>Plural form: one</note>
+      </trans-unit>
+      <trans-unit id="%lld visible records
+|==|plural.other" xml:space="preserve">
+        <source>%lld visible records</source>
+        <target state="needs-l10n">%lld visible records</target>
+        <note>Plural form: other</note>
+      </trans-unit>
+      <trans-unit id="%lld%% downloaded" xml:space="preserve">
+        <source>%lld%% downloaded</source>
+        <target state="translated">%lld%% descargado</target>
+      </trans-unit>
+      <trans-unit id="•" xml:space="preserve">
+        <source>•</source>
+        <target state="translated">•</target>
+      </trans-unit>
+      <trans-unit id="© 2023 Kevin Fechtel" xml:space="preserve">
+        <source>© 2023 Kevin Fechtel</source>
+        <target state="needs-l10n">© 2023 Kevin Fechtel</target>
+      </trans-unit>
+      <trans-unit id="1 audio" xml:space="preserve">
+        <source>1 audio</source>
+        <target state="translated">1 audio</target>
+      </trans-unit>
+      <trans-unit id="1 new article" xml:space="preserve">
+        <source>1 new article</source>
+        <target state="translated">1 artículo nuevo</target>
+      </trans-unit>
+      <trans-unit id="10,000 characters" xml:space="preserve">
+        <source>10,000 characters</source>
+        <target state="translated">10.000 caracteres</target>
+      </trans-unit>
+      <trans-unit id="180 days" xml:space="preserve">
+        <source>180 days</source>
+        <target state="translated">180 días</target>
+      </trans-unit>
+      <trans-unit id="20,000 characters" xml:space="preserve">
+        <source>20,000 characters</source>
+        <target state="translated">20.000 caracteres</target>
+      </trans-unit>
+      <trans-unit id="30 days" xml:space="preserve">
+        <source>30 days</source>
+        <target state="translated">30 días</target>
+      </trans-unit>
+      <trans-unit id="365 days" xml:space="preserve">
+        <source>365 days</source>
+        <target state="translated">365 días</target>
+      </trans-unit>
+      <trans-unit id="5,000 characters" xml:space="preserve">
+        <source>5,000 characters</source>
+        <target state="translated">5.000 caracteres</target>
+      </trans-unit>
+      <trans-unit id="60 days" xml:space="preserve">
+        <source>60 days</source>
+        <target state="translated">60 días</target>
+      </trans-unit>
+      <trans-unit id="7 days" xml:space="preserve">
+        <source>7 days</source>
+        <target state="translated">7 días</target>
+      </trans-unit>
+      <trans-unit id="90 days" xml:space="preserve">
+        <source>90 days</source>
+        <target state="translated">90 días</target>
+      </trans-unit>
+      <trans-unit id="About" xml:space="preserve">
+        <source>About</source>
+        <target state="needs-l10n">About</target>
+      </trans-unit>
+      <trans-unit id="Account" xml:space="preserve">
+        <source>Account</source>
+        <target state="needs-l10n">Account</target>
+      </trans-unit>
+      <trans-unit id="Account data and feed preferences on this installation will be removed." xml:space="preserve">
+        <source>Account data and feed preferences on this installation will be removed.</source>
+        <target state="translated">Se eliminarán los datos de la cuenta y las preferencias de feeds de esta instalación.</target>
+      </trans-unit>
+      <trans-unit id="Account required" xml:space="preserve">
+        <source>Account required</source>
+        <target state="needs-l10n">Account required</target>
+      </trans-unit>
+      <trans-unit id="Action Bar" xml:space="preserve">
+        <source>Action Bar</source>
+        <target state="translated">Barra de acciones</target>
+      </trans-unit>
+      <trans-unit id="Action Failed" xml:space="preserve">
+        <source>Action Failed</source>
+        <target state="needs-l10n">Action Failed</target>
+      </trans-unit>
+      <trans-unit id="Actions not selected for direct display remain available under More when they are relevant to the current article scope." xml:space="preserve">
+        <source>Actions not selected for direct display remain available under More when they are relevant to the current article scope.</source>
+        <target state="needs-l10n">Actions not selected for direct display remain available under More when they are relevant to the current article scope.</target>
+      </trans-unit>
+      <trans-unit id="Add" xml:space="preserve">
+        <source>Add</source>
+        <target state="needs-l10n">Add</target>
+      </trans-unit>
+      <trans-unit id="Add audio news to your Listening List to find them here." xml:space="preserve">
+        <source>Add audio news to your Listening List to find them here.</source>
+        <target state="translated">Añade noticias con audio a tu lista de escucha para encontrarlas aquí.</target>
+      </trans-unit>
+      <trans-unit id="Add Category" xml:space="preserve">
+        <source>Add Category</source>
+        <target state="needs-l10n">Add Category</target>
+      </trans-unit>
+      <trans-unit id="Add Feed" xml:space="preserve">
+        <source>Add Feed</source>
+        <target state="translated">Añadir feed</target>
+      </trans-unit>
+      <trans-unit id="Add Header" xml:space="preserve">
+        <source>Add Header</source>
+        <target state="needs-l10n">Add Header</target>
+      </trans-unit>
+      <trans-unit id="Add to Listening List" xml:space="preserve">
+        <source>Add to Listening List</source>
+        <target state="translated">Añadir a la lista de escucha</target>
+      </trans-unit>
+      <trans-unit id="Added to Listening List" xml:space="preserve">
+        <source>Added to Listening List</source>
+        <target state="needs-l10n">Added to Listening List</target>
+      </trans-unit>
+      <trans-unit id="Additional Action" xml:space="preserve">
+        <source>Additional Action</source>
+        <target state="translated">Acción adicional</target>
+      </trans-unit>
+      <trans-unit id="All" xml:space="preserve">
+        <source>All</source>
+        <target state="needs-l10n">All</target>
+      </trans-unit>
+      <trans-unit id="All / Unread" xml:space="preserve">
+        <source>All / Unread</source>
+        <target state="needs-l10n">All / Unread</target>
+      </trans-unit>
+      <trans-unit id="All Articles" xml:space="preserve">
+        <source>All Articles</source>
+        <target state="needs-l10n">All Articles</target>
+      </trans-unit>
+      <trans-unit id="All Feeds" xml:space="preserve">
+        <source>All Feeds</source>
+        <target state="translated">Todos los feeds</target>
+      </trans-unit>
+      <trans-unit id="All locally downloaded audio files will be removed. Listening List items and playback progress will not be deleted." xml:space="preserve">
+        <source>All locally downloaded audio files will be removed. Listening List items and playback progress will not be deleted.</source>
+        <target state="needs-l10n">All locally downloaded audio files will be removed. Listening List items and playback progress will not be deleted.</target>
+      </trans-unit>
+      <trans-unit id="All News" xml:space="preserve">
+        <source>All News</source>
+        <target state="translated">Todas las Noticias</target>
+      </trans-unit>
+      <trans-unit id="Always available" xml:space="preserve">
+        <source>Always available</source>
+        <target state="needs-l10n">Always available</target>
+      </trans-unit>
+      <trans-unit id="Always shown" xml:space="preserve">
+        <source>Always shown</source>
+        <target state="needs-l10n">Always shown</target>
+      </trans-unit>
+      <trans-unit id="Any Network" xml:space="preserve">
+        <source>Any Network</source>
+        <target state="translated">Cualquier red</target>
+      </trans-unit>
+      <trans-unit id="API key" xml:space="preserve">
+        <source>API key</source>
+      </trans-unit>
+      <trans-unit id="API Key" xml:space="preserve">
+        <source>API Key</source>
+        <target state="needs-l10n">API Key</target>
+      </trans-unit>
+      <trans-unit id="App Group" xml:space="preserve">
+        <source>App Group</source>
+      </trans-unit>
+      <trans-unit id="Article Action" xml:space="preserve">
+        <source>Article Action</source>
+      </trans-unit>
+      <trans-unit id="Article image" xml:space="preserve">
+        <source>Article image</source>
+        <target state="needs-l10n">Article image</target>
+      </trans-unit>
+      <trans-unit id="Article List Actions" xml:space="preserve">
+        <source>Article List Actions</source>
+        <target state="translated">Acciones de la lista de artículos</target>
+      </trans-unit>
+      <trans-unit id="articles" xml:space="preserve">
+        <source>articles</source>
+        <target state="needs-l10n">articles</target>
+      </trans-unit>
+      <trans-unit id="Articles" xml:space="preserve">
+        <source>Articles</source>
+        <target state="needs-l10n">Articles</target>
+      </trans-unit>
+      <trans-unit id="Articles could not be loaded. Please try again." xml:space="preserve">
+        <source>Articles could not be loaded. Please try again.</source>
+        <target state="needs-l10n">Articles could not be loaded. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Audio" xml:space="preserve">
+        <source>Audio</source>
+        <target state="translated">Audio</target>
+      </trans-unit>
+      <trans-unit id="Audio %lld" xml:space="preserve">
+        <source>Audio %lld</source>
+        <target state="translated">Audio %lld</target>
+      </trans-unit>
+      <trans-unit id="Audio %lld of %lld" xml:space="preserve">
+        <source>Audio %lld of %lld</source>
+        <target state="translated">Audio %lld de %lld</target>
+      </trans-unit>
+      <trans-unit id="Automatic and manual downloads use the same network policy. Retention cleanup applies to downloaded media that is no longer protected by active playback or other Core media state." xml:space="preserve">
+        <source>Automatic and manual downloads use the same network policy. Retention cleanup applies to downloaded media that is no longer protected by active playback or other Core media state.</source>
+        <target state="translated">Las descargas automáticas y manuales usan la misma política de red. La limpieza por retención se aplica al contenido descargado que ya no está protegido por una reproducción activa u otro estado multimedia del Core.</target>
+      </trans-unit>
+      <trans-unit id="Automatically Download Audio" xml:space="preserve">
+        <source>Automatically Download Audio</source>
+        <target state="needs-l10n">Automatically Download Audio</target>
+      </trans-unit>
+      <trans-unit id="Automatically download Listening List audio" xml:space="preserve">
+        <source>Automatically download Listening List audio</source>
+        <target state="translated">Descargar automáticamente el audio de la lista de escucha</target>
+      </trans-unit>
+      <trans-unit id="Available Actions" xml:space="preserve">
+        <source>Available Actions</source>
+        <target state="translated">Acciones disponibles</target>
+      </trans-unit>
+      <trans-unit id="Back 15 seconds" xml:space="preserve">
+        <source>Back 15 seconds</source>
+        <target state="translated">Retroceder 15 segundos</target>
+      </trans-unit>
+      <trans-unit id="Background Sync" xml:space="preserve">
+        <source>Background Sync</source>
+        <target state="translated">Sincronización en segundo plano</target>
+      </trans-unit>
+      <trans-unit id="Background Sync setting could not be loaded. Please try again." xml:space="preserve">
+        <source>Background Sync setting could not be loaded. Please try again.</source>
+        <target state="translated">No se pudo cargar la configuración de sincronización en segundo plano. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Background Sync setting could not be saved. Please try again." xml:space="preserve">
+        <source>Background Sync setting could not be saved. Please try again.</source>
+        <target state="translated">No se pudo guardar la configuración de sincronización en segundo plano. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Backup Password" xml:space="preserve">
+        <source>Backup Password</source>
+        <target state="needs-l10n">Backup Password</target>
+      </trans-unit>
+      <trans-unit id="Base URL" xml:space="preserve">
+        <source>Base URL</source>
+      </trans-unit>
+      <trans-unit id="bookmarked" xml:space="preserve">
+        <source>bookmarked</source>
+        <target state="translated">Marcadas</target>
+      </trans-unit>
+      <trans-unit id="Bookmarks" xml:space="preserve">
+        <source>Bookmarks</source>
+        <target state="translated">Marcadores</target>
+      </trans-unit>
+      <trans-unit id="BSD 3-Clause License" xml:space="preserve">
+        <source>BSD 3-Clause License</source>
+        <target state="needs-l10n">BSD 3-Clause License</target>
+      </trans-unit>
+      <trans-unit id="Buffering…" xml:space="preserve">
+        <source>Buffering…</source>
+        <target state="translated">Almacenando en búfer…</target>
+      </trans-unit>
+      <trans-unit id="Build" xml:space="preserve">
+        <source>Build</source>
+        <target state="needs-l10n">Build</target>
+      </trans-unit>
+      <trans-unit id="Cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target state="needs-l10n">Cancel</target>
+      </trans-unit>
+      <trans-unit id="Cancel Download" xml:space="preserve">
+        <source>Cancel Download</source>
+        <target state="translated">Cancelar descarga</target>
+      </trans-unit>
+      <trans-unit id="Cancel sync" xml:space="preserve">
+        <source>Cancel sync</source>
+        <target state="translated">Cancelar sincronización</target>
+      </trans-unit>
+      <trans-unit id="Cancelling" xml:space="preserve">
+        <source>Cancelling</source>
+        <target state="translated">Cancelando</target>
+      </trans-unit>
+      <trans-unit id="Cancelling Download" xml:space="preserve">
+        <source>Cancelling Download</source>
+        <target state="translated">Cancelando descarga</target>
+      </trans-unit>
+      <trans-unit id="Category" xml:space="preserve">
+        <source>Category</source>
+        <target state="translated">Categoría</target>
+      </trans-unit>
+      <trans-unit id="Category name" xml:space="preserve">
+        <source>Category name</source>
+        <target state="needs-l10n">Category name</target>
+      </trans-unit>
+      <trans-unit id="Chapter %lld" xml:space="preserve">
+        <source>Chapter %lld</source>
+        <target state="translated">Capítulo %lld</target>
+      </trans-unit>
+      <trans-unit id="Chapter %lld of %lld" xml:space="preserve">
+        <source>Chapter %lld of %lld</source>
+        <target state="translated">Capítulo %lld de %lld</target>
+      </trans-unit>
+      <trans-unit id="Chapters" xml:space="preserve">
+        <source>Chapters</source>
+        <target state="translated">Chapters</target>
+      </trans-unit>
+      <trans-unit id="Choose a Feed" xml:space="preserve">
+        <source>Choose a Feed</source>
+        <target state="needs-l10n">Choose a Feed</target>
+      </trans-unit>
+      <trans-unit id="Choose audio" xml:space="preserve">
+        <source>Choose audio</source>
+        <target state="translated">Elegir audio</target>
+      </trans-unit>
+      <trans-unit id="Choose Backup to Restore" xml:space="preserve">
+        <source>Choose Backup to Restore</source>
+        <target state="needs-l10n">Choose Backup to Restore</target>
+      </trans-unit>
+      <trans-unit id="Choose news scope" xml:space="preserve">
+        <source>Choose news scope</source>
+        <target state="needs-l10n">Choose news scope</target>
+      </trans-unit>
+      <trans-unit id="Choose the actions shown on the article list. More is always available for secondary actions." xml:space="preserve">
+        <source>Choose the actions shown on the article list. More is always available for secondary actions.</source>
+        <target state="translated">Elige las acciones que se muestran en la lista de artículos. Más siempre está disponible para las acciones secundarias.</target>
+      </trans-unit>
+      <trans-unit id="Choose the FluxNews content this widget shows." xml:space="preserve">
+        <source>Choose the FluxNews content this widget shows.</source>
+        <target state="translated">Elige el contenido de FluxNews que muestra este widget.</target>
+      </trans-unit>
+      <trans-unit id="Clear" xml:space="preserve">
+        <source>Clear</source>
+        <target state="needs-l10n">Clear</target>
+      </trans-unit>
+      <trans-unit id="Clear Logs" xml:space="preserve">
+        <source>Clear Logs</source>
+        <target state="needs-l10n">Clear Logs</target>
+      </trans-unit>
+      <trans-unit id="Clear Logs?" xml:space="preserve">
+        <source>Clear Logs?</source>
+        <target state="needs-l10n">Clear Logs?</target>
+      </trans-unit>
+      <trans-unit id="Collapse category" xml:space="preserve">
+        <source>Collapse category</source>
+        <target state="needs-l10n">Collapse category</target>
+      </trans-unit>
+      <trans-unit id="Collapsed" xml:space="preserve">
+        <source>Collapsed</source>
+        <target state="translated">Contraído</target>
+      </trans-unit>
+      <trans-unit id="Comments available" xml:space="preserve">
+        <source>Comments available</source>
+      </trans-unit>
+      <trans-unit id="Compact" xml:space="preserve">
+        <source>Compact</source>
+        <target state="needs-l10n">Compact</target>
+      </trans-unit>
+      <trans-unit id="Compatible settings" xml:space="preserve">
+        <source>Compatible settings</source>
+      </trans-unit>
+      <trans-unit id="Completed" xml:space="preserve">
+        <source>Completed</source>
+        <target state="needs-l10n">Completed</target>
+      </trans-unit>
+      <trans-unit id="Completed with skipped items" xml:space="preserve">
+        <source>Completed with skipped items</source>
+        <target state="needs-l10n">Completed with skipped items</target>
+      </trans-unit>
+      <trans-unit id="Configuration Backup" xml:space="preserve">
+        <source>Configuration Backup</source>
+        <target state="needs-l10n">Configuration Backup</target>
+      </trans-unit>
+      <trans-unit id="Configuration backup prepared." xml:space="preserve">
+        <source>Configuration backup prepared.</source>
+        <target state="needs-l10n">Configuration backup prepared.</target>
+      </trans-unit>
+      <trans-unit id="Configuration restore rollback failed." xml:space="preserve">
+        <source>Configuration restore rollback failed.</source>
+        <target state="needs-l10n">Configuration restore rollback failed.</target>
+      </trans-unit>
+      <trans-unit id="Configuration restored and synchronized." xml:space="preserve">
+        <source>Configuration restored and synchronized.</source>
+        <target state="needs-l10n">Configuration restored and synchronized.</target>
+      </trans-unit>
+      <trans-unit id="Configuration restored. Synchronization will be retried later." xml:space="preserve">
+        <source>Configuration restored. Synchronization will be retried later.</source>
+        <target state="needs-l10n">Configuration restored. Synchronization will be retried later.</target>
+      </trans-unit>
+      <trans-unit id="Configure a Miniflux account before exporting a backup." xml:space="preserve">
+        <source>Configure a Miniflux account before exporting a backup.</source>
+        <target state="needs-l10n">Configure a Miniflux account before exporting a backup.</target>
+      </trans-unit>
+      <trans-unit id="Connection Details" xml:space="preserve">
+        <source>Connection Details</source>
+        <target state="needs-l10n">Connection Details</target>
+      </trans-unit>
+      <trans-unit id="Connection Diagnostics" xml:space="preserve">
+        <source>Connection Diagnostics</source>
+      </trans-unit>
+      <trans-unit id="Content" xml:space="preserve">
+        <source>Content</source>
+        <target state="translated">Contenido</target>
+      </trans-unit>
+      <trans-unit id="Continue" xml:space="preserve">
+        <source>Continue</source>
+        <target state="needs-l10n">Continue</target>
+      </trans-unit>
+      <trans-unit id="Continue in background" xml:space="preserve">
+        <source>Continue in background</source>
+        <target state="needs-l10n">Continue in background</target>
+      </trans-unit>
+      <trans-unit id="Copy Link" xml:space="preserve">
+        <source>Copy Link</source>
+        <target state="needs-l10n">Copy Link</target>
+      </trans-unit>
+      <trans-unit id="Copy Log Record" xml:space="preserve">
+        <source>Copy Log Record</source>
+        <target state="needs-l10n">Copy Log Record</target>
+      </trans-unit>
+      <trans-unit id="Could not add category. Please try again." xml:space="preserve">
+        <source>Could not add category. Please try again.</source>
+        <target state="needs-l10n">Could not add category. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Could not add feed. Please try again." xml:space="preserve">
+        <source>Could not add feed. Please try again.</source>
+        <target state="needs-l10n">Could not add feed. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Could not discover feeds. Please try again." xml:space="preserve">
+        <source>Could not discover feeds. Please try again.</source>
+        <target state="needs-l10n">Could not discover feeds. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Credentials checked" xml:space="preserve">
+        <source>Credentials checked</source>
+        <target state="needs-l10n">Credentials checked</target>
+      </trans-unit>
+      <trans-unit id="Custom headers" xml:space="preserve">
+        <source>Custom headers</source>
+      </trans-unit>
+      <trans-unit id="Custom headers must have unique valid names and cannot replace FluxNews transport headers." xml:space="preserve">
+        <source>Custom headers must have unique valid names and cannot replace FluxNews transport headers.</source>
+        <target state="needs-l10n">Custom headers must have unique valid names and cannot replace FluxNews transport headers.</target>
+      </trans-unit>
+      <trans-unit id="Custom HTTP Headers" xml:space="preserve">
+        <source>Custom HTTP Headers</source>
+        <target state="translated">Cabeceras HTTP personalizadas</target>
+      </trans-unit>
+      <trans-unit id="Debug" xml:space="preserve">
+        <source>Debug</source>
+        <target state="needs-l10n">Debug</target>
+      </trans-unit>
+      <trans-unit id="Debug Logging" xml:space="preserve">
+        <source>Debug Logging</source>
+        <target state="needs-l10n">Debug Logging</target>
+      </trans-unit>
+      <trans-unit id="Delete" xml:space="preserve">
+        <source>Delete</source>
+        <target state="needs-l10n">Delete</target>
+      </trans-unit>
+      <trans-unit id="Delete All Downloads" xml:space="preserve">
+        <source>Delete All Downloads</source>
+        <target state="needs-l10n">Delete All Downloads</target>
+      </trans-unit>
+      <trans-unit id="Delete All Downloads?" xml:space="preserve">
+        <source>Delete All Downloads?</source>
+        <target state="needs-l10n">Delete All Downloads?</target>
+      </trans-unit>
+      <trans-unit id="Delete Download" xml:space="preserve">
+        <source>Delete Download</source>
+        <target state="translated">Delete Download?</target>
+      </trans-unit>
+      <trans-unit id="Delete download after playback completes" xml:space="preserve">
+        <source>Delete download after playback completes</source>
+        <target state="translated">Eliminar la descarga al finalizar la reproducción</target>
+      </trans-unit>
+      <trans-unit id="Deleting downloads removes only local media files. Listening List items and playback progress are kept." xml:space="preserve">
+        <source>Deleting downloads removes only local media files. Listening List items and playback progress are kept.</source>
+        <target state="needs-l10n">Deleting downloads removes only local media files. Listening List items and playback progress are kept.</target>
+      </trans-unit>
+      <trans-unit id="Deleting Downloads…" xml:space="preserve">
+        <source>Deleting Downloads…</source>
+        <target state="needs-l10n">Deleting Downloads…</target>
+      </trans-unit>
+      <trans-unit id="Deletion Pending" xml:space="preserve">
+        <source>Deletion Pending</source>
+        <target state="translated">Eliminación pendiente</target>
+      </trans-unit>
+      <trans-unit id="Detail Rendering" xml:space="preserve">
+        <source>Detail Rendering</source>
+        <target state="needs-l10n">Detail Rendering</target>
+      </trans-unit>
+      <trans-unit id="Developer Diagnostics" xml:space="preserve">
+        <source>Developer Diagnostics</source>
+        <target state="needs-l10n">Developer Diagnostics</target>
+      </trans-unit>
+      <trans-unit id="Done" xml:space="preserve">
+        <source>Done</source>
+        <target state="needs-l10n">Done</target>
+      </trans-unit>
+      <trans-unit id="Download" xml:space="preserve">
+        <source>Download</source>
+        <target state="translated">Descargar</target>
+      </trans-unit>
+      <trans-unit id="Download Audio" xml:space="preserve">
+        <source>Download Audio</source>
+        <target state="translated">Download Audio</target>
+      </trans-unit>
+      <trans-unit id="Download cancelled" xml:space="preserve">
+        <source>Download cancelled</source>
+        <target state="needs-l10n">Download cancelled</target>
+      </trans-unit>
+      <trans-unit id="Download deletion requested" xml:space="preserve">
+        <source>Download deletion requested</source>
+        <target state="needs-l10n">Download deletion requested</target>
+      </trans-unit>
+      <trans-unit id="Download metadata" xml:space="preserve">
+        <source>Download metadata</source>
+      </trans-unit>
+      <trans-unit id="Download Network" xml:space="preserve">
+        <source>Download Network</source>
+        <target state="translated">Red de descarga</target>
+      </trans-unit>
+      <trans-unit id="Download requested" xml:space="preserve">
+        <source>Download requested</source>
+        <target state="needs-l10n">Download requested</target>
+      </trans-unit>
+      <trans-unit id="Downloaded Data" xml:space="preserve">
+        <source>Downloaded Data</source>
+        <target state="needs-l10n">Downloaded Data</target>
+      </trans-unit>
+      <trans-unit id="Downloaded data could not be loaded. Please try again." xml:space="preserve">
+        <source>Downloaded data could not be loaded. Please try again.</source>
+        <target state="needs-l10n">Downloaded data could not be loaded. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Downloaded Files" xml:space="preserve">
+        <source>Downloaded Files</source>
+        <target state="needs-l10n">Downloaded Files</target>
+      </trans-unit>
+      <trans-unit id="Downloading" xml:space="preserve">
+        <source>Downloading</source>
+        <target state="translated">Descargando</target>
+      </trans-unit>
+      <trans-unit id="Downloads" xml:space="preserve">
+        <source>Downloads</source>
+        <target state="translated">Descargas</target>
+      </trans-unit>
+      <trans-unit id="Downloads could not be deleted. Please try again." xml:space="preserve">
+        <source>Downloads could not be deleted. Please try again.</source>
+        <target state="needs-l10n">Downloads could not be deleted. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Duration" xml:space="preserve">
+        <source>Duration</source>
+        <target state="translated">Duración</target>
+      </trans-unit>
+      <trans-unit id="Each side supports up to two actions. The Full Swipe action is the outer action and runs when you deliberately swipe through the row." xml:space="preserve">
+        <source>Each side supports up to two actions. The Full Swipe action is the outer action and runs when you deliberately swipe through the row.</source>
+        <target state="translated">Cada lado admite hasta dos acciones. La acción de deslizamiento completo es la acción exterior y se ejecuta al deslizar deliberadamente toda la fila.</target>
+      </trans-unit>
+      <trans-unit id="Enter a backup password." xml:space="preserve">
+        <source>Enter a backup password.</source>
+        <target state="needs-l10n">Enter a backup password.</target>
+      </trans-unit>
+      <trans-unit id="Enter a valid HTTP or HTTPS Miniflux server URL." xml:space="preserve">
+        <source>Enter a valid HTTP or HTTPS Miniflux server URL.</source>
+        <target state="needs-l10n">Enter a valid HTTP or HTTPS Miniflux server URL.</target>
+      </trans-unit>
+      <trans-unit id="Enter both a Miniflux server URL and API key." xml:space="preserve">
+        <source>Enter both a Miniflux server URL and API key.</source>
+        <target state="needs-l10n">Enter both a Miniflux server URL and API key.</target>
+      </trans-unit>
+      <trans-unit id="Error" xml:space="preserve">
+        <source>Error</source>
+        <target state="needs-l10n">Error</target>
+      </trans-unit>
+      <trans-unit id="Expand category" xml:space="preserve">
+        <source>Expand category</source>
+        <target state="needs-l10n">Expand category</target>
+      </trans-unit>
+      <trans-unit id="Expanded" xml:space="preserve">
+        <source>Expanded</source>
+        <target state="translated">Expandido</target>
+      </trans-unit>
+      <trans-unit id="Export" xml:space="preserve">
+        <source>Export</source>
+        <target state="needs-l10n">Export</target>
+      </trans-unit>
+      <trans-unit id="Export Configuration Backup" xml:space="preserve">
+        <source>Export Configuration Backup</source>
+        <target state="needs-l10n">Export Configuration Backup</target>
+      </trans-unit>
+      <trans-unit id="Export Diagnostics" xml:space="preserve">
+        <source>Export Diagnostics</source>
+        <target state="needs-l10n">Export Diagnostics</target>
+      </trans-unit>
+      <trans-unit id="Feed" xml:space="preserve">
+        <source>Feed</source>
+        <target state="translated">Feed</target>
+      </trans-unit>
+      <trans-unit id="Feed preferences" xml:space="preserve">
+        <source>Feed preferences</source>
+      </trans-unit>
+      <trans-unit id="Feed Settings" xml:space="preserve">
+        <source>Feed Settings</source>
+        <target state="needs-l10n">Feed Settings</target>
+      </trans-unit>
+      <trans-unit id="Feed settings could not be loaded. Please try again." xml:space="preserve">
+        <source>Feed settings could not be loaded. Please try again.</source>
+        <target state="needs-l10n">Feed settings could not be loaded. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Feed settings could not be saved. Please try again." xml:space="preserve">
+        <source>Feed settings could not be saved. Please try again.</source>
+        <target state="needs-l10n">Feed settings could not be saved. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Feeds" xml:space="preserve">
+        <source>Feeds</source>
+        <target state="needs-l10n">Feeds</target>
+      </trans-unit>
+      <trans-unit id="Feeds &amp; startup view" xml:space="preserve">
+        <source>Feeds &amp; startup view</source>
+        <target state="needs-l10n">Feeds &amp; startup view</target>
+      </trans-unit>
+      <trans-unit id="Filter" xml:space="preserve">
+        <source>Filter</source>
+        <target state="needs-l10n">Filter</target>
+      </trans-unit>
+      <trans-unit id="Filter and Sort" xml:space="preserve">
+        <source>Filter and Sort</source>
+        <target state="needs-l10n">Filter and Sort</target>
+      </trans-unit>
+      <trans-unit id="Filter by Feed" xml:space="preserve">
+        <source>Filter by Feed</source>
+        <target state="needs-l10n">Filter by Feed</target>
+      </trans-unit>
+      <trans-unit id="Filter Listening List by feed" xml:space="preserve">
+        <source>Filter Listening List by feed</source>
+        <target state="translated">Filtrar la lista de escucha por feed</target>
+      </trans-unit>
+      <trans-unit id="Finish migration with skipped items?" xml:space="preserve">
+        <source>Finish migration with skipped items?</source>
+        <target state="needs-l10n">Finish migration with skipped items?</target>
+      </trans-unit>
+      <trans-unit id="Finish with unresolved items" xml:space="preserve">
+        <source>Finish with unresolved items</source>
+        <target state="needs-l10n">Finish with unresolved items</target>
+      </trans-unit>
+      <trans-unit id="Flux could not resolve a valid Miniflux entry URL." xml:space="preserve">
+        <source>Flux could not resolve a valid Miniflux entry URL.</source>
+        <target state="needs-l10n">Flux could not resolve a valid Miniflux entry URL.</target>
+      </trans-unit>
+      <trans-unit id="Flux Development Repository" xml:space="preserve">
+        <source>Flux Development Repository</source>
+        <target state="needs-l10n">Flux Development Repository</target>
+      </trans-unit>
+      <trans-unit id="Flux News" xml:space="preserve">
+        <source>Flux News</source>
+        <target state="needs-l10n">Flux News</target>
+      </trans-unit>
+      <trans-unit id="Flux News is a newsreader and podcast client for the Miniflux backend." xml:space="preserve">
+        <source>Flux News is a newsreader and podcast client for the Miniflux backend.</source>
+        <target state="needs-l10n">Flux News is a newsreader and podcast client for the Miniflux backend.</target>
+      </trans-unit>
+      <trans-unit id="Flux News is open source. The application project is moving to the FluxNews repository; the Flux repository remains available for the current native development history and shared Core." xml:space="preserve">
+        <source>Flux News is open source. The application project is moving to the FluxNews repository; the Flux repository remains available for the current native development history and shared Core.</source>
+        <target state="needs-l10n">Flux News is open source. The application project is moving to the FluxNews repository; the Flux repository remains available for the current native development history and shared Core.</target>
+      </trans-unit>
+      <trans-unit id="FluxNews" xml:space="preserve">
+        <source>FluxNews</source>
+        <target state="needs-l10n">FluxNews</target>
+      </trans-unit>
+      <trans-unit id="FluxNews · %lld %@" xml:space="preserve">
+        <source>FluxNews · %lld %@</source>
+        <target state="needs-l10n">FluxNews · %lld %@</target>
+      </trans-unit>
+      <trans-unit id="FluxNews could not start" xml:space="preserve">
+        <source>FluxNews could not start</source>
+        <target state="needs-l10n">FluxNews could not start</target>
+      </trans-unit>
+      <trans-unit id="FluxNews could not start. Check the account configuration and try again." xml:space="preserve">
+        <source>FluxNews could not start. Check the account configuration and try again.</source>
+        <target state="needs-l10n">FluxNews could not start. Check the account configuration and try again.</target>
+      </trans-unit>
+      <trans-unit id="FluxNews count and last successful sync." xml:space="preserve">
+        <source>FluxNews count and last successful sync.</source>
+        <target state="translated">Recuento de FluxNews y última sincronización correcta.</target>
+      </trans-unit>
+      <trans-unit id="FluxNews Headlines" xml:space="preserve">
+        <source>FluxNews Headlines</source>
+        <target state="translated">Titulares de FluxNews</target>
+      </trans-unit>
+      <trans-unit id="FluxNews is currently busy. Try the restore again." xml:space="preserve">
+        <source>FluxNews is currently busy. Try the restore again.</source>
+        <target state="needs-l10n">FluxNews is currently busy. Try the restore again.</target>
+      </trans-unit>
+      <trans-unit id="FluxNews notification permission is disabled. Enable notifications in iOS Settings to use System Notifications." xml:space="preserve">
+        <source>FluxNews notification permission is disabled. Enable notifications in iOS Settings to use System Notifications.</source>
+        <target state="translated">El permiso de notificaciones de FluxNews está desactivado. Activa las notificaciones en Ajustes de iOS para usar las notificaciones del sistema.</target>
+      </trans-unit>
+      <trans-unit id="FluxNews Repository" xml:space="preserve">
+        <source>FluxNews Repository</source>
+        <target state="needs-l10n">FluxNews Repository</target>
+      </trans-unit>
+      <trans-unit id="FluxNews Status" xml:space="preserve">
+        <source>FluxNews Status</source>
+        <target state="translated">Estado de FluxNews</target>
+      </trans-unit>
+      <trans-unit id="FluxNews Widget" xml:space="preserve">
+        <source>FluxNews Widget</source>
+        <target state="translated">Widget de FluxNews</target>
+      </trans-unit>
+      <trans-unit id="Forever" xml:space="preserve">
+        <source>Forever</source>
+        <target state="translated">Siempre</target>
+      </trans-unit>
+      <trans-unit id="Forward 30 seconds" xml:space="preserve">
+        <source>Forward 30 seconds</source>
+        <target state="translated">Avanzar 30 segundos</target>
+      </trans-unit>
+      <trans-unit id="Full Swipe" xml:space="preserve">
+        <source>Full Swipe</source>
+        <target state="translated">Deslizamiento completo</target>
+      </trans-unit>
+      <trans-unit id="Full Swipe: %@" xml:space="preserve">
+        <source>Full Swipe: %@</source>
+        <target state="translated">Deslizamiento completo: %@</target>
+      </trans-unit>
+      <trans-unit id="Header name" xml:space="preserve">
+        <source>Header name</source>
+        <target state="needs-l10n">Header name</target>
+      </trans-unit>
+      <trans-unit id="Header value" xml:space="preserve">
+        <source>Header value</source>
+        <target state="needs-l10n">Header value</target>
+      </trans-unit>
+      <trans-unit id="Hide empty feeds" xml:space="preserve">
+        <source>Hide empty feeds</source>
+        <target state="needs-l10n">Hide empty feeds</target>
+      </trans-unit>
+      <trans-unit id="Immediate article sync setting could not be loaded. Please try again." xml:space="preserve">
+        <source>Immediate article sync setting could not be loaded. Please try again.</source>
+        <target state="translated">No se pudo cargar la configuración de sincronización inmediata de artículos. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Immediate article sync setting could not be saved. Please try again." xml:space="preserve">
+        <source>Immediate article sync setting could not be saved. Please try again.</source>
+        <target state="translated">No se pudo guardar la configuración de sincronización inmediata de artículos. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Import from FluxNews" xml:space="preserve">
+        <source>Import from FluxNews</source>
+        <target state="needs-l10n">Import from FluxNews</target>
+      </trans-unit>
+      <trans-unit id="Info" xml:space="preserve">
+        <source>Info</source>
+        <target state="needs-l10n">Info</target>
+      </trans-unit>
+      <trans-unit id="Info, warning and error records are kept even when Debug Logging is off. Debug and trace records are stored only while Debug Logging is enabled." xml:space="preserve">
+        <source>Info, warning and error records are kept even when Debug Logging is off. Debug and trace records are stored only while Debug Logging is enabled.</source>
+        <target state="needs-l10n">Info, warning and error records are kept even when Debug Logging is off. Debug and trace records are stored only while Debug Logging is enabled.</target>
+      </trans-unit>
+      <trans-unit id="Initialized" xml:space="preserve">
+        <source>Initialized</source>
+        <target state="needs-l10n">Initialized</target>
+      </trans-unit>
+      <trans-unit id="Inner: %@ · Full Swipe: %@" xml:space="preserve">
+        <source>Inner: %@ · Full Swipe: %@</source>
+        <target state="translated">Interior: %1$@ · Deslizamiento completo: %2$@</target>
+      </trans-unit>
+      <trans-unit id="Keep Downloads" xml:space="preserve">
+        <source>Keep Downloads</source>
+        <target state="translated">Conservar descargas</target>
+      </trans-unit>
+      <trans-unit id="Keep read articles" xml:space="preserve">
+        <source>Keep read articles</source>
+        <target state="translated">Conservar artículos leídos</target>
+      </trans-unit>
+      <trans-unit id="Keep retrying" xml:space="preserve">
+        <source>Keep retrying</source>
+        <target state="needs-l10n">Keep retrying</target>
+      </trans-unit>
+      <trans-unit id="Keychain credentials" xml:space="preserve">
+        <source>Keychain credentials</source>
+      </trans-unit>
+      <trans-unit id="Last sync: %@" xml:space="preserve">
+        <source>Last sync: %@</source>
+        <target state="translated">Última sincronización: %@</target>
+      </trans-unit>
+      <trans-unit id="Leading Side" xml:space="preserve">
+        <source>Leading Side</source>
+        <target state="translated">Lado inicial</target>
+      </trans-unit>
+      <trans-unit id="Legacy cache" xml:space="preserve">
+        <source>Legacy cache</source>
+      </trans-unit>
+      <trans-unit id="Legacy database" xml:space="preserve">
+        <source>Legacy database</source>
+      </trans-unit>
+      <trans-unit id="Legacy downloads" xml:space="preserve">
+        <source>Legacy downloads</source>
+      </trans-unit>
+      <trans-unit id="Legacy migration feasibility" xml:space="preserve">
+        <source>Legacy migration feasibility</source>
+      </trans-unit>
+      <trans-unit id="Level" xml:space="preserve">
+        <source>Level</source>
+        <target state="needs-l10n">Level</target>
+      </trans-unit>
+      <trans-unit id="Link copied" xml:space="preserve">
+        <source>Link copied</source>
+        <target state="needs-l10n">Link copied</target>
+      </trans-unit>
+      <trans-unit id="Listening List" xml:space="preserve">
+        <source>Listening List</source>
+        <target state="needs-l10n">Listening List</target>
+      </trans-unit>
+      <trans-unit id="Listening List actions" xml:space="preserve">
+        <source>Listening List actions</source>
+        <target state="translated">Acciones de la lista de escucha</target>
+      </trans-unit>
+      <trans-unit id="Listening List is Empty" xml:space="preserve">
+        <source>Listening List is Empty</source>
+        <target state="translated">La lista de escucha está vacía</target>
+      </trans-unit>
+      <trans-unit id="Loading article..." xml:space="preserve">
+        <source>Loading article...</source>
+        <target state="needs-l10n">Loading article...</target>
+      </trans-unit>
+      <trans-unit id="Loading article…" xml:space="preserve">
+        <source>Loading article…</source>
+        <target state="translated">Cargando artículo…</target>
+      </trans-unit>
+      <trans-unit id="Loading articles" xml:space="preserve">
+        <source>Loading articles</source>
+        <target state="needs-l10n">Loading articles</target>
+      </trans-unit>
+      <trans-unit id="Loading…" xml:space="preserve">
+        <source>Loading…</source>
+        <target state="translated">loading…</target>
+      </trans-unit>
+      <trans-unit id="Local state rebuilt." xml:space="preserve">
+        <source>Local state rebuilt.</source>
+        <target state="translated">Estado local reconstruido.</target>
+      </trans-unit>
+      <trans-unit id="Local state was cleared, but synchronization could not be completed." xml:space="preserve">
+        <source>Local state was cleared, but synchronization could not be completed.</source>
+        <target state="translated">Se borró el estado local, pero no se pudo completar la sincronización.</target>
+      </trans-unit>
+      <trans-unit id="Log Viewer" xml:space="preserve">
+        <source>Log Viewer</source>
+        <target state="needs-l10n">Log Viewer</target>
+      </trans-unit>
+      <trans-unit id="Logging" xml:space="preserve">
+        <source>Logging</source>
+        <target state="needs-l10n">Logging</target>
+      </trans-unit>
+      <trans-unit id="Mark All as Read" xml:space="preserve">
+        <source>Mark All as Read</source>
+        <target state="needs-l10n">Mark All as Read</target>
+      </trans-unit>
+      <trans-unit id="Mark All as Read and Continue" xml:space="preserve">
+        <source>Mark All as Read and Continue</source>
+        <target state="needs-l10n">Mark All as Read and Continue</target>
+      </trans-unit>
+      <trans-unit id="Mark as Read" xml:space="preserve">
+        <source>Mark as Read</source>
+        <target state="needs-l10n">Mark as Read</target>
+      </trans-unit>
+      <trans-unit id="Mark as Unread" xml:space="preserve">
+        <source>Mark as Unread</source>
+        <target state="needs-l10n">Mark as Unread</target>
+      </trans-unit>
+      <trans-unit id="Mark read on scrollover" xml:space="preserve">
+        <source>Mark read on scrollover</source>
+        <target state="needs-l10n">Mark read on scrollover</target>
+      </trans-unit>
+      <trans-unit id="Marks all unread articles in this scope as read." xml:space="preserve">
+        <source>Marks all unread articles in this scope as read.</source>
+        <target state="translated">Marca como leídos todos los artículos no leídos de este ámbito.</target>
+      </trans-unit>
+      <trans-unit id="Media" xml:space="preserve">
+        <source>Media</source>
+        <target state="translated">Multimedia</target>
+      </trans-unit>
+      <trans-unit id="Media artwork" xml:space="preserve">
+        <source>Media artwork</source>
+        <target state="translated">Carátula multimedia</target>
+      </trans-unit>
+      <trans-unit id="Media is not available yet." xml:space="preserve">
+        <source>Media is not available yet.</source>
+        <target state="needs-l10n">Media is not available yet.</target>
+      </trans-unit>
+      <trans-unit id="Media setting could not be saved. Please try again." xml:space="preserve">
+        <source>Media setting could not be saved. Please try again.</source>
+        <target state="translated">No se pudo guardar el ajuste multimedia. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Media settings could not be loaded. Please try again." xml:space="preserve">
+        <source>Media settings could not be loaded. Please try again.</source>
+        <target state="translated">No se pudieron cargar los ajustes multimedia. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Migration complete" xml:space="preserve">
+        <source>Migration complete</source>
+        <target state="needs-l10n">Migration complete</target>
+      </trans-unit>
+      <trans-unit id="Miniflux" xml:space="preserve">
+        <source>Miniflux</source>
+        <target state="needs-l10n">Miniflux</target>
+      </trans-unit>
+      <trans-unit id="Miniflux Account" xml:space="preserve">
+        <source>Miniflux Account</source>
+        <target state="needs-l10n">Miniflux Account</target>
+      </trans-unit>
+      <trans-unit id="Miniflux did not find a subscription for this URL." xml:space="preserve">
+        <source>Miniflux did not find a subscription for this URL.</source>
+        <target state="needs-l10n">Miniflux did not find a subscription for this URL.</target>
+      </trans-unit>
+      <trans-unit id="Miniflux Project" xml:space="preserve">
+        <source>Miniflux Project</source>
+        <target state="needs-l10n">Miniflux Project</target>
+      </trans-unit>
+      <trans-unit id="Miniflux rejected the API key." xml:space="preserve">
+        <source>Miniflux rejected the API key.</source>
+        <target state="needs-l10n">Miniflux rejected the API key.</target>
+      </trans-unit>
+      <trans-unit id="Miniflux server returned an unexpected response." xml:space="preserve">
+        <source>Miniflux server returned an unexpected response.</source>
+      </trans-unit>
+      <trans-unit id="Miniflux Version" xml:space="preserve">
+        <source>Miniflux Version</source>
+        <target state="needs-l10n">Miniflux Version</target>
+      </trans-unit>
+      <trans-unit id="Miniflux will look for available feeds at this address." xml:space="preserve">
+        <source>Miniflux will look for available feeds at this address.</source>
+        <target state="translated">Miniflux buscará feeds disponibles en esta dirección.</target>
+      </trans-unit>
+      <trans-unit id="More" xml:space="preserve">
+        <source>More</source>
+        <target state="needs-l10n">More</target>
+      </trans-unit>
+      <trans-unit id="Multiple audio files" xml:space="preserve">
+        <source>Multiple audio files</source>
+        <target state="needs-l10n">Multiple audio files</target>
+      </trans-unit>
+      <trans-unit id="Navigation" xml:space="preserve">
+        <source>Navigation</source>
+        <target state="needs-l10n">Navigation</target>
+      </trans-unit>
+      <trans-unit id="Never" xml:space="preserve">
+        <source>Never</source>
+        <target state="translated">never</target>
+      </trans-unit>
+      <trans-unit id="New articles available" xml:space="preserve">
+        <source>New articles available</source>
+        <target state="needs-l10n">New articles available</target>
+      </trans-unit>
+      <trans-unit id="Newest First" xml:space="preserve">
+        <source>Newest First</source>
+        <target state="needs-l10n">Newest First</target>
+      </trans-unit>
+      <trans-unit id="News" xml:space="preserve">
+        <source>News</source>
+        <target state="needs-l10n">News</target>
+      </trans-unit>
+      <trans-unit id="News could not be synced. Please try again." xml:space="preserve">
+        <source>News could not be synced. Please try again.</source>
+        <target state="needs-l10n">News could not be synced. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="News syncing…" xml:space="preserve">
+        <source>News syncing…</source>
+        <target state="needs-l10n">News syncing…</target>
+      </trans-unit>
+      <trans-unit id="No article selected" xml:space="preserve">
+        <source>No article selected</source>
+        <target state="needs-l10n">No article selected</target>
+      </trans-unit>
+      <trans-unit id="No articles" xml:space="preserve">
+        <source>No articles</source>
+        <target state="needs-l10n">No articles</target>
+      </trans-unit>
+      <trans-unit id="No audio items available." xml:space="preserve">
+        <source>No audio items available.</source>
+        <target state="needs-l10n">No audio items available.</target>
+      </trans-unit>
+      <trans-unit id="No bookmarks" xml:space="preserve">
+        <source>No bookmarks</source>
+        <target state="translated">Sin marcadores</target>
+      </trans-unit>
+      <trans-unit id="No Log Records" xml:space="preserve">
+        <source>No Log Records</source>
+        <target state="needs-l10n">No Log Records</target>
+      </trans-unit>
+      <trans-unit id="No News" xml:space="preserve">
+        <source>No News</source>
+        <target state="needs-l10n">No News</target>
+      </trans-unit>
+      <trans-unit id="No results" xml:space="preserve">
+        <source>No results</source>
+      </trans-unit>
+      <trans-unit id="No third-party integration is configured in Miniflux" xml:space="preserve">
+        <source>No third-party integration is configured in Miniflux</source>
+        <target state="needs-l10n">No third-party integration is configured in Miniflux</target>
+      </trans-unit>
+      <trans-unit id="No unread articles" xml:space="preserve">
+        <source>No unread articles</source>
+        <target state="needs-l10n">No unread articles</target>
+      </trans-unit>
+      <trans-unit id="No unread news" xml:space="preserve">
+        <source>No unread news</source>
+        <target state="translated">No hay noticias sin leer</target>
+      </trans-unit>
+      <trans-unit id="No widget data available" xml:space="preserve">
+        <source>No widget data available</source>
+        <target state="translated">No hay datos de widget disponibles</target>
+      </trans-unit>
+      <trans-unit id="None" xml:space="preserve">
+        <source>None</source>
+        <target state="translated">None</target>
+      </trans-unit>
+      <trans-unit id="Not a valid FluxNews backup." xml:space="preserve">
+        <source>Not a valid FluxNews backup.</source>
+        <target state="needs-l10n">Not a valid FluxNews backup.</target>
+      </trans-unit>
+      <trans-unit id="Not played yet" xml:space="preserve">
+        <source>Not played yet</source>
+        <target state="needs-l10n">Not played yet</target>
+      </trans-unit>
+      <trans-unit id="Now Playing" xml:space="preserve">
+        <source>Now Playing</source>
+        <target state="translated">Reproduciendo ahora</target>
+      </trans-unit>
+      <trans-unit id="OK" xml:space="preserve">
+        <source>OK</source>
+        <target state="needs-l10n">OK</target>
+      </trans-unit>
+      <trans-unit id="Oldest First" xml:space="preserve">
+        <source>Oldest First</source>
+        <target state="needs-l10n">Oldest First</target>
+      </trans-unit>
+      <trans-unit id="Open %@ in FluxNews" xml:space="preserve">
+        <source>Open %@ in FluxNews</source>
+        <target state="translated">Abrir %@ en FluxNews</target>
+      </trans-unit>
+      <trans-unit id="Open article" xml:space="preserve">
+        <source>Open article</source>
+        <target state="needs-l10n">Open article</target>
+      </trans-unit>
+      <trans-unit id="Open Comments" xml:space="preserve">
+        <source>Open Comments</source>
+        <target state="needs-l10n">Open Comments</target>
+      </trans-unit>
+      <trans-unit id="Open FluxNews to configure" xml:space="preserve">
+        <source>Open FluxNews to configure</source>
+        <target state="translated">Abre FluxNews para configurar</target>
+      </trans-unit>
+      <trans-unit id="Open FluxNews to refresh widget data" xml:space="preserve">
+        <source>Open FluxNews to refresh widget data</source>
+        <target state="needs-l10n">Open FluxNews to refresh widget data</target>
+      </trans-unit>
+      <trans-unit id="Open image" xml:space="preserve">
+        <source>Open image</source>
+        <target state="needs-l10n">Open image</target>
+      </trans-unit>
+      <trans-unit id="Open in Miniflux" xml:space="preserve">
+        <source>Open in Miniflux</source>
+        <target state="needs-l10n">Open in Miniflux</target>
+      </trans-unit>
+      <trans-unit id="Open in Reader" xml:space="preserve">
+        <source>Open in Reader</source>
+        <target state="needs-l10n">Open in Reader</target>
+      </trans-unit>
+      <trans-unit id="Open Original" xml:space="preserve">
+        <source>Open Original</source>
+        <target state="needs-l10n">Open Original</target>
+      </trans-unit>
+      <trans-unit id="Open Source" xml:space="preserve">
+        <source>Open Source</source>
+        <target state="needs-l10n">Open Source</target>
+      </trans-unit>
+      <trans-unit id="Opens the article" xml:space="preserve">
+        <source>Opens the article</source>
+        <target state="needs-l10n">Opens the article</target>
+      </trans-unit>
+      <trans-unit id="Original link" xml:space="preserve">
+        <source>Original link</source>
+        <target state="translated">Enlace original</target>
+      </trans-unit>
+      <trans-unit id="Pause" xml:space="preserve">
+        <source>Pause</source>
+        <target state="translated">Pause</target>
+      </trans-unit>
+      <trans-unit id="Pending items are retried after synchronization." xml:space="preserve">
+        <source>Pending items are retried after synchronization.</source>
+        <target state="needs-l10n">Pending items are retried after synchronization.</target>
+      </trans-unit>
+      <trans-unit id="Play" xml:space="preserve">
+        <source>Play</source>
+        <target state="translated">Play</target>
+      </trans-unit>
+      <trans-unit id="Playback progress" xml:space="preserve">
+        <source>Playback progress</source>
+        <target state="translated">Progreso de reproducción</target>
+      </trans-unit>
+      <trans-unit id="Playback speed" xml:space="preserve">
+        <source>Playback speed</source>
+        <target state="translated">Velocidad de reproducción</target>
+      </trans-unit>
+      <trans-unit id="Playback start failed" xml:space="preserve">
+        <source>Playback start failed</source>
+        <target state="translated">No se pudo iniciar la reproducción</target>
+      </trans-unit>
+      <trans-unit id="Player" xml:space="preserve">
+        <source>Player</source>
+        <target state="translated">Reproductor</target>
+      </trans-unit>
+      <trans-unit id="Prepare Backup" xml:space="preserve">
+        <source>Prepare Backup</source>
+        <target state="needs-l10n">Prepare Backup</target>
+      </trans-unit>
+      <trans-unit id="Prepare Diagnostics Export" xml:space="preserve">
+        <source>Prepare Diagnostics Export</source>
+        <target state="needs-l10n">Prepare Diagnostics Export</target>
+      </trans-unit>
+      <trans-unit id="Preparing Download" xml:space="preserve">
+        <source>Preparing Download</source>
+        <target state="translated">Preparando descarga</target>
+      </trans-unit>
+      <trans-unit id="Presentation" xml:space="preserve">
+        <source>Presentation</source>
+        <target state="needs-l10n">Presentation</target>
+      </trans-unit>
+      <trans-unit id="Preview lines" xml:space="preserve">
+        <source>Preview lines</source>
+        <target state="needs-l10n">Preview lines</target>
+      </trans-unit>
+      <trans-unit id="Previous data has been checked." xml:space="preserve">
+        <source>Previous data has been checked.</source>
+        <target state="needs-l10n">Previous data has been checked.</target>
+      </trans-unit>
+      <trans-unit id="Production identity" xml:space="preserve">
+        <source>Production identity</source>
+      </trans-unit>
+      <trans-unit id="Publication Date" xml:space="preserve">
+        <source>Publication Date</source>
+        <target state="translated">Fecha de publicación</target>
+      </trans-unit>
+      <trans-unit id="Read" xml:space="preserve">
+        <source>Read</source>
+        <target state="needs-l10n">Read</target>
+      </trans-unit>
+      <trans-unit id="Read / Unread" xml:space="preserve">
+        <source>Read / Unread</source>
+        <target state="translated">Leído / No leído</target>
+      </trans-unit>
+      <trans-unit id="Read article retention controls how long synchronized read items remain in local history. The Reader detail limit controls how much article text the Core keeps when a feed uses truncated Reader content." xml:space="preserve">
+        <source>Read article retention controls how long synchronized read items remain in local history. The Reader detail limit controls how much article text the Core keeps when a feed uses truncated Reader content.</source>
+        <target state="translated">La retención de artículos leídos controla cuánto tiempo permanecen en el historial local los elementos sincronizados ya leídos. El límite de detalle del lector controla cuánto texto conserva el Core cuando un feed usa contenido del lector truncado.</target>
+      </trans-unit>
+      <trans-unit id="Read article retention setting could not be loaded. Please try again." xml:space="preserve">
+        <source>Read article retention setting could not be loaded. Please try again.</source>
+        <target state="translated">No se pudo cargar la configuración de retención de artículos leídos. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Read article retention setting could not be saved. Please try again." xml:space="preserve">
+        <source>Read article retention setting could not be saved. Please try again.</source>
+        <target state="translated">No se pudo guardar la configuración de retención de artículos leídos. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Read Filter" xml:space="preserve">
+        <source>Read Filter</source>
+        <target state="needs-l10n">Read Filter</target>
+      </trans-unit>
+      <trans-unit id="Read-only discovery; no legacy data is imported or modified." xml:space="preserve">
+        <source>Read-only discovery; no legacy data is imported or modified.</source>
+        <target state="translated">Detección de solo lectura; no se importa ni modifica ningún dato heredado.</target>
+      </trans-unit>
+      <trans-unit id="Read, starred" xml:space="preserve">
+        <source>Read, starred</source>
+        <target state="needs-l10n">Read, starred</target>
+      </trans-unit>
+      <trans-unit id="Reader" xml:space="preserve">
+        <source>Reader</source>
+        <target state="translated">Lector</target>
+      </trans-unit>
+      <trans-unit id="Reader detail limit" xml:space="preserve">
+        <source>Reader detail limit</source>
+        <target state="translated">Límite de detalle del lector</target>
+      </trans-unit>
+      <trans-unit id="Reader detail limit setting could not be loaded. Please try again." xml:space="preserve">
+        <source>Reader detail limit setting could not be loaded. Please try again.</source>
+        <target state="translated">No se pudo cargar el límite de detalle del lector. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Reader detail limit setting could not be saved. Please try again." xml:space="preserve">
+        <source>Reader detail limit setting could not be saved. Please try again.</source>
+        <target state="translated">No se pudo guardar el límite de detalle del lector. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="Reading time" xml:space="preserve">
+        <source>Reading time</source>
+        <target state="translated">Tiempo de lectura</target>
+      </trans-unit>
+      <trans-unit id="Ready" xml:space="preserve">
+        <source>Ready</source>
+        <target state="needs-l10n">Ready</target>
+      </trans-unit>
+      <trans-unit id="Rebuild" xml:space="preserve">
+        <source>Rebuild</source>
+        <target state="translated">Reconstruir</target>
+      </trans-unit>
+      <trans-unit id="Rebuild discards synchronized local data and downloads it again from Miniflux while keeping this account and your settings. Remove Account also removes account-bound data and credentials." xml:space="preserve">
+        <source>Rebuild discards synchronized local data and downloads it again from Miniflux while keeping this account and your settings. Remove Account also removes account-bound data and credentials.</source>
+        <target state="translated">Reconstruir descarta los datos locales sincronizados y los vuelve a descargar desde Miniflux, conservando esta cuenta y tus ajustes. Eliminar cuenta también elimina los datos y credenciales asociados a la cuenta.</target>
+      </trans-unit>
+      <trans-unit id="Rebuild Local State" xml:space="preserve">
+        <source>Rebuild Local State</source>
+        <target state="translated">Reconstruir estado local</target>
+      </trans-unit>
+      <trans-unit id="Rebuild Local State?" xml:space="preserve">
+        <source>Rebuild Local State?</source>
+        <target state="translated">¿Reconstruir el estado local?</target>
+      </trans-unit>
+      <trans-unit id="Rebuilding Local State…" xml:space="preserve">
+        <source>Rebuilding Local State…</source>
+        <target state="translated">Reconstruyendo estado local…</target>
+      </trans-unit>
+      <trans-unit id="Recently Added" xml:space="preserve">
+        <source>Recently Added</source>
+        <target state="translated">Añadidos recientemente</target>
+      </trans-unit>
+      <trans-unit id="Recoverable startup error" xml:space="preserve">
+        <source>Recoverable startup error</source>
+        <target state="needs-l10n">Recoverable startup error</target>
+      </trans-unit>
+      <trans-unit id="Refresh" xml:space="preserve">
+        <source>Refresh</source>
+        <target state="needs-l10n">Refresh</target>
+      </trans-unit>
+      <trans-unit id="Remove" xml:space="preserve">
+        <source>Remove</source>
+        <target state="translated">Eliminar</target>
+      </trans-unit>
+      <trans-unit id="Remove Account" xml:space="preserve">
+        <source>Remove Account</source>
+        <target state="needs-l10n">Remove Account</target>
+      </trans-unit>
+      <trans-unit id="Remove articles when read" xml:space="preserve">
+        <source>Remove articles when read</source>
+        <target state="needs-l10n">Remove articles when read</target>
+      </trans-unit>
+      <trans-unit id="Remove completed items from Listening List" xml:space="preserve">
+        <source>Remove completed items from Listening List</source>
+        <target state="translated">Quitar elementos completados de la lista de escucha</target>
+      </trans-unit>
+      <trans-unit id="Remove from Listening List" xml:space="preserve">
+        <source>Remove from Listening List</source>
+        <target state="translated">Quitar de la lista de escucha</target>
+      </trans-unit>
+      <trans-unit id="Remove this account?" xml:space="preserve">
+        <source>Remove this account?</source>
+        <target state="needs-l10n">Remove this account?</target>
+      </trans-unit>
+      <trans-unit id="Removed from Listening List" xml:space="preserve">
+        <source>Removed from Listening List</source>
+        <target state="needs-l10n">Removed from Listening List</target>
+      </trans-unit>
+      <trans-unit id="Removes this account and its local account data, but keeps global app and display preferences." xml:space="preserve">
+        <source>Removes this account and its local account data, but keeps global app and display preferences.</source>
+        <target state="translated">Elimina esta cuenta y sus datos locales, pero conserva las preferencias globales de la app y de visualización.</target>
+      </trans-unit>
+      <trans-unit id="Rendered" xml:space="preserve">
+        <source>Rendered</source>
+        <target state="translated">Renderizado</target>
+      </trans-unit>
+      <trans-unit id="Reset to Default" xml:space="preserve">
+        <source>Reset to Default</source>
+        <target state="translated">Restablecer valores predeterminados</target>
+      </trans-unit>
+      <trans-unit id="Restart" xml:space="preserve">
+        <source>Restart</source>
+        <target state="translated">Reiniciar</target>
+      </trans-unit>
+      <trans-unit id="Restore" xml:space="preserve">
+        <source>Restore</source>
+        <target state="needs-l10n">Restore</target>
+      </trans-unit>
+      <trans-unit id="Restore Configuration Backup" xml:space="preserve">
+        <source>Restore Configuration Backup</source>
+        <target state="needs-l10n">Restore Configuration Backup</target>
+      </trans-unit>
+      <trans-unit id="Restore Configuration?" xml:space="preserve">
+        <source>Restore Configuration?</source>
+        <target state="needs-l10n">Restore Configuration?</target>
+      </trans-unit>
+      <trans-unit id="Restore Error" xml:space="preserve">
+        <source>Restore Error</source>
+        <target state="needs-l10n">Restore Error</target>
+      </trans-unit>
+      <trans-unit id="Restoring replaces the configured account and configuration, clears reconstructable synchronized state, and then attempts a normal sync. Downloaded media and playback state are not restored from the backup." xml:space="preserve">
+        <source>Restoring replaces the configured account and configuration, clears reconstructable synchronized state, and then attempts a normal sync. Downloaded media and playback state are not restored from the backup.</source>
+        <target state="needs-l10n">Restoring replaces the configured account and configuration, clears reconstructable synchronized state, and then attempts a normal sync. Downloaded media and playback state are not restored from the backup.</target>
+      </trans-unit>
+      <trans-unit id="Retry" xml:space="preserve">
+        <source>Retry</source>
+        <target state="needs-l10n">Retry</target>
+      </trans-unit>
+      <trans-unit id="Retry Download" xml:space="preserve">
+        <source>Retry Download</source>
+        <target state="translated">Reintentar descarga</target>
+      </trans-unit>
+      <trans-unit id="Rust Core" xml:space="preserve">
+        <source>Rust Core</source>
+      </trans-unit>
+      <trans-unit id="Sandbox paths" xml:space="preserve">
+        <source>Sandbox paths</source>
+      </trans-unit>
+      <trans-unit id="Save to Third-Party Service" xml:space="preserve">
+        <source>Save to Third-Party Service</source>
+        <target state="needs-l10n">Save to Third-Party Service</target>
+      </trans-unit>
+      <trans-unit id="Saved to third-party service" xml:space="preserve">
+        <source>Saved to third-party service</source>
+        <target state="needs-l10n">Saved to third-party service</target>
+      </trans-unit>
+      <trans-unit id="Saving…" xml:space="preserve">
+        <source>Saving…</source>
+        <target state="translated">Guardando…</target>
+      </trans-unit>
+      <trans-unit id="Search" xml:space="preserve">
+        <source>Search</source>
+        <target state="translated">Buscar</target>
+      </trans-unit>
+      <trans-unit id="Search category or message" xml:space="preserve">
+        <source>Search category or message</source>
+        <target state="needs-l10n">Search category or message</target>
+      </trans-unit>
+      <trans-unit id="Search could not be completed. Please try again." xml:space="preserve">
+        <source>Search could not be completed. Please try again.</source>
+        <target state="needs-l10n">Search could not be completed. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="Search Failed" xml:space="preserve">
+        <source>Search Failed</source>
+        <target state="needs-l10n">Search Failed</target>
+      </trans-unit>
+      <trans-unit id="Search Miniflux" xml:space="preserve">
+        <source>Search Miniflux</source>
+        <target state="needs-l10n">Search Miniflux</target>
+      </trans-unit>
+      <trans-unit id="Search Results" xml:space="preserve">
+        <source>Search Results</source>
+        <target state="needs-l10n">Search Results</target>
+      </trans-unit>
+      <trans-unit id="Searching" xml:space="preserve">
+        <source>Searching</source>
+        <target state="needs-l10n">Searching</target>
+      </trans-unit>
+      <trans-unit id="Selected category unavailable" xml:space="preserve">
+        <source>Selected category unavailable</source>
+        <target state="translated">La categoría seleccionada no está disponible</target>
+      </trans-unit>
+      <trans-unit id="Selected feed unavailable" xml:space="preserve">
+        <source>Selected feed unavailable</source>
+        <target state="translated">El feed seleccionado no está disponible</target>
+      </trans-unit>
+      <trans-unit id="Server Information" xml:space="preserve">
+        <source>Server Information</source>
+        <target state="needs-l10n">Server Information</target>
+      </trans-unit>
+      <trans-unit id="Server URL" xml:space="preserve">
+        <source>Server URL</source>
+        <target state="needs-l10n">Server URL</target>
+      </trans-unit>
+      <trans-unit id="Set Up FluxNews" xml:space="preserve">
+        <source>Set Up FluxNews</source>
+        <target state="needs-l10n">Set Up FluxNews</target>
+      </trans-unit>
+      <trans-unit id="Settings" xml:space="preserve">
+        <source>Settings</source>
+        <target state="needs-l10n">Settings</target>
+      </trans-unit>
+      <trans-unit id="Settings and media data are imported after a successful sync." xml:space="preserve">
+        <source>Settings and media data are imported after a successful sync.</source>
+        <target state="needs-l10n">Settings and media data are imported after a successful sync.</target>
+      </trans-unit>
+      <trans-unit id="Share" xml:space="preserve">
+        <source>Share</source>
+        <target state="needs-l10n">Share</target>
+      </trans-unit>
+      <trans-unit id="Show" xml:space="preserve">
+        <source>Show</source>
+        <target state="needs-l10n">Show</target>
+      </trans-unit>
+      <trans-unit id="Show All Articles" xml:space="preserve">
+        <source>Show All Articles</source>
+        <target state="needs-l10n">Show All Articles</target>
+      </trans-unit>
+      <trans-unit id="Show article count" xml:space="preserve">
+        <source>Show article count</source>
+        <target state="needs-l10n">Show article count</target>
+      </trans-unit>
+      <trans-unit id="Show Newest First" xml:space="preserve">
+        <source>Show Newest First</source>
+        <target state="needs-l10n">Show Newest First</target>
+      </trans-unit>
+      <trans-unit id="Show Notes" xml:space="preserve">
+        <source>Show Notes</source>
+        <target state="translated">Notas del episodio</target>
+      </trans-unit>
+      <trans-unit id="Show Oldest First" xml:space="preserve">
+        <source>Show Oldest First</source>
+        <target state="needs-l10n">Show Oldest First</target>
+      </trans-unit>
+      <trans-unit id="Show relative publication time" xml:space="preserve">
+        <source>Show relative publication time</source>
+        <target state="translated">Mostrar tiempo de publicación relativo</target>
+      </trans-unit>
+      <trans-unit id="Show Unread Only" xml:space="preserve">
+        <source>Show Unread Only</source>
+        <target state="needs-l10n">Show Unread Only</target>
+      </trans-unit>
+      <trans-unit id="Showing %lld of %lld" xml:space="preserve">
+        <source>Showing %lld of %lld</source>
+      </trans-unit>
+      <trans-unit id="Shows the latest articles from your selected FluxNews view." xml:space="preserve">
+        <source>Shows the latest articles from your selected FluxNews view.</source>
+        <target state="translated">Muestra los últimos artículos de la vista de FluxNews seleccionada.</target>
+      </trans-unit>
+      <trans-unit id="Skip unresolved items" xml:space="preserve">
+        <source>Skip unresolved items</source>
+        <target state="needs-l10n">Skip unresolved items</target>
+      </trans-unit>
+      <trans-unit id="Sleep Timer" xml:space="preserve">
+        <source>Sleep Timer</source>
+        <target state="translated">Temporizador de sueño</target>
+      </trans-unit>
+      <trans-unit id="Smoke test" xml:space="preserve">
+        <source>Smoke test</source>
+      </trans-unit>
+      <trans-unit id="Some content was simplified" xml:space="preserve">
+        <source>Some content was simplified</source>
+        <target state="needs-l10n">Some content was simplified</target>
+      </trans-unit>
+      <trans-unit id="Some content was simplified and truncated" xml:space="preserve">
+        <source>Some content was simplified and truncated</source>
+        <target state="needs-l10n">Some content was simplified and truncated</target>
+      </trans-unit>
+      <trans-unit id="Some content was truncated" xml:space="preserve">
+        <source>Some content was truncated</source>
+        <target state="needs-l10n">Some content was truncated</target>
+      </trans-unit>
+      <trans-unit id="Sort" xml:space="preserve">
+        <source>Sort</source>
+        <target state="needs-l10n">Sort</target>
+      </trans-unit>
+      <trans-unit id="Sort Listening List" xml:space="preserve">
+        <source>Sort Listening List</source>
+        <target state="translated">Ordenar lista de escucha</target>
+      </trans-unit>
+      <trans-unit id="Sort Order" xml:space="preserve">
+        <source>Sort Order</source>
+        <target state="needs-l10n">Sort Order</target>
+      </trans-unit>
+      <trans-unit id="Star" xml:space="preserve">
+        <source>Star</source>
+        <target state="needs-l10n">Star</target>
+      </trans-unit>
+      <trans-unit id="Star / Unstar" xml:space="preserve">
+        <source>Star / Unstar</source>
+        <target state="translated">Destacar / Quitar destacado</target>
+      </trans-unit>
+      <trans-unit id="Starred" xml:space="preserve">
+        <source>Starred</source>
+        <target state="translated">Destacados</target>
+      </trans-unit>
+      <trans-unit id="Starting" xml:space="preserve">
+        <source>Starting</source>
+        <target state="needs-l10n">Starting</target>
+      </trans-unit>
+      <trans-unit id="Starting FluxNews…" xml:space="preserve">
+        <source>Starting FluxNews…</source>
+        <target state="needs-l10n">Starting FluxNews…</target>
+      </trans-unit>
+      <trans-unit id="Startup category" xml:space="preserve">
+        <source>Startup category</source>
+        <target state="needs-l10n">Startup category</target>
+      </trans-unit>
+      <trans-unit id="Startup feed" xml:space="preserve">
+        <source>Startup feed</source>
+        <target state="needs-l10n">Startup feed</target>
+      </trans-unit>
+      <trans-unit id="Startup scope" xml:space="preserve">
+        <source>Startup scope</source>
+        <target state="needs-l10n">Startup scope</target>
+      </trans-unit>
+      <trans-unit id="Status" xml:space="preserve">
+        <source>Status</source>
+      </trans-unit>
+      <trans-unit id="Stop" xml:space="preserve">
+        <source>Stop</source>
+        <target state="translated">Stop</target>
+      </trans-unit>
+      <trans-unit id="Stops in" xml:space="preserve">
+        <source>Stops in</source>
+        <target state="translated">Se detiene en</target>
+      </trans-unit>
+      <trans-unit id="Storage &amp; Reader" xml:space="preserve">
+        <source>Storage &amp; Reader</source>
+        <target state="translated">Almacenamiento y lector</target>
+      </trans-unit>
+      <trans-unit id="Storage Used" xml:space="preserve">
+        <source>Storage Used</source>
+        <target state="needs-l10n">Storage Used</target>
+      </trans-unit>
+      <trans-unit id="Stored Records" xml:space="preserve">
+        <source>Stored Records</source>
+        <target state="needs-l10n">Stored Records</target>
+      </trans-unit>
+      <trans-unit id="Successfully imported downloads and playback positions are preserved. Only unresolved items will be skipped. Original Flutter data remains untouched." xml:space="preserve">
+        <source>Successfully imported downloads and playback positions are preserved. Only unresolved items will be skipped. Original Flutter data remains untouched.</source>
+        <target state="needs-l10n">Successfully imported downloads and playback positions are preserved. Only unresolved items will be skipped. Original Flutter data remains untouched.</target>
+      </trans-unit>
+      <trans-unit id="Support Diagnostics" xml:space="preserve">
+        <source>Support Diagnostics</source>
+        <target state="needs-l10n">Support Diagnostics</target>
+      </trans-unit>
+      <trans-unit id="Support Export" xml:space="preserve">
+        <source>Support Export</source>
+        <target state="needs-l10n">Support Export</target>
+      </trans-unit>
+      <trans-unit id="Support logs are stored locally with bounded retention. Credentials and registered custom-header values are redacted before records are persisted or exported." xml:space="preserve">
+        <source>Support logs are stored locally with bounded retention. Credentials and registered custom-header values are redacted before records are persisted or exported.</source>
+        <target state="needs-l10n">Support logs are stored locally with bounded retention. Credentials and registered custom-header values are redacted before records are persisted or exported.</target>
+      </trans-unit>
+      <trans-unit id="Swipe Actions" xml:space="preserve">
+        <source>Swipe Actions</source>
+        <target state="translated">Acciones de deslizamiento</target>
+      </trans-unit>
+      <trans-unit id="Swipe Comments" xml:space="preserve">
+        <source>Comments</source>
+        <target state="translated">Comentarios</target>
+      </trans-unit>
+      <trans-unit id="Swipe Download Audio" xml:space="preserve">
+        <source>Swipe Download Audio</source>
+        <target state="translated">Descargar audio</target>
+      </trans-unit>
+      <trans-unit id="Swipe Miniflux" xml:space="preserve">
+        <source>Miniflux</source>
+        <target state="translated">Miniflux</target>
+      </trans-unit>
+      <trans-unit id="Swipe Original" xml:space="preserve">
+        <source>Original</source>
+        <target state="translated">Original</target>
+      </trans-unit>
+      <trans-unit id="Swipe Read" xml:space="preserve">
+        <source>Read</source>
+        <target state="translated">Leer</target>
+      </trans-unit>
+      <trans-unit id="Swipe Save" xml:space="preserve">
+        <source>Save</source>
+        <target state="translated">Guardar</target>
+      </trans-unit>
+      <trans-unit id="Swipe Share" xml:space="preserve">
+        <source>Share</source>
+        <target state="translated">Compartir</target>
+      </trans-unit>
+      <trans-unit id="Swipe Star" xml:space="preserve">
+        <source>Star</source>
+        <target state="translated">Destacar</target>
+      </trans-unit>
+      <trans-unit id="Swipe Unread" xml:space="preserve">
+        <source>Unread</source>
+        <target state="translated">No leído</target>
+      </trans-unit>
+      <trans-unit id="Swipe Unstar" xml:space="preserve">
+        <source>Unstar</source>
+        <target state="translated">Quitar destacado</target>
+      </trans-unit>
+      <trans-unit id="Sync" xml:space="preserve">
+        <source>Sync</source>
+        <target state="needs-l10n">Sync</target>
+      </trans-unit>
+      <trans-unit id="Sync article changes immediately" xml:space="preserve">
+        <source>Sync article changes immediately</source>
+        <target state="translated">Sincronizar cambios de artículos inmediatamente</target>
+      </trans-unit>
+      <trans-unit id="Sync complete" xml:space="preserve">
+        <source>Sync complete</source>
+        <target state="needs-l10n">Sync complete</target>
+      </trans-unit>
+      <trans-unit id="Sync news" xml:space="preserve">
+        <source>Sync news</source>
+        <target state="needs-l10n">Sync news</target>
+      </trans-unit>
+      <trans-unit id="Sync now" xml:space="preserve">
+        <source>Sync now</source>
+        <target state="needs-l10n">Sync now</target>
+      </trans-unit>
+      <trans-unit id="Sync stays fixed at the beginning and More stays available as the fallback. The order of selected actions sets their display priority. Use Edit to remove or reorder selected actions." xml:space="preserve">
+        <source>Sync stays fixed at the beginning and More stays available as the fallback. The order of selected actions sets their display priority. Use Edit to remove or reorder selected actions.</source>
+        <target state="needs-l10n">Sync stays fixed at the beginning and More stays available as the fallback. The order of selected actions sets their display priority. Use Edit to remove or reorder selected actions.</target>
+      </trans-unit>
+      <trans-unit id="Synchronized local content and pending changes will be discarded and rebuilt from Miniflux. Your account and settings are preserved. If synchronization fails, the previous local data cannot be restored." xml:space="preserve">
+        <source>Synchronized local content and pending changes will be discarded and rebuilt from Miniflux. Your account and settings are preserved. If synchronization fails, the previous local data cannot be restored.</source>
+        <target state="translated">El contenido local sincronizado y los cambios pendientes se descartarán y se reconstruirán desde Miniflux. Se conservarán tu cuenta y tus ajustes. Si la sincronización falla, no se podrán restaurar los datos locales anteriores.</target>
+      </trans-unit>
+      <trans-unit id="Syncing" xml:space="preserve">
+        <source>Syncing</source>
+        <target state="needs-l10n">Syncing</target>
+      </trans-unit>
+      <trans-unit id="Syncing…" xml:space="preserve">
+        <source>Syncing…</source>
+        <target state="translated">Sincronizando…</target>
+      </trans-unit>
+      <trans-unit id="System Notifications" xml:space="preserve">
+        <source>System Notifications</source>
+        <target state="translated">Notificaciones del sistema</target>
+      </trans-unit>
+      <trans-unit id="Technical Details" xml:space="preserve">
+        <source>Technical Details</source>
+        <target state="needs-l10n">Technical Details</target>
+      </trans-unit>
+      <trans-unit id="Text Only" xml:space="preserve">
+        <source>Text Only</source>
+        <target state="translated">Solo texto</target>
+      </trans-unit>
+      <trans-unit id="The account could not be activated. Your previous account is still active." xml:space="preserve">
+        <source>The account could not be activated. Your previous account is still active.</source>
+        <target state="needs-l10n">The account could not be activated. Your previous account is still active.</target>
+      </trans-unit>
+      <trans-unit id="The account could not be removed." xml:space="preserve">
+        <source>The account could not be removed.</source>
+        <target state="needs-l10n">The account could not be removed.</target>
+      </trans-unit>
+      <trans-unit id="The article could not be loaded in Reader." xml:space="preserve">
+        <source>The article could not be loaded in Reader.</source>
+        <target state="needs-l10n">The article could not be loaded in Reader.</target>
+      </trans-unit>
+      <trans-unit id="The article could not be updated. Please try again." xml:space="preserve">
+        <source>The article could not be updated. Please try again.</source>
+        <target state="needs-l10n">The article could not be updated. Please try again.</target>
+      </trans-unit>
+      <trans-unit id="The article does not have a valid web URL." xml:space="preserve">
+        <source>The article does not have a valid web URL.</source>
+        <target state="needs-l10n">The article does not have a valid web URL.</target>
+      </trans-unit>
+      <trans-unit id="The audio session could not be activated." xml:space="preserve">
+        <source>The audio session could not be activated.</source>
+        <target state="translated">No se pudo activar la sesión de audio.</target>
+      </trans-unit>
+      <trans-unit id="The backup could not be decrypted. The password may be incorrect or the file may be damaged." xml:space="preserve">
+        <source>The backup could not be decrypted. The password may be incorrect or the file may be damaged.</source>
+        <target state="needs-l10n">The backup could not be decrypted. The password may be incorrect or the file may be damaged.</target>
+      </trans-unit>
+      <trans-unit id="The backup is damaged or contains invalid data." xml:space="preserve">
+        <source>The backup is damaged or contains invalid data.</source>
+        <target state="needs-l10n">The backup is damaged or contains invalid data.</target>
+      </trans-unit>
+      <trans-unit id="The backup is password-encrypted and contains account credentials, Core settings, feed preferences, and iOS configuration. The password is not stored and cannot be recovered. Articles, downloads, playback state, logs, caches, and widget instances are not included." xml:space="preserve">
+        <source>The backup is password-encrypted and contains account credentials, Core settings, feed preferences, and iOS configuration. The password is not stored and cannot be recovered. Articles, downloads, playback state, logs, caches, and widget instances are not included.</source>
+        <target state="needs-l10n">The backup is password-encrypted and contains account credentials, Core settings, feed preferences, and iOS configuration. The password is not stored and cannot be recovered. Articles, downloads, playback state, logs, caches, and widget instances are not included.</target>
+      </trans-unit>
+      <trans-unit id="The configuration backup operation failed." xml:space="preserve">
+        <source>The configuration backup operation failed.</source>
+        <target state="needs-l10n">The configuration backup operation failed.</target>
+      </trans-unit>
+      <trans-unit id="The configuration could not be restored." xml:space="preserve">
+        <source>The configuration could not be restored.</source>
+        <target state="needs-l10n">The configuration could not be restored.</target>
+      </trans-unit>
+      <trans-unit id="The diagnostics export could not be prepared." xml:space="preserve">
+        <source>The diagnostics export could not be prepared.</source>
+        <target state="needs-l10n">The diagnostics export could not be prepared.</target>
+      </trans-unit>
+      <trans-unit id="The export contains the retained native and Core support records plus app, OS, device and Debug Logging metadata." xml:space="preserve">
+        <source>The export contains the retained native and Core support records plus app, OS, device and Debug Logging metadata.</source>
+        <target state="needs-l10n">The export contains the retained native and Core support records plus app, OS, device and Debug Logging metadata.</target>
+      </trans-unit>
+      <trans-unit id="The Listening List could not be loaded." xml:space="preserve">
+        <source>The Listening List could not be loaded.</source>
+        <target state="needs-l10n">The Listening List could not be loaded.</target>
+      </trans-unit>
+      <trans-unit id="The media Core is unavailable." xml:space="preserve">
+        <source>The media Core is unavailable.</source>
+        <target state="translated">El Core multimedia no está disponible.</target>
+      </trans-unit>
+      <trans-unit id="The media Core session is unavailable." xml:space="preserve">
+        <source>The media Core session is unavailable.</source>
+        <target state="translated">La sesión del Core multimedia no está disponible.</target>
+      </trans-unit>
+      <trans-unit id="The media URL is not playable." xml:space="preserve">
+        <source>The media URL is not playable.</source>
+        <target state="translated">La URL multimedia no se puede reproducir.</target>
+      </trans-unit>
+      <trans-unit id="The Miniflux server could not be reached. Check the server URL and network connection." xml:space="preserve">
+        <source>The Miniflux server could not be reached. Check the server URL and network connection.</source>
+        <target state="needs-l10n">The Miniflux server could not be reached. Check the server URL and network connection.</target>
+      </trans-unit>
+      <trans-unit id="The Miniflux server returned an unexpected response." xml:space="preserve">
+        <source>The Miniflux server returned an unexpected response.</source>
+        <target state="needs-l10n">The Miniflux server returned an unexpected response.</target>
+      </trans-unit>
+      <trans-unit id="The restore failed and the previous configuration could not be recovered. Restart FluxNews before making further changes." xml:space="preserve">
+        <source>The restore failed and the previous configuration could not be recovered. Restart FluxNews before making further changes.</source>
+        <target state="needs-l10n">The restore failed and the previous configuration could not be recovered. Restart FluxNews before making further changes.</target>
+      </trans-unit>
+      <trans-unit id="The selected backup file could not be read." xml:space="preserve">
+        <source>The selected backup file could not be read.</source>
+        <target state="needs-l10n">The selected backup file could not be read.</target>
+      </trans-unit>
+      <trans-unit id="The selected backup is too large." xml:space="preserve">
+        <source>The selected backup is too large.</source>
+        <target state="needs-l10n">The selected backup is too large.</target>
+      </trans-unit>
+      <trans-unit id="This backup contains invalid iOS settings." xml:space="preserve">
+        <source>This backup contains invalid iOS settings.</source>
+        <target state="needs-l10n">This backup contains invalid iOS settings.</target>
+      </trans-unit>
+      <trans-unit id="This backup contains unsupported iOS settings." xml:space="preserve">
+        <source>This backup contains unsupported iOS settings.</source>
+        <target state="needs-l10n">This backup contains unsupported iOS settings.</target>
+      </trans-unit>
+      <trans-unit id="This backup uses a newer unsupported format." xml:space="preserve">
+        <source>This backup uses a newer unsupported format.</source>
+        <target state="needs-l10n">This backup uses a newer unsupported format.</target>
+      </trans-unit>
+      <trans-unit id="This backup was created for another platform." xml:space="preserve">
+        <source>This backup was created for another platform.</source>
+        <target state="needs-l10n">This backup was created for another platform.</target>
+      </trans-unit>
+      <trans-unit id="This includes local audio files that are still waiting for physical deletion. Listening List items and playback progress are stored separately." xml:space="preserve">
+        <source>This includes local audio files that are still waiting for physical deletion. Listening List items and playback progress are stored separately.</source>
+        <target state="needs-l10n">This includes local audio files that are still waiting for physical deletion. Listening List items and playback progress are stored separately.</target>
+      </trans-unit>
+      <trans-unit id="This Miniflux server uses unencrypted HTTP. Account credentials and feed traffic are not protected by HTTPS." xml:space="preserve">
+        <source>This Miniflux server uses unencrypted HTTP. Account credentials and feed traffic are not protected by HTTPS.</source>
+        <target state="needs-l10n">This Miniflux server uses unencrypted HTTP. Account credentials and feed traffic are not protected by HTTPS.</target>
+      </trans-unit>
+      <trans-unit id="This permanently removes the retained local support log. New records will continue to be collected according to the current logging settings." xml:space="preserve">
+        <source>This permanently removes the retained local support log. New records will continue to be collected according to the current logging settings.</source>
+        <target state="needs-l10n">This permanently removes the retained local support log. New records will continue to be collected according to the current logging settings.</target>
+      </trans-unit>
+      <trans-unit id="This replaces the current account and configuration with the selected backup. Existing synchronized article state will be rebuilt." xml:space="preserve">
+        <source>This replaces the current account and configuration with the selected backup. Existing synchronized article state will be rebuilt.</source>
+        <target state="needs-l10n">This replaces the current account and configuration with the selected backup. Existing synchronized article state will be rebuilt.</target>
+      </trans-unit>
+      <trans-unit id="This server does not provide the required Miniflux endpoint." xml:space="preserve">
+        <source>This server does not provide the required Miniflux endpoint.</source>
+        <target state="needs-l10n">This server does not provide the required Miniflux endpoint.</target>
+      </trans-unit>
+      <trans-unit id="Trace" xml:space="preserve">
+        <source>Trace</source>
+        <target state="needs-l10n">Trace</target>
+      </trans-unit>
+      <trans-unit id="Trailing Side" xml:space="preserve">
+        <source>Trailing Side</source>
+        <target state="translated">Lado final</target>
+      </trans-unit>
+      <trans-unit id="Truncate Detail" xml:space="preserve">
+        <source>Truncate Detail</source>
+        <target state="needs-l10n">Truncate Detail</target>
+      </trans-unit>
+      <trans-unit id="Unable to load article" xml:space="preserve">
+        <source>Unable to load article</source>
+        <target state="needs-l10n">Unable to load article</target>
+      </trans-unit>
+      <trans-unit id="Unable to Load Articles" xml:space="preserve">
+        <source>Unable to Load Articles</source>
+        <target state="needs-l10n">Unable to Load Articles</target>
+      </trans-unit>
+      <trans-unit id="Unable to Open Article" xml:space="preserve">
+        <source>Unable to Open Article</source>
+        <target state="needs-l10n">Unable to Open Article</target>
+      </trans-unit>
+      <trans-unit id="Unavailable" xml:space="preserve">
+        <source>Unavailable</source>
+        <target state="needs-l10n">Unavailable</target>
+      </trans-unit>
+      <trans-unit id="Undo" xml:space="preserve">
+        <source>Undo</source>
+        <target state="needs-l10n">Undo</target>
+      </trans-unit>
+      <trans-unit id="Unexpected" xml:space="preserve">
+        <source>Unexpected</source>
+      </trans-unit>
+      <trans-unit id="Unknown" xml:space="preserve">
+        <source>Unknown</source>
+        <target state="needs-l10n">Unknown</target>
+      </trans-unit>
+      <trans-unit id="Unknown Feed" xml:space="preserve">
+        <source>Unknown Feed</source>
+        <target state="translated">Feed desconocido</target>
+      </trans-unit>
+      <trans-unit id="Unmetered Networks Only" xml:space="preserve">
+        <source>Unmetered Networks Only</source>
+        <target state="translated">Solo redes sin medición</target>
+      </trans-unit>
+      <trans-unit id="unread" xml:space="preserve">
+        <source>unread</source>
+        <target state="translated">No leidas</target>
+      </trans-unit>
+      <trans-unit id="Unread" xml:space="preserve">
+        <source>Unread</source>
+        <target state="needs-l10n">Unread</target>
+      </trans-unit>
+      <trans-unit id="Unread Only" xml:space="preserve">
+        <source>Unread Only</source>
+        <target state="needs-l10n">Unread Only</target>
+      </trans-unit>
+      <trans-unit id="Unread, starred" xml:space="preserve">
+        <source>Unread, starred</source>
+        <target state="needs-l10n">Unread, starred</target>
+      </trans-unit>
+      <trans-unit id="Unstar" xml:space="preserve">
+        <source>Unstar</source>
+        <target state="needs-l10n">Unstar</target>
+      </trans-unit>
+      <trans-unit id="Untitled" xml:space="preserve">
+        <source>Untitled</source>
+        <target state="needs-l10n">Untitled</target>
+      </trans-unit>
+      <trans-unit id="Untitled News" xml:space="preserve">
+        <source>Untitled News</source>
+        <target state="translated">Noticia sin título</target>
+      </trans-unit>
+      <trans-unit id="Use Miniflux default" xml:space="preserve">
+        <source>Use Miniflux default</source>
+        <target state="translated">Usar valor predeterminado de Miniflux</target>
+      </trans-unit>
+      <trans-unit id="Validate and Continue" xml:space="preserve">
+        <source>Validate and Continue</source>
+        <target state="translated">Validar y continuar</target>
+      </trans-unit>
+      <trans-unit id="Version" xml:space="preserve">
+        <source>Version</source>
+        <target state="needs-l10n">Version</target>
+      </trans-unit>
+      <trans-unit id="Visual" xml:space="preserve">
+        <source>Visual</source>
+        <target state="needs-l10n">Visual</target>
+      </trans-unit>
+      <trans-unit id="Visual compact" xml:space="preserve">
+        <source>Visual compact</source>
+        <target state="translated">Visual compacto</target>
+      </trans-unit>
+      <trans-unit id="Waiting for first successful sync" xml:space="preserve">
+        <source>Waiting for first successful sync</source>
+        <target state="translated">Esperando la primera sincronización correcta</target>
+      </trans-unit>
+      <trans-unit id="Warning" xml:space="preserve">
+        <source>Warning</source>
+        <target state="needs-l10n">Warning</target>
+      </trans-unit>
+      <trans-unit id="When enabled, FluxNews may refresh news in the background and when you return to the app. Manual Sync remains available at all times." xml:space="preserve">
+        <source>When enabled, FluxNews may refresh news in the background and when you return to the app. Manual Sync remains available at all times.</source>
+        <target state="translated">Cuando está activado, FluxNews puede actualizar las noticias en segundo plano y al volver a la app. La sincronización manual siempre está disponible.</target>
+      </trans-unit>
+      <trans-unit id="When enabled, read/unread and star changes are saved locally first and then sent to Miniflux immediately. If delivery fails, FluxNews keeps the change pending for a later retry." xml:space="preserve">
+        <source>When enabled, read/unread and star changes are saved locally first and then sent to Miniflux immediately. If delivery fails, FluxNews keeps the change pending for a later retry.</source>
+        <target state="translated">Cuando está activado, los cambios de leído/no leído y de estrella se guardan primero localmente y se envían inmediatamente a Miniflux. Si falla el envío, FluxNews mantiene el cambio pendiente para reintentarlo más tarde.</target>
+      </trans-unit>
+      <trans-unit id="Widgets" xml:space="preserve">
+        <source>Widgets</source>
+        <target state="needs-l10n">Widgets</target>
+      </trans-unit>
+      <trans-unit id="Working…" xml:space="preserve">
+        <source>Working…</source>
+        <target state="needs-l10n">Working…</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

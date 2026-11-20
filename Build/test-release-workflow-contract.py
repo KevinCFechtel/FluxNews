@@ -9,6 +9,7 @@ FDROID = (ROOT / ".github/workflows/fdroid-native.yml").read_text()
 CANDIDATE = (ROOT / "Build/check-release-candidate.sh").read_text()
 SIGN = (ROOT / "Build/sign-release-apk.sh").read_text()
 CONTRACT_CI = (ROOT / ".github/workflows/release-scripts.yml").read_text()
+GRADLE_WRAPPER = (ROOT / "android/gradle/wrapper/gradle-wrapper.properties").read_text()
 
 def fail(message: str) -> None:
     print(f"release workflow contract: FAIL: {message}", file=sys.stderr)
@@ -106,6 +107,16 @@ require("automation will not rewrite or delete tags" in publish,
         "partial promotion diagnostic must preserve tag immutability")
 
 require("workflow_call:" in FDROID, "F-Droid workflow must be reusable")
+gradle_distribution = re.search(
+    r"^distributionUrl=https\\://services\.gradle\.org/distributions/gradle-(\d+\.\d+\.\d+)-bin\.zip$",
+    GRADLE_WRAPPER, re.MULTILINE,
+)
+require(gradle_distribution is not None, "Android wrapper must pin an official stable Gradle distribution")
+gradle_version = gradle_distribution.group(1)
+require(f'gradle-version: "{gradle_version}"' in FDROID,
+        "F-Droid Gradle pin must match the Android wrapper")
+require(f"gradle --version | grep -F 'Gradle {gradle_version}'" in FDROID,
+        "F-Droid version check must match the pinned Gradle version")
 require("git clone --no-checkout https://github.com/KevinCFechtel/FluxNews.git" in FDROID,
         "F-Droid must check out sources from FluxNews")
 require('builds[0]["rm"] == ["Archived/Flutter"]' in FDROID,

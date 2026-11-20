@@ -1,10 +1,7 @@
 name: Rust
 
 on:
-  pull_request:
-    paths:
-      - "core/**"
-      - ".github/workflows/rust.yml"
+  workflow_call:
   push:
     branches:
       - main

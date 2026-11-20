@@ -1,11 +1,7 @@
 name: Apple
 
 on:
-  pull_request:
-    paths:
-      - "apple/**"
-      - "core/**"
-      - ".github/workflows/apple.yml"
+  workflow_call:
   push:
     branches:
       - main

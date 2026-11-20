@@ -1,0 +1,200 @@
+# Dependency maintenance and security policy
+
+> **Decision: 18 October 2026; status refreshed after FluxNews cutover.**
+> This policy applies to the active **FluxNews** repository. The old Flux
+> repository is retired. This policy does not by itself approve a release,
+> merge, dependency major-version upgrade, or official F-Droid submission.
+
+## Why this is necessary
+
+Green unit/integration tests are **not** an assertion that dependencies are
+up-to-date or free of disclosed vulnerabilities. The dependency set has moved
+substantially since the 18 October baseline (for example UniFFI and ureq are on
+newer generations), so old inventory tables below must not be read as the
+current resolved graph.
+
+Use the current `core/Cargo.lock`, current Dependabot PRs and the strict
+RustSec workflow as the source for present dependency status. Do **not** infer
+that a crate is vulnerable merely because an old baseline listed it; investigate
+the advisory and the actually resolved current version.
+
+## Update-first maintenance policy
+
+**Default: regularly adopt the newest stable upstream dependency generations, including
+major-version changes.** A build that happens to work on an old version is not a
+reason to retain it. Compatibility work is part of dependency maintenance,
+not an indefinite blocker or a separate optional project. Security-only patching
+is emergency mitigation, **not** completion of an outdated dependency upgrade.
+
+- At least weekly, compare all direct Rust, Gradle/Kotlin/Android and GitHub
+  Actions dependencies against the latest **stable** releases, and review the
+  actually resolved lockfile and relevant transitive dependencies. Include
+  compiler/SDK/NDK/Xcode and the rustls Kotlin/Rust subcomponent relationship
+  in a periodic toolchain review; Dependabot alone cannot cover all of them.
+- **Do not exclude major upgrades.** Offer them in Dependabot and work through
+  API/source/FFI migrations, adapting code, tests and generation scripts.
+  Group dependencies according to compatibility boundaries rather than
+  applying the largest number of unrelated upgrades in one unreviewable PR.
+- Every outdated major version must have an active upgrade PR or a tracked
+  actionable blocker, with affected APIs, a concrete next action, owner and
+  review date. A green CI or vague fear of breakage is **not** an accepted
+  blocker. Revisit blockers at least weekly; do not roll them over silently.
+- Urgent advisories receive an immediate targeted fix if required, followed
+  by the ordinary **current-stable upgrade**. Security fixes and currency
+  are two separate success criteria.
+- Merge only after affected Rust, Android, Apple, F-Droid and runtime trust/
+  migration gates are satisfied. No untested bulk version bumps, skipped
+  required CI, automatic merge or release. Apply current versions by
+  **making the code compatible**, not by disabling tests or suppressing
+  advisories.
+
+## Strict unmaintained-dependency release gate
+
+A dependency which is no longer maintained is an **unacceptable release
+risk** for Flux, even if no specific exploit has yet been disclosed. The
+project must not ship a new release while RustSec reports a vulnerability
+**or an unmaintained dependency** in the resolved dependency graph.
+This includes **transitive** packages. Replacing the dependency or migrating
+its parent crate is mandatory; no blanket ignore list, downgraded exit status
+or permanent exception is accepted.
+
+The workflow therefore enforces `cargo audit --file core/Cargo.lock --deny
+warnings`, deliberately including RustSec's maintenance warnings. A red
+result is actionable and must remain visible until the dependency is replaced.
+Passing this check is necessary for release readiness, not sufficient
+proof of complete security or up-to-date dependencies.
+
+**Historical blocking findings (18 October 2026):** the then-resolved graph
+contained `paste`, `rustls-pemfile`, `rustybuzz` and `ttf-parser` through
+the dependency chains documented in the original audit. Those four findings
+are **not the current baseline** and must not be used to describe today's
+`Cargo.lock`.
+
+The strict gate remains unchanged: every current RustSec vulnerability or
+unmaintained-warning finding must actually disappear from the resolved
+`core/Cargo.lock`; changing only a manifest constraint is insufficient.
+At the current FluxNews baseline, the outstanding strict-RustSec work is tracked
+against the resolved occurrences including `ctutils`, `libsqlite3-sys`,
+`basic-toml` and `rustix`. The exact advisory chain must be taken from the
+current RustSec output rather than copied forward from this historical table.
+
+**One-time transition:** landing the strict policy/CI into `main` makes
+already-present findings visible and can initially create an expected red
+security check. This is not a waiver for any release or later dependency
+acceptance. Work on dependency updates continues as the highest priority
+until the strict security check AND all affected platform checks pass.
+
+## Automated monitoring and CI costs
+
+1. Configure GitHub Dependabot **version updates including major versions**
+   for `cargo` at `/core`, `gradle` at `/android` and `github-actions`
+   at `/`. Review Cargo/Gradle weekly and Actions monthly, with a meaningful
+   PR budget that does **not** hide unreviewed majors behind a two-PR queue.
+2. Group patch/minor updates to control CI load, and actively migrate **major
+   updates** as small compatibility-related batches, not postponed indefinitely.
+   No auto-merge and no auto-release. Dependabot
+   **security updates** and GitHub vulnerability alerts must remain enabled
+   in repository settings; verify that their alert visibility and notification
+   routing actually work after cutover.
+3. Run an isolated, **daily strict RustSec scan** of `core/Cargo.lock`
+   (`cargo audit --deny warnings`), without building Rust targets, Android
+   apps, or Apple apps. Run it after `core/Cargo.lock` changes and via
+   manual dispatch. **Fail for vulnerabilities, unmaintained crates and
+   other RustSec warnings.** Preserve output, do not suppress findings.
+4. Dependabot's routine PRs should not themselves cascade redundant full
+   test suites. Limit open PRs, group updates and use existing per-workflow
+   `concurrency.cancel-in-progress` behavior; Rust/Android/Apple CI remain
+   mandatory for changes they actually affect. Never weaken required
+   merge gates simply because a change comes from Dependabot.
+   Use paths to avoid unrelated platform builds. Do not start an
+   additional F-Droid source build when another equivalent immutable-SHA
+   F-Droid gate is already running.
+5. Dependabot creates suggested patches **rather than evaluating** Kotlin/
+   Rust JNI alignment, UniFFI-generated code, build IDs or the exact
+   required source revision of external Git submodules. Enforce those
+   relationships through project tests and human review.
+
+## Mandatory dependency review before acceptance
+
+For each dependency version change, verify:
+- **latest release and date** from the upstream registry/release notes,
+  including security advisories and any documented MSRV, Gradle, Kotlin,
+  Swift, Xcode, or Android SDK constraints;
+- actual locked versions (`core/Cargo.lock`, Gradle dependencies),
+  including relevant transitive dependencies and build toolchains;
+- direct and indirect license/provenance suitability (especially F-Droid
+  restrictions on prebuilt binaries);
+- source API and behavioral changes, with particular attention to
+  Android CA store, **user-installed CA trust**, TLS failure behavior,
+  networking, database migration, media decoding and playback;
+- relevant tests on all affected targets, both routine CI and specific
+  device/integration checks when required.
+
+Prioritize both security **and latest stable versions**. Do not create one
+unreviewable PR that changes all unrelated major APIs at once, but also do not
+keep old major generations solely to avoid adapting product code. For any
+necessary temporary pin, require a reproducible blocker, a concrete follow-up
+and a dated review; keep its owner-visible status current. Release promotion
+must not rely on a skipped, missing, or failed required gate.
+
+## Historical 18 October dependency inventory
+
+The following table records the B2-branch inventory that motivated the update
+work. It is **historical evidence, not the current dependency list**. Current
+versions and blockers must be read from `core/Cargo.lock`, Dependabot and the
+strict RustSec result.
+
+| Component | `Cargo.lock` on B2 branch, 18 October | Initial decision |
+| --- | --- | --- |
+| rustls-platform-verifier / Android companion | 0.5.3 / 0.1.1 | **P0:** evaluate 0.7.1 / 0.2.0 alongside JNI 0.22 and rebuilding Kotlin component from source, then rerun Android CA-trust cases |
+| ureq | 2.12.1 | **P1:** newer v3 has an incompatible transport API: evaluate independently of verifier |
+| rusqlite | 0.37.0 | **P1:** database/runtime compatibility and migrations |
+| uniffi | 0.29.5 | **P1:** generated Swift/Kotlin bindings and release scripts must change together |
+| jni | 0.21.1 | **Coupled to verifier:** no isolated update |
+| lofty | 0.22.4 | **P2:** media metadata and artwork extraction regression checks |
+| rand, argon2, html5ever | 0.8.8, 0.5.3, 0.39.0 | **P2:** check API changes / security findings, do not assume vulnerabilities |
+| AGP, Kotlin, Gradle | 9.4.0, 2.4.20, 9.7.1 | Recently refreshed, still monitor updates and wrapper provenance |
+
+The original pinned verifier was accepted for **Android TLS behavior**,
+not for being the newest version. A documented compatibility proof must
+not be misread as a dependency freshness assessment.
+
+## Implementation and repository boundaries
+
+- The policy, Dependabot configuration and strict security CI have been carried
+  into **FluxNews**; the repository cutover is complete.
+- All active dependency monitoring and security/release CI now run in FluxNews.
+  The retired Flux repository is historical reference only.
+- Keep documentation separate from source version changes so docs-only
+  commits do not trigger costly Rust/Apple/F-Droid CI.
+- Carry out a tracked series of compatibility-focused current-stable updates:
+  (a) rustls-platform-verifier + Android JNI/Kotlin source and TLS trust,
+  (b) ureq transport, (c) rusqlite/storage, (d) UniFFI bindings across all
+  platforms, then other audio/rendering/crypto dependencies. These are **upgrade
+  tasks**, not indefinite recommendations to remain on old versions.
+- Changes to critical or coupled dependencies should be tested on isolated
+  PRs with **one consolidated verification cycle per candidate SHA**.
+- A passing F-Droid recipe/build on a version is not a substitute for the
+  AAR provenance, same-SHA reproducibility or Flutter-to-native signed
+  upgrade acceptance gate.
+
+
+## Current maintenance ownership
+
+This document is the single operational owner for dependency/security work.
+The completed repository-migration record and historical post-replacement plans
+must not maintain parallel dependency task lists.
+
+Current maintenance rules include:
+
+- review Dependabot updates individually or in small compatible groups, with
+  security and unmaintained dependencies prioritized;
+- resolve every current strict RustSec vulnerability/unmaintained warning where
+  a maintained stable replacement or update is available;
+- do not use ignore lists or warning suppression to clear `ctutils`,
+  `libsqlite3-sys`, `basic-toml`, `rustix`, or successor findings;
+- determine the actual current blocker set from `core/Cargo.lock`, Dependabot
+  and the strict RustSec workflow rather than from historical inventories.
+
+Release readiness depends on the required dependency/security gates passing; it
+does not turn this policy into a release-publication authority.

@@ -1,0 +1,79 @@
+name: Android signing diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-signing-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    name: Build and verify developer-signed APK
+    runs-on: ubuntu-24.04
+    environment: release-testing
+    env:
+      ANDROID_NDK_VERSION: "29.0.14206865"
+      KEYSTORE_BASE64: "${{ secrets.KEYSTORE_BASE64 }}"
+      KEYSTORE_PASSWORD: "${{ secrets.KEYSTORE_PASSWORD }}"
+      KEY_PASSWORD: "${{ secrets.KEY_PASSWORD }}"
+      KEY_ALIAS: "${{ secrets.KEY_ALIAS }}"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: platform-tools
+
+      - name: Install Android SDK and NDK
+        run: |
+          set -euo pipefail
+          cli="${ANDROID_HOME}/cmdline-tools/22.0/bin/android"
+          "${cli}" --sdk="${ANDROID_HOME}" sdk install "platforms/android-37.0"
+          "${cli}" --sdk="${ANDROID_HOME}" sdk install "build-tools/37.0.0"
+          "${cli}" --sdk="${ANDROID_HOME}" sdk install "ndk/${ANDROID_NDK_VERSION}"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "${GITHUB_ENV}"
+
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+
+      - name: Verify pinned Rust compiler
+        run: rustc --version | grep -F 'rustc 1.99.1 '
+
+      - name: Build unsigned production APK
+        id: build
+        run: |
+          set -euo pipefail
+          source Build/versions/android.properties
+          ./android/Build/build-app.sh productionRelease "${BUILD_NUMBER}" "${VERSION_NAME}"
+          apk="android/app/build/outputs/apk/production/release/app-production-release-unsigned.apk"
+          test -s "${apk}"
+          echo "apk=${apk}" >> "${GITHUB_OUTPUT}"
+          echo "version_name=${VERSION_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "version_code=${BUILD_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Sign APK and verify developer certificate
+        run: |
+          bash Build/sign-release-apk.sh             "${{ steps.build.outputs.apk }}"             "${{ steps.build.outputs.version_name }}"             "${{ steps.build.outputs.version_code }}"
+
+      - name: Upload signed diagnostic artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-signing-diagnostic
+          path: |
+            dist/android/github/*.apk
+            dist/android/github/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 7
