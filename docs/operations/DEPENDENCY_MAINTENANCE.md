@@ -198,3 +198,21 @@ Current maintenance rules include:
 
 Release readiness depends on the required dependency/security gates passing; it
 does not turn this policy into a release-publication authority.
+
+### Reviewed PR #155 candidate — 20 November 2026
+
+The candidate updates `rusqlite` to **0.43.0** with bundled
+`libsqlite3-sys 0.40.0`, and refreshes the compatible transitive packages
+`ctutils` to **0.4.8** and `rustix` to **1.1.6**. No application schema,
+backup format, UniFFI version or platform trust policy changes are involved.
+The strict local audit of this candidate reports **zero vulnerabilities** and
+the two unmaintained-package findings below. It still exits unsuccessfully;
+this record is not a security-gate waiver or permission to merge/release.
+
+| Remaining finding | Affected path / concrete blocker | Next action | Owner | Review by |
+| --- | --- | --- | --- | --- |
+| `chrono 0.4.45` — [RUSTSEC-2026-0543](https://rustsec.org/advisories/RUSTSEC-2026-0543.html) | Direct Core dependency; no patched version. Used by Miniflux RFC 3339 parsing/UTC normalization, retention calculations, media timestamps and runtime retry metadata. | Replace with a maintained date/time crate in a separate focused change; preserve timestamp serialization, offset handling, retention cutoffs and the existing native API. | Repository maintainer / dependency maintenance | 2026-11-27 |
+| `basic-toml 0.1.10` — [RUSTSEC-2026-0374](https://rustsec.org/advisories/RUSTSEC-2026-0374.html) | `flux-uniffi → uniffi 0.32.2 → uniffi_bindgen → askama 0.16.1 → askama_macros → askama_derive → basic-toml`. Current stable UniFFI and Askama still resolve it. Askama's replacement with `toml` is upstream in [3863808cf594054f7644979ed92caaafc878f378](https://github.com/askama-rs/askama/commit/3863808cf594054f7644979ed92caaafc878f378), but is not yet released. | Track/request a stable Askama release containing that fix and validate Swift/Kotlin binding generation. If a source pin is needed before that release, obtain explicit review of the exact upstream revision/provenance; do not silently add a Git patch, fork or advisory ignore. | Repository maintainer / dependency maintenance | 2026-11-27 |
+
+Recheck the current advisory database before acceptance; this candidate snapshot
+does not replace `cargo audit --file core/Cargo.lock --deny warnings`.
