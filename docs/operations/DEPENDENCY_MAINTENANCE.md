@@ -1,6 +1,6 @@
 # Dependency maintenance and security policy
 
-> **Decision: 18 October 2026; status refreshed after FluxNews cutover.**
+> **Decision: 18 October 2026; PR regression-gate amendment: 20 November 2026.**
 > This policy applies to the active **FluxNews** repository. The old Flux
 > repository is retired. This policy does not by itself approve a release,
 > merge, dependency major-version upgrade, or official F-Droid submission.
@@ -43,12 +43,58 @@ is emergency mitigation, **not** completion of an outdated dependency upgrade.
   by the ordinary **current-stable upgrade**. Security fixes and currency
   are two separate success criteria.
 - Merge only after affected Rust, Android, Apple, F-Droid and runtime trust/
-  migration gates are satisfied. No untested bulk version bumps, skipped
+  migration gates and the PR security-regression gate are satisfied. Existing
+  RustSec findings do not prevent independent improvements; new findings do.
+  No untested bulk version bumps, skipped
   required CI, automatic merge or release. Apply current versions by
   **making the code compatible**, not by disabling tests or suppressing
   advisories.
 
-## Strict unmaintained-dependency release gate
+## Normal PR acceptance: no new RustSec findings
+
+Dependency maintenance must improve the repository without requiring a full
+cleanup of unrelated inherited findings in every PR. This is the normal merge
+policy, not an exception or a maintainer override.
+
+`Build/rustsec_gate.py --base <full-PR-base-SHA> --output <report-directory>`
+audits `core/Cargo.lock` from the exact PR base commit and the proposed GitHub
+merge commit. It does not resolve manifests or execute dependency build scripts.
+Both audits use one clean, private checkout of the current RustSec advisory
+database, with independent fetching disabled. The source SHAs, database SHA,
+complete JSON/stderr reports and comparison are retained as CI artifacts; the
+job summary lists new, existing and resolved findings with advisory links.
+Before freezing that database, preparation audits refresh crates.io metadata
+for both lockfiles, including removed packages. This preserves yanked-package
+checks rather than relying on whichever sparse-index entries a runner happens
+to have cached. Preparation reports are retained too; reported registry-check
+errors block the gate even if cargo-audit otherwise returns valid JSON.
+
+- **Pass:** existing findings remain, findings are fixed, or both.
+- **Fail:** a new advisory/package/provenance/kind combination appears, another
+  affected version of an existing package is added, or a newly yanked version
+  is introduced.
+- A package version change alone is not a new advisory. Both resolved versions
+  remain visible in the raw reports. The comparison is not a proof of general
+  runtime safety or exploitability; affected platform/runtime checks still apply.
+- A newly published advisory affecting both base and merge is reported as
+  inherited, rather than attributed to an unrelated PR.
+- Missing/deleted lockfiles, inaccessible commits/databases, malformed or
+  filtered audit output, changed database snapshots and unexpected command
+  failures **block the gate**. The comparison never treats missing evidence as
+  zero findings.
+
+No checked-in baseline, advisory ignore list or blanket warning suppression is
+used. Audits run outside the repository configuration directory and reject
+reported ignores, severity thresholds and target filters. The same rules apply
+to human-authored and Dependabot PRs.
+
+The selective PR workflow runs this check for Rust lockfile/manifests, audit
+configuration and audit/CI-tooling changes. It is a dependency of the existing
+required **CI Gate**; a selected missing/skipped/failed audit therefore blocks
+merging without needing another GitHub ruleset exception. Docs-only or unrelated
+UI changes do not start dependency scans or unnecessary native builds.
+
+## Full monitoring and strict unmaintained-dependency release gate
 
 A dependency which is no longer maintained is an **unacceptable release
 risk** for Flux, even if no specific exploit has yet been disclosed. The
@@ -58,11 +104,18 @@ This includes **transitive** packages. Replacing the dependency or migrating
 its parent crate is mandatory; no blanket ignore list, downgraded exit status
 or permanent exception is accepted.
 
-The workflow therefore enforces `cargo audit --file core/Cargo.lock --deny
-warnings`, deliberately including RustSec's maintenance warnings. A red
-result is actionable and must remain visible until the dependency is replaced.
-Passing this check is necessary for release readiness, not sufficient
-proof of complete security or up-to-date dependencies.
+The daily/manual/main-push scan runs the full audit with
+`cargo audit --deny warnings`, deliberately including RustSec's maintenance
+warnings, through `Build/rustsec_gate.py` without `--base`. A red result remains
+visible and actionable, but is not a blanket PR merge veto. Exit status is not
+downgraded: the script exits 1 for findings and 2 for incomplete evidence.
+
+The release workflow separately runs that same full audit on its exact candidate
+SHA, without a PR baseline, for every platform and validation/release mode.
+Android signing and all tag/publication paths explicitly require its successful
+result. Passing a PR regression check is **not** release approval. A clean full
+audit is necessary for release readiness, not proof of complete security or
+up-to-date dependencies.
 
 **Historical blocking findings (18 October 2026):** the then-resolved graph
 contained `paste`, `rustls-pemfile`, `rustybuzz` and `ttf-parser` through
@@ -70,7 +123,7 @@ the dependency chains documented in the original audit. Those four findings
 are **not the current baseline** and must not be used to describe today's
 `Cargo.lock`.
 
-The strict gate remains unchanged: every current RustSec vulnerability or
+The strict **release** gate remains unchanged: every current RustSec vulnerability or
 unmaintained-warning finding must actually disappear from the resolved
 `core/Cargo.lock`; changing only a manifest constraint is insufficient.
 At the current FluxNews baseline, the outstanding strict-RustSec work is tracked
@@ -78,11 +131,10 @@ against the resolved occurrences including `ctutils`, `libsqlite3-sys`,
 `basic-toml` and `rustix`. The exact advisory chain must be taken from the
 current RustSec output rather than copied forward from this historical table.
 
-**One-time transition:** landing the strict policy/CI into `main` makes
-already-present findings visible and can initially create an expected red
-security check. This is not a waiver for any release or later dependency
-acceptance. Work on dependency updates continues as the highest priority
-until the strict security check AND all affected platform checks pass.
+**Daily work:** an update which fixes three inherited findings and leaves two
+unchanged is mergeable once the regression gate and affected platform checks
+pass. The two remaining findings retain their tracked next actions/owners and
+remain blocking for release. No per-PR policy override is needed.
 
 ## Automated monitoring and CI costs
 
@@ -96,11 +148,13 @@ until the strict security check AND all affected platform checks pass.
    **security updates** and GitHub vulnerability alerts must remain enabled
    in repository settings; verify that their alert visibility and notification
    routing actually work after cutover.
-3. Run an isolated, **daily strict RustSec scan** of `core/Cargo.lock`
-   (`cargo audit --deny warnings`), without building Rust targets, Android
-   apps, or Apple apps. Run it after `core/Cargo.lock` changes and via
-   manual dispatch. **Fail for vulnerabilities, unmaintained crates and
-   other RustSec warnings.** Preserve output, do not suppress findings.
+3. Run the isolated **PR regression gate** for dependency/audit changes through
+   `CI Gate`. Separately run the **daily strict RustSec scan** of
+   `core/Cargo.lock`, after relevant changes land on `main`, via manual dispatch,
+   and on exact release candidates. Neither audit builds Rust targets, Android
+   apps or Apple apps; only the pinned audit tool is installed. Full scans
+   **fail for vulnerabilities, unmaintained crates and other RustSec warnings**.
+   Preserve output and do not suppress findings.
 4. Dependabot's routine PRs should not themselves cascade redundant full
    test suites. Limit open PRs, group updates and use existing per-workflow
    `concurrency.cancel-in-progress` behavior; Rust/Android/Apple CI remain
