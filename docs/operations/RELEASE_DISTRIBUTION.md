@@ -137,6 +137,12 @@ All final scripts should print a concise release summary containing:
    (`arm64-v8a`, `x86_64`, `armeabi-v7a`). Reject missing, failed, skipped or
    inconclusive mandatory checks. Reuse existing checks and avoid duplicate
    native builds.
+   The reusable RustSec workflow also performs a **full strict audit of this
+   exact candidate SHA**, without a PR baseline. Existing findings accepted by
+   a PR regression comparison are not release waivers. The `security` result
+   must be successful before Android signing or any platform's tag/publication
+   step; missing, skipped, cancelled or failed results do not permit promotion.
+   This security check also runs for iOS/macOS and validation-only dispatches.
 3. Before any first native F-Droid publication, also close B2's dependency
    provenance, reproducibility, historical metadata/signature and
    Flutter-to-native signed-update acceptance criteria. CI success alone does

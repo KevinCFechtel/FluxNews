@@ -41,7 +41,7 @@ class CISelectionTests(unittest.TestCase):
         paths = selectors("core/Cargo.lock")
         self.assertEqual(
             {key for key, run in paths.items() if run and key in JOBS},
-            {"rust", "android", "apple", "fdroid"},
+            {"rust", "android", "apple", "fdroid", "security"},
         )
         self.assertFalse(paths["armv7"])
 
@@ -119,6 +119,16 @@ class CISelectionTests(unittest.TestCase):
     def test_leaf_workflow_change_only_affects_itself(self):
         self.assertEqual(selected(".github/workflows/rust.yml"), {"rust"})
 
+    def test_security_tooling_selects_audit_and_cheap_contracts_only(self):
+        for path in ("Build/rustsec_gate.py", "Build/test_rustsec_gate.py",
+                     ".github/workflows/dependency-security.yml"):
+            self.assertEqual(selected(path), {"security", "contracts"})
+
+    def test_core_manifests_and_audit_config_require_security_gate(self):
+        for path in ("core/Cargo.toml", "core/crates/flux-core/Cargo.toml",
+                     ".cargo/audit.toml", "core/.cargo/audit.toml"):
+            self.assertIn("security", selected(path))
+
     def test_archived_flutter_does_not_build_native(self):
         self.assertEqual(
             selected("Archived/Flutter/docs/OLD.md"), set()
@@ -146,6 +156,12 @@ class CIGateTests(unittest.TestCase):
         data = needs({"apple"})
         data["apple"]["result"] = "cancelled"
         self.assertTrue(evaluate_needs(data))
+
+    def test_security_regressions_or_missing_audit_block_required_ci_gate(self):
+        for result in ("failure", "skipped", "cancelled", None):
+            data = needs({"security"})
+            data["security"]["result"] = result
+            self.assertTrue(evaluate_needs(data))
 
     def test_unexpected_job_execution_blocks(self):
         data = needs(set())
