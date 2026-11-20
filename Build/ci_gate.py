@@ -15,7 +15,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-JOBS = ("rust", "android", "apple", "fdroid", "contracts")
+JOBS = ("rust", "android", "apple", "fdroid", "contracts", "security")
 SELECTORS = JOBS + ("armv7",)
 CONTROL_FILES = {
     ".github/workflows/ci.yml",
@@ -52,6 +52,15 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
         gitmodules = path == ".gitmodules"
 
         result["rust"] |= core or path == ".github/workflows/rust.yml"
+        result["security"] |= (
+            path in {
+                "core/Cargo.lock", "core/Cargo.toml",
+                ".github/workflows/dependency-security.yml",
+                "Build/rustsec_gate.py", "Build/test_rustsec_gate.py",
+            }
+            or (core and path.endswith("/Cargo.toml"))
+            or path.startswith(".cargo/") or path.startswith("core/.cargo/")
+        )
         result["armv7"] |= core
         result["android"] |= (
             android or core or verifier or gitmodules
@@ -84,6 +93,7 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
                 ".github/workflows/release-scripts.yml",
                 ".github/workflows/release.yml",
                 ".github/workflows/fdroid-native.yml",
+                ".github/workflows/dependency-security.yml",
             }
             or (path.startswith("fdroid/") and path.endswith(".py"))
         )
