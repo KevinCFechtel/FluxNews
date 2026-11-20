@@ -49,6 +49,12 @@ jobs:
           fi
           bash Build/check-release-candidate.sh "$SCOPE" "$VERSION" "$SHA" "$MODE" >> "$GITHUB_OUTPUT"
 
+  security:
+    needs: preflight
+    uses: ./.github/workflows/dependency-security.yml
+    with:
+      source_sha: ${{ needs.preflight.outputs.sha }}
+
   rust:
     needs: preflight
     runs-on: ubuntu-24.04
@@ -142,8 +148,8 @@ jobs:
           sha256sum "${a[0]}" "${b[0]}"
           cmp -- "${a[0]}" "${b[0]}"
   sign-android:
-    if: "${{ !cancelled() && inputs.mode == 'release' && (inputs.scope == 'android' || inputs.scope == 'all') && needs.rust.result == 'success' && needs.fdroid.result == 'success' && needs.android-tests.result == 'success' && needs.compare.result == 'success' }}"
-    needs: [preflight, rust, android-tests, fdroid, compare]
+    if: "${{ !cancelled() && inputs.mode == 'release' && (inputs.scope == 'android' || inputs.scope == 'all') && needs.security.result == 'success' && needs.rust.result == 'success' && needs.fdroid.result == 'success' && needs.android-tests.result == 'success' && needs.compare.result == 'success' }}"
+    needs: [preflight, security, rust, android-tests, fdroid, compare]
     runs-on: ubuntu-24.04
     environment: release-testing
     env:
@@ -167,8 +173,8 @@ jobs:
           path: dist/android/github/*
           if-no-files-found: error
   publish:
-    if: "${{ always() && !cancelled() && inputs.mode == 'release' && needs.preflight.result == 'success' && needs.rust.result == 'success' && (inputs.scope != 'android' && inputs.scope != 'all' || needs.android-tests.result == 'success' && needs.sign-android.result == 'success') && (inputs.scope != 'ios' && inputs.scope != 'all' || needs.ios.result == 'success') && (inputs.scope != 'macos' && inputs.scope != 'all' || needs.macos.result == 'success') }}"
-    needs: [preflight, rust, android-tests, ios, macos, fdroid, fdroid-repeat, compare, sign-android]
+    if: "${{ always() && !cancelled() && inputs.mode == 'release' && needs.preflight.result == 'success' && needs.security.result == 'success' && needs.rust.result == 'success' && (inputs.scope != 'android' && inputs.scope != 'all' || needs.android-tests.result == 'success' && needs.sign-android.result == 'success') && (inputs.scope != 'ios' && inputs.scope != 'all' || needs.ios.result == 'success') && (inputs.scope != 'macos' && inputs.scope != 'all' || needs.macos.result == 'success') }}"
+    needs: [preflight, security, rust, android-tests, ios, macos, fdroid, fdroid-repeat, compare, sign-android]
     runs-on: ubuntu-24.04
     permissions: {contents: write}
     env:

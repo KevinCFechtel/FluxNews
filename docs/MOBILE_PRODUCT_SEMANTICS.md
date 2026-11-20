@@ -57,7 +57,7 @@ Expansion state, drawer/sheet visibility, and similar presentation state remain 
 
 `Unread Only` and article sort direction are transient Article List presentation controls, not persistent global Settings.
 
-A semantic list reset caused by scope/filter/sort or another explicitly defined reset event returns the Article List to its natural starting position. The mechanism is platform-specific. iOS keeps the owned Timeline controller and moves its collection view to the natural scroll edge so the system navigation chrome follows its normal Large Title behavior; Android must use its own native list/navigation semantics rather than copying that implementation.
+A semantic list reset caused by scope/filter/sort or another explicitly defined reset event returns the Article List to its natural starting position. The mechanism is platform-specific. iOS keeps the owned Timeline controller and moves its current UIKit table-based Timeline to the natural scroll edge so the system navigation chrome follows its normal Large Title behavior; Android must use its own native list/navigation semantics rather than copying that implementation.
 
 Feed icons, including available normal/dark variants from Core, should be used by native clients rather than independently deriving another icon model.
 
@@ -79,33 +79,63 @@ Do not copy an Apple browser implementation to Android or vice versa; preserve t
 
 ## 6. Mark as Read on Scrollover
 
-Scrollover is a product behavior, not an Apple-specific gesture implementation.
+Scrollover is a user-facing article-read feature on native mobile clients, but
+**the accepted qualification algorithms differ by platform**. Do not impose
+iOS UIKit visibility/geometry rules on the already accepted Android Compose
+implementation solely because both features are called Scrollover.
 
-The intended semantic rule is:
+### Android — accepted Compose scroll-session semantics
 
-> An unread article that has satisfied the exposure/qualification requirement and is then genuinely moved completely past the upper Scrollover boundary by user-initiated forward scrolling is marked as read.
+Android E3-D/E3-E uses the first-visible LazyList index, not per-row visibility
+tracking. For each user scroll interaction it records the idle starting
+first-visible index and highest first-visible index reached. When the interaction
+becomes idle, it submits one Core bulk-read batch for stable article IDs in
+`[startIndex, highestReachedIndex)`; at the true end of the loaded dataset its
+accepted end-of-list behavior includes the remaining tail. Reversal does not
+erase the previously reached maximum. Known programmatic movement is excluded;
+structural snapshot replacement resets the in-flight interaction, whereas
+append-only paging can retain it. Already emitted IDs are not re-emitted unless
+explicitly re-armed (for example by Undo).
 
-Required invariants:
+**Important behavioral difference:** first-visible-index progression is not
+proof that every intermediate row was actually visible. A fast fling may
+therefore mark intervening articles read even if Compose did not render them
+within the viewport. That is a known consequence of the **existing accepted
+Android algorithm**, not a regression to fix by silently replacing its tracker.
+Any proposal to require actual per-row visibility on Android is a separate
+product/performance decision requiring explicit approval and new acceptance.
 
-- sufficient exposure/qualification is required; merely jumping past an unseen article must not mark it read;
-- qualification survives a scroll-direction reversal;
-- crossing geometry is rebased across direction reversals so stale motion does not cause missed or false crossings;
-- reverse movement must not mark an article read;
-- a valid forward crossing emits the read action exactly once;
-- programmatic list movement, scope resets, layout changes, and structural row removal must not count as Scrollover;
-- fast movement may process multiple genuinely crossed, already-qualified articles but must not qualify unseen articles merely because they were skipped;
-- Undo semantics remain available where the native client exposes Scrollover.
+See [Android E3-D and Scrollover](platforms/android/ANDROID.md#e3-d--native-android-scrollover).
 
-Each platform should implement these semantics using its native scroll/geometry facilities. SwiftUI/UIKit tracker details are not part of the Android contract.
+### iOS/iPadOS — accepted UIKit execution, flexible read qualification
 
-For iOS/iPadOS, the accepted details in
-[Phase D](PHASE_D_NATIVE_IOS_IPADOS.md#iosipados-article-timeline--uikit) define
-qualification as observed visibility, without a minimum exposure duration, and
-define the narrow terminal exception: a genuine forward arrival at the content
-bottom may complete observed visible trailing rows. This is not permission to
-mark unseen skipped rows or arbitrary newly visible rows after leaving the
-bottom. The UIKit Timeline amendment preserves these existing iOS product rules;
-it does not select an Android renderer or introduce Android-specific behavior.
+The existing UIKit Timeline currently uses resolved row geometry and observed
+visibility for its Scrollover detection. **This is an implementation choice,
+not a mandatory product requirement or an acceptance gate.** A native client
+may mark articles read on genuine user-initiated forward scroll progress without
+individually proving that each article was visually displayed. Fast scrolling
+may include articles passed between observed viewport samples. This is
+acceptable product behavior; do not change the accepted implementation solely
+to enforce or remove an exposure test.
+
+Preserve the established operational safeguards: user-initiated forward
+scrolling rather than reverse-only or known programmatic movement, stable
+article identities, safe session-bound read mutations, non-structural Timeline
+updates, and the existing iOS Undo mechanism. Undo remains the recovery path
+when users want to restore read status, under its existing qualification and
+expiry rules; it is not a promise that every single Scrollover read will
+display an Undo action.
+
+The current UIKit geometry implementation, including its direction-reversal
+and end-of-list behavior, remains valid. Its precise exposure-tracking
+algorithm can evolve through a separate reviewed implementation change without
+reopening an alleged product obligation to prove visual exposure.
+
+See [iOS/iPadOS UIKit Timeline](platforms/ios/IOS.md#iosipados-article-timeline--uikit).
+
+On both platforms, the Core remains the owner of durable read state. Native
+code uses exact article-ID mutations, preserves account/session safety, and
+offers Undo according to the platform's accepted presentation rules.
 
 ## 7. Swipe actions
 

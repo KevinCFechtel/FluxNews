@@ -54,9 +54,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-provider: basic
-          gradle-version: "9.8.1"
+          gradle-version: "9.9.2"
       - name: Verify pinned Gradle for local F-Droid recipe
-        run: gradle --version | grep -F 'Gradle 9.8.1'
+        run: gradle --version | grep -F 'Gradle 9.9.2'
       - name: Install fdroidserver in isolated Python environment
         run: |
           python3 -m venv "${RUNNER_TEMP}/fdroid-venv"

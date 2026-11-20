@@ -31,7 +31,13 @@ Flux displays content from arbitrary RSS subscriptions configured on a user's Mi
 
 Automated structural tests in the existing iOS and macOS XCTest targets parse the **source host and widget Info.plists**, assert the declared host exception, and check that widget ATS remains unchanged. The existing Apple CI exercises the clients and tests but cannot by itself establish HTTP success from arbitrary publishers.
 
-**Outstanding real-environment acceptance** (record pass/fail and sample URL for each target separately):
+**A1 acceptance status (18 October 2026):** the project owner accepted and
+closed A1. The checklist below is retained as the original real-environment
+validation/regression guidance. Its individual pass/fail records and sample URLs
+were not supplied as separate evidence, so they must not be represented as
+independently verified after the fact.
+
+**Original real-environment acceptance checklist:**
 
 1. HTTPS article thumbnail and podcast artwork.
 2. HTTP-only article image in the native timeline.
@@ -42,4 +48,7 @@ Automated structural tests in the existing iOS and macOS XCTest targets parse th
 7. A configured HTTPS Miniflux account still works; a manually configured HTTP Miniflux account continues to show the existing warning.
 8. Inspect **the built host apps'** Info.plists to confirm `NSAppTransportSecurity:NSAllowsArbitraryLoads = YES` and inspect widget Info.plists to confirm no additional exception.
 
-**Status:** ATS plist policy and structural tests implemented. End-to-end network acceptance and App Store review acceptance **not yet independently verified**. A1 is not fully closed until the platform/device checks are recorded.
+**Status:** ATS plist policy and structural tests are implemented and **A1 is
+owner-accepted/closed as of 18 October 2026**. Independent per-case device
+evidence was not recorded in this document. App Store review acceptance remains
+a separate distribution concern and is not implied by A1 closure.

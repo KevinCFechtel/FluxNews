@@ -53,7 +53,7 @@ phases.
 Owns domain models; SQLite/local persistence and durable data state; Miniflux
 networking; sync/reconciliation; durable offline mutations; article/feed/category
 data; account/server configuration semantics; core settings; article/Reader
-content processing; feed-icon acquisition/cache; article-image discovery/cache;
+content processing; feed-icon acquisition/cache; article-image discovery;
 search requests; notification candidate/domain data; widget projection/domain
 data; queries; structured errors/events; and the completed shared media domain,
 persistence, download policies, playback progress, and media-retention
@@ -242,8 +242,8 @@ main thread. Rust owns durable state and delivery; do not add a Swift database
 or another Miniflux client.
 
 The detailed iOS behavior contract is in
-[Phase D](PHASE_D_NATIVE_IOS_IPADOS.md#iosipados-article-timeline--uikit).
-[UIKit Timeline implementation handoff](IOS_UIKIT_TIMELINE_IMPLEMENTATION.md)
+[Phase D](platforms/ios/IOS.md#iosipados-article-timeline--uikit).
+[UIKit Timeline implementation handoff](platforms/ios/IOS.md)
 records the rationale, work packages, and acceptance cases. This is a bounded
 amendment to the iOS Timeline, not a reopening of frozen Core/macOS architecture
 or the Flutter production-data migration contract.
@@ -636,9 +636,12 @@ is only a fallback when the source icon does not provide a suitable
 adaptive appearance. This behavior is automatic and has no user-facing
 setting.
 
-Article image discovery/download/disk cache belongs to the core; native
-UI triggers lazy loading, decodes/renders images, and may maintain a
-memory cache. Background sync does not preload article images.
+Article-image presentation is native-owned. The Core may discover and expose
+article-image URLs or other domain-level image metadata, but native clients own
+HTTP fetching, request policy, decode/downsampling, platform HTTP caching,
+bounded memory/disk image caches, cancellation/prefetch, memory-pressure
+handling and rendering. Article-image bytes/cache state are not Core or sync
+state. Background sync does not preload article images.
 
 Feed-domain preferences are represented as one typed per-feed preference
 model rather than separate preference tables for every feature. The
@@ -740,9 +743,10 @@ Automatic icon contrast handling is implementation behavior, not a user
 preference, and there is no per-feed icon-contrast override. Feed icons are
 regenerable cache; there is no user-facing "delete feed icons only" control.
 
-Article-image cache age is not a user preference. Native clients own bounded
-decoded-image caching, normal platform HTTP caching, memory-pressure handling
-and eviction/tuning. The legacy user-selectable image-cache duration is retired.
+Article-image cache age is not a user preference. Native clients own the
+article-image HTTP/download path plus bounded decoded-image and disk caching,
+normal platform HTTP caching, memory-pressure handling and eviction/tuning.
+The legacy user-selectable image-cache duration is retired.
 
 The following FluxNews legacy concepts are intentionally not carried
 into the shared Flux settings model: fixed stored-article/starred
@@ -843,13 +847,11 @@ Core media root.
 
 Account/server replacement, Rebuild, and Full Reset intentionally have
 different FeedPreferences policies: account replacement and Full Reset remove
-them; Rebuild preserves them. Backup Import remains a separate future
-transactional configuration-replace operation.
+them; Rebuild preserves them. Backup Import is implemented as a separate transactional configuration-replace operation. The platform-specific restore contracts own its current behavior.
 
 ## 15. Phase B — Shared Podcast / Media Core
 
-Phase B is the next development phase. It extends the shared Rust architecture
-without reopening Phase A Newsreader scope. The dependency guide is:
+Phase B is complete. The following is retained as the historical dependency guide for the shared media architecture, not a new implementation sequence:
 
 ```text
 Enclosures
@@ -1044,20 +1046,27 @@ unavailable. Widget Sync activates the app, which performs the normal Core
 Miniflux, credential, and Keychain-free.
 
 After a successful snapshot write or successful stale-snapshot invalidation,
-the app reloads the two stable kinds, `FluxNewsHeadlinesWidget` and
-`FluxNewsCompactStatusWidget`, with targeted `reloadTimelines(ofKind:)` calls.
-There is no delayed reload workaround or `reloadAllTimelines()` call. Incoming
-widget URLs are parsed once and retained until app/Core configuration is ready,
-so cold and warm launches do not duplicate or drop actions.
+the app requests a WidgetKit reload through the shared
+`WidgetTimelineReloader`, whose accepted implementation uses
+`reloadAllTimelines()`. Each native iOS widget timeline also requests a
+30-minute `.after(...)` fallback refresh so an already-written App Group
+snapshot is eventually re-read if the immediate reload is deferred by WidgetKit.
+The fallback performs no Miniflux/Core/database/credential work and does not
+create a second sync path. Incoming widget URLs are parsed once and retained
+until app/Core configuration is ready, so cold and warm launches do not
+duplicate or drop actions.
 
-Supported data scopes include All, Starred, Category, and Feed. Widget
-queries support pagination; `limit = 0` allows the complete matching
-list where the platform can display it.
+Supported data scopes include All, Starred, Category, and Feed. **Main-app/Core
+projection queries** support pagination; `limit = 0` allows the complete
+matching list where the native platform can project it. The extension does not
+perform those queries or access Core directly.
 
-Widgets call the same standardized core operations and may trigger
-`sync(reason = Widget)`. If direct mutation/sync execution is unsuitable
-on a platform, the widget may open the main app with the required intent
-and let the normal app/core path execute it.
+Widget actions route an article/scope or Sync intent into the **main app**,
+which executes the existing standardized Core operation through its normal
+Core-session boundary (including `SyncReason::Widget` where supported). Widget
+extensions/providers are credential-free presentation and intent producers, not
+independent Core mutation, database, or Miniflux execution contexts. No platform
+may interpret this paragraph as permission for direct extension-side Core calls.
 
 ## 18. Opening, Reader navigation, and sharing articles
 
@@ -1223,7 +1232,7 @@ implementation decision depends on the answer, defer the analysis.
 >
 > Add the following authoritative section to the repository architecture
 > decisions. It records durable Phase-C decisions; detailed UX and implementation
-> sequencing remain in `docs/PHASE_C_NATIVE_MACOS_AUDIO.md`.
+> sequencing remain in `docs/platforms/macos/MACOS.md`.
 
 ## Phase C — macOS audio and Listening List
 
@@ -1302,16 +1311,19 @@ is directly visible in the Listening List.
 
 ### macOS Player semantics
 
-The macOS Player is a dedicated popover presentation mode, not a separate
-window and not an in-app mini-player. Native macOS Now Playing/Control Center
-provides remote playback presence while the popover is elsewhere.
+The macOS full Player is a dedicated presentation mode **inside the menu-bar
+popover**, not a separate window. The accepted macOS parity implementation
+additionally provides a **compact in-popover player** with title/artwork and
+play/pause access. Both surfaces use the same native player/Core media state;
+there is no second playback engine. System Now Playing/Control Center remains
+an additional OS-level remote playback surface.
 
 The Player remains available while a medium is loaded, including paused or
 stopped state.
 
 The primary controls are:
 
-**−30s · Play/Pause · Stop · +30s · Restart**
+**−15s · Play/Pause · Stop · +30s · Restart**
 
 Pause preserves loaded media and position. Stop checkpoints progress and keeps
 the medium loaded. Restart resets progress to `0:00` while keeping the medium
@@ -1322,4 +1334,4 @@ pipeline and exposes Core-owned chapters. Visible Player artwork is not
 required; artwork is used for native Now Playing where available.
 
 For complete Phase-C UX, contract, sequencing and acceptance criteria, see
-`docs/PHASE_C_NATIVE_MACOS_AUDIO.md`.
+`docs/platforms/macos/MACOS.md`.

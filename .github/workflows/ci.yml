@@ -21,6 +21,7 @@ jobs:
       fdroid: ${{ steps.select.outputs.fdroid }}
       contracts: ${{ steps.select.outputs.contracts }}
       armv7: ${{ steps.select.outputs.armv7 }}
+      security: ${{ steps.select.outputs.security }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -67,9 +68,18 @@ jobs:
     if: ${{ needs.changes.outputs.contracts == 'true' }}
     uses: ./.github/workflows/release-scripts.yml
 
+  security:
+    name: Security
+    needs: changes
+    if: ${{ needs.changes.outputs.security == 'true' }}
+    uses: ./.github/workflows/dependency-security.yml
+    with:
+      source_sha: ${{ github.sha }}
+      base_sha: ${{ github.event.pull_request.base.sha }}
+
   gate:
     name: CI Gate
-    needs: [changes, rust, android, apple, fdroid, contracts]
+    needs: [changes, rust, android, apple, fdroid, contracts, security]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     steps:

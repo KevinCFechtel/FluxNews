@@ -11,7 +11,7 @@ Android, iOS/iPadOS and macOS clients:
 - `android/` — native Kotlin/Jetpack Compose client;
 - `apple/` — native Apple clients and canonical UniFFI packaging;
 - `Build/` — platform version inputs and release tooling;
-- `docs/` and `AGENTS.md` — unchanged native documentation and agent instructions.
+- `docs/` and `AGENTS.md` — native documentation, project contracts, and agent instructions.
 
 Initialize the native source dependency with:
 
@@ -19,10 +19,10 @@ Initialize the native source dependency with:
 git submodule update --init --recursive -- vendor/rustls-platform-verifier
 ```
 
-See [native development notes](NATIVE_DEVELOPMENT.md), the
-[native architecture](docs/ARCHITECTURE_DECISIONS.md), and the
-[migration record and remaining cutover requirements](MIGRATION.md).
-The repository migration is not an application release.
+See the [documentation index](docs/README.md), [native development notes](NATIVE_DEVELOPMENT.md),
+[native architecture](docs/ARCHITECTURE_DECISIONS.md), and the completed
+[repository migration record](docs/archive/migration/FLUX_TO_FLUXNEWS.md).
+The repository migration is complete; native release and distribution gates are tracked separately in the documentation index.
 
 ## Published Flutter application
 

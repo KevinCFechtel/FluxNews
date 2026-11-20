@@ -15,7 +15,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-JOBS = ("rust", "android", "apple", "fdroid", "contracts")
+JOBS = ("rust", "android", "apple", "fdroid", "contracts", "security")
 SELECTORS = JOBS + ("armv7",)
 CONTROL_FILES = {
     ".github/workflows/ci.yml",
@@ -39,10 +39,11 @@ FDROID_BUILD_FILES = {
 
 def select_jobs(paths: list[str]) -> dict[str, bool]:
     result = {name: False for name in SELECTORS}
-    if any(path in CONTROL_FILES for path in paths):
+    technical_paths = [path for path in paths if not path.lower().endswith(".md")]
+    if any(path in CONTROL_FILES for path in technical_paths):
         return {name: True for name in SELECTORS}
 
-    for path in paths:
+    for path in technical_paths:
         core = path.startswith("core/")
         android = path.startswith("android/")
         apple = path.startswith("apple/")
@@ -51,11 +52,19 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
         gitmodules = path == ".gitmodules"
 
         result["rust"] |= core or path == ".github/workflows/rust.yml"
+        result["security"] |= (
+            path in {
+                "core/Cargo.lock", "core/Cargo.toml",
+                ".github/workflows/dependency-security.yml",
+                "Build/rustsec_gate.py", "Build/test_rustsec_gate.py",
+            }
+            or (core and path.endswith("/Cargo.toml"))
+            or path.startswith(".cargo/") or path.startswith("core/.cargo/")
+        )
         result["armv7"] |= core
         result["android"] |= (
             android or core or verifier or gitmodules
             or path == ".github/workflows/android.yml"
-            or path == "docs/ANDROID_WEBLATE_LOCALIZATION.md"
             or path == "Build/versions/android.properties"
         )
         result["apple"] |= (
@@ -84,6 +93,7 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
                 ".github/workflows/release-scripts.yml",
                 ".github/workflows/release.yml",
                 ".github/workflows/fdroid-native.yml",
+                ".github/workflows/dependency-security.yml",
             }
             or (path.startswith("fdroid/") and path.endswith(".py"))
         )
