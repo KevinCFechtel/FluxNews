@@ -61,6 +61,20 @@ enum IOSArticleListChromePresentation {
         }
     }
 
+    /// iPadOS 17–25 keeps custom actions outside the compressed navigation bar;
+    /// iPadOS 26+ retains its native grouped toolbar.
+    static func iPadActionPlacement(
+        for mode: IOSArticleListChromeMode,
+        supportsNativeGroupedToolbar: Bool
+    ) -> IOSArticleListActionPlacement {
+        switch mode {
+        case .persistentSplit, .persistentSplitCollapsed:
+            supportsNativeGroupedToolbar ? .topBarTrailing : .floatingTopTrailing
+        case .compactPortrait, .compactLandscape:
+            actionPlacement(for: mode)
+        }
+    }
+
     static func configurableDirectActionCapacity(
         for mode: IOSArticleListChromeMode,
         systemPrefersVerticalToolbar: Bool = false
@@ -138,12 +152,14 @@ enum IOSArticleListChromePresentation {
 }
 
 enum IOSArticleListActionChromeMetrics {
+    static let legacyIPadMinimumHitTarget: CGFloat = 44
     static let floatingHorizontalPadding: CGFloat = 8
     static let floatingVerticalPadding: CGFloat = 5
     static let floatingSpacing: CGFloat = 6
 }
 
 enum IOSArticleListTitleCapsuleMetrics {
+    static let legacyIPadMinimumTitleHeight: CGFloat = 44
     /// The title capsule is deliberately outside UINavigationBar chrome. These
     /// insets create a small transparent floating row without registering the
     /// capsule as a scroll-edge element.
@@ -269,6 +285,7 @@ private struct ArticleListTitleCapsule: View {
     var showsBrandMark = false
     var reservesInlineMinimumWidth = true
     var usesSystemToolbarGlass = false
+    var minimumHeight: CGFloat? = nil
     // Read so the derived glyph height is recomputed when the text size changes.
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -353,6 +370,7 @@ private struct ArticleListTitleCapsule: View {
         }
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
+        .frame(minHeight: minimumHeight)
         .background {
             ArticleListChromeCapsuleBackground(
                 usesSystemToolbarGlass: usesSystemToolbarGlass,
@@ -755,7 +773,10 @@ struct ArticleListNavigationChrome<Content: View, TopActions: View, TopAccessory
                             widthReservationSubtitle: nil,
                             layout: .inline,
                             action: nil,
-                            showsBrandMark: true
+                            showsBrandMark: true,
+                            minimumHeight: UIDevice.current.userInterfaceIdiom == .pad
+                                ? IOSArticleListTitleCapsuleMetrics.legacyIPadMinimumTitleHeight
+                                : nil
                         )
                         Spacer(minLength: IOSArticleListTitleCapsuleMetrics.floatingRowSpacing)
                         topAccessory()
