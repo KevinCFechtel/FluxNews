@@ -20,6 +20,13 @@ daily/main-push/manual scans and strict exact-SHA release checks.
 - `resvg` and `usvg` share the `svg-rendering` Cargo group for every update
   type, including breaking 0.x updates. They exchange `usvg::Tree` directly
   and must be upgraded together; the routine Cargo group excludes both.
+- `dtolnay/rust-toolchain` pins a reviewed commit from upstream `master`, not
+  a compiler-named ref. Dependabot can update the Action SHA independently;
+  `with.toolchain` explicitly selects Rust `1.99.1`, with an immediate runtime
+  version assertion in every consuming job. Compiler upgrades are separate,
+  deliberate changes. `Build/test_rust_toolchain_contract.py` checks this
+  separation, including release and diagnostic workflows; every workflow change
+  selects the cheap contract gate. No Action updates are ignored or disabled.
 - PRs compare base and proposed merge lockfiles against the **same** current
   advisory-database checkout. Existing findings remain visible but do not block
   independent improvements; new findings, additional affected versions, changed

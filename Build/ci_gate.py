@@ -86,16 +86,11 @@ def select_jobs(paths: list[str]) -> dict[str, bool]:
         )
         result["contracts"] |= (
             scripts
+            or path.startswith(".github/workflows/")
             or path.startswith("android/Build/")
             or path.startswith("apple/ios/Build/")
             or path.startswith("apple/macos/Build/")
-            or path in {
-                ".github/workflows/release-scripts.yml",
-                ".github/workflows/release.yml",
-                ".github/workflows/fdroid-native.yml",
-                ".github/workflows/dependency-security.yml",
-                ".github/dependabot.yml",
-            }
+            or path == ".github/dependabot.yml"
             or (path.startswith("fdroid/") and path.endswith(".py"))
         )
 

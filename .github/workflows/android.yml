@@ -68,8 +68,9 @@ jobs:
           "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "build-tools/37.0.0"
           "${ANDROID_CLI}" --sdk="${ANDROID_HOME}" sdk install "ndk/${ANDROID_NDK_VERSION}"
           echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "${GITHUB_ENV}"
-      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # master
         with:
+          toolchain: "1.99.1"
           targets: ${{ inputs.include_armv7 && 'aarch64-linux-android,x86_64-linux-android,armv7-linux-androideabi' || 'aarch64-linux-android,x86_64-linux-android' }}
       - name: Verify pinned Rust compiler
         run: rustc --version | grep -F 'rustc 1.99.1 '
