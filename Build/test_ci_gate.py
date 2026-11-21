@@ -116,8 +116,12 @@ class CISelectionTests(unittest.TestCase):
         self.assertEqual(selected("Build/ci_gate.py"), set(JOBS))
         self.assertTrue(selectors(".github/workflows/ci.yml")["armv7"])
 
-    def test_leaf_workflow_change_only_affects_itself(self):
-        self.assertEqual(selected(".github/workflows/rust.yml"), {"rust"})
+    def test_leaf_workflow_change_checks_itself_and_cheap_contracts(self):
+        self.assertEqual(selected(".github/workflows/rust.yml"), {"rust", "contracts"})
+
+    def test_every_workflow_change_checks_toolchain_contracts(self):
+        for path in ("android-signing-diagnostic.yml", "new-workflow.yml"):
+            self.assertEqual(selected(f".github/workflows/{path}"), {"contracts"})
 
     def test_dependabot_group_changes_require_cheap_contracts(self):
         self.assertEqual(selected(".github/dependabot.yml"), {"contracts"})

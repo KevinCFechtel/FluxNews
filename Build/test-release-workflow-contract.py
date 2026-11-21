@@ -193,8 +193,10 @@ require(expected_fingerprint in SIGN, "developer signing fingerprint changed or 
 require("apksigner" in SIGN and "aapt" in SIGN,
         "signing script must verify certificate and APK identity")
 
-require('".github/workflows/release.yml"' in CONTRACT_CI,
-        "release workflow changes must trigger cheap contract CI")
+require('".github/workflows/**"' in CONTRACT_CI,
+        "all workflow changes must trigger cheap toolchain/release contract CI")
+require("test_rust_toolchain_contract.py" in CONTRACT_CI,
+        "cheap CI must verify independent Action and Rust compiler pins")
 require("actionlint" in CONTRACT_CI and "test-release-workflow-contract.py" in CONTRACT_CI,
         "cheap CI must run actionlint and the project release contract")
 for forbidden in ("git push --force", "git tag -f", "update-ref -f"):
