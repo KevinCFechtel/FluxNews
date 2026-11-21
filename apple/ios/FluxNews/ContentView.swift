@@ -782,6 +782,8 @@ struct ContentView: View {
         systemUsesAdaptiveToolbar: Bool,
         systemPrefersVerticalToolbar: Bool
     ) -> some View {
+        // Keep iPad actions in their established native navigation-bar position.
+        // Only the pre-iPadOS-26 custom group needs explicit visual/hit sizing.
         let actionPlacement: IOSArticleListActionPlacement = if
             UIDevice.current.userInterfaceIdiom == .pad,
             articleListChromeMode == .persistentSplit
@@ -794,6 +796,17 @@ struct ContentView: View {
                 systemPrefersVerticalToolbar: systemPrefersVerticalToolbar,
                 systemUsesAdaptiveToolbar: systemUsesAdaptiveToolbar
             )
+        }
+        let legacyIPadMinimumHitTarget: CGFloat?
+        if UIDevice.current.userInterfaceIdiom == .pad,
+           actionPlacement == .topBarTrailing {
+            if #available(iOS 26.0, *) {
+                legacyIPadMinimumHitTarget = nil
+            } else {
+                legacyIPadMinimumHitTarget = IOSArticleListActionChromeMetrics.legacyIPadMinimumHitTarget
+            }
+        } else {
+            legacyIPadMinimumHitTarget = nil
         }
         let usesNativeTopEdgeEffect = IOSArticleListChromePresentation.usesNativeTopEdgeEffect(
             for: articleListChromeMode,
@@ -817,7 +830,10 @@ struct ContentView: View {
             systemUsesAdaptiveToolbar: systemUsesAdaptiveToolbar,
             systemPrefersVerticalToolbar: systemPrefersVerticalToolbar,
             topActions: {
-                articleListActionButtons(directCapacity: directActionCapacity)
+                articleListActionButtons(
+                    directCapacity: directActionCapacity,
+                    minimumHitTarget: legacyIPadMinimumHitTarget
+                )
             },
             topAccessory: {
                 if miniPlayerPlacement == .compactTopBar {
@@ -898,10 +914,20 @@ struct ContentView: View {
                     } else {
                         ToolbarItem(placement: .topBarTrailing) {
                             HStack(spacing: IOSArticleListActionChromeMetrics.floatingSpacing) {
-                                articleListActionButtons(directCapacity: directActionCapacity)
+                                articleListActionButtons(
+                                    directCapacity: directActionCapacity,
+                                    minimumHitTarget: legacyIPadMinimumHitTarget
+                                )
                             }
+                            .labelStyle(.iconOnly)
+                            .font(legacyIPadMinimumHitTarget == nil
+                                ? nil
+                                : .system(size: IOSArticleListActionChromeMetrics.legacyIPadIconPointSize,
+                                          weight: .medium))
                             .padding(.horizontal, IOSArticleListActionChromeMetrics.floatingHorizontalPadding)
-                            .padding(.vertical, IOSArticleListActionChromeMetrics.floatingVerticalPadding)
+                            .padding(.vertical, legacyIPadMinimumHitTarget == nil
+                                ? IOSArticleListActionChromeMetrics.floatingVerticalPadding
+                                : 0)
                             .background(.regularMaterial, in: Capsule())
                         }
                     }
@@ -974,7 +1000,8 @@ struct ContentView: View {
                     manualSyncState: newsreaderStore.manualSyncState,
                     transientState: syncPresentation
                 ),
-                action: performManualSyncControlAction
+                action: performManualSyncControlAction,
+                minimumHitTarget: minimumHitTarget
             )
             articleListConfigurableActionButtons(
                 directCapacity: directCapacity,
@@ -1015,6 +1042,19 @@ struct ContentView: View {
     }
 
     @ViewBuilder
+    private func articleListActionIcon(
+        _ symbolName: String,
+        minimumHitTarget: CGFloat?
+    ) -> some View {
+        Image(systemName: symbolName)
+            .frame(
+                width: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize,
+                height: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize
+            )
+            .frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)
+            .contentShape(Rectangle())
+    }
+
     private func articleListActionButton(
         _ action: IOSBottomAction,
         minimumHitTarget: CGFloat? = nil
@@ -1027,7 +1067,8 @@ struct ContentView: View {
                     manualSyncState: newsreaderStore.manualSyncState,
                     transientState: syncPresentation
                 ),
-                action: performManualSyncControlAction
+                action: performManualSyncControlAction,
+                minimumHitTarget: minimumHitTarget
             )
 
         case .filterAndSort:
@@ -1035,6 +1076,8 @@ struct ContentView: View {
                 filterAndSortMenuContent
             } label: {
                 Label("Filter and Sort", systemImage: action.symbolName)
+                    .frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)
+                    .contentShape(Rectangle())
             }
             .accessibilityIdentifier("articleList.filterSort")
 
@@ -1042,8 +1085,7 @@ struct ContentView: View {
             Button {
                 newsreaderStore.setUnreadOnly(!newsreaderStore.unreadOnly)
             } label: {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(
                 newsreaderStore.unreadOnly
@@ -1056,8 +1098,7 @@ struct ContentView: View {
             Button {
                 newsreaderStore.setNewestFirst(!newsreaderStore.newestFirst)
             } label: {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(
                 newsreaderStore.newestFirst
@@ -1068,48 +1109,42 @@ struct ContentView: View {
 
         case .search:
             Button(action: openSearch) {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(action.settingsTitle)
             .accessibilityIdentifier("articleList.search")
 
         case .markAllRead:
             Button { presentMarkReadConfirmation(.read) } label: {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(action.settingsTitle)
             .accessibilityIdentifier("articleList.markAllRead")
 
         case .markAllReadAndNext:
             Button { presentMarkReadConfirmation(.readAndNext) } label: {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(action.settingsTitle)
             .accessibilityIdentifier("articleList.markAllReadAndNext")
 
         case .listeningList:
             Button(action: openListeningList) {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(action.settingsTitle)
             .accessibilityIdentifier("articleList.listeningList")
 
         case .nowPlaying:
             Button { nowPlayingPresented = true } label: {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel("Now Playing")
             .accessibilityIdentifier("articleList.nowPlaying")
 
         case .settings:
             Button { settingsPresented = true } label: {
-                Image(systemName: action.symbolName)
-                    .frame(width: 24, height: 24)
+                articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)
             }
             .accessibilityLabel(action.settingsTitle)
             .accessibilityIdentifier("articleList.settings")
@@ -1118,11 +1153,6 @@ struct ContentView: View {
                 EmptyView()
             }
         }
-        .frame(
-            minWidth: minimumHitTarget,
-            minHeight: minimumHitTarget
-        )
-        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -1156,14 +1186,11 @@ struct ContentView: View {
             }
         } label: {
             Label("More", systemImage: IOSBottomAction.more.symbolName)
+                .frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel(String(localized: "More"))
         .accessibilityIdentifier("articleList.more")
-        .frame(
-            minWidth: minimumHitTarget,
-            minHeight: minimumHitTarget
-        )
-        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -1991,11 +2018,17 @@ extension ContentView {
 private struct IOSSyncToolbarButton: View {
     let state: IOSSyncButtonPresentation.State
     let action: () -> Void
+    var minimumHitTarget: CGFloat? = nil
 
     var body: some View {
         Button(action: action) {
             Image(systemName: IOSSyncButtonPresentation.symbolName(for: state))
-                .frame(width: 24, height: 24)
+                .frame(
+                    width: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize,
+                    height: minimumHitTarget == nil ? 24 : IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize
+                )
+                .frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel(IOSSyncButtonPresentation.accessibilityLabel(for: state))
         .accessibilityValue(IOSSyncButtonPresentation.accessibilityValue(for: state))

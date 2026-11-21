@@ -807,6 +807,10 @@ final class NewsreaderPresentationTests: XCTestCase {
     }
 
     func testFloatingActionGroupUsesStableCapsuleMetrics() {
+        XCTAssertEqual(IOSArticleListActionChromeMetrics.legacyIPadMinimumHitTarget, 44)
+        XCTAssertEqual(IOSArticleListActionChromeMetrics.legacyIPadIconPointSize, 26)
+        XCTAssertEqual(IOSArticleListActionChromeMetrics.legacyIPadIconFrameSize, 28)
+        XCTAssertEqual(IOSArticleListTitleCapsuleMetrics.legacyIPadMinimumTitleHeight, 44)
         XCTAssertEqual(IOSArticleListActionChromeMetrics.floatingHorizontalPadding, 8)
         XCTAssertEqual(IOSArticleListActionChromeMetrics.floatingVerticalPadding, 5)
         XCTAssertEqual(IOSArticleListActionChromeMetrics.floatingSpacing, 6)
@@ -1246,6 +1250,33 @@ final class NewsreaderPresentationTests: XCTestCase {
                 .topBarTrailing
             )
         }
+    }
+
+    func testIPadLegacyActionLabelsExpandTheirOwnHitTargets() throws {
+        let testsDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+        let iosDirectory = testsDirectory.deletingLastPathComponent()
+        let source = try String(
+            contentsOf: iosDirectory.appendingPathComponent("FluxNews/ContentView.swift"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(source.contains("minimumHitTarget: legacyIPadMinimumHitTarget"))
+        XCTAssertTrue(source.contains(".frame(minWidth: minimumHitTarget, minHeight: minimumHitTarget)"))
+        XCTAssertTrue(source.contains("articleListActionIcon(action.symbolName, minimumHitTarget: minimumHitTarget)"))
+        XCTAssertTrue(source.contains("size: IOSArticleListActionChromeMetrics.legacyIPadIconPointSize"))
+    }
+
+    func testLegacyIPadCollapsedTitleIsProminentWithoutMovingToolbar() throws {
+        let testsDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+        let iosDirectory = testsDirectory.deletingLastPathComponent()
+        let chrome = try String(
+            contentsOf: iosDirectory.appendingPathComponent("FluxNews/IOSArticleListChrome.swift"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(chrome.contains("prominentLegacyIPad: prominentLegacyIPadTitle"))
+        XCTAssertTrue(chrome.contains("minimumHeight: prominentLegacyIPadTitle"))
+        XCTAssertTrue(chrome.contains(".font(prominentLegacyIPad ? .headline"))
     }
 
     func testIPadRegularToolbarUsesOneHorizontalPathIndependentOfVerticalToolbarCapability() throws {
