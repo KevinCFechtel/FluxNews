@@ -41,10 +41,13 @@ daily/main-push/manual scans and strict exact-SHA release checks.
   `rustls-pemfile`, `rustybuzz`, `ttf-parser`) is historical and no
   longer describes the current resolved graph. Use the current
   `core/Cargo.lock` plus the strict RustSec job for present blockers.
-  Outstanding current work includes resolved occurrences associated with
-  `ctutils`, `libsqlite3-sys`, `basic-toml` and `rustix`; take the
-  exact advisory/dependency chain from the current audit output. No finding is
-  cleared by merely changing a parent manifest constraint.
+  The November PR batch resolved the inherited `ctutils`, `libsqlite3-sys`
+  and `rustix` findings in #155. The last verified strict audit still reports
+  unmaintained `chrono` and `basic-toml`; these are separate release blockers,
+  not unfinished work on those merged PRs. Current PR dispositions, audit
+  evidence and remaining ownership are recorded only in
+  `docs/operations/DEPENDENCY_MAINTENANCE.md`. No finding is cleared by merely
+  changing a parent manifest constraint.
 - Do not skip required Android/Rust/Apple gates for Dependabot PRs, nor add
   automatic full F-Droid, device or release builds to this security workflow.
 - Before merging changes to `rustls-platform-verifier`, `jni`, `uniffi`,

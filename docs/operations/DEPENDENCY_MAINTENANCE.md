@@ -126,10 +126,11 @@ are **not the current baseline** and must not be used to describe today's
 The strict **release** gate remains unchanged: every current RustSec vulnerability or
 unmaintained-warning finding must actually disappear from the resolved
 `core/Cargo.lock`; changing only a manifest constraint is insufficient.
-At the current FluxNews baseline, the outstanding strict-RustSec work is tracked
-against the resolved occurrences including `ctutils`, `libsqlite3-sys`,
-`basic-toml` and `rustix`. The exact advisory chain must be taken from the
-current RustSec output rather than copied forward from this historical table.
+PR #155 resolved the inherited `ctutils`, `libsqlite3-sys` and `rustix`
+findings. The last verified strict audit still reports unmaintained `chrono`
+and `basic-toml`; see the dated evidence and remaining ownership below.
+Determine the exact current advisory set from fresh audit output, not from
+the historical inventory.
 
 **Daily work:** an update which fixes three inherited findings and leaves two
 unchanged is mergeable once the regression gate and affected platform checks
@@ -221,11 +222,11 @@ not be misread as a dependency freshness assessment.
   The retired Flux repository is historical reference only.
 - Keep documentation separate from source version changes so docs-only
   commits do not trigger costly Rust/Apple/F-Droid CI.
-- Carry out a tracked series of compatibility-focused current-stable updates:
-  (a) rustls-platform-verifier + Android JNI/Kotlin source and TLS trust,
-  (b) ureq transport, (c) rusqlite/storage, (d) UniFFI bindings across all
-  platforms, then other audio/rendering/crypto dependencies. These are **upgrade
-  tasks**, not indefinite recommendations to remain on old versions.
+- The initial compatibility-focused upgrade sequence and 18 October inventory
+  are historical, not an active taskboard. Further current-stable updates
+  should use small compatible groups and the current resolved graph; do not
+  reopen completed verifier/JNI, transport, storage or binding migrations from
+  that inventory. The November PR dispositions are recorded below.
 - Changes to critical or coupled dependencies should be tested on isolated
   PRs with **one consolidated verification cycle per candidate SHA**.
 - A passing F-Droid recipe/build on a version is not a substitute for the
@@ -245,28 +246,54 @@ Current maintenance rules include:
   security and unmaintained dependencies prioritized;
 - resolve every current strict RustSec vulnerability/unmaintained warning where
   a maintained stable replacement or update is available;
-- do not use ignore lists or warning suppression to clear `ctutils`,
-  `libsqlite3-sys`, `basic-toml`, `rustix`, or successor findings;
+- do not use ignore lists or warning suppression to clear `chrono`,
+  `basic-toml`, or successor findings;
 - determine the actual current blocker set from `core/Cargo.lock`, Dependabot
   and the strict RustSec workflow rather than from historical inventories.
 
 Release readiness depends on the required dependency/security gates passing; it
 does not turn this policy into a release-publication authority.
 
-### Reviewed PR #155 candidate — 20 November 2026
+### November dependency PR closure review — 21 November 2026
 
-The candidate updates `rusqlite` to **0.43.0** with bundled
+GitHub PR states and the resolved lockfile were checked on 21 November.
+The merged updates and superseded proposals below are **not open dependency
+tasks**. Routine future dependency review continues under the policy above.
+
+| PR | Scope | Verified disposition |
+| --- | --- | --- |
+| [#158](https://github.com/KevinCFechtel/FluxNews/pull/158) | Gradle wrapper and F-Droid pin to 9.9.2, official checksums and alignment contract | Merged 20 November |
+| [#187](https://github.com/KevinCFechtel/FluxNews/pull/187) | Required PR RustSec regression gate; separate strict monitoring/release audits | Merged 20 November; no per-PR policy exception remains |
+| [#155](https://github.com/KevinCFechtel/FluxNews/pull/155) | `rusqlite 0.43.0`, `libsqlite3-sys 0.40.0`, `ctutils 0.4.8`, `rustix 1.1.6` | Merged 20 November; inherited findings for the latter three packages resolved |
+| [#153](https://github.com/KevinCFechtel/FluxNews/pull/153) | Locked `ureq 3.5.2` and `ureq-proto 0.7.1` | Merged 20 November; #155 fixes retained |
+| [#156](https://github.com/KevinCFechtel/FluxNews/pull/156) / [#157](https://github.com/KevinCFechtel/FluxNews/pull/157) | Coupled `resvg` / `usvg 0.50.0`, SVG regression tests and Dependabot compatibility group | #156 merged 20 November; #157 closed as superseded |
+| [#188](https://github.com/KevinCFechtel/FluxNews/pull/188) | Locked `rand 0.10.4` | Merged 20 November |
+| [#189](https://github.com/KevinCFechtel/FluxNews/pull/189) | Android Gradle Plugin 9.5.2 for application, library and test plugins | Merged 20 November |
+| [#154](https://github.com/KevinCFechtel/FluxNews/pull/154) / [#192](https://github.com/KevinCFechtel/FluxNews/pull/192) | Replace the invalid compiler-ref update with independent Action SHA and explicit Rust 1.99.1 input, plus contract tests | #154 closed without merge; replacement #192 merged 21 November after full affected CI passed on `f4fdf604` ([run #44879665743](https://github.com/KevinCFechtel/FluxNews/actions/runs/44879665743)) |
+
+No PR acceptance or implementation tasks remain for this reviewed batch.
+The independent strict-release findings below remain open. No automatic merge,
+signing, publication or release approval is authorized by this closure record.
+
+### Remaining strict-release findings — last verified 20 November 2026
+
+The merged #155 update uses `rusqlite` **0.43.0** with bundled
 `libsqlite3-sys 0.40.0`, and refreshes the compatible transitive packages
 `ctutils` to **0.4.8** and `rustix` to **1.1.6**. No application schema,
 backup format, UniFFI version or platform trust policy changes are involved.
-The strict local audit of this candidate reports **zero vulnerabilities** and
-the two unmaintained-package findings below. It still exits unsuccessfully;
-this record is not a security-gate waiver or permission to merge/release.
+The later strict monitoring audit
+[#44795290191](https://github.com/KevinCFechtel/FluxNews/actions/runs/44795290191),
+on the #188 merge SHA `0f710a528149f69fa54db607cbf49f32a4d2130d`,
+still reports the two unmaintained-package findings below and exits
+unsuccessfully. Both versions remain in the reviewed lockfile.
+This is dated audit evidence, not a fresh audit of every subsequent SHA,
+a PR merge veto or release approval. These follow-ups are independent of the
+completed dependency PR batch.
 
 | Remaining finding | Affected path / concrete blocker | Next action | Owner | Review by |
 | --- | --- | --- | --- | --- |
 | `chrono 0.4.45` — [RUSTSEC-2026-0543](https://rustsec.org/advisories/RUSTSEC-2026-0543.html) | Direct Core dependency; no patched version. Used by Miniflux RFC 3339 parsing/UTC normalization, retention calculations, media timestamps and runtime retry metadata. | Replace with a maintained date/time crate in a separate focused change; preserve timestamp serialization, offset handling, retention cutoffs and the existing native API. | Repository maintainer / dependency maintenance | 2026-11-27 |
-| `basic-toml 0.1.10` — [RUSTSEC-2026-0374](https://rustsec.org/advisories/RUSTSEC-2026-0374.html) | `flux-uniffi → uniffi 0.32.2 → uniffi_bindgen → askama 0.16.1 → askama_macros → askama_derive → basic-toml`. Current stable UniFFI and Askama still resolve it. Askama's replacement with `toml` is upstream in [3863808cf594054f7644979ed92caaafc878f378](https://github.com/askama-rs/askama/commit/3863808cf594054f7644979ed92caaafc878f378), but is not yet released. | Track/request a stable Askama release containing that fix and validate Swift/Kotlin binding generation. If a source pin is needed before that release, obtain explicit review of the exact upstream revision/provenance; do not silently add a Git patch, fork or advisory ignore. | Repository maintainer / dependency maintenance | 2026-11-27 |
+| `basic-toml 0.1.10` — [RUSTSEC-2026-0374](https://rustsec.org/advisories/RUSTSEC-2026-0374.html) | `flux-uniffi → uniffi 0.32.2 → uniffi_bindgen → askama 0.16.1 → askama_macros → askama_derive → basic-toml`. At the recorded review, stable UniFFI and Askama still resolved it. Askama's replacement with `toml` is upstream in [3863808cf594054f7644979ed92caaafc878f378](https://github.com/askama-rs/askama/commit/3863808cf594054f7644979ed92caaafc878f378), but was not yet released. | Track/request a published stable Askama release containing that fix and validate Swift/Kotlin binding generation. Do not substitute an unreleased Git pin, fork or advisory ignore for this maintenance batch. | Repository maintainer / dependency maintenance | 2026-11-27 |
 
-Recheck the current advisory database before acceptance; this candidate snapshot
+Recheck the current advisory database before release acceptance; this dated snapshot
 does not replace `cargo audit --file core/Cargo.lock --deny warnings`.
