@@ -692,6 +692,18 @@ struct ArticleListNavigationChrome<Content: View, TopActions: View, TopAccessory
         ArticleListCounterPresentation.usesNativeSubtitle(showArticleCount: store.showArticleCount, supportsNativeSubtitle: true) ? subtitle : nil
     }
 
+    private var prominentLegacyIPadTitle: Bool {
+        guard UIDevice.current.userInterfaceIdiom == .pad,
+              chromeMode == .persistentSplitCollapsed
+        else {
+            return false
+        }
+        if #available(iOS 26.0, *) {
+            return false
+        }
+        return true
+    }
+
     var body: some View {
         let title = ArticleListTitlePresentation.title(scope: store.scope, catalog: store.catalog)
         let countLabel = ArticleListCounterPresentation.expandedLabel(
@@ -710,14 +722,6 @@ struct ArticleListNavigationChrome<Content: View, TopActions: View, TopAccessory
         // Reserve the alternate second-line state so Count -> Syncing -> Count
         // does not make the compact landscape capsule breathe horizontally.
         let landscapeWidthReservationSubtitle = store.isSyncing ? landscapeCountLabel : syncingLabel
-
-        let prominentLegacyIPadTitle: Bool
-        if #available(iOS 26.0, *) {
-            prominentLegacyIPadTitle = false
-        } else {
-            prominentLegacyIPadTitle = UIDevice.current.userInterfaceIdiom == .pad
-                && chromeMode == .persistentSplitCollapsed
-        }
 
         let capsulePlacement = IOSArticleListChromePresentation.titleCapsulePlacement(
             for: chromeMode,
