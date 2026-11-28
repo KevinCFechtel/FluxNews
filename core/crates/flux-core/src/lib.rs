@@ -2028,6 +2028,7 @@ mod tests {
                     is_starred: false,
                     raw_html_content: "<p>Equivalent content</p>".into(),
                     reading_time_minutes: 0,
+                    tags: Vec::new(),
                     preview: "Remote preview".into(),
                     image_url: None,
                 },
@@ -2128,6 +2129,7 @@ mod tests {
                 comments_url: String::new(),
                 published_at: "2026-01-02T03:04:05Z".into(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 is_read: false,
                 is_starred: false,
                 preview: "Remote preview".into(),
@@ -2147,6 +2149,7 @@ mod tests {
             is_starred: starred,
             raw_html_content: format!("<p>{id}</p>"),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: id.to_string(),
             image_url: None,
         }
@@ -2498,7 +2501,7 @@ mod tests {
         assert_eq!(
             conn.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            22
+            23
         );
         let bytes = std::fs::read(core.database_path()).unwrap();
         assert!(
@@ -3890,6 +3893,7 @@ mod tests {
                 is_read: false,
                 is_starred: false,
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             };
@@ -4133,6 +4137,7 @@ mod tests {
                 is_read: false,
                 is_starred: false,
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             })

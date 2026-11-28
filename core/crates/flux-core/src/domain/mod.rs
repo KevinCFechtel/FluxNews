@@ -51,6 +51,8 @@ pub struct Article {
     pub reading_time_minutes: u32,
     pub preview: String,
     pub image_url: Option<String>,
+    /// Publisher-provided article topics, independent of the feed's category.
+    pub tags: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -361,6 +363,7 @@ pub struct ArticleSummary {
     pub reading_time_minutes: u32,
     pub preview: String,
     pub image_url: Option<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

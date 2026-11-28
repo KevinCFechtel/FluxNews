@@ -510,6 +510,24 @@ The larger `AndroidStoragePaths` ownership/lifecycle review remains deferred to 
 
 ## 14. E3 — Native Article Timeline / Article Presentation
 
+### Publisher-provided article tags
+
+Android Article Timeline and Search rows show publisher-provided tags between
+the headline and publication row in Compact, Visual and Visual Compact modes.
+These are article topics, not the user's feed category. Labels are neutral,
+small and non-interactive. The row never wraps or scrolls horizontally: at most
+three labels fit the actual available width, with a reserved `+N` indicator
+for remaining tags. A lone oversized label is ellipsized. System font scaling
+is preserved; narrower layouts show fewer labels, not smaller text. Empty tag
+lists create neither a row nor extra spacing. Accessibility exposes the complete
+topic list, including visually hidden tags.
+
+Tags arrive in the existing Core/UniFFI article summaries, without per-row
+requests. Existing local articles receive tags when fetched again through normal
+sync; schema upgrades initialize missing tags to an empty list without resetting
+article state. The first implementation adds no filter, editing or setting, and
+does not add tag presentation to Apple clients.
+
 E3 implements the native Android Article List over Core query/page APIs.
 
 ### E3-A — Timeline paging foundation
