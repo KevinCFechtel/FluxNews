@@ -512,21 +512,22 @@ The larger `AndroidStoragePaths` ownership/lifecycle review remains deferred to 
 
 ### Publisher-provided article tags
 
-Android Article Timeline and Search rows show publisher-provided tags between
-the headline and publication row in Compact, Visual and Visual Compact modes.
-These are article topics, not the user's feed category. Labels are neutral,
-small and non-interactive. The row never wraps or scrolls horizontally: at most
-three labels fit the actual available width, with a reserved `+N` indicator
-for remaining tags. A lone oversized label is ellipsized. System font scaling
-is preserved; narrower layouts show fewer labels, not smaller text. Empty tag
-lists create neither a row nor extra spacing. Accessibility exposes the complete
-topic list, including visually hidden tags.
+Android Article Timeline and Search rows show publisher-provided topics inline
+after publication/reading time, using only residual width. These are article
+topics, not the user's feed category. Every style, including Visual Compact's
+text-only variant, uses a neutral tag symbol, one subtly boxed name, then `+N`
+outside the box. At most one name is shown, ellipsized after reserving the symbol
+and remaining-topic `+N`; a lone visible topic needs no counter.
+An unreadably narrow name falls back to symbol + total-topic count; no fit means
+no visual group. Topics never add height, wrap, scroll horizontally, or reduce the
+date/reading-time width budget. System font scaling is preserved. Empty lists add
+no spacing. The publication group's accessibility exposes all topics, including
+visually omitted topics. Labels remain non-interactive.
 
 Tags arrive in the existing Core/UniFFI article summaries, without per-row
 requests. Existing local articles receive tags when fetched again through normal
 sync; schema upgrades initialize missing tags to an empty list without resetting
-article state. The first implementation adds no filter, editing or setting, and
-does not add tag presentation to Apple clients.
+article state. The presentation adds no filter, editing or setting.
 
 E3 implements the native Android Article List over Core query/page APIs.
 
@@ -784,7 +785,7 @@ Implemented on 3 October 2026:
 - Search remains a real secondary Navigation Compose destination, so Back returns to the preserved News Timeline rather than treating Search as a Reader-style overlay;
 - Search uses Core/Miniflux `searchArticles` with its own 50-item offset pagination, request-generation stale suppression and result de-duplication; it does not create a local FTS/index;
 - Search reuses the normal Android article row renderer, swipe configuration, context actions, feed icons and available audio projection;
-- Article publication rows mirror the accepted iOS temporal semantics: relative publication time carries a small history/clock icon, optional Miniflux reading time is an inline Material Article icon plus duration after the centered dot, and audio articles substitute the reading-time document icon with headphones;
+- Article publication rows mirror the accepted iOS temporal semantics: relative publication time carries a small history/clock icon, optional Miniflux reading time is an inline Material Article icon plus duration with normal spacing and no extra dot before the icon, and audio articles substitute the reading-time document icon with headphones;
 - Search chrome uses a single stable Material text-field surface with an integrated leading Search action, in-field progress/clear affordance, IME Search handling and focused tonal treatment; initial/no-result states use a centered icon, headline and supporting text rather than a bare sentence;
 - Search loading feedback is intentionally singular: the in-field progress indicator is the only initial-search spinner; the result area does not render a second centered progress indicator;
 - Search Read/Unread and Star/Unstar use the Core search mutation APIs with optimistic presentation and rollback on failure;

@@ -675,7 +675,7 @@ struct IOSMediaPlayerView: View {
         switch action {
         case .playbackRate:
             rateMenu
-                .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: true, vertical: false)
         case .sleepTimer:
             sleepTimerButton
                 .frame(maxWidth: .infinity)
@@ -996,7 +996,8 @@ struct IOSMediaPlayerView: View {
                 rateLabel(playbackState.playbackRate),
                 systemImage: "speedometer"
             )
-            .frame(maxWidth: .infinity)
+            .lineLimit(1)
+            .frame(minWidth: 44)
         }
         .accessibilityLabel(String(localized: "Playback speed"))
         .disabled(isPreviewingInactiveItem)

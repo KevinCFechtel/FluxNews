@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -574,11 +575,14 @@ private fun AndroidMediaPlayerControls(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(modifier = Modifier.weight(1f)) {
+            // Rate needs only its short label; leave the remaining row width
+            // to the localized sleep-timer label.
+            Box {
                 OutlinedButton(
                     onClick = { onRateMenuChange(true) },
                     enabled = !previewingInactiveItem,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.widthIn(min = 48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                 ) {
                     Icon(
                         Icons.Rounded.Speed,
@@ -586,7 +590,11 @@ private fun AndroidMediaPlayerControls(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.size(8.dp))
-                    Text(androidPlaybackRateLabel(playback.playbackRate))
+                    Text(
+                        androidPlaybackRateLabel(playback.playbackRate),
+                        maxLines = 1,
+                        softWrap = false,
+                    )
                 }
                 DropdownMenu(
                     expanded = rateMenuOpen,

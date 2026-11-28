@@ -73,6 +73,25 @@ internal data class AndroidVisualCompactPreviewBreak(
 }
 
 internal object AndroidVisualCompactFlowPolicy {
+    data class HeaderLayout(
+        val publicationTopPx: Int,
+        val bottomPx: Int,
+    )
+
+    /** Topics are inline and cannot add height or affect the preview break plan. */
+    fun headerLayout(
+        titleHeightPx: Int,
+        publicationHeightPx: Int,
+        textSpacingPx: Int,
+    ): HeaderLayout {
+        val publicationTop = titleHeightPx + textSpacingPx
+        val publicationBottom = publicationTop + publicationHeightPx
+        return HeaderLayout(
+            publicationTopPx = publicationTop,
+            bottomPx = publicationBottom,
+        )
+    }
+
     fun breakFor(
         textLength: Int,
         maximumLines: Int,
@@ -96,11 +115,11 @@ internal object AndroidVisualCompactFlowPolicy {
 
     fun continuationTop(
         imageBottomPx: Int,
-        publicationBottomPx: Int,
+        headerBottomPx: Int,
         sidePreviewBottomPx: Int?,
         textSpacingPx: Int,
     ): Int = if (sidePreviewBottomPx == null) {
-        maxOf(imageBottomPx, publicationBottomPx) + textSpacingPx
+        maxOf(imageBottomPx, headerBottomPx) + textSpacingPx
     } else {
         maxOf(imageBottomPx, sidePreviewBottomPx)
     }

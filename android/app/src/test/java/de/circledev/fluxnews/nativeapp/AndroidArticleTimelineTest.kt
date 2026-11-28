@@ -50,7 +50,7 @@ class AndroidArticleTimelineTest {
             104,
             AndroidVisualCompactFlowPolicy.continuationTop(
                 imageBottomPx = 100,
-                publicationBottomPx = 60,
+                headerBottomPx = 60,
                 sidePreviewBottomPx = 104,
                 textSpacingPx = 7,
             ),
@@ -75,7 +75,7 @@ class AndroidArticleTimelineTest {
             110,
             AndroidVisualCompactFlowPolicy.continuationTop(
                 imageBottomPx = 100,
-                publicationBottomPx = 85,
+                headerBottomPx = 85,
                 sidePreviewBottomPx = null,
                 textSpacingPx = 10,
             ),
@@ -84,6 +84,45 @@ class AndroidArticleTimelineTest {
         assertEquals("", allSide.continuationText(input, 3))
         assertEquals(0, allSide.continuationLines(3))
     }
+
+    @Test
+    fun visualCompactInlineTopicsUseOnlyThePublicationHeight() {
+        val header = AndroidVisualCompactFlowPolicy.headerLayout(
+            titleHeightPx = 40,
+            publicationHeightPx = 18,
+            textSpacingPx = 7,
+        )
+        assertEquals(47, header.publicationTopPx)
+        assertEquals(65, header.bottomPx)
+    }
+
+    @Test
+    fun visualCompactContinuationClearsScaledPublication() {
+        val header = AndroidVisualCompactFlowPolicy.headerLayout(
+            titleHeightPx = 40,
+            publicationHeightPx = 60,
+            textSpacingPx = 7,
+        )
+        assertEquals(
+            114,
+            AndroidVisualCompactFlowPolicy.continuationTop(
+                imageBottomPx = 100,
+                headerBottomPx = header.bottomPx,
+                sidePreviewBottomPx = null,
+                textSpacingPx = 7,
+            ),
+        )
+        val split = AndroidVisualCompactFlowPolicy.breakFor(
+            textLength = 100,
+            maximumLines = 3,
+            availableSideHeightPx = (100 - header.bottomPx - 7).toFloat(),
+            measuredLineCount = 3,
+            lineTopPx = { it * 18f },
+            lineEnd = { 30 * (it + 1) },
+        )
+        assertEquals(0, split.sideLines)
+    }
+
     @Test
     fun readPresentationKeepsHeadlineGeometryStable() {
         assertEquals(

@@ -83,9 +83,6 @@ internal fun AndroidArticleTimelineRow(
         val title: @Composable () -> Unit = {
             ArticleTitle(article)
         }
-        val tags: @Composable () -> Unit = {
-            ArticleTagsRow(article.tags, article.isRead)
-        }
         val publication: @Composable () -> Unit = {
             ArticlePublicationRow(
                 article = article,
@@ -106,7 +103,6 @@ internal fun AndroidArticleTimelineRow(
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     metadata()
                     title()
-                    tags()
                     publication()
                     preview()
                 }
@@ -120,7 +116,6 @@ internal fun AndroidArticleTimelineRow(
                     )
                     metadata()
                     title()
-                    tags()
                     publication()
                     preview()
                 }
@@ -142,7 +137,6 @@ internal fun AndroidArticleTimelineRow(
                     ) {
                         metadata()
                         title()
-                        tags()
                         publication()
                         preview()
                     }
@@ -204,8 +198,6 @@ private fun AndroidVisualCompactFlowBody(
 
         val titlePlaceable = subcompose("title") { ArticleTitle(article) }
             .first().measure(textConstraints)
-        val tagsPlaceable = subcompose("tags") { ArticleTagsRow(article.tags, article.isRead) }
-            .firstOrNull()?.measure(textConstraints)
         val publicationPlaceable = subcompose("publication") {
             ArticlePublicationRow(
                 article = article,
@@ -221,11 +213,12 @@ private fun AndroidVisualCompactFlowBody(
             )
         }.first().measure(Constraints.fixed(imageWidth, imageHeight))
 
-        val tagsTop = titlePlaceable.height + gapPx
-        val publicationTop = tagsPlaceable?.let { tagsTop + it.height + gapPx }
-            ?: (titlePlaceable.height + gapPx)
-        val publicationBottom = publicationTop + publicationPlaceable.height
-        val previewTop = publicationBottom + if (previewText.isNotEmpty()) gapPx else 0
+        val header = AndroidVisualCompactFlowPolicy.headerLayout(
+            titleHeightPx = titlePlaceable.height,
+            publicationHeightPx = publicationPlaceable.height,
+            textSpacingPx = gapPx,
+        )
+        val previewTop = header.bottomPx + if (previewText.isNotEmpty()) gapPx else 0
 
         val lineBreak = if (previewText.isNotEmpty() && previewTop < imageHeight) {
             val measured = textMeasurer.measure(
@@ -262,7 +255,7 @@ private fun AndroidVisualCompactFlowBody(
         val sideBottom = sidePlaceable?.let { previewTop + it.height }
         val continuationTop = AndroidVisualCompactFlowPolicy.continuationTop(
             imageBottomPx = imageHeight,
-            publicationBottomPx = publicationBottom,
+            headerBottomPx = header.bottomPx,
             sidePreviewBottomPx = sideBottom,
             textSpacingPx = gapPx,
         )
@@ -280,14 +273,13 @@ private fun AndroidVisualCompactFlowBody(
         } else null
         val height = maxOf(
             imagePlaceable.height,
-            publicationBottom,
+            header.bottomPx,
             sideBottom ?: 0,
             continuationPlaceable?.let { continuationTop + it.height } ?: 0,
         )
         layout(width, height) {
             titlePlaceable.placeRelative(0, 0)
-            tagsPlaceable?.placeRelative(0, tagsTop)
-            publicationPlaceable.placeRelative(0, publicationTop)
+            publicationPlaceable.placeRelative(0, header.publicationTopPx)
             sidePlaceable?.placeRelative(0, previewTop)
             continuationPlaceable?.placeRelative(0, continuationTop)
             imagePlaceable.placeRelative(width - imageWidth, 0)
@@ -404,6 +396,49 @@ private fun ArticlePublicationRow(
     preferences: AndroidArticlePreferenceState,
     publicationReferenceMillis: Long,
 ) {
+    val labels = remember(article.tags) { AndroidArticleTagPolicy.labels(article.tags) }
+    val publicationText = publicationLabel(article, preferences.showRelativePublicationTime, publicationReferenceMillis)
+    val locale = LocalConfiguration.current.locales[0]
+    val topicDescription = if (labels.isEmpty()) null else stringResource(
+        R.string.article_tags_accessibility,
+        android.icu.text.ListFormatter.getInstance(locale).format(labels),
+    )
+    val readingDescription = if (article.readingTimeMinutes > 0u) {
+        stringResource(if (hasAudio) R.string.l10n_audio_duration else R.string.l10n_reading_time) + " " +
+            stringResource(R.string.l10n_duration_minutes_short, article.readingTimeMinutes.toInt())
+    } else null
+    val accessibilityDescription = listOfNotNull(publicationText, readingDescription, topicDescription).joinToString(", ")
+    SubcomposeLayout(modifier = Modifier.clearAndSetSemantics {
+        contentDescription = accessibilityDescription
+    }) { constraints ->
+        val width = constraints.maxWidth
+        // The existing publication block is measured first, with its complete
+        // width budget. Topics may consume only the residual space.
+        val publication = subcompose("publication") {
+            ArticlePublicationMetadata(article, hasAudio, publicationText, preferences.showRelativePublicationTime)
+        }.single().measure(Constraints(maxWidth = width))
+        val gap = 6.dp.roundToPx()
+        val remaining = (width - publication.width - gap).coerceAtLeast(0)
+        val topics = subcompose("topics") {
+            ArticleTagsRow(labels, article.isRead)
+        }.firstOrNull()?.measure(Constraints(maxWidth = remaining))
+        val topicsWidth = topics?.width ?: 0
+        layout(publication.width + if (topicsWidth > 0) gap + topicsWidth else 0, publication.height) {
+            publication.placeRelative(0, 0)
+            if (topics != null && topicsWidth > 0) {
+                topics.placeRelative(publication.width + gap, (publication.height - topics.height) / 2)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ArticlePublicationMetadata(
+    article: ArticleSummary,
+    hasAudio: Boolean,
+    publicationText: String,
+    showRelativePublicationTime: Boolean,
+) {
     val supportingColor = MaterialTheme.colorScheme.onSurface.copy(
         alpha = AndroidArticleStatusPresentationPolicy.supportingAlpha(article.isRead),
     )
@@ -411,7 +446,7 @@ private fun ArticlePublicationRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (preferences.showRelativePublicationTime) {
+        if (showRelativePublicationTime) {
             Icon(
                 painter = painterResource(R.drawable.ic_relative_time),
                 contentDescription = null,
@@ -420,20 +455,15 @@ private fun ArticlePublicationRow(
             )
         }
         Text(
-            publicationLabel(
-                article = article,
-                relative = preferences.showRelativePublicationTime,
-                referenceMillis = publicationReferenceMillis,
-            ),
+            publicationText,
+            modifier = Modifier.weight(1f, fill = false),
             style = MaterialTheme.typography.labelSmall,
             color = supportingColor,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
         )
         if (article.readingTimeMinutes > 0u) {
-            Text(
-                "·",
-                style = MaterialTheme.typography.labelSmall,
-                color = supportingColor,
-            )
             Icon(
                 painter = painterResource(
                     if (hasAudio) R.drawable.ic_headphones else R.drawable.ic_reading_time,
@@ -446,6 +476,9 @@ private fun ArticlePublicationRow(
                 stringResource(R.string.l10n_duration_minutes_short, article.readingTimeMinutes.toInt()),
                 style = MaterialTheme.typography.labelSmall,
                 color = supportingColor,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
