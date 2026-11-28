@@ -5001,8 +5001,8 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertEqual(row.overflow?.text, input.tagOverflowLabels[3])
         XCTAssertEqual(input.tagOverflowLabels[3], "+\(NumberFormatter.localizedString(from: 2, number: .decimal))")
         let frame = try XCTUnwrap(metrics.tagsFrame)
-        XCTAssertEqual(frame.minY, metrics.titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
-        XCTAssertEqual(metrics.dateFrame.minY, frame.maxY + IOSUIKitArticleGeometry.textSpacing)
+        XCTAssertEqual(metrics.dateFrame.minY, metrics.titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
+        XCTAssertEqual(frame.minY, metrics.dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
         XCTAssertLessThanOrEqual(row.overflow!.frame.maxX, frame.width)
     }
 
@@ -5085,6 +5085,16 @@ final class NewsreaderPresentationTests: XCTestCase {
                     let cell = configuredOracleCell(item: item, mode: mode, previewLines: .standard, width: width, layoutDirection: direction)
                     let height = measureUIKitArticleCell(cell, width: width)
                     let expected = try XCTUnwrap(cell.preparedLayoutMetrics)
+                    let tagsFrame = try XCTUnwrap(expected.tagsFrame)
+                    XCTAssertEqual(tagsFrame.minY, expected.dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
+                    XCTAssertLessThanOrEqual(tagsFrame.maxY, expected.contentFrame.maxY + 0.5)
+                    let withoutTags = oracleItem(title: "Short title", preview: preview, hasImage: hasImage, hasComments: true, readingTimeMinutes: 4)
+                    let withoutTagsInput = IOSUIKitArticleLayoutInput(item: withoutTags, mode: mode, previewLines: .standard, containerWidth: width, displayScale: cell.traitCollection.displayScale, contentSizeCategory: .large, layoutDirection: direction)
+                    let withoutTagsMetrics = IOSUIKitArticleLayoutEngine.metrics(for: withoutTagsInput)
+                    assertFrameEqual(expected.dateFrame, withoutTagsMetrics.dateFrame)
+                    if let sidePreview = expected.previewFrame {
+                        XCTAssertEqual(sidePreview.minY, tagsFrame.maxY + IOSUIKitArticleGeometry.textSpacing, accuracy: 0.01)
+                    }
                     // Prepared row heights ceil the total to whole points;
                     // UIKit's compressed fit may still have a fractional tail.
                     // Permit only that ceiling gap, retaining the existing
@@ -5120,6 +5130,10 @@ final class NewsreaderPresentationTests: XCTestCase {
         let baseline = cell.layoutDiagnosticsForTesting
         let revision = cell.layoutVariantRevision
         XCTAssertTrue(cell.accessibilityLabel?.contains("Hidden topic") == true)
+        let accessibilityLabel = try XCTUnwrap(cell.accessibilityLabel)
+        let publicationRange = try XCTUnwrap(accessibilityLabel.range(of: item.content.publishedDate))
+        let topicRange = try XCTUnwrap(accessibilityLabel.range(of: "Hidden topic"))
+        XCTAssertLessThan(publicationRange.upperBound, topicRange.lowerBound)
         cell.updateStatus(isRead: true, isStarred: true)
         XCTAssertEqual(measureUIKitArticleCell(cell, width: 320), baselineHeight, accuracy: 0.5)
         XCTAssertEqual(cell.layoutDiagnosticsForTesting, baseline)

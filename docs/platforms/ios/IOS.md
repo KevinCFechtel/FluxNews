@@ -212,7 +212,8 @@ preview-line choices, Dynamic Type, VoiceOver, and adaptive compact/regular
 presentation remain supported. Cell structure and content sizing are reused
 when their layout inputs have not changed.
 
-Publisher topic labels follow the shared mobile tag presentation contract.
+Publisher topic labels follow the shared mobile tag presentation contract,
+below the publication row and before any preview in Timeline and Search.
 Their bounded single-line geometry participates in deterministic prepared
 heights and layout-cache identity, including Visual Compact's preview flow.
 Reusable native labels are decorative; the cell's VoiceOver description includes

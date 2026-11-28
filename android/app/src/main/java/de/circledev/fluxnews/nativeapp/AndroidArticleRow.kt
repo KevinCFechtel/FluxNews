@@ -106,8 +106,8 @@ internal fun AndroidArticleTimelineRow(
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     metadata()
                     title()
-                    tags()
                     publication()
+                    tags()
                     preview()
                 }
             }
@@ -120,8 +120,8 @@ internal fun AndroidArticleTimelineRow(
                     )
                     metadata()
                     title()
-                    tags()
                     publication()
+                    tags()
                     preview()
                 }
             }
@@ -142,8 +142,8 @@ internal fun AndroidArticleTimelineRow(
                     ) {
                         metadata()
                         title()
-                        tags()
                         publication()
+                        tags()
                         preview()
                     }
                 }
@@ -204,8 +204,6 @@ private fun AndroidVisualCompactFlowBody(
 
         val titlePlaceable = subcompose("title") { ArticleTitle(article) }
             .first().measure(textConstraints)
-        val tagsPlaceable = subcompose("tags") { ArticleTagsRow(article.tags, article.isRead) }
-            .firstOrNull()?.measure(textConstraints)
         val publicationPlaceable = subcompose("publication") {
             ArticlePublicationRow(
                 article = article,
@@ -214,6 +212,8 @@ private fun AndroidVisualCompactFlowBody(
                 publicationReferenceMillis = publicationReferenceMillis,
             )
         }.first().measure(textConstraints)
+        val tagsPlaceable = subcompose("tags") { ArticleTagsRow(article.tags, article.isRead) }
+            .firstOrNull()?.measure(textConstraints)
         val imagePlaceable = subcompose("image") {
             ArticleImage(
                 imageUrl = imageUrl,
@@ -221,11 +221,13 @@ private fun AndroidVisualCompactFlowBody(
             )
         }.first().measure(Constraints.fixed(imageWidth, imageHeight))
 
-        val tagsTop = titlePlaceable.height + gapPx
-        val publicationTop = tagsPlaceable?.let { tagsTop + it.height + gapPx }
-            ?: (titlePlaceable.height + gapPx)
-        val publicationBottom = publicationTop + publicationPlaceable.height
-        val previewTop = publicationBottom + if (previewText.isNotEmpty()) gapPx else 0
+        val header = AndroidVisualCompactFlowPolicy.headerLayout(
+            titleHeightPx = titlePlaceable.height,
+            publicationHeightPx = publicationPlaceable.height,
+            tagsHeightPx = tagsPlaceable?.height,
+            textSpacingPx = gapPx,
+        )
+        val previewTop = header.bottomPx + if (previewText.isNotEmpty()) gapPx else 0
 
         val lineBreak = if (previewText.isNotEmpty() && previewTop < imageHeight) {
             val measured = textMeasurer.measure(
@@ -262,7 +264,7 @@ private fun AndroidVisualCompactFlowBody(
         val sideBottom = sidePlaceable?.let { previewTop + it.height }
         val continuationTop = AndroidVisualCompactFlowPolicy.continuationTop(
             imageBottomPx = imageHeight,
-            publicationBottomPx = publicationBottom,
+            headerBottomPx = header.bottomPx,
             sidePreviewBottomPx = sideBottom,
             textSpacingPx = gapPx,
         )
@@ -280,14 +282,14 @@ private fun AndroidVisualCompactFlowBody(
         } else null
         val height = maxOf(
             imagePlaceable.height,
-            publicationBottom,
+            header.bottomPx,
             sideBottom ?: 0,
             continuationPlaceable?.let { continuationTop + it.height } ?: 0,
         )
         layout(width, height) {
             titlePlaceable.placeRelative(0, 0)
-            tagsPlaceable?.placeRelative(0, tagsTop)
-            publicationPlaceable.placeRelative(0, publicationTop)
+            publicationPlaceable.placeRelative(0, header.publicationTopPx)
+            tagsPlaceable?.placeRelative(0, header.tagsTopPx)
             sidePlaceable?.placeRelative(0, previewTop)
             continuationPlaceable?.placeRelative(0, continuationTop)
             imagePlaceable.placeRelative(width - imageWidth, 0)

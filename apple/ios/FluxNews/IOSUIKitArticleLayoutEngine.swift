@@ -705,7 +705,7 @@ enum IOSUIKitArticleLayoutEngine {
         // preview because it needs the room to read as a paragraph.
         let isSideTitleVariant = variant == .visualSideTitle || variant == .visualSideTitleWide
         // Every productive article layout uses one semantic order:
-        // metadata -> title -> optional topics -> publication row -> preview.
+        // metadata -> title -> publication row -> optional topics -> preview.
         let titleWidth = isSideTitleVariant
             ? max(0, geometry.availableWidth - imageSize.width - IOSUIKitArticleGeometry.sideTitleSpacing)
             : textWidth
@@ -846,13 +846,6 @@ enum IOSUIKitArticleLayoutEngine {
         let metadataFrame = CGRect(x: textOrigin.x, y: textOrigin.y, width: infoWidth, height: metadataHeight)
         let titleTop = metadataFrame.maxY + IOSUIKitArticleGeometry.textSpacing
         let titleFrame = CGRect(x: textOrigin.x, y: titleTop, width: titleWidth, height: titleHeight)
-        let tagsFrame = tagRow.map { row in
-            CGRect(
-                x: physicalX(logicalX: logicalTextX, width: titleWidth, in: input.containerWidth, direction: input.layoutDirection),
-                y: titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing,
-                width: titleWidth, height: row.height
-            )
-        }
         let metadataLayout = geometry.metadataLayout(
             width: infoWidth,
             hasComments: input.hasComments,
@@ -891,7 +884,7 @@ enum IOSUIKitArticleLayoutEngine {
         let landscapeReadingTimeIconFrame: CGRect?
         let landscapeReadingTimeFrame: CGRect?
 
-        let dateRowY = (tagsFrame?.maxY ?? titleFrame.maxY) + IOSUIKitArticleGeometry.textSpacing
+        let dateRowY = titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing
         let dateRowWidth = isSideTitleVariant ? titleWidth : infoWidth
         let readingTimeReservedWidth = usesDateRowReadingTime && dateRowReadingTimeBlockWidth > 0
             ? IOSUIKitArticleGeometry.landscapeDateReadingTimeSpacing + dateRowReadingTimeBlockWidth
@@ -913,6 +906,13 @@ enum IOSUIKitArticleLayoutEngine {
             width: dateWidth,
             height: dateHeight
         )
+        let tagsFrame = tagRow.map { row in
+            CGRect(
+                x: physicalX(logicalX: logicalTextX, width: titleWidth, in: input.containerWidth, direction: input.layoutDirection),
+                y: dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing,
+                width: titleWidth, height: row.height
+            )
+        }
         publicationTimeIconFrame = input.showsRelativePublicationTime
             ? CGRect(
                 x: physicalX(
@@ -977,7 +977,7 @@ enum IOSUIKitArticleLayoutEngine {
         if variant == .visualSideTitleTextOnly {
             previewTop = titleTop + sideTitleRowHeight + IOSUIKitArticleGeometry.textSpacing
         } else {
-            previewTop = dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing
+            previewTop = (tagsFrame?.maxY ?? dateFrame.maxY) + IOSUIKitArticleGeometry.textSpacing
         }
         let actualPreviewWidth = isSideTitleVariant ? titleWidth : previewWidth
         let previewFrame = previewHeight == 0 ? nil : CGRect(

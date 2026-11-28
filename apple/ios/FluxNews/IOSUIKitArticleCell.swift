@@ -59,8 +59,8 @@ final class IOSUIKitArticleCell: UITableViewCell {
     private var previewBottomDefaultConstraint: NSLayoutConstraint!
     private var previewTrailingDefaultConstraint: NSLayoutConstraint!
     /// Preview top in the side-title variant: it must clear the image as well as
-    /// the date, and its spacing collapses with the preview itself.
-    private var sideTitlePreviewBelowDateConstraint: NSLayoutConstraint!
+    /// the topics/publication block, and its spacing collapses with the preview itself.
+    private var sideTitlePreviewBelowTagsConstraint: NSLayoutConstraint!
     private var sideTitlePreviewBelowImageConstraint: NSLayoutConstraint!
     private var landscapeImageWidthConstraint: NSLayoutConstraint!
     private var landscapeImageHeightConstraint: NSLayoutConstraint!
@@ -360,7 +360,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         // without rebuilding the constraint graph or measuring text on reuse.
         tagsView.translatesAutoresizingMaskIntoConstraints = false
         textContainer.addSubview(tagsView)
-        tagsTopConstraint = tagsView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor)
+        tagsTopConstraint = tagsView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor)
         tagsHeightConstraint = tagsView.heightAnchor.constraint(equalToConstant: 0)
         NSLayoutConstraint.activate([
             tagsView.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
@@ -368,7 +368,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             tagsTopConstraint,
             tagsHeightConstraint,
         ])
-        previewTopConstraint = previewLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing)
+        previewTopConstraint = previewLabel.topAnchor.constraint(equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing)
         // Collapsing by priority keeps the constraint graph untouched. Removing
         // or deactivating it instead would mutate the graph on every reuse
         // between an article with and without a preview.
@@ -383,7 +383,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         previewTrailingDefaultConstraint = previewLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor)
 
         defaultDateTopConstraint = dateLabel.topAnchor.constraint(
-            equalTo: tagsView.bottomAnchor,
+            equalTo: titleLabel.bottomAnchor,
             constant: IOSUIKitArticleGeometry.textSpacing
         )
         defaultDateTrailingConstraint = dateLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor)
@@ -482,7 +482,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         //   Date · ▤ 4 min
         //   Preview …
         //
-        // Full-width image followed by the normal metadata/title/date stack.
+        // Full-width image followed by metadata/title/date/optional topics.
         portraitDateTrailingConstraint = dateLabel.trailingAnchor.constraint(
             equalTo: landscapeReadingTimeContainer.leadingAnchor,
             constant: -IOSUIKitArticleGeometry.landscapeDateReadingTimeSpacing
@@ -514,7 +514,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             titleLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),
 
             dateLabel.topAnchor.constraint(
-                equalTo: tagsView.bottomAnchor,
+                equalTo: titleLabel.bottomAnchor,
                 constant: IOSUIKitArticleGeometry.textSpacing
             ),
             portraitDateTrailingConstraint,
@@ -553,7 +553,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             landscapeReadingTimeContainer.bottomAnchor.constraint(equalTo: dateLabel.bottomAnchor),
         ]
 
-        // Image-bearing Visual Compact: preview begins below publication
+        // Image-bearing Visual Compact: preview begins below publication/topics
         // beside the thumbnail, with a full-width continuation underneath.
         sideTitleDateTrailingConstraint = dateLabel.trailingAnchor.constraint(
             equalTo: landscapeReadingTimeContainer.leadingAnchor,
@@ -571,8 +571,8 @@ final class IOSUIKitArticleCell: UITableViewCell {
             lessThanOrEqualTo: articleImageView.leadingAnchor,
             constant: -IOSUIKitArticleGeometry.sideTitleSpacing
         )
-        sideTitlePreviewBelowDateConstraint = previewLabel.topAnchor.constraint(
-            equalTo: dateLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
+        sideTitlePreviewBelowTagsConstraint = previewLabel.topAnchor.constraint(
+            equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
         )
         sideTitlePreviewBelowImageConstraint = previewLabel.topAnchor.constraint(
             greaterThanOrEqualTo: articleImageView.bottomAnchor
@@ -596,7 +596,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
                 constant: -IOSUIKitArticleGeometry.sideTitleSpacing
             ),
             dateLabel.topAnchor.constraint(
-                equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
+                equalTo: titleLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
             ),
             landscapeReadingTimeContainer.topAnchor.constraint(equalTo: dateLabel.topAnchor),
             landscapeReadingTimeContainer.bottomAnchor.constraint(equalTo: dateLabel.bottomAnchor),
@@ -606,7 +606,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             articleImageView.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),
             landscapeImageWidthConstraint,
             landscapeImageHeightConstraint,
-            sideTitlePreviewBelowDateConstraint,
+            sideTitlePreviewBelowTagsConstraint,
             previewLabel.trailingAnchor.constraint(
                 equalTo: articleImageView.leadingAnchor,
                 constant: -IOSUIKitArticleGeometry.sideTitleSpacing
@@ -621,7 +621,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             // image-bearing row to the metadata height (~30 pt), even though
             // the precomputed row height correctly includes its thumbnail.
             articleImageView.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
-            dateLabel.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
+            tagsView.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
             previewLabel.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
             previewContinuationLabel.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
         ]
@@ -631,7 +631,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         sideTitleWideConstraints = sideTitleConstraints
 
         // `Visual compact` without an image: the same order — metadata bar,
-        // then title, date, preview — at full width, with no image slot.
+        // then title, date, optional topics, preview — at full width, with no image slot.
         sideTitleTextOnlyDateTrailingConstraint = dateLabel.trailingAnchor.constraint(
             equalTo: landscapeReadingTimeContainer.leadingAnchor,
             constant: -IOSUIKitArticleGeometry.landscapeDateReadingTimeSpacing
@@ -650,7 +650,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
 
             titleLabel.topAnchor.constraint(equalTo: metadataRow.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing),
             titleLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),
-            dateLabel.topAnchor.constraint(equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing),
+            dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing),
             sideTitleTextOnlyDateTrailingConstraint,
             sideTitleTextOnlyReadingContainerTrailingConstraint,
             landscapeReadingTimeContainer.topAnchor.constraint(equalTo: dateLabel.topAnchor),
@@ -735,7 +735,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         // side-title variant's pair, or a preview-less row keeps a gap below the
         // image that the engine did not budget for.
         let previewSpacing = hasPreview ? IOSUIKitArticleGeometry.textSpacing : 0
-        sideTitlePreviewBelowDateConstraint.constant = previewSpacing
+        sideTitlePreviewBelowTagsConstraint.constant = previewSpacing
         sideTitlePreviewBelowImageConstraint.constant = previewSpacing
         previewCollapseConstraint.priority = hasPreview ? UILayoutPriority(1) : .defaultHigh
         let hasComments = item.content.hasComments
@@ -1196,7 +1196,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
     private func updateAccessibility() {
         let reading = currentReadingTime.map { ", \(String(localized: "Reading time")) \($0)" } ?? ""
         let topics = currentTopicsAccessibilityLabel.map { ", \($0)" } ?? ""
-        accessibilityLabel = "\(currentTitle)\(topics), \(currentFeedTitle), \(currentPublishedDate)\(reading), \(currentIsRead ? String(localized: "Read") : String(localized: "Unread"))\(currentIsStarred ? String(localized: ", starred") : "")"
+        accessibilityLabel = "\(currentTitle), \(currentFeedTitle), \(currentPublishedDate)\(reading)\(topics), \(currentIsRead ? String(localized: "Read") : String(localized: "Unread"))\(currentIsStarred ? String(localized: ", starred") : "")"
         accessibilityValue = currentIsRead
             ? (currentIsStarred ? String(localized: "Read, starred") : String(localized: "Read"))
             : (currentIsStarred ? String(localized: "Unread, starred") : String(localized: "Unread"))

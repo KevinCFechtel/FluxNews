@@ -67,9 +67,9 @@ Native mobile clients provide the retained article presentation modes **Compact*
 
 Visual Compact must retain its article title; adding publication or reading-time metadata must never collapse the headline. Article audio availability is consumed from a batched/article-level Core projection. Productive list rows must not perform per-row enclosure/media queries merely to populate the Audio accessory.
 
-Publisher article tags appear as subtle, non-interactive topic labels between
-the headline and publication row, including Search results. Show at most three
-labels in one line, reserve `+N` for hidden topics, and truncate an oversized
+Publisher article tags appear as subtle, non-interactive topic labels below
+the publication row and before any preview, including Search results. Show at
+most three labels in one line, reserve `+N` for hidden topics, and truncate an oversized
 first label when necessary. Respect system font scaling and expose all topics
 to accessibility. Whitespace/empty/duplicate display labels are normalized only
 in native presentation; Core retains the complete metadata. No tags means no
