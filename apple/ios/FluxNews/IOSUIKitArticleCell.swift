@@ -701,9 +701,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         updateAudioAvailability(hasAudio)
         titleLabel.text = currentTitle
         feedTitleLabel.text = currentFeedTitle
-        dateLabel.text = item.content.readingTime == nil
-            ? currentPublishedDate
-            : "\(currentPublishedDate) ·"
+        dateLabel.text = currentPublishedDate
         landscapeReadingTimeLabel.text = item.content.readingTime
         let hasPreview = !item.content.article.preview.isEmpty
         let imageSideFlow = preparedLayoutMetrics.variant == .visualSideTitle
@@ -1036,6 +1034,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
     var feedTitlePresentationForTesting: (lineCount: Int, lineBreakMode: NSLineBreakMode) {
         (feedTitleLabel.numberOfLines, feedTitleLabel.lineBreakMode)
     }
+    var publicationTextForTesting: String? { dateLabel.text }
     var tagPresentationForTesting: (labels: [String], overflow: String?, badgeFrames: [CGRect], overflowFrame: CGRect?, fontSize: CGFloat, lineCount: Int, lineBreakMode: NSLineBreakMode, interactive: Bool) {
         tagsView.presentationForTesting
     }

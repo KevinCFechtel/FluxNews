@@ -67,6 +67,10 @@ Native mobile clients provide the retained article presentation modes **Compact*
 
 Visual Compact must retain its article title; adding publication or reading-time metadata must never collapse the headline. Article audio availability is consumed from a batched/article-level Core projection. Productive list rows must not perform per-row enclosure/media queries merely to populate the Audio accessory.
 
+The reading-time/audio icon follows the publication value with normal spacing,
+without an additional dot separator. Native formatting between date and time
+remains unchanged.
+
 Publisher article tags are inline in the publication row, including Search.
 Date and reading time retain their normal width budget; topics use only the
 remaining space and never add a row or increase its height. Show at most the first

@@ -4348,6 +4348,7 @@ final class NewsreaderPresentationTests: XCTestCase {
             let expected = IOSUIKitArticleLayoutEngine.metrics(for: input)
             let diagnostics = cell.layoutDiagnosticsForTesting
 
+            XCTAssertEqual(cell.publicationTextForTesting, item.content.publishedAge)
             XCTAssertEqual(actualHeight, expected.cellSize.height, accuracy: 0.5)
             assertFrameEqual(diagnostics.metadataFrame, expected.metadataFrame)
             assertFrameEqual(diagnostics.titleFrame, expected.titleFrame)
@@ -4389,6 +4390,7 @@ final class NewsreaderPresentationTests: XCTestCase {
         let diagnostics = cell.layoutDiagnosticsForTesting
 
         XCTAssertEqual(expected.variant, .visualPortrait)
+        XCTAssertEqual(cell.publicationTextForTesting, item.content.publishedDate)
         XCTAssertEqual(actualHeight, expected.cellSize.height, accuracy: 0.5)
         assertFrameEqual(diagnostics.imageFrame, try! XCTUnwrap(expected.imageFrame))
         assertFrameEqual(diagnostics.metadataFrame, expected.metadataFrame)
@@ -4479,6 +4481,10 @@ final class NewsreaderPresentationTests: XCTestCase {
                 return XCTFail("Date-row reading time should be present for \(expectedVariant)")
             }
             XCTAssertNil(withoutReading.landscapeReadingTimeContainerFrame)
+            XCTAssertEqual(
+                withReading.dateFrame.width, withoutReading.dateFrame.width,
+                "Reading-time icon must not append a separator to the publication text"
+            )
             XCTAssertEqual(withReading.cellSize.height, withoutReading.cellSize.height, accuracy: 0.5)
             XCTAssertEqual(readingContainer.minY, withReading.dateFrame.minY, accuracy: 0.5)
             XCTAssertEqual(readingContainer.height, withReading.dateFrame.height, accuracy: 0.5)

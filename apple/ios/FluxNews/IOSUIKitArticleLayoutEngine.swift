@@ -727,12 +727,9 @@ enum IOSUIKitArticleLayoutEngine {
         let metadataHeight = max(accessories.feedIcon, font(.subheadline, category: input.contentSizeCategory, bold: true).lineHeight)
         let dateFont = font(.caption1, category: input.contentSizeCategory, bold: false)
         let usesDateRowReadingTime = input.readingTime != nil
-        // Reading time is one inline metadata group with the publication value:
-        // "date · [doc.text] duration". The separator stays attached to the date
-        // so the optional reading-time container can follow it immediately.
-        let publicationText = usesDateRowReadingTime
-            ? "\(input.publishedDate) ·"
-            : input.publishedDate
+        // The reading-time icon already separates its duration from publication;
+        // no extra punctuation is appended to the publication value.
+        let publicationText = input.publishedDate
         let dateHeight = fixedLineHeight(publicationText, font: dateFont)
         let publicationDateTextWidth = coreTextWidth(publicationText, font: dateFont, displayScale: scale)
         let publicationTimeIconSize = input.showsRelativePublicationTime

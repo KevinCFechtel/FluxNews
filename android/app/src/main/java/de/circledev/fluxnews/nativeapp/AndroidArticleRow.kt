@@ -464,13 +464,6 @@ private fun ArticlePublicationMetadata(
             overflow = TextOverflow.Ellipsis,
         )
         if (article.readingTimeMinutes > 0u) {
-            Text(
-                "·",
-                style = MaterialTheme.typography.labelSmall,
-                color = supportingColor,
-                maxLines = 1,
-                softWrap = false,
-            )
             Icon(
                 painter = painterResource(
                     if (hasAudio) R.drawable.ic_headphones else R.drawable.ic_reading_time,
