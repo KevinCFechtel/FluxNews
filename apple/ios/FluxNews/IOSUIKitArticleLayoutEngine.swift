@@ -5,6 +5,8 @@ import CoreText
 /// are intentionally absent: they must never affect article-card geometry.
 struct IOSUIKitArticleLayoutInput: Hashable {
     let title: String
+    let tags: [String]
+    let tagOverflowLabels: [String]
     let feedTitle: String
     let publishedDate: String
     let showsRelativePublicationTime: Bool
@@ -22,6 +24,8 @@ struct IOSUIKitArticleLayoutInput: Hashable {
 
     init(item: IOSUIKitArticleTimelineItem, hasAudio: Bool = false, mode: ArticlePresentationMode, previewLines: ArticlePreviewLines, showsRelativePublicationTime: Bool = false, containerWidth: CGFloat, displayScale: CGFloat, contentSizeCategory: UIContentSizeCategory, layoutDirection: UIUserInterfaceLayoutDirection) {
         title = item.content.article.title
+        tags = item.content.tags
+        tagOverflowLabels = item.content.tagOverflowLabels
         feedTitle = item.content.article.feedTitle
         publishedDate = showsRelativePublicationTime ? item.content.publishedAge : item.content.publishedDate
         self.showsRelativePublicationTime = showsRelativePublicationTime
@@ -38,8 +42,10 @@ struct IOSUIKitArticleLayoutInput: Hashable {
         self.layoutDirection = layoutDirection
     }
 
-    init(title: String, feedTitle: String, publishedDate: String, showsRelativePublicationTime: Bool = false, readingTime: String? = nil, preview: String, hasImage: Bool, hasComments: Bool, hasAudio: Bool = false, mode: ArticlePresentationMode, previewLines: ArticlePreviewLines, containerWidth: CGFloat, displayScale: CGFloat, contentSizeCategory: UIContentSizeCategory, layoutDirection: UIUserInterfaceLayoutDirection) {
+    init(title: String, tags: [String] = [], feedTitle: String, publishedDate: String, showsRelativePublicationTime: Bool = false, readingTime: String? = nil, preview: String, hasImage: Bool, hasComments: Bool, hasAudio: Bool = false, mode: ArticlePresentationMode, previewLines: ArticlePreviewLines, containerWidth: CGFloat, displayScale: CGFloat, contentSizeCategory: UIContentSizeCategory, layoutDirection: UIUserInterfaceLayoutDirection) {
         self.title = title
+        self.tags = IOSArticleTagPresentation.labels(tags)
+        tagOverflowLabels = IOSArticleTagPresentation.overflowLabels(tagCount: self.tags.count)
         self.feedTitle = feedTitle
         self.publishedDate = publishedDate
         self.showsRelativePublicationTime = showsRelativePublicationTime
@@ -53,6 +59,8 @@ struct IOSUIKitArticleLayoutInput: Hashable {
 
 struct IOSUIKitArticleLayoutKey: Hashable {
     let title: String
+    let tags: [String]
+    let tagOverflowLabels: [String]
     let feedTitle: String
     let publishedDate: String
     let showsRelativePublicationTime: Bool
@@ -82,6 +90,8 @@ struct IOSUIKitArticleLayoutKey: Hashable {
             containerWidth: input.containerWidth
         )
         title = input.title
+        tags = input.tags
+        tagOverflowLabels = input.tagOverflowLabels
         feedTitle = input.feedTitle
         let resolvedVariant = geometry.variant(hasImage: input.hasImage && input.mode.showsArticleImage)
         variant = resolvedVariant
@@ -131,6 +141,8 @@ struct IOSUIKitArticleLayoutMetrics: Equatable {
     let imageFrame: CGRect?
     let textFrame: CGRect
     let titleFrame: CGRect
+    let tagsFrame: CGRect?
+    let tagRow: IOSUIKitArticleTagRowMetrics?
     let metadataFrame: CGRect
     let unreadFrame: CGRect
     let feedIconFrame: CGRect
@@ -152,6 +164,22 @@ struct IOSUIKitArticleLayoutMetrics: Equatable {
     let metadataHeight: CGFloat
     let previewHeight: CGFloat
     let textBlockHeight: CGFloat
+}
+
+struct IOSUIKitArticleTagBadgeMetrics: Equatable {
+    let text: String
+    /// Physical coordinates relative to the tag row, including RTL mirroring.
+    let frame: CGRect
+}
+
+struct IOSUIKitArticleTagRowMetrics: Equatable {
+    static let horizontalPadding: CGFloat = 6
+    static let verticalPadding: CGFloat = 2
+    static let spacing: CGFloat = 5
+
+    let badges: [IOSUIKitArticleTagBadgeMetrics]
+    let overflow: IOSUIKitArticleTagBadgeMetrics?
+    let height: CGFloat
 }
 
 /// A deterministic FIFO cache. Reuse is keyed exclusively by the canonical
@@ -677,7 +705,7 @@ enum IOSUIKitArticleLayoutEngine {
         // preview because it needs the room to read as a paragraph.
         let isSideTitleVariant = variant == .visualSideTitle || variant == .visualSideTitleWide
         // Every productive article layout uses one semantic order:
-        // metadata -> title -> publication row -> preview.
+        // metadata -> title -> optional topics -> publication row -> preview.
         let titleWidth = isSideTitleVariant
             ? max(0, geometry.availableWidth - imageSize.width - IOSUIKitArticleGeometry.sideTitleSpacing)
             : textWidth
@@ -696,6 +724,12 @@ enum IOSUIKitArticleLayoutEngine {
         let titleHeight = coreTextHeight(input.title, font: titleFont, width: titleWidth, maximumLines: nil, displayScale: scale)
         let metadataHeight = max(accessories.feedIcon, font(.subheadline, category: input.contentSizeCategory, bold: true).lineHeight)
         let dateFont = font(.caption1, category: input.contentSizeCategory, bold: false)
+        let tagRow = tagRowMetrics(
+            tags: input.tags, overflowLabels: input.tagOverflowLabels, width: titleWidth,
+            font: font(.caption2, category: input.contentSizeCategory, bold: false),
+            displayScale: scale, direction: input.layoutDirection
+        )
+        let tagRowHeight = tagRow.map { $0.height + IOSUIKitArticleGeometry.textSpacing } ?? 0
         let usesDateRowReadingTime = input.readingTime != nil
         // Reading time is one inline metadata group with the publication value:
         // "date · [doc.text] duration". The separator stays attached to the date
@@ -714,7 +748,7 @@ enum IOSUIKitArticleLayoutEngine {
         let previewFont = font(.subheadline, category: input.contentSizeCategory, bold: false)
         let sidePreviewFlow: IOSVisualCompactPreviewFlow?
         if isSideTitleVariant {
-            let topOfPreview = titleHeight + IOSUIKitArticleGeometry.textSpacing
+            let topOfPreview = titleHeight + tagRowHeight + IOSUIKitArticleGeometry.textSpacing
                 + dateHeight + IOSUIKitArticleGeometry.textSpacing
             sidePreviewFlow = IOSVisualCompactPreviewFlow.prepare(
                 text: input.preview,
@@ -753,7 +787,7 @@ enum IOSUIKitArticleLayoutEngine {
         // The column that shares its row with the image. On a wide container the
         // preview belongs to it, so it is part of the height the image competes
         // with; otherwise the preview follows below the whole row.
-        let sideTitleColumnHeight = titleHeight + IOSUIKitArticleGeometry.textSpacing + dateHeight
+        let sideTitleColumnHeight = titleHeight + tagRowHeight + IOSUIKitArticleGeometry.textSpacing + dateHeight
             + (isSideTitleVariant && previewHeight > 0
                 ? IOSUIKitArticleGeometry.textSpacing + previewHeight : 0)
         // A side preview may end before the thumbnail bottom. Continuation
@@ -770,6 +804,7 @@ enum IOSUIKitArticleLayoutEngine {
         } else {
             textBlockHeight = metadataHeight
                 + IOSUIKitArticleGeometry.textSpacing + titleHeight
+                + tagRowHeight
                 + IOSUIKitArticleGeometry.textSpacing + dateHeight
                 + (previewHeight > 0 ? IOSUIKitArticleGeometry.textSpacing + previewHeight : 0)
         }
@@ -811,6 +846,13 @@ enum IOSUIKitArticleLayoutEngine {
         let metadataFrame = CGRect(x: textOrigin.x, y: textOrigin.y, width: infoWidth, height: metadataHeight)
         let titleTop = metadataFrame.maxY + IOSUIKitArticleGeometry.textSpacing
         let titleFrame = CGRect(x: textOrigin.x, y: titleTop, width: titleWidth, height: titleHeight)
+        let tagsFrame = tagRow.map { row in
+            CGRect(
+                x: physicalX(logicalX: logicalTextX, width: titleWidth, in: input.containerWidth, direction: input.layoutDirection),
+                y: titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing,
+                width: titleWidth, height: row.height
+            )
+        }
         let metadataLayout = geometry.metadataLayout(
             width: infoWidth,
             hasComments: input.hasComments,
@@ -849,7 +891,7 @@ enum IOSUIKitArticleLayoutEngine {
         let landscapeReadingTimeIconFrame: CGRect?
         let landscapeReadingTimeFrame: CGRect?
 
-        let dateRowY = titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing
+        let dateRowY = (tagsFrame?.maxY ?? titleFrame.maxY) + IOSUIKitArticleGeometry.textSpacing
         let dateRowWidth = isSideTitleVariant ? titleWidth : infoWidth
         let readingTimeReservedWidth = usesDateRowReadingTime && dateRowReadingTimeBlockWidth > 0
             ? IOSUIKitArticleGeometry.landscapeDateReadingTimeSpacing + dateRowReadingTimeBlockWidth
@@ -958,6 +1000,8 @@ enum IOSUIKitArticleLayoutEngine {
             imageFrame: imageFrame,
             textFrame: CGRect(x: textOrigin.x, y: textOrigin.y, width: infoWidth, height: textBlockHeight),
             titleFrame: titleFrame,
+            tagsFrame: tagsFrame,
+            tagRow: tagRow,
             metadataFrame: metadataFrame,
             unreadFrame: unreadFrame,
             feedIconFrame: feedIconFrame,
@@ -980,6 +1024,59 @@ enum IOSUIKitArticleLayoutEngine {
             previewHeight: previewHeight,
             textBlockHeight: textBlockHeight
         )
+    }
+
+    /// At most three natural-width labels plus their possible overflow counts
+    /// are measured during normal prepared layout, never during status updates.
+    private static func tagRowMetrics(tags: [String], overflowLabels: [String], width: CGFloat, font: UIFont, displayScale: CGFloat, direction: UIUserInterfaceLayoutDirection) -> IOSUIKitArticleTagRowMetrics? {
+        guard !tags.isEmpty, width > 0 else { return nil }
+        let padding = IOSUIKitArticleTagRowMetrics.horizontalPadding * 2
+        let gap = IOSUIKitArticleTagRowMetrics.spacing
+        let height = ceil(font.lineHeight * displayScale) / displayScale
+            + IOSUIKitArticleTagRowMetrics.verticalPadding * 2
+        let widths = tags.prefix(IOSArticleTagPresentation.maximumVisibleTags).map {
+            coreTextWidth($0, font: font, displayScale: displayScale) + padding
+        }
+        func overflowWidth(_ visible: Int) -> CGFloat {
+            coreTextWidth(overflowLabels[visible], font: font, displayScale: displayScale)
+        }
+        var visibleCount = 0
+        var firstWidth: CGFloat?
+        for count in stride(from: widths.count, through: 1, by: -1) {
+            let trailing = tags.count > count ? gap + overflowWidth(count) : 0
+            if widths.prefix(count).reduce(0, +) + gap * CGFloat(count - 1) + trailing <= width {
+                visibleCount = count
+                break
+            }
+        }
+        if visibleCount == 0 {
+            let remaining = width - (tags.count > 1 ? gap + overflowWidth(1) : 0)
+            if remaining > 0 {
+                visibleCount = 1
+                firstWidth = min(widths[0], remaining)
+            }
+        }
+        var x: CGFloat = 0
+        let badges = (0..<visibleCount).map { index -> IOSUIKitArticleTagBadgeMetrics in
+            let badgeWidth = firstWidth ?? widths[index]
+            defer { x += badgeWidth + gap }
+            return .init(text: tags[index], frame: CGRect(
+                x: physicalX(logicalX: x, width: badgeWidth, in: width, direction: direction),
+                y: 0, width: badgeWidth, height: height
+            ))
+        }
+        let overflow: IOSUIKitArticleTagBadgeMetrics?
+        if visibleCount < tags.count {
+            let overflowBadgeWidth = min(overflowWidth(visibleCount), max(0, width - x))
+            overflow = .init(text: overflowLabels[visibleCount], frame: CGRect(
+                x: physicalX(logicalX: x, width: overflowBadgeWidth, in: width, direction: direction),
+                y: IOSUIKitArticleTagRowMetrics.verticalPadding,
+                width: overflowBadgeWidth, height: height - IOSUIKitArticleTagRowMetrics.verticalPadding * 2
+            ))
+        } else {
+            overflow = nil
+        }
+        return .init(badges: badges, overflow: overflow, height: height)
     }
 
     private static func pixelAligned(_ length: CGFloat, scale: CGFloat) -> CGFloat {

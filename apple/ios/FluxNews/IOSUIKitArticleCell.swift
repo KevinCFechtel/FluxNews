@@ -19,6 +19,9 @@ final class IOSUIKitArticleCell: UITableViewCell {
     // `previewLabel.isHidden` is set on every `configure`.
     private let textContainer = UIView()
     private let titleLabel = UILabel()
+    private let tagsView = IOSUIKitArticleTagsView()
+    private var tagsTopConstraint: NSLayoutConstraint!
+    private var tagsHeightConstraint: NSLayoutConstraint!
     private let starImageView = UIImageView(image: UIImage(systemName: "star.fill"))
     private let metadataRow = UIView()
     private let unreadIndicator = UIView()
@@ -125,6 +128,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
     private var articleImagePipeline = ArticleImagePipeline.shared
     private var imageBindingGeneration: UInt64 = 0
     private var currentTitle = ""
+    private var currentTopicsAccessibilityLabel: String?
     private var currentFeedTitle = ""
     private var currentPublishedDate = ""
     private var currentShowsRelativePublicationTime = false
@@ -352,6 +356,18 @@ final class IOSUIKitArticleCell: UITableViewCell {
         textContainer.addSubview(landscapeReadingTimeContainer)
         textContainer.addSubview(previewContinuationLabel)
         previewContinuationLabel.isHidden = true
+        // A permanent, explicitly sized row. Empty tags collapse via constants,
+        // without rebuilding the constraint graph or measuring text on reuse.
+        tagsView.translatesAutoresizingMaskIntoConstraints = false
+        textContainer.addSubview(tagsView)
+        tagsTopConstraint = tagsView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor)
+        tagsHeightConstraint = tagsView.heightAnchor.constraint(equalToConstant: 0)
+        NSLayoutConstraint.activate([
+            tagsView.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            tagsView.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            tagsTopConstraint,
+            tagsHeightConstraint,
+        ])
         previewTopConstraint = previewLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing)
         // Collapsing by priority keeps the constraint graph untouched. Removing
         // or deactivating it instead would mutate the graph on every reuse
@@ -367,7 +383,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         previewTrailingDefaultConstraint = previewLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor)
 
         defaultDateTopConstraint = dateLabel.topAnchor.constraint(
-            equalTo: titleLabel.bottomAnchor,
+            equalTo: tagsView.bottomAnchor,
             constant: IOSUIKitArticleGeometry.textSpacing
         )
         defaultDateTrailingConstraint = dateLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor)
@@ -498,7 +514,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             titleLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),
 
             dateLabel.topAnchor.constraint(
-                equalTo: titleLabel.bottomAnchor,
+                equalTo: tagsView.bottomAnchor,
                 constant: IOSUIKitArticleGeometry.textSpacing
             ),
             portraitDateTrailingConstraint,
@@ -580,7 +596,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
                 constant: -IOSUIKitArticleGeometry.sideTitleSpacing
             ),
             dateLabel.topAnchor.constraint(
-                equalTo: titleLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
+                equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
             ),
             landscapeReadingTimeContainer.topAnchor.constraint(equalTo: dateLabel.topAnchor),
             landscapeReadingTimeContainer.bottomAnchor.constraint(equalTo: dateLabel.bottomAnchor),
@@ -634,7 +650,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
 
             titleLabel.topAnchor.constraint(equalTo: metadataRow.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing),
             titleLabel.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),
-            dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing),
+            dateLabel.topAnchor.constraint(equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing),
             sideTitleTextOnlyDateTrailingConstraint,
             sideTitleTextOnlyReadingContainerTrailingConstraint,
             landscapeReadingTimeContainer.topAnchor.constraint(equalTo: dateLabel.topAnchor),
@@ -653,6 +669,8 @@ final class IOSUIKitArticleCell: UITableViewCell {
         representedImageRequest = nil
         representedArticleID = nil
         preparedLayoutMetrics = nil
+        tagsView.configure(nil)
+        currentTopicsAccessibilityLabel = nil
         previewContinuationLabel.text = nil
         previewContinuationLabel.isHidden = true
         clearArticleImagePresentation()
@@ -676,6 +694,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         textContainer.semanticContentAttribute = semanticContentAttribute
         self.preparedLayoutMetrics = preparedLayoutMetrics
         currentTitle = item.content.article.title
+        currentTopicsAccessibilityLabel = item.content.topicsAccessibilityLabel
         currentFeedTitle = item.content.article.feedTitle
         currentShowsRelativePublicationTime = showRelativePublicationTime
         currentPublishedDate = showRelativePublicationTime ? item.content.publishedAge : item.content.publishedDate
@@ -797,6 +816,9 @@ final class IOSUIKitArticleCell: UITableViewCell {
 
     private func applyLayout(_ layout: IOSUIKitArticleLayoutMetrics) {
         applyAccessoryMetrics(layout)
+        tagsView.configure(layout.tagRow)
+        tagsHeightConstraint.constant = layout.tagRow?.height ?? 0
+        tagsTopConstraint.constant = layout.tagRow == nil ? 0 : IOSUIKitArticleGeometry.textSpacing
         let variant = layout.variant
         contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: layout.verticalInset,
@@ -868,6 +890,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         currentIsRead = isRead
         currentIsStarred = isStarred
         titleLabel.textColor = isRead ? .secondaryLabel : .label
+        tagsView.updateStatus(isRead: isRead)
         // Colour only — never anything that could move a frame.
         let supporting = isRead ? Self.supportingReadTextColor : Self.supportingTextColor
         feedTitleLabel.textColor = supporting
@@ -956,6 +979,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         let imageFrame: CGRect
         let textStackFrame: CGRect
         let titleFrame: CGRect
+        let tagsFrame: CGRect?
         let starFrame: CGRect
         let metadataFrame: CGRect
         let unreadFrame: CGRect
@@ -980,6 +1004,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             imageFrame: frame(articleImageView),
             textStackFrame: frame(textContainer),
             titleFrame: frame(titleLabel),
+            tagsFrame: preparedLayoutMetrics?.tagRow == nil ? nil : frame(tagsView),
             starFrame: frame(starImageView),
             metadataFrame: frame(metadataRow),
             unreadFrame: frame(unreadIndicator),
@@ -1010,6 +1035,9 @@ final class IOSUIKitArticleCell: UITableViewCell {
     var feedIconImageForTesting: UIImage? { feedIconImageView.image }
     var feedTitlePresentationForTesting: (lineCount: Int, lineBreakMode: NSLineBreakMode) {
         (feedTitleLabel.numberOfLines, feedTitleLabel.lineBreakMode)
+    }
+    var tagPresentationForTesting: (labels: [String], overflow: String?, badgeFrames: [CGRect], overflowFrame: CGRect?, fontSize: CGFloat, lineCount: Int, lineBreakMode: NSLineBreakMode, interactive: Bool) {
+        tagsView.presentationForTesting
     }
 
     private func configureArticleImage(
@@ -1167,9 +1195,98 @@ final class IOSUIKitArticleCell: UITableViewCell {
 
     private func updateAccessibility() {
         let reading = currentReadingTime.map { ", \(String(localized: "Reading time")) \($0)" } ?? ""
-        accessibilityLabel = "\(currentTitle), \(currentFeedTitle), \(currentPublishedDate)\(reading), \(currentIsRead ? String(localized: "Read") : String(localized: "Unread"))\(currentIsStarred ? String(localized: ", starred") : "")"
+        let topics = currentTopicsAccessibilityLabel.map { ", \($0)" } ?? ""
+        accessibilityLabel = "\(currentTitle)\(topics), \(currentFeedTitle), \(currentPublishedDate)\(reading), \(currentIsRead ? String(localized: "Read") : String(localized: "Unread"))\(currentIsStarred ? String(localized: ", starred") : "")"
         accessibilityValue = currentIsRead
             ? (currentIsStarred ? String(localized: "Read, starred") : String(localized: "Read"))
             : (currentIsStarred ? String(localized: "Unread, starred") : String(localized: "Unread"))
+    }
+}
+
+/// Decorative topic labels, not controls. All geometry comes from the same
+/// prepared layout as the cell height; the bounded view pool survives reuse.
+@MainActor
+private final class IOSUIKitArticleTagsView: UIView {
+    private let badges = (0..<IOSArticleTagPresentation.maximumVisibleTags).map { _ in UIView() }
+    private let labels = (0..<IOSArticleTagPresentation.maximumVisibleTags).map { _ in UILabel() }
+    private let overflowLabel = UILabel()
+    private var metrics: IOSUIKitArticleTagRowMetrics?
+    private static let readColor = UIColor { traits in
+        let base = UIColor.secondaryLabel.resolvedColor(with: traits)
+        return base.withAlphaComponent(base.cgColor.alpha * (traits.accessibilityContrast == .high ? 1 : 0.75))
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        accessibilityElementsHidden = true
+        clipsToBounds = true
+        for (badge, label) in zip(badges, labels) {
+            badge.backgroundColor = .secondarySystemFill
+            badge.layer.cornerRadius = 4
+            badge.clipsToBounds = true
+            badge.addSubview(label)
+            addSubview(badge)
+        }
+        addSubview(overflowLabel)
+        for label in labels + [overflowLabel] {
+            label.font = .preferredFont(forTextStyle: .caption2)
+            label.adjustsFontForContentSizeCategory = true
+            label.numberOfLines = 1
+            label.lineBreakMode = .byTruncatingTail
+            label.textColor = .secondaryLabel
+        }
+        configure(nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(_ metrics: IOSUIKitArticleTagRowMetrics?) {
+        self.metrics = metrics
+        for index in badges.indices {
+            let badge = metrics.flatMap { index < $0.badges.count ? $0.badges[index] : nil }
+            badges[index].isHidden = badge == nil
+            labels[index].text = badge?.text
+        }
+        overflowLabel.text = metrics?.overflow?.text
+        overflowLabel.isHidden = metrics?.overflow == nil
+        setNeedsLayout()
+    }
+
+    func updateStatus(isRead: Bool) {
+        for label in labels + [overflowLabel] {
+            label.textColor = isRead ? Self.readColor : .secondaryLabel
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let metrics else { return }
+        for (index, badge) in metrics.badges.enumerated() {
+            badges[index].frame = badge.frame
+            let horizontal = IOSUIKitArticleTagRowMetrics.horizontalPadding
+            let vertical = IOSUIKitArticleTagRowMetrics.verticalPadding
+            labels[index].frame = CGRect(
+                x: min(horizontal, badge.frame.width / 2), y: vertical,
+                width: max(0, badge.frame.width - horizontal * 2),
+                height: max(0, badge.frame.height - vertical * 2)
+            )
+        }
+        overflowLabel.frame = metrics.overflow?.frame ?? .zero
+    }
+
+    var presentationForTesting: (labels: [String], overflow: String?, badgeFrames: [CGRect], overflowFrame: CGRect?, fontSize: CGFloat, lineCount: Int, lineBreakMode: NSLineBreakMode, interactive: Bool) {
+        (
+            labels: labels.compactMap(\.text),
+            overflow: overflowLabel.text,
+            badgeFrames: badges.filter { !$0.isHidden }.map(\.frame),
+            overflowFrame: overflowLabel.isHidden ? nil : overflowLabel.frame,
+            fontSize: labels[0].font.pointSize,
+            lineCount: labels[0].numberOfLines,
+            lineBreakMode: labels[0].lineBreakMode,
+            interactive: isUserInteractionEnabled
+        )
     }
 }

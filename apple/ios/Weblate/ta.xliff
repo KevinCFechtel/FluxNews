@@ -5,6 +5,12 @@
       <tool tool-id="dev.kevincfechtel.fluxnews.weblate-handoff" tool-name="FluxNews Weblate handoff" tool-version="1" />
     </header>
     <body>
+      <trans-unit id="+%@" xml:space="preserve">
+        <source>+%@</source>
+      </trans-unit>
+      <trans-unit id="Topics: %@" xml:space="preserve">
+        <source>Topics: %@</source>
+      </trans-unit>
       <trans-unit id=", starred" xml:space="preserve">
         <source>, starred</source>
         <target state="needs-l10n">, starred</target>

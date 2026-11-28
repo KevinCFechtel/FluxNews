@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "+%@": {
+      "comment": "Additional article topics; the argument is a locale-formatted count.",
+      "extractionState": "manual",
+      "shouldTranslate": false
+    },
+    "Topics: %@": {
+      "comment": "VoiceOver description of all publisher-provided article tags, including visually hidden topics.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topics: %@"
+          }
+        }
+      }
+    },
     "%lld audio": {
       "localizations": {
         "de": {

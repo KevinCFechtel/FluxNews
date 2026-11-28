@@ -212,6 +212,12 @@ preview-line choices, Dynamic Type, VoiceOver, and adaptive compact/regular
 presentation remain supported. Cell structure and content sizing are reused
 when their layout inputs have not changed.
 
+Publisher topic labels follow the shared mobile tag presentation contract.
+Their bounded single-line geometry participates in deterministic prepared
+heights and layout-cache identity, including Visual Compact's preview flow.
+Reusable native labels are decorative; the cell's VoiceOver description includes
+all topics. Read/starred updates remain geometry-neutral.
+
 The Timeline must not use SwiftUI `List`, `ScrollView`/`LazyVStack`, or hosted
 SwiftUI article cells as its production renderer. Navigation, Settings, Reader,
 Search, sheets, and other surfaces may continue using SwiftUI. Use public UIKit

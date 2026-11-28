@@ -480,7 +480,7 @@ List presentation uses separately persisted, regenerable derivatives:
 Publisher-provided article tags are preserved as article metadata independently
 of the user's feed categories. Core sync, persistence, search and article-summary
 projections expose the complete tag list; display limits belong to native clients.
-The initial Android feature is display-only, with no tag editing or filtering.
+The Android and iOS/iPadOS presentation is display-only, with no tag editing or filtering.
 
 The preview has a fixed Core maximum of **600 characters**. This is a
 technical processing limit, not a user setting. Native clients control
