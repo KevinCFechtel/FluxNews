@@ -110,6 +110,8 @@ pub struct ArticleSummary {
     pub reading_time_minutes: u32,
     pub preview: String,
     pub image_url: Option<String>,
+    #[uniffi(default = [])]
+    pub tags: Vec<String>,
 }
 #[derive(uniffi::Record)]
 pub struct ArticlePage {
@@ -1318,6 +1320,7 @@ impl Flux {
             is_starred: snapshot.is_starred,
             raw_html_content: snapshot.raw_html_content,
             reading_time_minutes: snapshot.reading_time_minutes,
+            tags: Vec::new(),
             preview: snapshot.preview,
             image_url: snapshot.image_url,
         };
@@ -2240,6 +2243,7 @@ impl From<domain::ArticleSummary> for ArticleSummary {
             reading_time_minutes: value.reading_time_minutes,
             preview: value.preview,
             image_url: value.image_url,
+            tags: value.tags,
         }
     }
 }
@@ -3066,6 +3070,7 @@ mod tests {
                 comments_url: String::new(),
                 published_at: "2026-01-01T00:00:00Z".into(),
                 reading_time_minutes: 0,
+                tags: vec!["Digital".into(), "IT-Sicherheit".into()],
                 is_read: false,
                 is_starred: true,
                 preview: String::new(),
@@ -3080,6 +3085,7 @@ mod tests {
         .into();
 
         assert_eq!(mapped.articles[0].id, 7);
+        assert_eq!(mapped.articles[0].tags, ["Digital", "IT-Sicherheit"]);
         assert_eq!(mapped.total, Some(12));
         assert_eq!(mapped.next_cursor.unwrap().article_id, 7);
     }

@@ -25,11 +25,12 @@ use crate::media_metadata::{
     AnalyzedMedia, analyze_file, article_chapters, resolve_media_reference, to_domain_chapters,
 };
 use crate::miniflux::normalize_installation_base;
-use chrono::Utc;
+use crate::timestamps::{now_rfc3339, parse_rfc3339};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
 use sha2::{Digest, Sha256};
+use time::{Duration, OffsetDateTime};
 
-const SCHEMA_VERSION: i64 = 22;
+const SCHEMA_VERSION: i64 = 23;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PendingSavedMediaReplication {
@@ -739,7 +740,7 @@ impl Store {
         }
         for a in articles {
             let existing = tx
-                .query_row("SELECT feed_id,title,url,comments_url,published_at,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url FROM articles WHERE id=?1", [a.id], |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, bool>(5)?, row.get::<_, bool>(6)?, row.get::<_, String>(7)?, row.get::<_, u32>(8)?, row.get::<_, String>(9)?, row.get::<_, Option<String>>(10)?)))
+                .query_row("SELECT feed_id,title,url,comments_url,published_at,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,tags_json FROM articles WHERE id=?1", [a.id], |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, bool>(5)?, row.get::<_, bool>(6)?, row.get::<_, String>(7)?, row.get::<_, u32>(8)?, row.get::<_, String>(9)?, row.get::<_, Option<String>>(10)?, row_article_tags(row, 11)?)))
                 .optional()
                 .map_err(sql_error)?;
             match existing {
@@ -765,13 +766,14 @@ impl Store {
                             a.reading_time_minutes,
                             a.preview.clone(),
                             a.image_url.clone(),
+                            a.tags.clone(),
                         ) =>
                 {
                     stats.updated_articles += 1
                 }
                 Some(_) => {}
             }
-            tx.execute("INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13) ON CONFLICT(id) DO UPDATE SET feed_id=excluded.feed_id,title=excluded.title,url=excluded.url,comments_url=excluded.comments_url,published_at=excluded.published_at,remote_is_read=excluded.remote_is_read,remote_is_starred=excluded.remote_is_starred,is_read=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='read') THEN articles.is_read ELSE excluded.is_read END,is_starred=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='starred') THEN articles.is_starred ELSE excluded.is_starred END,raw_html_content=excluded.raw_html_content,reading_time_minutes=excluded.reading_time_minutes,preview=excluded.preview,image_url=excluded.image_url,content_processing_version=excluded.content_processing_version", params![a.id,a.feed_id,a.title,a.url,a.comments_url,a.published_at,a.is_read,a.is_starred,a.raw_html_content,a.reading_time_minutes,a.preview,a.image_url,crate::article::PROCESSING_VERSION]).map_err(sql_error)?;
+            tx.execute("INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version,tags_json) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13,?14) ON CONFLICT(id) DO UPDATE SET feed_id=excluded.feed_id,title=excluded.title,url=excluded.url,comments_url=excluded.comments_url,published_at=excluded.published_at,remote_is_read=excluded.remote_is_read,remote_is_starred=excluded.remote_is_starred,is_read=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='read') THEN articles.is_read ELSE excluded.is_read END,is_starred=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='starred') THEN articles.is_starred ELSE excluded.is_starred END,raw_html_content=excluded.raw_html_content,reading_time_minutes=excluded.reading_time_minutes,preview=excluded.preview,image_url=excluded.image_url,content_processing_version=excluded.content_processing_version,tags_json=excluded.tags_json", params![a.id,a.feed_id,a.title,a.url,a.comments_url,a.published_at,a.is_read,a.is_starred,a.raw_html_content,a.reading_time_minutes,a.preview,a.image_url,crate::article::PROCESSING_VERSION, encode_article_tags(&a.tags)?]).map_err(sql_error)?;
         }
         let new_live_enclosures = if matches!(discovery_mode, DiscoveryMode::LiveDiscovery) {
             enclosures
@@ -811,7 +813,7 @@ impl Store {
             }
         }
         for article_id in auto_download_articles {
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
             for enclosure_id in audio_enclosure_ids_for_article(&tx, article_id)? {
                 let suppressed: bool = tx
                     .query_row(
@@ -1293,7 +1295,7 @@ impl Store {
             .lock()
             .map_err(|_| CoreError::internal("database lock poisoned"))?;
         let tx = connection.transaction().map_err(sql_error)?;
-        tx.execute("INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13) ON CONFLICT(id) DO NOTHING", params![article.id,article.feed_id,article.title,article.url,article.comments_url,article.published_at,article.is_read,article.is_starred,article.raw_html_content,article.reading_time_minutes,article.preview,article.image_url,crate::article::PROCESSING_VERSION]).map_err(sql_error)?;
+        tx.execute("INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version,tags_json) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13,?14) ON CONFLICT(id) DO NOTHING", params![article.id,article.feed_id,article.title,article.url,article.comments_url,article.published_at,article.is_read,article.is_starred,article.raw_html_content,article.reading_time_minutes,article.preview,article.image_url,crate::article::PROCESSING_VERSION,encode_article_tags(&article.tags)?]).map_err(sql_error)?;
         upsert_remote_enclosures(&tx, std::slice::from_ref(enclosure))?;
         save_media(&tx, enclosure.id, added_at)?;
         tx.commit().map_err(sql_error)
@@ -1955,7 +1957,7 @@ impl Store {
                     |row| row.get(0),
                 )
                 .map_err(sql_error)?;
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
         }
         request_download_in_transaction(&tx, enclosure_id, origin)?;
         tx.commit().map_err(sql_error)
@@ -2059,7 +2061,7 @@ impl Store {
             Some(DownloadState::Requested) => {
                 tx.execute(
                     "UPDATE media_downloads SET state='downloaded',local_file=?1,file_size_bytes=?2,downloaded_at=?3,failure_kind=NULL WHERE enclosure_id=?4",
-                    params![local_file, size, Utc::now().to_rfc3339(), enclosure_id],
+                    params![local_file, size, now_rfc3339(), enclosure_id],
                 )
                 .map_err(sql_error)?;
                 let artwork_reference = self.persist_artwork(&analyzed.artwork)?;
@@ -2110,8 +2112,8 @@ impl Store {
             return Ok(false);
         }
         tx.execute(
-            "INSERT OR IGNORE INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13)",
-            params![article.id,article.feed_id,article.title,article.url,article.comments_url,article.published_at,article.is_read,article.is_starred,article.raw_html_content,article.reading_time_minutes,article.preview,article.image_url,crate::article::PROCESSING_VERSION],
+            "INSERT OR IGNORE INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version,tags_json) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13,?14)",
+            params![article.id,article.feed_id,article.title,article.url,article.comments_url,article.published_at,article.is_read,article.is_starred,article.raw_html_content,article.reading_time_minutes,article.preview,article.image_url,crate::article::PROCESSING_VERSION,encode_article_tags(&article.tags)?],
         ).map_err(sql_error)?;
         upsert_remote_enclosures(&tx, enclosures)?;
         tx.commit().map_err(sql_error)?;
@@ -2198,7 +2200,7 @@ impl Store {
         }
 
         tx.execute(
-            "INSERT OR IGNORE INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,NULL,NULL,?9,?10,?11,?12,?13)",
+            "INSERT OR IGNORE INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version,tags_json) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,NULL,NULL,?9,?10,?11,?12,?13,?14)",
             params![
                 article.id,
                 article.feed_id,
@@ -2212,7 +2214,8 @@ impl Store {
                 article.reading_time_minutes,
                 article.preview,
                 article.image_url,
-                crate::article::PROCESSING_VERSION
+                crate::article::PROCESSING_VERSION,
+                encode_article_tags(&article.tags)?
             ],
         )
         .map_err(sql_error)?;
@@ -2372,7 +2375,7 @@ impl Store {
                 .map_err(sql_error)?;
             // A previous migration may have persisted the download before its
             // Listening List projection was restored. Repair it on safe retry.
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
         }
         if existing_state.is_some() {
             tx.commit().map_err(sql_error)?;
@@ -2380,7 +2383,7 @@ impl Store {
         }
         tx.execute(
             "INSERT INTO media_downloads(enclosure_id,state,origin,local_file,file_size_bytes,downloaded_at,failure_kind) VALUES(?1,'downloaded','manual',?2,?3,?4,NULL)",
-            params![enclosure_id, local_file, size, Utc::now().to_rfc3339()],
+            params![enclosure_id, local_file, size, now_rfc3339()],
         ).map_err(sql_error)?;
         let artwork_reference = self.persist_artwork(&analyzed.artwork)?;
         persist_media_metadata(
@@ -2532,14 +2535,11 @@ impl Store {
             .map_err(sql_error)
     }
 
-    pub fn evaluate_media_cleanup(
-        &self,
-        now: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<i64>, CoreError> {
+    pub fn evaluate_media_cleanup(&self, now: OffsetDateTime) -> Result<Vec<i64>, CoreError> {
         let settings = self.core_settings()?;
         let cutoff = match settings.download_retention {
             DownloadRetention::Forever => None,
-            DownloadRetention::Days(days) => Some(now - chrono::Duration::days(i64::from(days))),
+            DownloadRetention::Days(days) => Some(now - Duration::days(i64::from(days))),
         };
         let mut connection = self
             .connection
@@ -2562,8 +2562,8 @@ impl Store {
         let mut deleted = Vec::new();
         for (enclosure_id, downloaded_at, completed) in candidates {
             let expired = cutoff.is_some_and(|cutoff| {
-                chrono::DateTime::parse_from_rfc3339(&downloaded_at)
-                    .map(|value| value.with_timezone(&chrono::Utc) <= cutoff)
+                parse_rfc3339(&downloaded_at)
+                    .map(|value| value <= cutoff)
                     .unwrap_or(false)
             });
             if expired || (settings.delete_after_playback && completed) {
@@ -2592,13 +2592,13 @@ impl Store {
             .map_err(|_| CoreError::internal("database lock poisoned"))?;
         let tx = connection.transaction().map_err(sql_error)?;
         tx.execute(
-            "INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13) ON CONFLICT(id) DO NOTHING",
-            params![article.id, article.feed_id, article.title, article.url, article.comments_url, article.published_at, article.is_read, article.is_starred, article.raw_html_content, article.reading_time_minutes, article.preview, article.image_url, crate::article::PROCESSING_VERSION],
+            "INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version,tags_json) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13,?14) ON CONFLICT(id) DO NOTHING",
+            params![article.id, article.feed_id, article.title, article.url, article.comments_url, article.published_at, article.is_read, article.is_starred, article.raw_html_content, article.reading_time_minutes, article.preview, article.image_url, crate::article::PROCESSING_VERSION, encode_article_tags(&article.tags)?],
         )
         .map_err(sql_error)?;
         upsert_remote_enclosures(&tx, std::slice::from_ref(enclosure))?;
         if is_audio_enclosure(&tx, enclosure.id)? {
-            ensure_listening_membership(&tx, article.id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article.id, &now_rfc3339())?;
         }
         tx.execute(
             "INSERT INTO media_downloads(enclosure_id,state,origin,local_file,file_size_bytes,downloaded_at,failure_kind) VALUES(?1,'requested',?2,NULL,NULL,NULL,NULL) ON CONFLICT(enclosure_id) DO UPDATE SET state='requested',origin=excluded.origin,local_file=NULL,file_size_bytes=NULL,downloaded_at=NULL,failure_kind=NULL",
@@ -3820,7 +3820,7 @@ impl Store {
             accepted_article_ids.insert(article.id);
             let existing = tx
                 .query_row(
-                    "SELECT feed_id,title,url,comments_url,published_at,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url FROM articles WHERE id=?1",
+                    "SELECT feed_id,title,url,comments_url,published_at,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,tags_json FROM articles WHERE id=?1",
                     [article.id],
                     |row| {
                         Ok((
@@ -3835,6 +3835,7 @@ impl Store {
                             row.get::<_, u32>(8)?,
                             row.get::<_, String>(9)?,
                             row.get::<_, Option<String>>(10)?,
+                            row_article_tags(row, 11)?,
                         ))
                     },
                 )
@@ -3864,6 +3865,7 @@ impl Store {
                             article.reading_time_minutes,
                             article.preview.clone(),
                             article.image_url.clone(),
+                            article.tags.clone(),
                         ) =>
                 {
                     stats.updated_articles += 1;
@@ -3872,7 +3874,7 @@ impl Store {
             }
 
             tx.execute(
-                "INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13) ON CONFLICT(id) DO UPDATE SET feed_id=excluded.feed_id,title=excluded.title,url=excluded.url,comments_url=excluded.comments_url,published_at=excluded.published_at,remote_is_read=excluded.remote_is_read,remote_is_starred=excluded.remote_is_starred,is_read=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='read') THEN articles.is_read ELSE excluded.is_read END,is_starred=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='starred') THEN articles.is_starred ELSE excluded.is_starred END,raw_html_content=excluded.raw_html_content,reading_time_minutes=excluded.reading_time_minutes,preview=excluded.preview,image_url=excluded.image_url,content_processing_version=excluded.content_processing_version",
+                "INSERT INTO articles (id,feed_id,title,url,comments_url,published_at,is_read,is_starred,remote_is_read,remote_is_starred,raw_html_content,reading_time_minutes,preview,image_url,content_processing_version,tags_json) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?7,?8,?9,?10,?11,?12,?13,?14) ON CONFLICT(id) DO UPDATE SET feed_id=excluded.feed_id,title=excluded.title,url=excluded.url,comments_url=excluded.comments_url,published_at=excluded.published_at,remote_is_read=excluded.remote_is_read,remote_is_starred=excluded.remote_is_starred,is_read=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='read') THEN articles.is_read ELSE excluded.is_read END,is_starred=CASE WHEN EXISTS(SELECT 1 FROM pending_mutations p WHERE p.article_id=excluded.id AND p.field='starred') THEN articles.is_starred ELSE excluded.is_starred END,raw_html_content=excluded.raw_html_content,reading_time_minutes=excluded.reading_time_minutes,preview=excluded.preview,image_url=excluded.image_url,content_processing_version=excluded.content_processing_version,tags_json=excluded.tags_json",
                 params![
                     article.id,
                     article.feed_id,
@@ -3886,7 +3888,8 @@ impl Store {
                     article.reading_time_minutes,
                     article.preview,
                     article.image_url,
-                    crate::article::PROCESSING_VERSION
+                    crate::article::PROCESSING_VERSION,
+                    encode_article_tags(&article.tags)?
                 ],
             )
             .map_err(sql_error)?;
@@ -3944,7 +3947,7 @@ impl Store {
             }
         }
         for article_id in auto_download_articles {
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
             for enclosure_id in audio_enclosure_ids_for_article(&tx, article_id)? {
                 let suppressed: bool = tx
                     .query_row(
@@ -4042,7 +4045,7 @@ impl Store {
             .map_err(|_| CoreError::internal("database lock poisoned"))?;
         connection
             .query_row(
-                "SELECT a.id,a.feed_id,f.category_id,f.title,a.title,a.url,a.comments_url,a.published_at,a.is_read,a.is_starred,a.reading_time_minutes,a.preview,a.image_url FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?1",
+                "SELECT a.id,a.feed_id,f.category_id,f.title,a.title,a.url,a.comments_url,a.published_at,a.is_read,a.is_starred,a.reading_time_minutes,a.preview,a.image_url,a.tags_json FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?1",
                 [article_id],
                 |r| {
                     Ok(ArticleSummary {
@@ -4059,6 +4062,7 @@ impl Store {
                         reading_time_minutes: r.get::<_, u32>(10)?,
                         preview: r.get(11)?,
                         image_url: r.get(12)?,
+                        tags: row_article_tags(r, 13)?,
                     })
                 },
             )
@@ -4126,7 +4130,7 @@ impl Store {
         connection: &Connection,
         query: &ArticleQuery,
     ) -> Result<Vec<ArticleSummary>, CoreError> {
-        let (mut sql,mut values)=article_filter_sql("SELECT a.id,a.feed_id,f.category_id,f.title,a.title,a.url,a.comments_url,a.published_at,a.is_read,a.is_starred,a.reading_time_minutes,a.preview,a.image_url FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE 1=1".into(),query);
+        let (mut sql,mut values)=article_filter_sql("SELECT a.id,a.feed_id,f.category_id,f.title,a.title,a.url,a.comments_url,a.published_at,a.is_read,a.is_starred,a.reading_time_minutes,a.preview,a.image_url,a.tags_json FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE 1=1".into(),query);
         let descending = query.sort == ArticleSort::NewestFirst;
         if let Some(cursor) = &query.cursor {
             let op = if descending { "<" } else { ">" };
@@ -4162,6 +4166,7 @@ impl Store {
                     reading_time_minutes: r.get::<_, u32>(10)?,
                     preview: r.get(11)?,
                     image_url: r.get(12)?,
+                    tags: row_article_tags(r, 13)?,
                 })
             })
             .map_err(sql_error)?
@@ -4536,8 +4541,31 @@ fn migrate(connection: &mut Connection) -> Result<(), CoreError> {
         tx.execute_batch("CREATE TABLE system_notification_candidates_v22 (id INTEGER PRIMARY KEY AUTOINCREMENT, feed_id INTEGER NOT NULL REFERENCES feeds(id) ON DELETE CASCADE, feed_title TEXT NOT NULL); INSERT INTO system_notification_candidates_v22(id,feed_id,feed_title) SELECT id,feed_id,feed_title FROM system_notification_candidates; CREATE TABLE notification_candidate_articles_v22 (candidate_id INTEGER NOT NULL REFERENCES system_notification_candidates_v22(id) ON DELETE CASCADE, article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE, PRIMARY KEY(candidate_id,article_id)); INSERT INTO notification_candidate_articles_v22(candidate_id,article_id) SELECT candidate_id,article_id FROM notification_candidate_articles; DROP TABLE notification_candidate_articles; DROP TABLE system_notification_candidates; ALTER TABLE system_notification_candidates_v22 RENAME TO system_notification_candidates; ALTER TABLE notification_candidate_articles_v22 RENAME TO notification_candidate_articles; PRAGMA user_version=22;").map_err(sql_error)?;
         tx.commit().map_err(sql_error)?;
     }
+    if current < 23 {
+        let tx = connection.transaction().map_err(sql_error)?;
+        // The complete publisher-provided list is article data, not presentation state.
+        // Old articles start empty and are populated when fetched again from Miniflux.
+        tx.execute_batch("ALTER TABLE articles ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(tags_json) AND json_type(tags_json)='array'); PRAGMA user_version=23;").map_err(sql_error)?;
+        tx.commit().map_err(sql_error)?;
+    }
     Ok(())
 }
+
+fn encode_article_tags(tags: &[String]) -> Result<String, CoreError> {
+    serde_json::to_string(tags).map_err(|_| CoreError::internal("could not serialize article tags"))
+}
+
+fn row_article_tags(row: &rusqlite::Row<'_>, index: usize) -> rusqlite::Result<Vec<String>> {
+    let json: String = row.get(index)?;
+    serde_json::from_str(&json).map_err(|error| {
+        rusqlite::Error::FromSqlConversionFailure(
+            index,
+            rusqlite::types::Type::Text,
+            Box::new(error),
+        )
+    })
+}
+
 fn initialize_core_settings(connection: &Connection) -> Result<(), CoreError> {
     for (key, value) in core_setting_defaults() {
         connection
@@ -5416,6 +5444,7 @@ mod tests {
             is_starred,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -5492,6 +5521,7 @@ mod tests {
             is_starred: false,
             raw_html_content: "<p>00:00 Intro</p><p>03:42 Topic</p>".into(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -5567,6 +5597,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: Some("https://example.test/article.jpg".into()),
         };
@@ -5857,6 +5888,9 @@ mod tests {
         {
             let store = Store::open(&data, &cache, &media).unwrap();
             let connection = store.connection.lock().unwrap();
+            connection
+                .execute_batch("ALTER TABLE articles DROP COLUMN tags_json;")
+                .unwrap();
             connection.execute_batch("DROP TABLE notification_candidate_articles; DROP TABLE system_notification_candidates; CREATE TABLE system_notification_candidates (id INTEGER PRIMARY KEY, feed_id INTEGER NOT NULL REFERENCES feeds(id) ON DELETE CASCADE, feed_title TEXT NOT NULL); CREATE TABLE notification_candidate_articles (candidate_id INTEGER NOT NULL REFERENCES system_notification_candidates(id) ON DELETE CASCADE, article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE, PRIMARY KEY(candidate_id,article_id)); PRAGMA user_version=21;").unwrap();
         }
 
@@ -5876,7 +5910,7 @@ mod tests {
     }
 
     #[test]
-    fn schema_22_database_reopens_after_migration() {
+    fn current_schema_database_reopens_after_migration() {
         let temp = TempDir::new().unwrap();
         let (data, cache, media) = roots(&temp);
 
@@ -5973,6 +6007,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -6037,6 +6072,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -6097,6 +6133,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -6283,7 +6320,7 @@ mod tests {
             let connection = store.connection.lock().unwrap();
             connection
                 .execute_batch(
-                    "DROP TABLE feed_open_in_miniflux_overrides; PRAGMA user_version=18;",
+                    "ALTER TABLE articles DROP COLUMN tags_json; DROP TABLE feed_open_in_miniflux_overrides; PRAGMA user_version=18;",
                 )
                 .unwrap();
         }
@@ -6318,7 +6355,7 @@ mod tests {
                     "UPDATE core_settings SET value = ?1 WHERE key = 'auto_download_listening_list'",
                     [if auto_download_listening_list { "1" } else { "0" }],
                 ).unwrap();
-                connection.execute_batch("DELETE FROM core_settings WHERE key IN ('background_sync_enabled_explicit', 'auto_download_listening_list_explicit'); PRAGMA user_version=19;").unwrap();
+                connection.execute_batch("ALTER TABLE articles DROP COLUMN tags_json; DELETE FROM core_settings WHERE key IN ('background_sync_enabled_explicit', 'auto_download_listening_list_explicit'); PRAGMA user_version=19;").unwrap();
             }
             drop(store);
 
@@ -6584,6 +6621,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         }];
@@ -6691,6 +6729,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -6923,6 +6962,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -6937,6 +6977,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -6951,6 +6992,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -7101,6 +7143,7 @@ mod tests {
             is_starred: false,
             raw_html_content: "<p>Search result</p>".into(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: "Search result".into(),
             image_url: None,
         };
@@ -7345,6 +7388,7 @@ mod tests {
                     raw_html_content:
                         "<p>Hello &amp; goodbye</p><img data-original=\"/image.jpg\">".into(),
                     reading_time_minutes: 0,
+                    tags: vec!["Digital".into(), "IT-Sicherheit".into(), "Überblick".into()],
                     preview: processed.preview.clone(),
                     image_url: processed.image_url.clone(),
                 }],
@@ -7360,6 +7404,7 @@ mod tests {
             .unwrap();
         assert_eq!(article.preview, processed.preview);
         assert_eq!(article.image_url, processed.image_url);
+        assert_eq!(article.tags, ["Digital", "IT-Sicherheit", "Überblick"]);
         assert_eq!(
             store
                 .connection
@@ -7372,6 +7417,149 @@ mod tests {
                 )
                 .unwrap(),
             crate::article::PROCESSING_VERSION
+        );
+    }
+
+    #[test]
+    fn article_tags_round_trip_and_tag_only_full_and_delta_updates_preserve_local_intent() {
+        let temp = TempDir::new().unwrap();
+        let (data, cache, media) = roots(&temp);
+        let store = Store::open(&data, &cache, &media).unwrap();
+        let (mut article, _) = media_article_enclosure_pair();
+        article.tags = vec![
+            "Digital".into(),
+            "Überblick".into(),
+            "A \"quote\"".into(),
+            "四".into(),
+        ];
+        let categories = [Category {
+            id: 1,
+            title: "My folder".into(),
+        }];
+        let feeds = [Feed {
+            id: 10,
+            category_id: 1,
+            title: "ZEIT".into(),
+        }];
+        assert_eq!(
+            store
+                .reconcile(&categories, &feeds, &[article.clone()])
+                .unwrap()
+                .new_articles,
+            1
+        );
+        let snapshot = store.article_summary(article.id).unwrap().unwrap();
+        assert_eq!(snapshot.tags, article.tags);
+        assert_eq!(snapshot.category_id, 1);
+        assert_eq!(
+            store
+                .article_page(
+                    &ArticleQuery {
+                        limit: 1,
+                        ..Default::default()
+                    },
+                    true
+                )
+                .unwrap()
+                .articles[0]
+                .tags,
+            article.tags
+        );
+        assert_eq!(
+            store
+                .reconcile(&categories, &feeds, &[article.clone()])
+                .unwrap()
+                .updated_articles,
+            0
+        );
+        store
+            .set_state_bulk(&[article.id], MutationField::Read, false)
+            .unwrap();
+        store
+            .set_state_bulk(&[article.id], MutationField::Starred, true)
+            .unwrap();
+
+        article.tags = vec!["Politics".into()];
+        assert_eq!(
+            store
+                .reconcile(&categories, &feeds, &[article.clone()])
+                .unwrap()
+                .updated_articles,
+            1
+        );
+        let current = store.article_summary(article.id).unwrap().unwrap();
+        assert_eq!(current.tags, article.tags);
+        assert!(!current.is_read);
+        assert!(current.is_starred);
+        assert_eq!(
+            snapshot.tags.len(),
+            4,
+            "previously returned snapshots stay independent"
+        );
+        article.tags.clear();
+        let (stats, skipped) = store
+            .reconcile_delta_articles(&[article], &[], &HashMap::new())
+            .unwrap();
+        assert_eq!(stats.updated_articles, 1);
+        assert!(skipped.is_empty());
+        drop(store);
+        let reopened = Store::open(&data, &cache, &media).unwrap();
+        let current = reopened.article_summary(100).unwrap().unwrap();
+        assert!(
+            current.tags.is_empty(),
+            "remote removal replaces the old list"
+        );
+        assert!(!current.is_read);
+        assert!(current.is_starred);
+        assert_eq!(reopened.pending_mutations().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn v22_migration_adds_empty_tags_without_changing_articles_or_pending_intent() {
+        let temp = TempDir::new().unwrap();
+        let (data, cache, media) = roots(&temp);
+        let store = Store::open(&data, &cache, &media).unwrap();
+        let (article, _) = media_article_enclosure_pair();
+        store
+            .reconcile(
+                &[Category {
+                    id: 1,
+                    title: "Folder".into(),
+                }],
+                &[Feed {
+                    id: 10,
+                    category_id: 1,
+                    title: "Feed".into(),
+                }],
+                &[article],
+            )
+            .unwrap();
+        store
+            .set_state_bulk(&[100], MutationField::Read, false)
+            .unwrap();
+        let before = store.article_summary(100).unwrap().unwrap();
+        store
+            .connection
+            .lock()
+            .unwrap()
+            .execute_batch("ALTER TABLE articles DROP COLUMN tags_json; PRAGMA user_version=22;")
+            .unwrap();
+        drop(store);
+
+        let migrated = Store::open(&data, &cache, &media).unwrap();
+        assert_eq!(migrated.schema_version().unwrap(), 23);
+        assert_eq!(migrated.article_summary(100).unwrap().unwrap(), before);
+        assert_eq!(migrated.pending_mutations().unwrap().len(), 1);
+        let connection = migrated.connection.lock().unwrap();
+        assert!(
+            connection
+                .execute("UPDATE articles SET tags_json='not json' WHERE id=100", [])
+                .is_err()
+        );
+        assert!(
+            connection
+                .execute("UPDATE articles SET tags_json='{}' WHERE id=100", [])
+                .is_err()
         );
     }
 
@@ -7401,6 +7589,7 @@ mod tests {
             is_starred: true,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         });
@@ -7478,6 +7667,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -7492,6 +7682,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -7506,6 +7697,7 @@ mod tests {
                 is_starred: true,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -7704,6 +7896,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         }];
@@ -7797,6 +7990,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -7868,6 +8062,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -8007,6 +8202,7 @@ mod tests {
                     is_starred: false,
                     raw_html_content: String::new(),
                     reading_time_minutes: 0,
+                    tags: Vec::new(),
                     preview: String::new(),
                     image_url: None,
                 }],
@@ -8068,6 +8264,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             })
@@ -8254,6 +8451,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         }];
@@ -8330,6 +8528,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -8661,6 +8860,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -8889,13 +9089,63 @@ mod tests {
         store
             .set_download_retention(DownloadRetention::Days(30))
             .unwrap();
-        let now = chrono::DateTime::parse_from_rfc3339("2026-02-01T00:00:00Z")
-            .unwrap()
-            .with_timezone(&chrono::Utc);
+        let now = parse_rfc3339("2026-02-01T00:00:00Z").unwrap();
         assert_eq!(store.evaluate_media_cleanup(now).unwrap(), vec![1000]);
         assert!(!store.auto_download_suppressed(1000).unwrap());
         assert!(store.saved_media(1000).unwrap().is_some());
         assert!(store.playback_state(1000).unwrap().is_none());
+    }
+
+    #[test]
+    fn download_retention_preserves_offset_fractional_and_invalid_timestamp_boundaries() {
+        let temp = TempDir::new().unwrap();
+        let (data, cache, media) = roots(&temp);
+        let store = Store::open(&data, &cache, &media).unwrap();
+        let (article, enclosure) = media_article_enclosure_pair();
+        store
+            .reconcile_with_enclosures(
+                &[Category {
+                    id: 1,
+                    title: "Category".into(),
+                }],
+                &[Feed {
+                    id: 10,
+                    category_id: 1,
+                    title: "Feed".into(),
+                }],
+                &[article],
+                &[enclosure],
+            )
+            .unwrap();
+        store
+            .request_download(1000, DownloadOrigin::Manual)
+            .unwrap();
+        store.download_finished(1000, "episode.mp3", 10).unwrap();
+        store
+            .set_download_retention(DownloadRetention::Days(30))
+            .unwrap();
+        let now = parse_rfc3339("2026-11-01T01:00:00-05:00").unwrap();
+        for (downloaded_at, expired) in [
+            ("2026-10-02T08:00:00+02:00", true),
+            ("2026-10-02T06:00:00.000000001Z", false),
+            ("2026-10-02T05:59:59.999999999+00:00", true),
+            ("invalid", false),
+        ] {
+            store.connection.lock().unwrap().execute(
+                "UPDATE media_downloads SET state='downloaded',downloaded_at=?1 WHERE enclosure_id=1000",
+                [downloaded_at],
+            ).unwrap();
+            assert_eq!(
+                !store.evaluate_media_cleanup(now).unwrap().is_empty(),
+                expired,
+                "{downloaded_at}"
+            );
+            assert!(store.article_summary(100).unwrap().is_some());
+            assert_eq!(
+                store.enclosure(1000).unwrap().unwrap().enclosure.article_id,
+                100
+            );
+        }
     }
 
     #[test]
@@ -9032,6 +9282,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -9615,6 +9866,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -9629,6 +9881,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             },
@@ -9696,6 +9949,7 @@ mod tests {
                 is_starred: false,
                 raw_html_content: String::new(),
                 reading_time_minutes: 0,
+                tags: Vec::new(),
                 preview: String::new(),
                 image_url: None,
             })

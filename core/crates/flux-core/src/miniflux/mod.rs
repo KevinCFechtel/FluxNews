@@ -11,7 +11,7 @@ use crate::domain::{
     SaveToServiceResult, SearchArticlesRequest, SearchArticlesResult,
 };
 use crate::sync_cancellation::SyncCancellation;
-use chrono::{DateTime, SecondsFormat};
+use crate::timestamps::{parse_rfc3339, publication_time};
 use serde::Deserialize;
 
 const PAGE_SIZE: i64 = 100;
@@ -839,7 +839,7 @@ impl MinifluxClient {
                     mime_type: item.mime_type.clone(),
                 })
                 .collect::<Vec<_>>();
-            let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+            let published = publication_time(&entry.published_at).map_err(|_| {
                 CoreError::data(format!("article {} has invalid publication time", entry.id))
             })?;
             let processed = crate::article::process(&entry.content, &entry.url, &enclosure_inputs);
@@ -850,9 +850,7 @@ impl MinifluxClient {
                 title: entry.title,
                 url: entry.url,
                 comments_url: entry.comments_url,
-                published_at: published
-                    .to_utc()
-                    .to_rfc3339_opts(SecondsFormat::Secs, true),
+                published_at: published,
                 // Miniflux's removed state is not an unread state. Full Sync
                 // eventually reconciles structural/removal truth.
                 is_read: entry.status != "unread",
@@ -861,6 +859,7 @@ impl MinifluxClient {
                 reading_time_minutes: entry.reading_time,
                 preview: processed.preview,
                 image_url: processed.image_url,
+                tags: entry.tags,
             });
         }
         tracing::info!(
@@ -1238,7 +1237,7 @@ impl MinifluxClient {
                     entry.id, entry.feed_id
                 )));
             }
-            let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+            let published = publication_time(&entry.published_at).map_err(|_| {
                 CoreError::data(format!("article {} has invalid publication time", entry.id))
             })?;
             let entry_enclosures = map_enclosures(entry.id, entry.enclosures)?;
@@ -1257,15 +1256,14 @@ impl MinifluxClient {
                 title: entry.title,
                 url: entry.url,
                 comments_url: entry.comments_url,
-                published_at: published
-                    .to_utc()
-                    .to_rfc3339_opts(SecondsFormat::Secs, true),
+                published_at: published,
                 is_read: entry.status == "read",
                 is_starred: entry.starred,
                 raw_html_content: entry.content,
                 reading_time_minutes: entry.reading_time,
                 preview: processed.preview,
                 image_url: processed.image_url,
+                tags: entry.tags,
             });
         }
         if cancellation.is_some_and(SyncCancellation::is_cancelled) {
@@ -1729,6 +1727,8 @@ struct EntryDto {
     #[serde(default)]
     enclosures: Vec<EnclosureDto>,
     feed: Option<FeedDto>,
+    #[serde(default)]
+    tags: Vec<String>,
 }
 #[derive(Deserialize)]
 struct EnclosureDto {
@@ -1762,8 +1762,8 @@ struct FeedDto {
 }
 
 fn entry_changed_at_unix(entry: &EntryDto) -> Result<i64, CoreError> {
-    DateTime::parse_from_rfc3339(&entry.changed_at)
-        .map(|value| value.timestamp())
+    parse_rfc3339(&entry.changed_at)
+        .map(|value| value.unix_timestamp())
         .map_err(|_| CoreError::data(format!("article {} has invalid changed_at", entry.id)))
 }
 
@@ -1778,7 +1778,7 @@ fn search_article_summary(entry: EntryDto) -> Result<ArticleSummary, CoreError> 
         .category
         .map(|category| category.id)
         .unwrap_or_default();
-    let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+    let published = publication_time(&entry.published_at).map_err(|_| {
         CoreError::data(format!("article {} has invalid publication time", entry.id))
     })?;
     let enclosures = entry
@@ -1798,14 +1798,13 @@ fn search_article_summary(entry: EntryDto) -> Result<ArticleSummary, CoreError> 
         title: entry.title,
         url: entry.url,
         comments_url: entry.comments_url,
-        published_at: published
-            .to_utc()
-            .to_rfc3339_opts(SecondsFormat::Secs, true),
+        published_at: published,
         is_read: entry.status == "read",
         is_starred: entry.starred,
         reading_time_minutes: entry.reading_time,
         preview: processed.preview,
         image_url: processed.image_url,
+        tags: entry.tags,
     })
 }
 
@@ -1834,7 +1833,7 @@ fn map_enclosures(
         .collect()
 }
 fn entry_to_saved_media_article(entry: EntryDto) -> Result<RemoteSavedMediaArticle, CoreError> {
-    let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+    let published = publication_time(&entry.published_at).map_err(|_| {
         CoreError::data(format!("article {} has invalid publication time", entry.id))
     })?;
     let enclosures = map_enclosures(entry.id, entry.enclosures)?;
@@ -1853,15 +1852,14 @@ fn entry_to_saved_media_article(entry: EntryDto) -> Result<RemoteSavedMediaArtic
             title: entry.title,
             url: entry.url,
             comments_url: entry.comments_url,
-            published_at: published
-                .to_utc()
-                .to_rfc3339_opts(SecondsFormat::Secs, true),
+            published_at: published,
             is_read: entry.status == "read",
             is_starred: entry.starred,
             raw_html_content: entry.content,
             reading_time_minutes: entry.reading_time,
             preview: processed.preview,
             image_url: processed.image_url,
+            tags: entry.tags,
         },
         enclosures,
     })
@@ -1975,6 +1973,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn nested_blob_origins_are_opaque_without_recursive_stack_growth() {
+        let url =
+            url::Url::parse(&format!("{}https://example.test/", "blob:".repeat(10_000))).unwrap();
+        assert!(matches!(url.origin(), url::Origin::Opaque(_)));
+    }
+
+    #[test]
     fn entry_reading_time_reaches_article_summary() {
         let entry: EntryDto = serde_json::from_str(
             r#"{
@@ -1995,6 +2000,45 @@ mod tests {
 
         let summary = search_article_summary(entry).unwrap();
         assert_eq!(summary.reading_time_minutes, 6);
+        assert!(summary.tags.is_empty());
+    }
+
+    #[test]
+    fn publisher_tags_reach_search_and_materialized_articles_without_a_display_limit() {
+        let json = r#"{
+            "id":42,"feed_id":7,"published_at":"2026-11-27T12:00:00Z",
+            "tags":["Digital","IT-Sicherheit","Wirtschaft","Überblick"],
+            "feed":{"id":7,"title":"ZEIT","category":{"id":3}}
+        }"#;
+        let summary = search_article_summary(serde_json::from_str(json).unwrap()).unwrap();
+        let materialized =
+            entry_to_saved_media_article(serde_json::from_str(json).unwrap()).unwrap();
+        assert_eq!(
+            summary.tags,
+            ["Digital", "IT-Sicherheit", "Wirtschaft", "Überblick"]
+        );
+        assert_eq!(summary.tags, materialized.article.tags);
+        assert_eq!(summary.category_id, 3);
+    }
+
+    #[test]
+    fn delta_fetch_preserves_publisher_tags() {
+        let page = r#"{"total":1,"entries":[{
+            "id":42,"feed_id":7,"published_at":"2026-11-27T12:00:00Z",
+            "changed_at":"2026-11-27T12:00:00Z","tags":["Digital","IT-Sicherheit"]
+        }]}"#;
+        let (address, worker) = entry_server(vec![
+            (200, page.into()),
+            (200, page.into()),
+            (200, r#"{"total":0,"entries":[]}"#.into()),
+        ]);
+        let client = MinifluxClient::new(&format!("http://{address}"), "test-key").unwrap();
+        let delta = client
+            .changed_entries_with_cancellation(1, &SyncCancellation::new())
+            .unwrap()
+            .unwrap();
+        assert_eq!(delta.articles[0].tags, ["Digital", "IT-Sicherheit"]);
+        assert_eq!(worker.join().unwrap().len(), 3);
     }
     use std::io::{BufRead, BufReader, Read, Write};
     use std::net::{SocketAddr, TcpListener};
@@ -3053,9 +3097,9 @@ mod tests {
         let responses = vec![
             r#"[{"id":1,"title":"Category"}]"#,
             r#"[{"id":9,"title":"Feed","category":{"id":1}}]"#,
-            r#"{"total":1,"entries":[{"id":4,"feed_id":9,"title":"Unread and starred","url":"https://entry/post","status":"unread","starred":true,"published_at":"2026-01-02T03:04:05Z","content":"<p>source &amp; preview</p>","enclosures":[{"id":40,"entry_id":4,"url":"audio.mp3","mime_type":"audio/mpeg"},{"id":41,"entry_id":4,"url":"/cover.jpg","mime_type":"image/jpeg"}]}]}"#,
+            r#"{"total":1,"entries":[{"id":4,"feed_id":9,"title":"Unread and starred","url":"https://entry/post","status":"unread","starred":true,"published_at":"2026-01-02T03:04:05Z","content":"<p>source &amp; preview</p>","tags":["Digital","IT-Sicherheit"],"enclosures":[{"id":40,"entry_id":4,"url":"audio.mp3","mime_type":"audio/mpeg"},{"id":41,"entry_id":4,"url":"/cover.jpg","mime_type":"image/jpeg"}]}]}"#,
             r#"{"total":0,"entries":[]}"#,
-            r#"{"total":1,"entries":[{"id":4,"feed_id":9,"title":"Unread and starred","url":"https://entry/post","status":"unread","starred":true,"published_at":"2026-01-02T03:04:05Z","content":"<p>source &amp; preview</p>","enclosures":[{"id":40,"entry_id":4,"url":"audio.mp3","mime_type":"audio/mpeg"},{"id":41,"entry_id":4,"url":"/cover.jpg","mime_type":"image/jpeg"}]}]}"#,
+            r#"{"total":1,"entries":[{"id":4,"feed_id":9,"title":"Unread and starred","url":"https://entry/post","status":"unread","starred":true,"published_at":"2026-01-02T03:04:05Z","content":"<p>source &amp; preview</p>","tags":["Digital","IT-Sicherheit"],"enclosures":[{"id":40,"entry_id":4,"url":"audio.mp3","mime_type":"audio/mpeg"},{"id":41,"entry_id":4,"url":"/cover.jpg","mime_type":"image/jpeg"}]}]}"#,
             r#"{"total":0,"entries":[]}"#,
         ];
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -3132,6 +3176,7 @@ mod tests {
             "<p>source &amp; preview</p>"
         );
         assert_eq!(snapshot.articles[0].preview, "source & preview");
+        assert_eq!(snapshot.articles[0].tags, ["Digital", "IT-Sicherheit"]);
         assert_eq!(
             snapshot.articles[0].image_url.as_deref(),
             Some("https://entry/cover.jpg")

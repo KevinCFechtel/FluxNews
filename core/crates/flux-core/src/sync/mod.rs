@@ -5,9 +5,10 @@ use crate::domain::{
 use crate::miniflux::RemoteSource;
 use crate::storage::Store;
 use crate::sync_cancellation::{Cancellable, SyncCancellation};
-use chrono::{Duration, Utc};
+use crate::timestamps::format_utc;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
+use time::{Duration, OffsetDateTime};
 
 /// Normal-sync orchestration after pending mutation delivery.
 #[derive(Clone, Debug, Default)]
@@ -301,13 +302,13 @@ fn run_full_cancellable(
     if cancellation.is_cancelled() {
         return Ok(Cancellable::Cancelled);
     }
-    let cutoff = Utc::now() - Duration::days(retention.days());
+    let cutoff = OffsetDateTime::now_utc() - Duration::days(retention.days());
     let cleanup_started = Instant::now();
-    let removed_articles = store.cleanup_expired_read_articles(&cutoff.to_rfc3339())?;
+    let removed_articles = store.cleanup_expired_read_articles(&format_utc(cutoff))?;
     if cancellation.is_cancelled() {
         return Ok(Cancellable::Cancelled);
     }
-    let removed_media = store.evaluate_media_cleanup(Utc::now())?;
+    let removed_media = store.evaluate_media_cleanup(OffsetDateTime::now_utc())?;
     if cancellation.is_cancelled() {
         return Ok(Cancellable::Cancelled);
     }
@@ -426,12 +427,12 @@ fn run_delta_cancellable(
             Cancellable::Cancelled => return Ok(Cancellable::Cancelled),
         };
 
-    let cutoff = Utc::now() - Duration::days(retention.days());
-    let removed_articles = store.cleanup_expired_read_articles(&cutoff.to_rfc3339())?;
+    let cutoff = OffsetDateTime::now_utc() - Duration::days(retention.days());
+    let removed_articles = store.cleanup_expired_read_articles(&format_utc(cutoff))?;
     if cancellation.is_cancelled() {
         return Ok(Cancellable::Cancelled);
     }
-    let _removed_media = store.evaluate_media_cleanup(Utc::now())?;
+    let _removed_media = store.evaluate_media_cleanup(OffsetDateTime::now_utc())?;
     if cancellation.is_cancelled() {
         return Ok(Cancellable::Cancelled);
     }
@@ -636,6 +637,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         }
@@ -759,6 +761,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -948,6 +951,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -1068,6 +1072,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -1168,6 +1173,7 @@ mod tests {
                         is_starred: false,
                         raw_html_content: String::new(),
                         reading_time_minutes: 0,
+                        tags: Vec::new(),
                         preview: String::new(),
                         image_url: None,
                     },
@@ -1203,6 +1209,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };
@@ -1322,6 +1329,7 @@ mod tests {
             is_starred: false,
             raw_html_content: String::new(),
             reading_time_minutes: 0,
+            tags: Vec::new(),
             preview: String::new(),
             image_url: None,
         };

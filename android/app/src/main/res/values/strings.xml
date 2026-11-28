@@ -1,5 +1,7 @@
 <resources>
     <!-- Canonical source strings for Weblate. Preserve semantic keys across revisions. -->
+    <string name="article_tags_accessibility">Topics: %1$s</string>
+    <string name="article_tags_more" translatable="false">+%1$s</string>
     <string name="nav_news">News</string>
     <string name="nav_all_news">All News</string>
     <string name="nav_starred">Starred</string>

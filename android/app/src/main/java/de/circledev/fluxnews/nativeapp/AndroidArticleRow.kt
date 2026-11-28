@@ -83,6 +83,9 @@ internal fun AndroidArticleTimelineRow(
         val title: @Composable () -> Unit = {
             ArticleTitle(article)
         }
+        val tags: @Composable () -> Unit = {
+            ArticleTagsRow(article.tags, article.isRead)
+        }
         val publication: @Composable () -> Unit = {
             ArticlePublicationRow(
                 article = article,
@@ -103,6 +106,7 @@ internal fun AndroidArticleTimelineRow(
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     metadata()
                     title()
+                    tags()
                     publication()
                     preview()
                 }
@@ -116,6 +120,7 @@ internal fun AndroidArticleTimelineRow(
                     )
                     metadata()
                     title()
+                    tags()
                     publication()
                     preview()
                 }
@@ -137,6 +142,7 @@ internal fun AndroidArticleTimelineRow(
                     ) {
                         metadata()
                         title()
+                        tags()
                         publication()
                         preview()
                     }
@@ -198,6 +204,8 @@ private fun AndroidVisualCompactFlowBody(
 
         val titlePlaceable = subcompose("title") { ArticleTitle(article) }
             .first().measure(textConstraints)
+        val tagsPlaceable = subcompose("tags") { ArticleTagsRow(article.tags, article.isRead) }
+            .firstOrNull()?.measure(textConstraints)
         val publicationPlaceable = subcompose("publication") {
             ArticlePublicationRow(
                 article = article,
@@ -213,7 +221,9 @@ private fun AndroidVisualCompactFlowBody(
             )
         }.first().measure(Constraints.fixed(imageWidth, imageHeight))
 
-        val publicationTop = titlePlaceable.height + gapPx
+        val tagsTop = titlePlaceable.height + gapPx
+        val publicationTop = tagsPlaceable?.let { tagsTop + it.height + gapPx }
+            ?: (titlePlaceable.height + gapPx)
         val publicationBottom = publicationTop + publicationPlaceable.height
         val previewTop = publicationBottom + if (previewText.isNotEmpty()) gapPx else 0
 
@@ -276,6 +286,7 @@ private fun AndroidVisualCompactFlowBody(
         )
         layout(width, height) {
             titlePlaceable.placeRelative(0, 0)
+            tagsPlaceable?.placeRelative(0, tagsTop)
             publicationPlaceable.placeRelative(0, publicationTop)
             sidePlaceable?.placeRelative(0, previewTop)
             continuationPlaceable?.placeRelative(0, continuationTop)

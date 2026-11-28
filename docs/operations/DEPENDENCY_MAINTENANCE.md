@@ -1,6 +1,7 @@
 # Dependency maintenance and security policy
 
-> **Decision: 18 October 2026; PR regression-gate amendment: 20 November 2026.**
+> **Decision: 18 October 2026; PR regression-gate amendment: 20 November 2026;
+> non-blocking release maintenance warnings: 28 November 2026.**
 > This policy applies to the active **FluxNews** repository. The old Flux
 > repository is retired. This policy does not by itself approve a release,
 > merge, dependency major-version upgrade, or official F-Droid submission.
@@ -94,28 +95,38 @@ required **CI Gate**; a selected missing/skipped/failed audit therefore blocks
 merging without needing another GitHub ruleset exception. Docs-only or unrelated
 UI changes do not start dependency scans or unnecessary native builds.
 
-## Full monitoring and strict unmaintained-dependency release gate
+## Full monitoring and release security gate
 
-A dependency which is no longer maintained is an **unacceptable release
-risk** for Flux, even if no specific exploit has yet been disclosed. The
-project must not ship a new release while RustSec reports a vulnerability
-**or an unmaintained dependency** in the resolved dependency graph.
-This includes **transitive** packages. Replacing the dependency or migrating
-its parent crate is mandatory; no blanket ignore list, downgraded exit status
-or permanent exception is accepted.
+**Release policy amended on 28 November 2026:** an unmaintained dependency is
+tracked maintenance debt, not by itself a reason to withhold a security update.
+Full daily/manual/main-push and exact-candidate release audits use these rules:
 
-The daily/manual/main-push scan runs the full audit with
-`cargo audit --deny warnings`, deliberately including RustSec's maintenance
-warnings, through `Build/rustsec_gate.py` without `--base`. A red result remains
-visible and actionable, but is not a blanket PR merge veto. Exit status is not
-downgraded: the script exits 1 for findings and 2 for incomplete evidence.
+- **Block:** vulnerabilities, unsoundness, notices and yanked packages.
+- **Warn, do not block:** findings whose kind is exactly `unmaintained`,
+  including transitive dependencies.
+- **Block:** failed or incomplete audits, filtered reports, missing evidence or
+  registry/database errors. Missing evidence is never a clean audit.
 
-The release workflow separately runs that same full audit on its exact candidate
-SHA, without a PR baseline, for every platform and validation/release mode.
-Android signing and all tag/publication paths explicitly require its successful
-result. Passing a PR regression check is **not** release approval. A clean full
-audit is necessary for release readiness, not proof of complete security or
-up-to-date dependencies.
+`Build/rustsec_gate.py` still invokes `cargo audit --deny warnings` and retains
+the complete, unfiltered JSON and raw exit status. The parser validates that
+status against all reported findings. The gate then explicitly classifies
+`unmaintained` as non-blocking **only in full-audit mode**; it does not ignore
+advisories or suppress their reporting. Full summaries separate blocking
+findings from maintenance warnings, and GitHub warning annotations make every
+current unmaintained dependency visible even when the job succeeds.
+`comparison.json` retains all findings and also records the blocking subset.
+The script exits 1 for policy-blocking findings, 0 for a complete audit with
+no blockers (possibly with maintenance warnings), and 2 for incomplete evidence.
+
+The PR regression gate is unchanged: new findings of **any** kind, including
+new maintenance warnings or additional affected copies, block the PR. Existing
+findings may remain while an independent security fix proceeds.
+
+The release workflow runs the full audit on its exact candidate SHA, without a
+PR baseline, for every platform and validation/release mode. Android signing and
+all tag/publication paths still require its successful result. A PR comparison
+cannot waive an existing vulnerability for release. A passing full gate is
+necessary for release readiness, not proof of complete security or currency.
 
 **Historical blocking findings (18 October 2026):** the then-resolved graph
 contained `paste`, `rustls-pemfile`, `rustybuzz` and `ttf-parser` through
@@ -123,19 +134,18 @@ the dependency chains documented in the original audit. Those four findings
 are **not the current baseline** and must not be used to describe today's
 `Cargo.lock`.
 
-The strict **release** gate remains unchanged: every current RustSec vulnerability or
-unmaintained-warning finding must actually disappear from the resolved
-`core/Cargo.lock`; changing only a manifest constraint is insufficient.
-PR #155 resolved the inherited `ctutils`, `libsqlite3-sys` and `rustix`
-findings. The last verified strict audit still reports unmaintained `chrono`
-and `basic-toml`; see the dated evidence and remaining ownership below.
+Every blocking finding must disappear from the resolved `core/Cargo.lock`;
+changing only a manifest constraint is insufficient. PR #155 resolved the
+inherited `ctutils`, `libsqlite3-sys` and `rustix` findings. Dated audit evidence
+and the current `chrono` replacement, `url` fix and remaining `basic-toml`
+maintenance ownership are recorded below.
 Determine the exact current advisory set from fresh audit output, not from
 the historical inventory.
 
 **Daily work:** an update which fixes three inherited findings and leaves two
 unchanged is mergeable once the regression gate and affected platform checks
-pass. The two remaining findings retain their tracked next actions/owners and
-remain blocking for release. No per-PR policy override is needed.
+pass. Remaining findings retain their tracked next actions/owners; only the
+release-blocking kinds above prevent release. No per-PR policy override is needed.
 
 ## Automated monitoring and CI costs
 
@@ -154,8 +164,8 @@ remain blocking for release. No per-PR policy override is needed.
    `core/Cargo.lock`, after relevant changes land on `main`, via manual dispatch,
    and on exact release candidates. Neither audit builds Rust targets, Android
    apps or Apple apps; only the pinned audit tool is installed. Full scans
-   **fail for vulnerabilities, unmaintained crates and other RustSec warnings**.
-   Preserve output and do not suppress findings.
+   **fail for vulnerabilities and other blocking kinds**, while unmaintained
+   crates remain explicit non-blocking warnings. Preserve all output.
 4. Dependabot's routine PRs should not themselves cascade redundant full
    test suites. Limit open PRs, group updates and use existing per-workflow
    `concurrency.cancel-in-progress` behavior; Rust/Android/Apple CI remain
@@ -272,10 +282,10 @@ tasks**. Routine future dependency review continues under the policy above.
 | [#154](https://github.com/KevinCFechtel/FluxNews/pull/154) / [#192](https://github.com/KevinCFechtel/FluxNews/pull/192) | Replace the invalid compiler-ref update with independent Action SHA and explicit Rust 1.99.1 input, plus contract tests | #154 closed without merge; replacement #192 merged 21 November after full affected CI passed on `f4fdf604` ([run #44879665743](https://github.com/KevinCFechtel/FluxNews/actions/runs/44879665743)) |
 
 No PR acceptance or implementation tasks remain for this reviewed batch.
-The independent strict-release findings below remain open. No automatic merge,
+The independent security/maintenance follow-ups below remain tracked. No automatic merge,
 signing, publication or release approval is authorized by this closure record.
 
-### Remaining strict-release findings — last verified 20 November 2026
+### Dated findings and current follow-up — 28 November 2026
 
 The merged #155 update uses `rusqlite` **0.43.0** with bundled
 `libsqlite3-sys 0.40.0`, and refreshes the compatible transitive packages
@@ -286,14 +296,20 @@ The later strict monitoring audit
 on the #188 merge SHA `0f710a528149f69fa54db607cbf49f32a4d2130d`,
 still reports the two unmaintained-package findings below and exits
 unsuccessfully. Both versions remain in the reviewed lockfile.
-This is dated audit evidence, not a fresh audit of every subsequent SHA,
-a PR merge veto or release approval. These follow-ups are independent of the
-completed dependency PR batch.
+This is dated evidence under the former release policy, not a PR merge veto or
+release approval. A fresh audit of commit `b3d7e9f17331e217dbf8b9b5831b9f0cf1cffa56`
+on 28 November additionally reported `url 2.5.8`
+([RUSTSEC-2026-0592](https://rustsec.org/advisories/RUSTSEC-2026-0592.html)).
+The [27 November CI run](https://github.com/KevinCFechtel/FluxNews/actions/runs/46034675295)
+reports the same three findings. The implementation changes below still require
+the affected Actions to pass; no local build/test run or release approval is
+implied by updating this record.
 
 | Remaining finding | Affected path / concrete blocker | Next action | Owner | Review by |
 | --- | --- | --- | --- | --- |
-| `chrono 0.4.45` — [RUSTSEC-2026-0543](https://rustsec.org/advisories/RUSTSEC-2026-0543.html) | Direct Core dependency; no patched version. Used by Miniflux RFC 3339 parsing/UTC normalization, retention calculations, media timestamps and runtime retry metadata. | Replace with a maintained date/time crate in a separate focused change; preserve timestamp serialization, offset handling, retention cutoffs and the existing native API. | Repository maintainer / dependency maintenance | 2026-11-27 |
-| `basic-toml 0.1.10` — [RUSTSEC-2026-0374](https://rustsec.org/advisories/RUSTSEC-2026-0374.html) | `flux-uniffi → uniffi 0.32.2 → uniffi_bindgen → askama 0.16.1 → askama_macros → askama_derive → basic-toml`. At the recorded review, stable UniFFI and Askama still resolved it. Askama's replacement with `toml` is upstream in [3863808cf594054f7644979ed92caaafc878f378](https://github.com/askama-rs/askama/commit/3863808cf594054f7644979ed92caaafc878f378), but was not yet released. | Track/request a published stable Askama release containing that fix and validate Swift/Kotlin binding generation. Do not substitute an unreleased Git pin, fork or advisory ignore for this maintenance batch. | Repository maintainer / dependency maintenance | 2026-11-27 |
+| `chrono 0.4.45` — [RUSTSEC-2026-0543](https://rustsec.org/advisories/RUSTSEC-2026-0543.html) | Replaced in Core and the lockfile with maintained `time 0.3.55`, using only UTC/standard RFC 3339 parsing. Existing publication keys, operational timestamp encodings, fixed-day retention and UniFFI records remain unchanged. | Validate timestamp, retention, sync/media and native regression coverage in Actions. | Repository maintainer / dependency maintenance | 2026-12-05 |
+| `url 2.5.8` — [RUSTSEC-2026-0592](https://rustsec.org/advisories/RUSTSEC-2026-0592.html) | Manifest and lockfile updated to patched `2.5.9`; regression coverage for deeply nested `blob:` origins added. | Validate affected Actions and the full security audit before release. | Repository maintainer / dependency maintenance | 2026-12-05 |
+| `basic-toml 0.1.10` — [RUSTSEC-2026-0374](https://rustsec.org/advisories/RUSTSEC-2026-0374.html) | `flux-uniffi → uniffi 0.32.2 → uniffi_bindgen → askama 0.16.1 → askama_macros → askama_derive → basic-toml`. Still maintenance debt, **not a full-audit release blocker**. Askama's replacement with `toml` is upstream in [3863808cf594054f7644979ed92caaafc878f378](https://github.com/askama-rs/askama/commit/3863808cf594054f7644979ed92caaafc878f378), but stable Askama remains `0.16.1` at this review. | Track a stable Askama release containing the fix and validate Swift/Kotlin generation. No unreleased Git pin, fork or advisory ignore. | Repository maintainer / dependency maintenance | 2026-12-05 |
 
 Recheck the current advisory database before release acceptance; this dated snapshot
-does not replace `cargo audit --file core/Cargo.lock --deny warnings`.
+does not replace the complete audit and policy decision from `Build/rustsec_gate.py`.

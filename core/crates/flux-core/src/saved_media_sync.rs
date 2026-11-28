@@ -1,6 +1,6 @@
 //! Optional Miniflux transport for the local SavedMedia domain.
 
-use chrono::Utc;
+use crate::timestamps::now_rfc3339;
 use std::collections::HashMap;
 
 use crate::domain::{
@@ -218,11 +218,7 @@ pub(crate) fn run_cancellable(
         if previous.as_ref().is_none_or(|previous| {
             previous.state != state || previous.marker_entry_id != marker.entry_id
         }) {
-            match store.apply_remote_saved_media_state(
-                enclosure_id,
-                state,
-                &Utc::now().to_rfc3339(),
-            ) {
+            match store.apply_remote_saved_media_state(enclosure_id, state, &now_rfc3339()) {
                 Ok(()) => changed = true,
                 Err(error) if state == SavedMediaMarkerState::Saved => {
                     if cancellation.is_cancelled() {
@@ -245,7 +241,7 @@ pub(crate) fn run_cancellable(
                         store.materialize_saved_media(
                             &resolved.article,
                             &enclosure,
-                            &Utc::now().to_rfc3339(),
+                            &now_rfc3339(),
                         )
                     });
                     match resolution {

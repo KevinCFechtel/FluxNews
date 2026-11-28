@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit committed lockfiles; PRs reject regressions, releases reject all findings."""
+"""Audit committed lockfiles; reject PR regressions, warn on release maintenance debt."""
 from __future__ import annotations
 
 import argparse
@@ -137,6 +137,7 @@ def audit(lock: Path, database: Path, output: Path, scratch: Path,
     ], scratch)
     output.write_text(result.stdout)
     output.with_suffix(".stderr.txt").write_text(result.stderr)
+    output.with_suffix(".exit-code.txt").write_text(f"{result.returncode}\n")
     if result.stderr.strip():
         # In particular cargo-audit can report incomplete yanked-package checks
         # on stderr without making that failure fatal itself.
@@ -167,22 +168,34 @@ def compare(base: list[Finding], head: list[Finding]) -> dict[str, list[Finding]
     }
 
 
+def blocking_findings(base: str | None, changes: dict[str, list[Finding]]) -> list[Finding]:
+    # PRs still reject every new finding, including new maintenance debt. Full
+    # audits relax only the unmaintained kind, never vulnerabilities or errors.
+    return [item for item in changes["new"] if base or item.kind != "unmaintained"]
+
+
 def markdown(value: str) -> str:
     return html.escape(value).replace("|", "&#124;").replace("\n", " ").replace("\r", " ")
 
 
 def summary(base: str | None, head: str, database: str,
             changes: dict[str, list[Finding]]) -> str:
-    mode = "regression gate" if base else "strict audit"
+    mode = "regression gate" if base else "full security audit"
     lines = [
         f"## RustSec {mode}", "",
         f"Source: `{head}`",
-        f"Base: `{base}`" if base else "No baseline: every finding blocks this check.",
+        f"Base: `{base}`" if base else
+        "No baseline: security findings block; unmaintained dependencies remain visible warnings.",
         f"Advisory database: `{database}`", "",
     ]
-    labels = {"new": "Blocking findings", "existing": "Existing findings", "resolved": "Resolved findings"}
-    for group, label in labels.items():
-        findings = changes[group]
+    blocking = blocking_findings(base, changes)
+    groups = [("Blocking findings", blocking)]
+    if not base:
+        groups.append(("Maintenance warnings (non-blocking)",
+                       [item for item in changes["new"] if item.kind == "unmaintained"]))
+    groups.extend([("Existing findings", changes["existing"]),
+                   ("Resolved findings", changes["resolved"])])
+    for label, findings in groups:
         lines.extend([f"### {label}: {len(findings)}", ""])
         if findings:
             lines.extend(["| Advisory | Kind | Package | Version | Title |",
@@ -197,11 +210,13 @@ def summary(base: str | None, head: str, database: str,
             lines.append("")
     lines.append(
         "**FAIL:** new findings or additional affected copies."
-        if base and changes["new"] else
-        "**FAIL:** strict audit requires zero findings."
-        if changes["new"] else
+        if base and blocking else
+        "**FAIL:** full audit has blocking security findings."
+        if blocking else
         "**PASS:** no security regressions; existing findings remain actionable."
-        if base else "**PASS:** no findings."
+        if base else
+        "**PASS:** no blocking security findings; maintenance warnings remain actionable."
+        if changes["new"] else "**PASS:** no findings."
     )
     return "\n".join(lines) + "\n"
 
@@ -212,6 +227,20 @@ def publish_summary(text: str, output: Path) -> None:
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as stream:
             stream.write(text)
+
+
+def publish_maintenance_warnings(findings: list[Finding]) -> None:
+    for item in findings:
+        if item.kind != "unmaintained":
+            continue
+        message = (
+            f"{item.package} {item.version}: {item.title} "
+            f"(https://rustsec.org/advisories/{item.advisory}.html). "
+            "Tracked maintenance debt; not a full-audit release blocker."
+        )
+        # Escape annotation data so advisory text cannot inject workflow commands.
+        message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::warning title=RustSec maintenance warning::{message}")
 
 
 def check(repo: Path, output: Path, base: str | None, database: Path | None) -> int:
@@ -250,6 +279,7 @@ def check(repo: Path, output: Path, base: str | None, database: Path | None) -> 
                 or git(["status", "--porcelain"], database)):
             raise AuditError("Advisory database changed during the audit")
     changes = compare(previous, current)
+    blocking = blocking_findings(base, changes)
     metadata = {
         "mode": "regression" if base else "strict",
         "base": base, "head": head, "database": database_sha,
@@ -257,15 +287,17 @@ def check(repo: Path, output: Path, base: str | None, database: Path | None) -> 
             kind: [finding.__dict__ for finding in findings]
             for kind, findings in changes.items()
         },
+        "blocking_findings": [finding.__dict__ for finding in blocking],
     }
     (output / "comparison.json").write_text(json.dumps(metadata, indent=2) + "\n")
     publish_summary(summary(base, head, database_sha, changes), output)
-    return 1 if changes["new"] else 0
+    publish_maintenance_warnings(current)
+    return 1 if blocking else 0
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", help="Exact PR base SHA; omit for strict daily/release audit")
+    parser.add_argument("--base", help="Exact PR base SHA; omit for full daily/release security audit")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--database", type=Path, help="Existing clean database checkout for local validation")
     args = parser.parse_args()
