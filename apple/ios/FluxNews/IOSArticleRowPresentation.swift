@@ -13,6 +13,7 @@ struct ArticleRowArticle: Equatable, Sendable {
     let readingTimeMinutes: UInt32
     let preview: String
     let imageUrl: String?
+    let tags: [String]
 
     init(article: ArticleSummary) {
         id = article.id
@@ -26,6 +27,36 @@ struct ArticleRowArticle: Equatable, Sendable {
         readingTimeMinutes = article.readingTimeMinutes
         preview = article.preview
         imageUrl = article.imageUrl
+        tags = article.tags
+    }
+}
+
+enum IOSArticleTagPresentation {
+    static let maximumVisibleTags = 3
+
+    static func labels(_ tags: [String]) -> [String] {
+        var seen = Set<String>()
+        return tags.compactMap { tag in
+            let label = tag.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            guard !label.isEmpty, seen.insert(label).inserted else { return nil }
+            return label
+        }
+    }
+
+    static func overflowLabels(tagCount: Int) -> [String] {
+        guard tagCount > 0 else { return [] }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return (0...min(maximumVisibleTags, tagCount)).map { visible in
+            let hidden = tagCount - visible
+            let number = formatter.string(from: NSNumber(value: hidden)) ?? String(hidden)
+            return String(format: String(localized: "+%@"), number)
+        }
+    }
+
+    static func accessibilityLabel(_ tags: [String]) -> String? {
+        guard !tags.isEmpty else { return nil }
+        return String(format: String(localized: "Topics: %@"), ListFormatter.localizedString(byJoining: tags))
     }
 }
 
@@ -55,6 +86,9 @@ struct ArticleRowContent: Equatable, Sendable {
     let readingTime: String?
     let imageURL: URL?
     let hasComments: Bool
+    let tags: [String]
+    let tagOverflowLabels: [String]
+    let topicsAccessibilityLabel: String?
 
     init(article: ArticleSummary, referenceDate: Date = .now) {
         self.article = ArticleRowArticle(article: article)
@@ -67,6 +101,9 @@ struct ArticleRowContent: Equatable, Sendable {
         readingTime = IOSArticleTemporalPresentation.readingTime(article.readingTimeMinutes)
         imageURL = article.imageUrl.flatMap { $0.isEmpty ? nil : URL(string: $0) }
         hasComments = IOSArticleContextMenuPolicy.commentsURL(article.commentsUrl) != nil
+        tags = IOSArticleTagPresentation.labels(article.tags)
+        tagOverflowLabels = IOSArticleTagPresentation.overflowLabels(tagCount: tags.count)
+        topicsAccessibilityLabel = IOSArticleTagPresentation.accessibilityLabel(tags)
     }
 }
 

@@ -4937,6 +4937,174 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertEqual(nearestMatches, 10)
     }
 
+    @MainActor
+    func testArticleTopicsPreserveCoreTagsAndNormalizeOnlyPresentation() {
+        let raw = ["  Science \n news ", "", "Science news", " \t ", "science news", "Space"]
+        let item = oracleItem(title: "Title", preview: "", hasImage: false, hasComments: false, tags: raw)
+        XCTAssertEqual(item.content.article.tags, raw)
+        XCTAssertEqual(item.content.tags, ["Science news", "science news", "Space"])
+        let state = ArticleRowPresentationState(article: item.article, content: item.content)
+        let updated = oracleItem(title: "Title", preview: "", hasImage: false, hasComments: false, tags: ["New topic"])
+        state.reconcile(with: updated.article)
+        XCTAssertEqual(state.content.tags, ["New topic"])
+    }
+
+    func testArticleTopicsLimitToThreeAndReserveOverflow() throws {
+        let input = tagLayoutInput(tags: ["One", "Two", "Three", "Four", "Five"], width: 800)
+        let metrics = IOSUIKitArticleLayoutEngine.metrics(for: input)
+        let row = try XCTUnwrap(metrics.tagRow)
+        XCTAssertEqual(row.badges.map(\.text), ["One", "Two", "Three"])
+        XCTAssertEqual(row.overflow?.text, input.tagOverflowLabels[3])
+        XCTAssertEqual(input.tagOverflowLabels[3], "+\(NumberFormatter.localizedString(from: 2, number: .decimal))")
+        let frame = try XCTUnwrap(metrics.tagsFrame)
+        XCTAssertEqual(frame.minY, metrics.titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
+        XCTAssertEqual(metrics.dateFrame.minY, frame.maxY + IOSUIKitArticleGeometry.textSpacing)
+        XCTAssertLessThanOrEqual(row.overflow!.frame.maxX, frame.width)
+    }
+
+    func testArticleTopicsPreferCompleteLabelsAndTruncateOversizedFirst() throws {
+        let oversized = String(repeating: "Very long publisher topic ", count: 20)
+        let complete = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["One", "Two"]))
+        let reducedInput = tagLayoutInput(tags: ["One", "Two", oversized, "Four"])
+        let reduced = try XCTUnwrap(IOSUIKitArticleLayoutEngine.metrics(for: reducedInput).tagRow)
+        XCTAssertEqual(reduced.badges.map(\.text), ["One", "Two"])
+        XCTAssertEqual(reduced.badges.map(\.frame.width), complete.tagRow!.badges.map(\.frame.width))
+        XCTAssertNil(complete.tagRow?.overflow)
+        XCTAssertEqual(reduced.overflow?.text, reducedInput.tagOverflowLabels[2])
+
+        let truncatedInput = tagLayoutInput(tags: [oversized, "Two", "Three", "Four"], width: 180)
+        let truncatedMetrics = IOSUIKitArticleLayoutEngine.metrics(for: truncatedInput)
+        let truncated = try XCTUnwrap(truncatedMetrics.tagRow)
+        XCTAssertEqual(truncated.badges.map(\.text), [oversized])
+        XCTAssertEqual(truncated.overflow?.text, truncatedInput.tagOverflowLabels[1])
+        XCTAssertLessThan(truncated.badges[0].frame.maxX, truncated.overflow!.frame.minX)
+        XCTAssertEqual(truncated.overflow!.frame.maxX, truncatedMetrics.tagsFrame!.width, accuracy: 0.01)
+
+        let lone = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [oversized], width: 180))
+        XCTAssertEqual(lone.tagRow?.badges.count, 1)
+        XCTAssertNil(lone.tagRow?.overflow)
+        XCTAssertEqual(lone.tagRow!.badges[0].frame.width, lone.tagsFrame!.width)
+    }
+
+    func testEmptyArticleTopicsDoNotChangeLayoutOrCacheIdentity() {
+        let empty = tagLayoutInput(tags: [])
+        let blanks = tagLayoutInput(tags: ["", " \n\t "])
+        XCTAssertEqual(IOSUIKitArticleLayoutKey(empty), IOSUIKitArticleLayoutKey(blanks))
+        let baseline = IOSUIKitArticleLayoutEngine.metrics(for: empty)
+        XCTAssertEqual(baseline, IOSUIKitArticleLayoutEngine.metrics(for: blanks))
+        XCTAssertNil(baseline.tagsFrame)
+        XCTAssertNil(baseline.tagRow)
+        XCTAssertNil(IOSArticleTagPresentation.accessibilityLabel([]))
+        XCTAssertEqual(baseline.dateFrame.minY, baseline.titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
+        XCTAssertNotEqual(IOSUIKitArticleLayoutKey(empty), IOSUIKitArticleLayoutKey(tagLayoutInput(tags: ["One"])))
+    }
+
+    func testArticleTopicsScaleWithDynamicTypeAndMirrorInRTL() throws {
+        let tags = ["Science", "Space", "Technology", "Hidden topic"]
+        let standard = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags))
+        let accessible = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, category: .accessibilityExtraExtraExtraLarge))
+        XCTAssertGreaterThan(accessible.tagRow!.height, standard.tagRow!.height)
+        for width in [CGFloat(180), 320, 800] {
+            for category in [UIContentSizeCategory.large, .accessibilityExtraExtraExtraLarge] {
+                let ltr = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, width: width, category: category))
+                let rtl = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, width: width, category: category, direction: .rightToLeft))
+                let row = try XCTUnwrap(ltr.tagRow)
+                let mirrored = try XCTUnwrap(rtl.tagRow)
+                XCTAssertEqual(ltr.cellSize.height, rtl.cellSize.height)
+                XCTAssertEqual(row.badges.map(\.text), mirrored.badges.map(\.text))
+                for (badge, counterpart) in zip(row.badges, mirrored.badges) {
+                    XCTAssertEqual(counterpart.frame.minX, ltr.tagsFrame!.width - badge.frame.maxX, accuracy: 0.01)
+                    XCTAssertEqual(badge.frame.minY, 0)
+                    XCTAssertGreaterThanOrEqual(badge.frame.minX, 0)
+                    XCTAssertLessThanOrEqual(badge.frame.maxX, ltr.tagsFrame!.width)
+                }
+                if let overflow = row.overflow, let counterpart = mirrored.overflow {
+                    XCTAssertEqual(counterpart.frame.minX, ltr.tagsFrame!.width - overflow.frame.maxX, accuracy: 0.01)
+                    XCTAssertLessThanOrEqual(overflow.frame.maxX, ltr.tagsFrame!.width)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func testArticleTopicsUIKitGeometryAcrossAllTimelineVariants() throws {
+        let cases: [(ArticlePresentationMode, CGFloat, Bool)] = [
+            (.compact, 320, false), (.visual, 390, false),
+            (.visual, 390, true), (.visual, 760, true),
+            (.visualCompact, 414, false), (.visualCompact, 414, true),
+            (.visualCompact, 760, true),
+        ]
+        for (mode, width, hasImage) in cases {
+            for direction in [UIUserInterfaceLayoutDirection.leftToRight, .rightToLeft] {
+                for preview in ["", String(repeating: "Preview flowing beside and below the image. ", count: 8)] {
+                    let item = oracleItem(title: "Short title", preview: preview, hasImage: hasImage, hasComments: true, readingTimeMinutes: 4, tags: ["Science", "Space", "Technology", "Hidden topic"])
+                    let cell = configuredOracleCell(item: item, mode: mode, previewLines: .standard, width: width, layoutDirection: direction)
+                    let height = measureUIKitArticleCell(cell, width: width)
+                    let expected = try XCTUnwrap(cell.preparedLayoutMetrics)
+                    XCTAssertEqual(height, expected.cellSize.height, accuracy: 0.5, "\(mode) \(width) \(direction)")
+                    assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.tagsFrame, expected.tagsFrame)
+                    assertFrameEqual(cell.layoutDiagnosticsForTesting.dateFrame, expected.dateFrame)
+                    if direction == .leftToRight {
+                        assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.previewFrame, expected.previewFrame)
+                        assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.previewContinuationFrame, expected.previewContinuationFrame)
+                    }
+                    let actual = cell.tagPresentationForTesting
+                    XCTAssertEqual(actual.labels, expected.tagRow!.badges.map(\.text))
+                    XCTAssertEqual(actual.overflow, expected.tagRow!.overflow?.text)
+                    XCTAssertEqual(actual.lineCount, 1)
+                    XCTAssertEqual(actual.lineBreakMode, .byTruncatingTail)
+                    XCTAssertFalse(actual.interactive)
+                    for (frame, badge) in zip(actual.badgeFrames, expected.tagRow!.badges) {
+                        assertFrameEqual(frame, badge.frame)
+                    }
+                    assertOptionalFrameEqual(actual.overflowFrame, expected.tagRow!.overflow?.frame)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func testArticleTopicsVoiceOverStatusUpdatesAndReuse() throws {
+        let item = oracleItem(title: "Title", preview: "", hasImage: false, hasComments: false, tags: ["One", "Two", "Three", "Hidden topic"])
+        let cell = configuredOracleCell(item: item, mode: .compact, previewLines: .standard, width: 320)
+        let baselineHeight = measureUIKitArticleCell(cell, width: 320)
+        let baseline = cell.layoutDiagnosticsForTesting
+        let revision = cell.layoutVariantRevision
+        XCTAssertTrue(cell.accessibilityLabel?.contains("Hidden topic") == true)
+        cell.updateStatus(isRead: true, isStarred: true)
+        XCTAssertEqual(measureUIKitArticleCell(cell, width: 320), baselineHeight, accuracy: 0.5)
+        XCTAssertEqual(cell.layoutDiagnosticsForTesting, baseline)
+        XCTAssertEqual(cell.layoutVariantRevision, revision)
+        XCTAssertTrue(cell.accessibilityLabel?.contains("Hidden topic") == true)
+
+        cell.prepareForReuse()
+        let empty = oracleItem(title: "Title", preview: "", hasImage: false, hasComments: false)
+        let input = IOSUIKitArticleLayoutInput(item: empty, mode: .compact, previewLines: .standard, containerWidth: 320, displayScale: cell.traitCollection.displayScale, contentSizeCategory: .large, layoutDirection: .leftToRight)
+        let metrics = IOSUIKitArticleLayoutEngine.metrics(for: input)
+        cell.configure(item: empty, mode: .compact, previewLines: .standard, displayScale: cell.traitCollection.displayScale, preparedLayoutMetrics: metrics)
+        XCTAssertEqual(measureUIKitArticleCell(cell, width: 320), metrics.cellSize.height, accuracy: 0.5)
+        XCTAssertNil(cell.layoutDiagnosticsForTesting.tagsFrame)
+        XCTAssertTrue(cell.tagPresentationForTesting.labels.isEmpty)
+        XCTAssertNil(cell.tagPresentationForTesting.overflow)
+        XCTAssertFalse(cell.accessibilityLabel?.contains("Hidden topic") == true)
+        XCTAssertEqual(cell.layoutVariantRevision, revision)
+    }
+
+    @MainActor
+    func testArticleTopicsUIKitUsesScaledFont() {
+        let item = oracleItem(title: "Title", preview: "", hasImage: false, hasComments: false, tags: ["Science", "Space", "Technology", "Hidden topic"])
+        let category = UIContentSizeCategory.accessibilityExtraExtraExtraLarge
+        let cell = configuredOracleCell(item: item, mode: .compact, previewLines: .standard, width: 320, contentSizeCategory: category)
+        _ = measureUIKitArticleCell(cell, width: 320)
+        let font = UIFont.preferredFont(forTextStyle: .caption2, compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
+        XCTAssertEqual(cell.tagPresentationForTesting.fontSize, font.pointSize)
+        assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.tagsFrame, cell.preparedLayoutMetrics?.tagsFrame)
+    }
+
+    private func tagLayoutInput(tags: [String], width: CGFloat = 390, category: UIContentSizeCategory = .large, direction: UIUserInterfaceLayoutDirection = .leftToRight) -> IOSUIKitArticleLayoutInput {
+        .init(title: "Title", tags: tags, feedTitle: "Feed", publishedDate: "January 1", preview: "", hasImage: false, hasComments: false, mode: .compact, previewLines: .standard, containerWidth: width, displayScale: 3, contentSizeCategory: category, layoutDirection: direction)
+    }
+
     private func layoutMetrics(
         mode: ArticlePresentationMode,
         width: CGFloat,
@@ -5014,8 +5182,8 @@ final class NewsreaderPresentationTests: XCTestCase {
     }
 
     @MainActor
-    private func oracleItem(title: String, preview: String, hasImage: Bool, hasComments: Bool, feedTitle: String = "Oracle Feed", articleID: Int64 = 91, imageURL: String? = nil, readingTimeMinutes: UInt32 = 0) -> IOSUIKitArticleTimelineItem {
-        let article = ArticleSummary(id: articleID, feedId: 10, categoryId: 20, feedTitle: feedTitle, title: title, url: "https://example.com/article", commentsUrl: hasComments ? "https://example.com/comments" : "", publishedAt: "2026-01-01T00:00:00Z", isRead: false, isStarred: false, readingTimeMinutes: readingTimeMinutes, preview: preview, imageUrl: hasImage ? (imageURL ?? "https://example.com/image.jpg") : nil)
+    private func oracleItem(title: String, preview: String, hasImage: Bool, hasComments: Bool, feedTitle: String = "Oracle Feed", articleID: Int64 = 91, imageURL: String? = nil, readingTimeMinutes: UInt32 = 0, tags: [String] = []) -> IOSUIKitArticleTimelineItem {
+        let article = ArticleSummary(id: articleID, feedId: 10, categoryId: 20, feedTitle: feedTitle, title: title, url: "https://example.com/article", commentsUrl: hasComments ? "https://example.com/comments" : "", publishedAt: "2026-01-01T00:00:00Z", isRead: false, isStarred: false, readingTimeMinutes: readingTimeMinutes, preview: preview, imageUrl: hasImage ? (imageURL ?? "https://example.com/image.jpg") : nil, tags: tags)
         return .init(article: article, content: .init(article: article), isRead: false, isStarred: false, feedIconImage: nil)
     }
 
@@ -5054,10 +5222,12 @@ final class NewsreaderPresentationTests: XCTestCase {
         width: CGFloat,
         layoutDirection: UIUserInterfaceLayoutDirection = .leftToRight,
         rasterScale: CGFloat? = nil,
-        showRelativePublicationTime: Bool = false
+        showRelativePublicationTime: Bool = false,
+        contentSizeCategory: UIContentSizeCategory = .large
     ) -> IOSUIKitArticleCell {
         let container = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 1_000))
         let cell = IOSUIKitArticleCell(frame: CGRect(x: 0, y: 0, width: width, height: 1_000))
+        cell.traitOverrides.preferredContentSizeCategory = contentSizeCategory
         cell.setArticleImagePipelineForTesting(ArticleImagePipeline { _ in throw CancellationError() })
         cell.articleImageRasterScale = { displayScale in rasterScale ?? displayScale }
         let semanticAttribute: UISemanticContentAttribute = layoutDirection == .rightToLeft ? .forceRightToLeft : .forceLeftToRight
@@ -5073,7 +5243,7 @@ final class NewsreaderPresentationTests: XCTestCase {
             showsRelativePublicationTime: showRelativePublicationTime,
             containerWidth: width,
             displayScale: displayScale,
-            contentSizeCategory: .large,
+            contentSizeCategory: contentSizeCategory,
             layoutDirection: layoutDirection
         )
         cell.configure(
