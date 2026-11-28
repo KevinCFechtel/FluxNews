@@ -5154,7 +5154,22 @@ final class NewsreaderPresentationTests: XCTestCase {
             window.isHidden = true
             window.rootViewController = nil
         }
-        let cell = configuredOracleCell(item: item, mode: .compact, previewLines: .standard, width: 320, hostingView: controller.view)
+        // A production row lives inside the Timeline's safe content area, not
+        // underneath the window's status bar/home indicator. Keep those window
+        // insets out of the cell-local geometry measured by the layout engine.
+        let hostingView = UIView()
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        controller.view.addSubview(hostingView)
+        let safeArea = controller.view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            hostingView.topAnchor.constraint(equalTo: safeArea.topAnchor),
+            hostingView.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor),
+        ])
+        window.layoutIfNeeded()
+        controller.view.layoutIfNeeded()
+        let cell = configuredOracleCell(item: item, mode: .compact, previewLines: .standard, width: 320, hostingView: hostingView)
         window.layoutIfNeeded()
         // Exercise a real trait transition after attachment, then prepare the
         // replacement geometry just as the Timeline does for Dynamic Type.
@@ -5165,6 +5180,8 @@ final class NewsreaderPresentationTests: XCTestCase {
         let input = IOSUIKitArticleLayoutInput(item: item, mode: .compact, previewLines: .standard, containerWidth: 320, displayScale: cell.traitCollection.displayScale, contentSizeCategory: category, layoutDirection: .leftToRight)
         cell.configure(item: item, mode: .compact, previewLines: .standard, displayScale: cell.traitCollection.displayScale, preparedLayoutMetrics: IOSUIKitArticleLayoutEngine.metrics(for: input))
         _ = measureUIKitArticleCell(cell, width: 320)
+        XCTAssertEqual(cell.safeAreaInsets, .zero)
+        XCTAssertEqual(cell.contentView.safeAreaInsets, .zero)
         let font = UIFont.preferredFont(forTextStyle: .caption2, compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
         XCTAssertEqual(cell.tagPresentationForTesting.fontSize, font.pointSize)
         assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.tagsFrame, cell.preparedLayoutMetrics?.tagsFrame)
@@ -5296,7 +5313,9 @@ final class NewsreaderPresentationTests: XCTestCase {
         hostingView: UIView? = nil
     ) -> IOSUIKitArticleCell {
         let container = hostingView ?? UIView(frame: CGRect(x: 0, y: 0, width: width, height: 1_000))
-        let cell = IOSUIKitArticleCell(frame: CGRect(x: 0, y: 0, width: width, height: 1_000))
+        // A hosted cell must fit inside its safe-area container even before
+        // compressed-size measurement; otherwise UIKit adds window-edge insets.
+        let cell = IOSUIKitArticleCell(frame: CGRect(x: 0, y: 0, width: width, height: container.bounds.height))
         if hostingView == nil {
             cell.traitOverrides.preferredContentSizeCategory = contentSizeCategory
         }
