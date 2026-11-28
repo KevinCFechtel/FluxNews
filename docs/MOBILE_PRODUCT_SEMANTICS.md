@@ -70,11 +70,13 @@ Visual Compact must retain its article title; adding publication or reading-time
 Publisher article tags are inline in the publication row, including Search.
 Date and reading time retain their normal width budget; topics use only the
 remaining space and never add a row or increase its height. Show at most the first
-topic name, truncating with an ellipsis after reserving `+N` for the other topics.
-Compact and Visual use a subtle background with minimal horizontal and no
-vertical padding. Visual Compact uses one neutral tag symbol and plain text,
-without a background, also when there is no image. If no meaningfully readable
-name fits, show the tag symbol and `+N` for all topics; omit the visual group if
+topic name, truncating with an ellipsis after reserving the tag symbol and `+N`
+for the other topics. Every style, including Visual Compact with or without an
+image, uses the same order: neutral tag symbol, first name in a subtle box with
+minimal horizontal and no vertical padding, then the remaining-topic `+N`.
+The counter stays outside the box and is absent when the visible name is the only
+topic. If no meaningfully readable name fits, show the tag symbol and `+N` for all
+topics (including `+1` for one hidden topic); omit the visual group if
 even that cannot fit. No wrapping, scrolling, smaller fonts, or fallback row.
 All topics remain accessible even when visually omitted. Labels are not controls.
 Whitespace/empty/duplicate display labels are normalized only in native

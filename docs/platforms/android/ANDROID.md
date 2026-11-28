@@ -514,9 +514,10 @@ The larger `AndroidStoragePaths` ownership/lifecycle review remains deferred to 
 
 Android Article Timeline and Search rows show publisher-provided topics inline
 after publication/reading time, using only residual width. These are article
-topics, not the user's feed category. Compact and Visual use a subtle background;
-Visual Compact uses a tag symbol and plain text, including its text-only variant.
-At most one name is shown, ellipsized after reserving the remaining-topic `+N`.
+topics, not the user's feed category. Every style, including Visual Compact's
+text-only variant, uses a neutral tag symbol, one subtly boxed name, then `+N`
+outside the box. At most one name is shown, ellipsized after reserving the symbol
+and remaining-topic `+N`; a lone visible topic needs no counter.
 An unreadably narrow name falls back to symbol + total-topic count; no fit means
 no visual group. Topics never add height, wrap, scroll horizontally, or reduce the
 date/reading-time width budget. System font scaling is preserved. Empty lists add

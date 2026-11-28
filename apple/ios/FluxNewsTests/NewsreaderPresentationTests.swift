@@ -5001,7 +5001,9 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertEqual(row.overflow?.text, input.tagOverflowLabels[1])
         XCTAssertEqual(input.tagOverflowLabels[1], "+\(NumberFormatter.localizedString(from: 4, number: .decimal))")
         XCTAssertTrue(row.isHighlighted)
-        XCTAssertNil(row.iconFrame)
+        let icon = try XCTUnwrap(row.iconFrame)
+        XCTAssertLessThan(icon.maxX, row.badges[0].frame.minX)
+        XCTAssertLessThan(row.badges[0].frame.maxX, row.overflow!.frame.minX)
         let frame = try XCTUnwrap(metrics.tagsFrame)
         XCTAssertEqual(metrics.dateFrame.minY, metrics.titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
         XCTAssertEqual(frame.minY, metrics.dateFrame.minY)
@@ -5026,29 +5028,32 @@ final class NewsreaderPresentationTests: XCTestCase {
         let lone = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [oversized], width: 240))
         XCTAssertEqual(lone.tagRow?.badges.count, 1)
         XCTAssertNil(lone.tagRow?.overflow)
-        XCTAssertEqual(lone.tagRow!.badges[0].frame.width, lone.tagsFrame!.width)
+        XCTAssertEqual(lone.tagRow!.badges[0].frame.maxX, lone.tagsFrame!.width)
     }
 
-    func testInlineTopicsUseSymbolOnlyInVisualCompactAndFallBackWithoutStealingPublicationSpace() throws {
-        let visualCompact = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["Science", "Space"], width: 800, mode: .visualCompact))
-        let row = try XCTUnwrap(visualCompact.tagRow)
-        XCTAssertFalse(row.isHighlighted)
-        XCTAssertNotNil(row.iconFrame)
-        XCTAssertEqual(row.badges.map(\.text), ["Science"])
-        let publication = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [], width: 390))
-        // Leave 42 points after the complete publication block: enough for a
-        // symbol and total count, but not a meaningful name plus its counter.
-        let publicationBudget = 20 + publication.dateFrame.width + IOSUIKitArticleTagRowMetrics.publicationSpacing
-        let counterInput = tagLayoutInput(tags: ["Very long topic", "Two", "Three"], width: publicationBudget + 42)
-        let counterOnly = IOSUIKitArticleLayoutEngine.metrics(for: counterInput)
-        let counter = try XCTUnwrap(counterOnly.tagRow)
-        XCTAssertTrue(counter.badges.isEmpty)
-        XCTAssertNotNil(counter.iconFrame)
-        XCTAssertEqual(counter.overflow?.text, counterInput.tagOverflowLabels[0])
-        XCTAssertEqual(counterOnly.dateFrame.width, publication.dateFrame.width)
-        let hidden = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["One", "Two"], width: publicationBudget + 1))
-        XCTAssertNil(hidden.tagRow)
-        XCTAssertEqual(hidden.dateFrame.width, publication.dateFrame.width)
+    func testInlineTopicsUseSymbolAndBadgeWithTheSameFallbackInEveryStyle() throws {
+        for mode in [ArticlePresentationMode.compact, .visual, .visualCompact] {
+            let wide = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["Science", "Space"], width: 800, mode: mode))
+            let row = try XCTUnwrap(wide.tagRow)
+            XCTAssertTrue(row.isHighlighted)
+            XCTAssertNotNil(row.iconFrame)
+            XCTAssertEqual(row.badges.map(\.text), ["Science"])
+            let publication = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [], width: 390, mode: mode))
+            // Leave 42 points after publication: enough for symbol + total
+            // count, but not for a meaningful boxed name and its counter.
+            let publicationBudget = publication.horizontalInset * 2 + publication.dateFrame.width + IOSUIKitArticleTagRowMetrics.publicationSpacing
+            let counterInput = tagLayoutInput(tags: ["Very long topic", "Two", "Three"], width: publicationBudget + 42, mode: mode)
+            let counterOnly = IOSUIKitArticleLayoutEngine.metrics(for: counterInput)
+            let counter = try XCTUnwrap(counterOnly.tagRow)
+            XCTAssertTrue(counter.badges.isEmpty)
+            XCTAssertFalse(counter.isHighlighted)
+            XCTAssertNotNil(counter.iconFrame)
+            XCTAssertEqual(counter.overflow?.text, counterInput.tagOverflowLabels[0])
+            XCTAssertEqual(counterOnly.dateFrame.width, publication.dateFrame.width)
+            let hidden = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["One", "Two"], width: publicationBudget + 1, mode: mode))
+            XCTAssertNil(hidden.tagRow)
+            XCTAssertEqual(hidden.dateFrame.width, publication.dateFrame.width)
+        }
     }
 
     func testEmptyArticleTopicsDoNotChangeLayoutOrCacheIdentity() {
@@ -5115,8 +5120,8 @@ final class NewsreaderPresentationTests: XCTestCase {
                     if let tagsFrame = expected.tagsFrame {
                         XCTAssertEqual(tagsFrame.minY, expected.dateFrame.minY)
                         XCTAssertEqual(tagsFrame.height, expected.dateFrame.height)
-                        XCTAssertEqual(cell.tagStyleForTesting.highlighted, mode != .visualCompact)
-                        if mode == .visualCompact { XCTAssertTrue(cell.tagStyleForTesting.iconVisible) }
+                        XCTAssertEqual(cell.tagStyleForTesting.highlighted, expected.tagRow?.badges.isEmpty == false)
+                        XCTAssertTrue(cell.tagStyleForTesting.iconVisible)
                     }
                     let withoutTags = oracleItem(title: "Short title", preview: preview, hasImage: hasImage, hasComments: true, readingTimeMinutes: 4)
                     let withoutTagsInput = IOSUIKitArticleLayoutInput(item: withoutTags, mode: mode, previewLines: .standard, containerWidth: width, displayScale: cell.traitCollection.displayScale, contentSizeCategory: .large, layoutDirection: direction)

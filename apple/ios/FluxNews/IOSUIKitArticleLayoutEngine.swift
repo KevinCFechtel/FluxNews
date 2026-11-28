@@ -906,7 +906,6 @@ enum IOSUIKitArticleLayoutEngine {
         let tagRow = tagRowMetrics(
             tags: input.tags, overflowLabels: input.tagOverflowLabels, width: tagsWidth,
             font: dateFont, height: dateHeight, iconSize: min(accessories.infoIcon, dateHeight),
-            symbolOnly: input.mode == .visualCompact,
             displayScale: scale, direction: input.layoutDirection
         )
         let tagsFrame = tagRow.map { row in
@@ -1033,29 +1032,27 @@ enum IOSUIKitArticleLayoutEngine {
 
     /// One name plus a counter, using only leftover publication width. A tiny,
     /// unreadable name falls back to icon + total count; no fit means no pixels.
-    private static func tagRowMetrics(tags: [String], overflowLabels: [String], width: CGFloat, font: UIFont, height: CGFloat, iconSize: CGFloat, symbolOnly: Bool, displayScale: CGFloat, direction: UIUserInterfaceLayoutDirection) -> IOSUIKitArticleTagRowMetrics? {
+    private static func tagRowMetrics(tags: [String], overflowLabels: [String], width: CGFloat, font: UIFont, height: CGFloat, iconSize: CGFloat, displayScale: CGFloat, direction: UIUserInterfaceLayoutDirection) -> IOSUIKitArticleTagRowMetrics? {
         guard let first = tags.first, width > 0, height > 0 else { return nil }
-        let padding = symbolOnly ? 0 : IOSUIKitArticleTagRowMetrics.horizontalPadding * 2
+        let padding = IOSUIKitArticleTagRowMetrics.horizontalPadding * 2
         let gap = IOSUIKitArticleTagRowMetrics.spacing
         let naturalWidth = coreTextWidth(first, font: font, displayScale: displayScale) + padding
         let minimumWidth = min(naturalWidth, coreTextWidth("MM…", font: font, displayScale: displayScale) + padding)
         let nameCounterWidth = tags.count > 1 ? coreTextWidth(overflowLabels[1], font: font, displayScale: displayScale) : 0
-        let remaining = width - (symbolOnly ? iconSize + gap : 0) - (tags.count > 1 ? gap + nameCounterWidth : 0)
+        let remaining = width - iconSize - gap - (tags.count > 1 ? gap + nameCounterWidth : 0)
         var visibleCount = 0
         if remaining >= minimumWidth {
             visibleCount = 1
         } else if iconSize + gap + coreTextWidth(overflowLabels[0], font: font, displayScale: displayScale) > width {
             return nil
         }
-        let showsIcon = symbolOnly || visibleCount == 0
         func frame(_ x: CGFloat, _ badgeWidth: CGFloat, _ badgeHeight: CGFloat? = nil) -> CGRect {
             let resolvedHeight = badgeHeight ?? height
             return CGRect(x: physicalX(logicalX: x, width: badgeWidth, in: width, direction: direction),
                           y: (height - resolvedHeight) / 2, width: badgeWidth, height: resolvedHeight)
         }
-        var x: CGFloat = 0
-        let iconFrame = showsIcon ? frame(0, iconSize, iconSize) : nil
-        if showsIcon { x += iconSize + gap }
+        let iconFrame = frame(0, iconSize, iconSize)
+        var x = iconSize + gap
         var badges: [IOSUIKitArticleTagBadgeMetrics] = []
         if visibleCount == 1 {
             let badgeWidth = min(naturalWidth, remaining)
@@ -1067,7 +1064,7 @@ enum IOSUIKitArticleLayoutEngine {
                 text: overflowLabels[visibleCount],
                 frame: frame(x, coreTextWidth(overflowLabels[visibleCount], font: font, displayScale: displayScale))
             ) : nil
-        return .init(badges: badges, overflow: overflow, iconFrame: iconFrame, isHighlighted: !symbolOnly, height: height)
+        return .init(badges: badges, overflow: overflow, iconFrame: iconFrame, isHighlighted: visibleCount == 1, height: height)
     }
 
     private static func pixelAligned(_ length: CGFloat, scale: CGFloat) -> CGFloat {

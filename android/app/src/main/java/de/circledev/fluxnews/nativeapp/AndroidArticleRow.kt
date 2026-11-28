@@ -420,7 +420,7 @@ private fun ArticlePublicationRow(
         val gap = 6.dp.roundToPx()
         val remaining = (width - publication.width - gap).coerceAtLeast(0)
         val topics = subcompose("topics") {
-            ArticleTagsRow(labels, article.isRead, preferences.presentationMode == AndroidArticlePresentationMode.VisualCompact)
+            ArticleTagsRow(labels, article.isRead)
         }.firstOrNull()?.measure(Constraints(maxWidth = remaining))
         val topicsWidth = topics?.width ?: 0
         layout(publication.width + if (topicsWidth > 0) gap + topicsWidth else 0, publication.height) {

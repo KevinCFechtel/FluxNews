@@ -213,8 +213,11 @@ presentation remain supported. Cell structure and content sizing are reused
 when their layout inputs have not changed.
 
 Publisher topic labels follow the shared mobile tag presentation contract,
-inline after date/reading time in Timeline and Search. Compact and Visual use a
-subtle label background; Visual Compact uses only a tag symbol and plain text.
+inline after date/reading time in Timeline and Search. All styles, including
+Visual Compact, use a tag symbol followed by a subtly boxed first name and an
+optional remaining-topic `+N` outside the box. All styles share the symbol +
+total-count fallback when no readable name fits, and omit the visual group
+when even that cannot fit.
 Their bounded residual-width geometry participates in deterministic layout-cache
 identity, but never adds row height or changes Visual Compact's preview flow.
 Reusable native labels are decorative; the cell's VoiceOver description includes

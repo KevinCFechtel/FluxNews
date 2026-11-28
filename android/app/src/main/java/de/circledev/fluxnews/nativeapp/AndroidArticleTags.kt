@@ -43,11 +43,10 @@ internal object AndroidArticleTagPolicy {
         availableWidth: Int,
         spacing: Int,
         iconWidth: Int,
-        symbolOnly: Boolean,
         overflowWidth: (Int) -> Int,
     ): AndroidArticleTagLayout {
         if (totalCount == 0 || availableWidth <= 0) return AndroidArticleTagLayout()
-        val leading = if (symbolOnly) iconWidth + spacing else 0
+        val leading = iconWidth + spacing
         val trailing = if (totalCount > 1) spacing + overflowWidth(totalCount - 1) else 0
         val remaining = availableWidth - leading - trailing
         if (remaining >= minOf(firstTagWidth, minimumTagWidth)) {
@@ -55,7 +54,7 @@ internal object AndroidArticleTagPolicy {
                 visibleCount = 1,
                 firstTagMaxWidth = minOf(firstTagWidth, remaining),
                 showsOverflow = totalCount > 1,
-                showsIcon = symbolOnly,
+                showsIcon = true,
             )
         }
         // A counter alone still needs a tag symbol to disambiguate it.
@@ -66,7 +65,7 @@ internal object AndroidArticleTagPolicy {
 }
 
 @Composable
-internal fun ArticleTagsRow(labels: List<String>, isRead: Boolean, symbolOnly: Boolean) {
+internal fun ArticleTagsRow(labels: List<String>, isRead: Boolean) {
     if (labels.isEmpty()) return
     val locale = LocalConfiguration.current.locales[0]
     val numberFormat = remember(locale) { NumberFormat.getIntegerInstance(locale) }
@@ -78,7 +77,7 @@ internal fun ArticleTagsRow(labels: List<String>, isRead: Boolean, symbolOnly: B
     val background = MaterialTheme.colorScheme.surfaceContainerHigh
     val iconSide = with(LocalDensity.current) { style.fontSize.toDp() }
     val textMeasurer = rememberTextMeasurer()
-    val labelModifier = if (symbolOnly) Modifier else Modifier
+    val labelModifier = Modifier
         .clip(RoundedCornerShape(3.dp)).background(background).padding(horizontal = 3.dp)
     // Full topic accessibility belongs to the publication group, even if no tag fits.
     SubcomposeLayout(modifier = Modifier.clearAndSetSemantics {}) { constraints ->
@@ -91,7 +90,7 @@ internal fun ArticleTagsRow(labels: List<String>, isRead: Boolean, symbolOnly: B
                 maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             )
         }.single().measure(Constraints(maxWidth = available))
-        val horizontalPadding = if (symbolOnly) 0 else 6.dp.roundToPx()
+        val horizontalPadding = 6.dp.roundToPx()
         val icon = subcompose("icon") {
             Icon(painterResource(R.drawable.ic_tag), contentDescription = null, tint = color, modifier = Modifier.size(iconSide))
         }.single().measure(childConstraints)
@@ -109,7 +108,7 @@ internal fun ArticleTagsRow(labels: List<String>, isRead: Boolean, symbolOnly: B
             ).size.width + horizontalPadding,
             minimumTagWidth = textMeasurer.measure(AnnotatedString("MM…"), style).size.width + horizontalPadding,
             totalCount = labels.size, availableWidth = width, spacing = gap,
-            iconWidth = icon.width, symbolOnly = symbolOnly,
+            iconWidth = icon.width,
             // Require the full counter, rather than its constrained/ellipsized width.
             overflowWidth = { hidden ->
                 textMeasurer.measure(AnnotatedString(overflowLabels.getValue(labels.size - hidden)), style).size.width
