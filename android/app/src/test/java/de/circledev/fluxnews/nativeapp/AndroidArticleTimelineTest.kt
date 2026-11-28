@@ -86,37 +86,25 @@ class AndroidArticleTimelineTest {
     }
 
     @Test
-    fun visualCompactTopicsFollowPublicationWithoutMovingItsRow() {
-        val withoutTags = AndroidVisualCompactFlowPolicy.headerLayout(
-            titleHeightPx = 40,
-            publicationHeightPx = 18,
-            tagsHeightPx = null,
-            textSpacingPx = 7,
-        )
-        val withTags = AndroidVisualCompactFlowPolicy.headerLayout(
-            titleHeightPx = 40,
-            publicationHeightPx = 18,
-            tagsHeightPx = 20,
-            textSpacingPx = 7,
-        )
-        assertEquals(47, withTags.publicationTopPx)
-        assertEquals(withoutTags.publicationTopPx, withTags.publicationTopPx)
-        assertEquals(72, withTags.tagsTopPx)
-        assertEquals(92, withTags.bottomPx)
-        assertEquals(65, withoutTags.bottomPx)
-        assertEquals(27, withTags.bottomPx - withoutTags.bottomPx)
-    }
-
-    @Test
-    fun visualCompactContinuationClearsScaledTopicsBelowPublication() {
+    fun visualCompactInlineTopicsUseOnlyThePublicationHeight() {
         val header = AndroidVisualCompactFlowPolicy.headerLayout(
             titleHeightPx = 40,
             publicationHeightPx = 18,
-            tagsHeightPx = 60,
+            textSpacingPx = 7,
+        )
+        assertEquals(47, header.publicationTopPx)
+        assertEquals(65, header.bottomPx)
+    }
+
+    @Test
+    fun visualCompactContinuationClearsScaledPublication() {
+        val header = AndroidVisualCompactFlowPolicy.headerLayout(
+            titleHeightPx = 40,
+            publicationHeightPx = 60,
             textSpacingPx = 7,
         )
         assertEquals(
-            139,
+            114,
             AndroidVisualCompactFlowPolicy.continuationTop(
                 imageBottomPx = 100,
                 headerBottomPx = header.bottomPx,

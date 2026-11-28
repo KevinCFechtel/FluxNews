@@ -20,7 +20,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
     private let textContainer = UIView()
     private let titleLabel = UILabel()
     private let tagsView = IOSUIKitArticleTagsView()
-    private var tagsTopConstraint: NSLayoutConstraint!
+    private var tagsWidthConstraint: NSLayoutConstraint!
     private var tagsHeightConstraint: NSLayoutConstraint!
     private let starImageView = UIImageView(image: UIImage(systemName: "star.fill"))
     private let metadataRow = UIView()
@@ -60,7 +60,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
     private var previewTrailingDefaultConstraint: NSLayoutConstraint!
     /// Preview top in the side-title variant: it must clear the image as well as
     /// the topics/publication block, and its spacing collapses with the preview itself.
-    private var sideTitlePreviewBelowTagsConstraint: NSLayoutConstraint!
+    private var sideTitlePreviewBelowPublicationConstraint: NSLayoutConstraint!
     private var sideTitlePreviewBelowImageConstraint: NSLayoutConstraint!
     private var landscapeImageWidthConstraint: NSLayoutConstraint!
     private var landscapeImageHeightConstraint: NSLayoutConstraint!
@@ -356,19 +356,18 @@ final class IOSUIKitArticleCell: UITableViewCell {
         textContainer.addSubview(landscapeReadingTimeContainer)
         textContainer.addSubview(previewContinuationLabel)
         previewContinuationLabel.isHidden = true
-        // A permanent, explicitly sized row. Empty tags collapse via constants,
-        // without rebuilding the constraint graph or measuring text on reuse.
+        // A permanent inline group using only the space after publication.
         tagsView.translatesAutoresizingMaskIntoConstraints = false
         textContainer.addSubview(tagsView)
-        tagsTopConstraint = tagsView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor)
+        tagsWidthConstraint = tagsView.widthAnchor.constraint(equalToConstant: 0)
         tagsHeightConstraint = tagsView.heightAnchor.constraint(equalToConstant: 0)
         NSLayoutConstraint.activate([
-            tagsView.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            tagsView.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
-            tagsTopConstraint,
+            tagsView.leadingAnchor.constraint(equalTo: landscapeReadingTimeContainer.trailingAnchor, constant: IOSUIKitArticleTagRowMetrics.publicationSpacing),
+            tagsView.topAnchor.constraint(equalTo: dateLabel.topAnchor),
+            tagsWidthConstraint,
             tagsHeightConstraint,
         ])
-        previewTopConstraint = previewLabel.topAnchor.constraint(equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing)
+        previewTopConstraint = previewLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing)
         // Collapsing by priority keeps the constraint graph untouched. Removing
         // or deactivating it instead would mutate the graph on every reuse
         // between an article with and without a preview.
@@ -482,7 +481,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         //   Date · ▤ 4 min
         //   Preview …
         //
-        // Full-width image followed by metadata/title/date/optional topics.
+        // Full-width image followed by metadata/title/publication with inline topics.
         portraitDateTrailingConstraint = dateLabel.trailingAnchor.constraint(
             equalTo: landscapeReadingTimeContainer.leadingAnchor,
             constant: -IOSUIKitArticleGeometry.landscapeDateReadingTimeSpacing
@@ -553,7 +552,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             landscapeReadingTimeContainer.bottomAnchor.constraint(equalTo: dateLabel.bottomAnchor),
         ]
 
-        // Image-bearing Visual Compact: preview begins below publication/topics
+        // Image-bearing Visual Compact: preview begins below the inline publication group
         // beside the thumbnail, with a full-width continuation underneath.
         sideTitleDateTrailingConstraint = dateLabel.trailingAnchor.constraint(
             equalTo: landscapeReadingTimeContainer.leadingAnchor,
@@ -571,8 +570,8 @@ final class IOSUIKitArticleCell: UITableViewCell {
             lessThanOrEqualTo: articleImageView.leadingAnchor,
             constant: -IOSUIKitArticleGeometry.sideTitleSpacing
         )
-        sideTitlePreviewBelowTagsConstraint = previewLabel.topAnchor.constraint(
-            equalTo: tagsView.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
+        sideTitlePreviewBelowPublicationConstraint = previewLabel.topAnchor.constraint(
+            equalTo: dateLabel.bottomAnchor, constant: IOSUIKitArticleGeometry.textSpacing
         )
         sideTitlePreviewBelowImageConstraint = previewLabel.topAnchor.constraint(
             greaterThanOrEqualTo: articleImageView.bottomAnchor
@@ -606,7 +605,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             articleImageView.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),
             landscapeImageWidthConstraint,
             landscapeImageHeightConstraint,
-            sideTitlePreviewBelowTagsConstraint,
+            sideTitlePreviewBelowPublicationConstraint,
             previewLabel.trailingAnchor.constraint(
                 equalTo: articleImageView.leadingAnchor,
                 constant: -IOSUIKitArticleGeometry.sideTitleSpacing
@@ -621,7 +620,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
             // image-bearing row to the metadata height (~30 pt), even though
             // the precomputed row height correctly includes its thumbnail.
             articleImageView.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
-            tagsView.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
+            dateLabel.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
             previewLabel.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
             previewContinuationLabel.bottomAnchor.constraint(lessThanOrEqualTo: textContainer.bottomAnchor),
         ]
@@ -631,7 +630,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         sideTitleWideConstraints = sideTitleConstraints
 
         // `Visual compact` without an image: the same order — metadata bar,
-        // then title, date, optional topics, preview — at full width, with no image slot.
+        // then title, publication with inline topics, preview — with no image slot.
         sideTitleTextOnlyDateTrailingConstraint = dateLabel.trailingAnchor.constraint(
             equalTo: landscapeReadingTimeContainer.leadingAnchor,
             constant: -IOSUIKitArticleGeometry.landscapeDateReadingTimeSpacing
@@ -735,7 +734,7 @@ final class IOSUIKitArticleCell: UITableViewCell {
         // side-title variant's pair, or a preview-less row keeps a gap below the
         // image that the engine did not budget for.
         let previewSpacing = hasPreview ? IOSUIKitArticleGeometry.textSpacing : 0
-        sideTitlePreviewBelowTagsConstraint.constant = previewSpacing
+        sideTitlePreviewBelowPublicationConstraint.constant = previewSpacing
         sideTitlePreviewBelowImageConstraint.constant = previewSpacing
         previewCollapseConstraint.priority = hasPreview ? UILayoutPriority(1) : .defaultHigh
         let hasComments = item.content.hasComments
@@ -817,8 +816,9 @@ final class IOSUIKitArticleCell: UITableViewCell {
     private func applyLayout(_ layout: IOSUIKitArticleLayoutMetrics) {
         applyAccessoryMetrics(layout)
         tagsView.configure(layout.tagRow)
+        tagsView.isHidden = layout.tagRow == nil
+        tagsWidthConstraint.constant = layout.tagsFrame?.width ?? 0
         tagsHeightConstraint.constant = layout.tagRow?.height ?? 0
-        tagsTopConstraint.constant = layout.tagRow == nil ? 0 : IOSUIKitArticleGeometry.textSpacing
         let variant = layout.variant
         contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: layout.verticalInset,
@@ -1039,6 +1039,9 @@ final class IOSUIKitArticleCell: UITableViewCell {
     var tagPresentationForTesting: (labels: [String], overflow: String?, badgeFrames: [CGRect], overflowFrame: CGRect?, fontSize: CGFloat, lineCount: Int, lineBreakMode: NSLineBreakMode, interactive: Bool) {
         tagsView.presentationForTesting
     }
+    var tagStyleForTesting: (highlighted: Bool, iconVisible: Bool) {
+        (preparedLayoutMetrics?.tagRow?.isHighlighted == true, preparedLayoutMetrics?.tagRow?.iconFrame != nil)
+    }
 
     private func configureArticleImage(
         url: URL?,
@@ -1210,6 +1213,7 @@ private final class IOSUIKitArticleTagsView: UIView {
     private let badges = (0..<IOSArticleTagPresentation.maximumVisibleTags).map { _ in UIView() }
     private let labels = (0..<IOSArticleTagPresentation.maximumVisibleTags).map { _ in UILabel() }
     private let overflowLabel = UILabel()
+    private let tagIconView = UIImageView(image: UIImage(systemName: "tag"))
     private var metrics: IOSUIKitArticleTagRowMetrics?
     private static let readColor = UIColor { traits in
         let base = UIColor.secondaryLabel.resolvedColor(with: traits)
@@ -1223,14 +1227,16 @@ private final class IOSUIKitArticleTagsView: UIView {
         clipsToBounds = true
         for (badge, label) in zip(badges, labels) {
             badge.backgroundColor = .secondarySystemFill
-            badge.layer.cornerRadius = 4
+            badge.layer.cornerRadius = 3
             badge.clipsToBounds = true
             badge.addSubview(label)
             addSubview(badge)
         }
         addSubview(overflowLabel)
+        tagIconView.contentMode = .scaleAspectFit
+        addSubview(tagIconView)
         for label in labels + [overflowLabel] {
-            label.font = .preferredFont(forTextStyle: .caption2)
+            label.font = .preferredFont(forTextStyle: .caption1)
             label.adjustsFontForContentSizeCategory = true
             label.numberOfLines = 1
             label.lineBreakMode = .byTruncatingTail
@@ -1248,8 +1254,10 @@ private final class IOSUIKitArticleTagsView: UIView {
         for index in badges.indices {
             let badge = metrics.flatMap { index < $0.badges.count ? $0.badges[index] : nil }
             badges[index].isHidden = badge == nil
+            badges[index].backgroundColor = metrics?.isHighlighted == true ? .secondarySystemFill : .clear
             labels[index].text = badge?.text
         }
+        tagIconView.isHidden = metrics?.iconFrame == nil
         overflowLabel.text = metrics?.overflow?.text
         overflowLabel.isHidden = metrics?.overflow == nil
         setNeedsLayout()
@@ -1259,6 +1267,7 @@ private final class IOSUIKitArticleTagsView: UIView {
         for label in labels + [overflowLabel] {
             label.textColor = isRead ? Self.readColor : .secondaryLabel
         }
+        tagIconView.tintColor = isRead ? Self.readColor : .secondaryLabel
     }
 
     override func layoutSubviews() {
@@ -1266,15 +1275,15 @@ private final class IOSUIKitArticleTagsView: UIView {
         guard let metrics else { return }
         for (index, badge) in metrics.badges.enumerated() {
             badges[index].frame = badge.frame
-            let horizontal = IOSUIKitArticleTagRowMetrics.horizontalPadding
-            let vertical = IOSUIKitArticleTagRowMetrics.verticalPadding
+            let horizontal = metrics.isHighlighted ? IOSUIKitArticleTagRowMetrics.horizontalPadding : 0
             labels[index].frame = CGRect(
-                x: min(horizontal, badge.frame.width / 2), y: vertical,
+                x: min(horizontal, badge.frame.width / 2), y: 0,
                 width: max(0, badge.frame.width - horizontal * 2),
-                height: max(0, badge.frame.height - vertical * 2)
+                height: badge.frame.height
             )
         }
         overflowLabel.frame = metrics.overflow?.frame ?? .zero
+        tagIconView.frame = metrics.iconFrame ?? .zero
     }
 
     var presentationForTesting: (labels: [String], overflow: String?, badgeFrames: [CGRect], overflowFrame: CGRect?, fontSize: CGFloat, lineCount: Int, lineBreakMode: NSLineBreakMode, interactive: Bool) {

@@ -32,7 +32,7 @@ struct ArticleRowArticle: Equatable, Sendable {
 }
 
 enum IOSArticleTagPresentation {
-    static let maximumVisibleTags = 3
+    static let maximumVisibleTags = 1
 
     static func labels(_ tags: [String]) -> [String] {
         var seen = Set<String>()

@@ -4993,30 +4993,29 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertEqual(state.content.tags, ["New topic"])
     }
 
-    func testArticleTopicsLimitToThreeAndReserveOverflow() throws {
+    func testArticleTopicsLimitToOneInlineNameAndReserveOverflow() throws {
         let input = tagLayoutInput(tags: ["One", "Two", "Three", "Four", "Five"], width: 800)
         let metrics = IOSUIKitArticleLayoutEngine.metrics(for: input)
         let row = try XCTUnwrap(metrics.tagRow)
-        XCTAssertEqual(row.badges.map(\.text), ["One", "Two", "Three"])
-        XCTAssertEqual(row.overflow?.text, input.tagOverflowLabels[3])
-        XCTAssertEqual(input.tagOverflowLabels[3], "+\(NumberFormatter.localizedString(from: 2, number: .decimal))")
+        XCTAssertEqual(row.badges.map(\.text), ["One"])
+        XCTAssertEqual(row.overflow?.text, input.tagOverflowLabels[1])
+        XCTAssertEqual(input.tagOverflowLabels[1], "+\(NumberFormatter.localizedString(from: 4, number: .decimal))")
+        XCTAssertTrue(row.isHighlighted)
+        XCTAssertNil(row.iconFrame)
         let frame = try XCTUnwrap(metrics.tagsFrame)
         XCTAssertEqual(metrics.dateFrame.minY, metrics.titleFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
-        XCTAssertEqual(frame.minY, metrics.dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
+        XCTAssertEqual(frame.minY, metrics.dateFrame.minY)
+        XCTAssertEqual(frame.height, metrics.dateFrame.height)
+        XCTAssertGreaterThan(frame.minX, metrics.dateFrame.maxX)
         XCTAssertLessThanOrEqual(row.overflow!.frame.maxX, frame.width)
     }
 
     func testArticleTopicsPreferCompleteLabelsAndTruncateOversizedFirst() throws {
         let oversized = String(repeating: "Very long publisher topic ", count: 20)
-        let complete = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["One", "Two"]))
-        let reducedInput = tagLayoutInput(tags: ["One", "Two", oversized, "Four"])
-        let reduced = try XCTUnwrap(IOSUIKitArticleLayoutEngine.metrics(for: reducedInput).tagRow)
-        XCTAssertEqual(reduced.badges.map(\.text), ["One", "Two"])
-        XCTAssertEqual(reduced.badges.map(\.frame.width), complete.tagRow!.badges.map(\.frame.width))
+        let complete = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["One"]))
         XCTAssertNil(complete.tagRow?.overflow)
-        XCTAssertEqual(reduced.overflow?.text, reducedInput.tagOverflowLabels[2])
 
-        let truncatedInput = tagLayoutInput(tags: [oversized, "Two", "Three", "Four"], width: 180)
+        let truncatedInput = tagLayoutInput(tags: [oversized, "Two", "Three", "Four"], width: 240)
         let truncatedMetrics = IOSUIKitArticleLayoutEngine.metrics(for: truncatedInput)
         let truncated = try XCTUnwrap(truncatedMetrics.tagRow)
         XCTAssertEqual(truncated.badges.map(\.text), [oversized.trimmingCharacters(in: .whitespacesAndNewlines)])
@@ -5024,10 +5023,32 @@ final class NewsreaderPresentationTests: XCTestCase {
         XCTAssertLessThan(truncated.badges[0].frame.maxX, truncated.overflow!.frame.minX)
         XCTAssertEqual(truncated.overflow!.frame.maxX, truncatedMetrics.tagsFrame!.width, accuracy: 0.01)
 
-        let lone = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [oversized], width: 180))
+        let lone = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [oversized], width: 240))
         XCTAssertEqual(lone.tagRow?.badges.count, 1)
         XCTAssertNil(lone.tagRow?.overflow)
         XCTAssertEqual(lone.tagRow!.badges[0].frame.width, lone.tagsFrame!.width)
+    }
+
+    func testInlineTopicsUseSymbolOnlyInVisualCompactAndFallBackWithoutStealingPublicationSpace() throws {
+        let visualCompact = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["Science", "Space"], width: 800, mode: .visualCompact))
+        let row = try XCTUnwrap(visualCompact.tagRow)
+        XCTAssertFalse(row.isHighlighted)
+        XCTAssertNotNil(row.iconFrame)
+        XCTAssertEqual(row.badges.map(\.text), ["Science"])
+        let publication = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [], width: 390))
+        // Leave 42 points after the complete publication block: enough for a
+        // symbol and total count, but not a meaningful name plus its counter.
+        let publicationBudget = 20 + publication.dateFrame.width + IOSUIKitArticleTagRowMetrics.publicationSpacing
+        let counterInput = tagLayoutInput(tags: ["Very long topic", "Two", "Three"], width: publicationBudget + 42)
+        let counterOnly = IOSUIKitArticleLayoutEngine.metrics(for: counterInput)
+        let counter = try XCTUnwrap(counterOnly.tagRow)
+        XCTAssertTrue(counter.badges.isEmpty)
+        XCTAssertNotNil(counter.iconFrame)
+        XCTAssertEqual(counter.overflow?.text, counterInput.tagOverflowLabels[0])
+        XCTAssertEqual(counterOnly.dateFrame.width, publication.dateFrame.width)
+        let hidden = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: ["One", "Two"], width: publicationBudget + 1))
+        XCTAssertNil(hidden.tagRow)
+        XCTAssertEqual(hidden.dateFrame.width, publication.dateFrame.width)
     }
 
     func testEmptyArticleTopicsDoNotChangeLayoutOrCacheIdentity() {
@@ -5045,16 +5066,19 @@ final class NewsreaderPresentationTests: XCTestCase {
 
     func testArticleTopicsScaleWithDynamicTypeAndMirrorInRTL() throws {
         let tags = ["Science", "Space", "Technology", "Hidden topic"]
-        let standard = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags))
-        let accessible = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, category: .accessibilityExtraExtraExtraLarge))
+        let standard = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, width: 800))
+        let accessible = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, width: 800, category: .accessibilityExtraExtraExtraLarge))
         XCTAssertGreaterThan(accessible.tagRow!.height, standard.tagRow!.height)
         for width in [CGFloat(180), 320, 800] {
             for category in [UIContentSizeCategory.large, .accessibilityExtraExtraExtraLarge] {
                 let ltr = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, width: width, category: category))
                 let rtl = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: tags, width: width, category: category, direction: .rightToLeft))
-                let row = try XCTUnwrap(ltr.tagRow)
-                let mirrored = try XCTUnwrap(rtl.tagRow)
+                let withoutTags = IOSUIKitArticleLayoutEngine.metrics(for: tagLayoutInput(tags: [], width: width, category: category))
+                XCTAssertEqual(ltr.cellSize.height, withoutTags.cellSize.height)
+                XCTAssertEqual(ltr.dateFrame, withoutTags.dateFrame)
                 XCTAssertEqual(ltr.cellSize.height, rtl.cellSize.height)
+                XCTAssertEqual(ltr.tagRow == nil, rtl.tagRow == nil)
+                guard let row = ltr.tagRow, let mirrored = rtl.tagRow else { continue }
                 XCTAssertEqual(row.badges.map(\.text), mirrored.badges.map(\.text))
                 for (badge, counterpart) in zip(row.badges, mirrored.badges) {
                     XCTAssertEqual(counterpart.frame.minX, ltr.tagsFrame!.width - badge.frame.maxX, accuracy: 0.01)
@@ -5065,6 +5089,9 @@ final class NewsreaderPresentationTests: XCTestCase {
                 if let overflow = row.overflow, let counterpart = mirrored.overflow {
                     XCTAssertEqual(counterpart.frame.minX, ltr.tagsFrame!.width - overflow.frame.maxX, accuracy: 0.01)
                     XCTAssertLessThanOrEqual(overflow.frame.maxX, ltr.tagsFrame!.width)
+                }
+                if let icon = row.iconFrame, let counterpart = mirrored.iconFrame {
+                    XCTAssertEqual(counterpart.minX, ltr.tagsFrame!.width - icon.maxX, accuracy: 0.01)
                 }
             }
         }
@@ -5085,15 +5112,21 @@ final class NewsreaderPresentationTests: XCTestCase {
                     let cell = configuredOracleCell(item: item, mode: mode, previewLines: .standard, width: width, layoutDirection: direction)
                     let height = measureUIKitArticleCell(cell, width: width)
                     let expected = try XCTUnwrap(cell.preparedLayoutMetrics)
-                    let tagsFrame = try XCTUnwrap(expected.tagsFrame)
-                    XCTAssertEqual(tagsFrame.minY, expected.dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing)
-                    XCTAssertLessThanOrEqual(tagsFrame.maxY, expected.contentFrame.maxY + 0.5)
+                    if let tagsFrame = expected.tagsFrame {
+                        XCTAssertEqual(tagsFrame.minY, expected.dateFrame.minY)
+                        XCTAssertEqual(tagsFrame.height, expected.dateFrame.height)
+                        XCTAssertEqual(cell.tagStyleForTesting.highlighted, mode != .visualCompact)
+                        if mode == .visualCompact { XCTAssertTrue(cell.tagStyleForTesting.iconVisible) }
+                    }
                     let withoutTags = oracleItem(title: "Short title", preview: preview, hasImage: hasImage, hasComments: true, readingTimeMinutes: 4)
                     let withoutTagsInput = IOSUIKitArticleLayoutInput(item: withoutTags, mode: mode, previewLines: .standard, containerWidth: width, displayScale: cell.traitCollection.displayScale, contentSizeCategory: .large, layoutDirection: direction)
                     let withoutTagsMetrics = IOSUIKitArticleLayoutEngine.metrics(for: withoutTagsInput)
                     assertFrameEqual(expected.dateFrame, withoutTagsMetrics.dateFrame)
+                    XCTAssertEqual(expected.cellSize.height, withoutTagsMetrics.cellSize.height)
+                    XCTAssertEqual(expected.previewFrame, withoutTagsMetrics.previewFrame)
+                    XCTAssertEqual(expected.previewContinuationFrame, withoutTagsMetrics.previewContinuationFrame)
                     if let sidePreview = expected.previewFrame {
-                        XCTAssertEqual(sidePreview.minY, tagsFrame.maxY + IOSUIKitArticleGeometry.textSpacing, accuracy: 0.01)
+                        XCTAssertEqual(sidePreview.minY, expected.dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing, accuracy: 0.01)
                     }
                     // Prepared row heights ceil the total to whole points;
                     // UIKit's compressed fit may still have a fractional tail.
@@ -5108,15 +5141,15 @@ final class NewsreaderPresentationTests: XCTestCase {
                         assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.previewContinuationFrame, expected.previewContinuationFrame)
                     }
                     let actual = cell.tagPresentationForTesting
-                    XCTAssertEqual(actual.labels, expected.tagRow!.badges.map(\.text))
-                    XCTAssertEqual(actual.overflow, expected.tagRow!.overflow?.text)
+                    XCTAssertEqual(actual.labels, expected.tagRow?.badges.map(\.text) ?? [])
+                    XCTAssertEqual(actual.overflow, expected.tagRow?.overflow?.text)
                     XCTAssertEqual(actual.lineCount, 1)
                     XCTAssertEqual(actual.lineBreakMode, .byTruncatingTail)
                     XCTAssertFalse(actual.interactive)
-                    for (frame, badge) in zip(actual.badgeFrames, expected.tagRow!.badges) {
+                    for (frame, badge) in zip(actual.badgeFrames, expected.tagRow?.badges ?? []) {
                         assertFrameEqual(frame, badge.frame)
                     }
-                    assertOptionalFrameEqual(actual.overflowFrame, expected.tagRow!.overflow?.frame)
+                    assertOptionalFrameEqual(actual.overflowFrame, expected.tagRow?.overflow?.frame)
                 }
             }
         }
@@ -5196,13 +5229,13 @@ final class NewsreaderPresentationTests: XCTestCase {
         _ = measureUIKitArticleCell(cell, width: 320)
         XCTAssertEqual(cell.safeAreaInsets, .zero)
         XCTAssertEqual(cell.contentView.safeAreaInsets, .zero)
-        let font = UIFont.preferredFont(forTextStyle: .caption2, compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
+        let font = UIFont.preferredFont(forTextStyle: .caption1, compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
         XCTAssertEqual(cell.tagPresentationForTesting.fontSize, font.pointSize)
         assertOptionalFrameEqual(cell.layoutDiagnosticsForTesting.tagsFrame, cell.preparedLayoutMetrics?.tagsFrame)
     }
 
-    private func tagLayoutInput(tags: [String], width: CGFloat = 390, category: UIContentSizeCategory = .large, direction: UIUserInterfaceLayoutDirection = .leftToRight) -> IOSUIKitArticleLayoutInput {
-        .init(title: "Title", tags: tags, feedTitle: "Feed", publishedDate: "January 1", preview: "", hasImage: false, hasComments: false, mode: .compact, previewLines: .standard, containerWidth: width, displayScale: 3, contentSizeCategory: category, layoutDirection: direction)
+    private func tagLayoutInput(tags: [String], width: CGFloat = 390, category: UIContentSizeCategory = .large, direction: UIUserInterfaceLayoutDirection = .leftToRight, mode: ArticlePresentationMode = .compact) -> IOSUIKitArticleLayoutInput {
+        .init(title: "Title", tags: tags, feedTitle: "Feed", publishedDate: "January 1", preview: "", hasImage: false, hasComments: false, mode: mode, previewLines: .standard, containerWidth: width, displayScale: 3, contentSizeCategory: category, layoutDirection: direction)
     }
 
     private func layoutMetrics(

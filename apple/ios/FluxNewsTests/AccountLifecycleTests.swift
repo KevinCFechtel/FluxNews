@@ -1413,6 +1413,8 @@ final class AccountLifecycleTests: XCTestCase {
             }
         )
         await bootstrapper.start()
+        let replacementGate = CoreQuiescenceGate()
+        bootstrapper.prepareForCoreReplacement = { await replacementGate.block() }
         let quiescenceRequested = expectation(
             description: "Core-session replacement requests cancellation of admitted work"
         )
@@ -1430,9 +1432,20 @@ final class AccountLifecycleTests: XCTestCase {
                 headers: []
             )
         }
+        // configure first validates the proposed account on the shared blocking
+        // worker lane. Queue/simulator startup latency is not evidence that the
+        // session gate failed to request cancellation. Synchronize on the real
+        // replacement boundary before starting that cancellation deadline.
+        await replacementGate.waitUntilEntered()
+        XCTAssertFalse(coordinator.isQuiescing)
+        XCTAssertEqual(coordinator.activeExecutionCount, 1)
+        XCTAssertEqual(factoryInputs.value(), [old])
+        XCTAssertIdentical(bootstrapper.core, oldCore)
+        replacementGate.release()
         await fulfillment(of: [quiescenceRequested], timeout: 5)
 
         XCTAssertTrue(coordinator.isQuiescing)
+        XCTAssertEqual(coordinator.activeExecutionCount, 1)
         XCTAssertEqual(factoryInputs.value(), [old])
         XCTAssertIdentical(bootstrapper.core, oldCore)
 

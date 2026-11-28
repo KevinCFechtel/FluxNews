@@ -213,9 +213,10 @@ presentation remain supported. Cell structure and content sizing are reused
 when their layout inputs have not changed.
 
 Publisher topic labels follow the shared mobile tag presentation contract,
-below the publication row and before any preview in Timeline and Search.
-Their bounded single-line geometry participates in deterministic prepared
-heights and layout-cache identity, including Visual Compact's preview flow.
+inline after date/reading time in Timeline and Search. Compact and Visual use a
+subtle label background; Visual Compact uses only a tag symbol and plain text.
+Their bounded residual-width geometry participates in deterministic layout-cache
+identity, but never adds row height or changes Visual Compact's preview flow.
 Reusable native labels are decorative; the cell's VoiceOver description includes
 all topics. Read/starred updates remain geometry-neutral.
 

@@ -67,13 +67,19 @@ Native mobile clients provide the retained article presentation modes **Compact*
 
 Visual Compact must retain its article title; adding publication or reading-time metadata must never collapse the headline. Article audio availability is consumed from a batched/article-level Core projection. Productive list rows must not perform per-row enclosure/media queries merely to populate the Audio accessory.
 
-Publisher article tags appear as subtle, non-interactive topic labels below
-the publication row and before any preview, including Search results. Show at
-most three labels in one line, reserve `+N` for hidden topics, and truncate an oversized
-first label when necessary. Respect system font scaling and expose all topics
-to accessibility. Whitespace/empty/duplicate display labels are normalized only
-in native presentation; Core retains the complete metadata. No tags means no
-tag row or additional spacing. This adds no editing, filtering, or setting.
+Publisher article tags are inline in the publication row, including Search.
+Date and reading time retain their normal width budget; topics use only the
+remaining space and never add a row or increase its height. Show at most the first
+topic name, truncating with an ellipsis after reserving `+N` for the other topics.
+Compact and Visual use a subtle background with minimal horizontal and no
+vertical padding. Visual Compact uses one neutral tag symbol and plain text,
+without a background, also when there is no image. If no meaningfully readable
+name fits, show the tag symbol and `+N` for all topics; omit the visual group if
+even that cannot fit. No wrapping, scrolling, smaller fonts, or fallback row.
+All topics remain accessible even when visually omitted. Labels are not controls.
+Whitespace/empty/duplicate display labels are normalized only in native
+presentation; Core retains the complete metadata. No tags means no additional
+spacing. This adds no editing, filtering, or setting.
 
 On native iOS/iPadOS, standard Visual portrait additionally uses the accepted full-content-width 16:9 image and the publication row uses the current Apple iconography/layout described by the frozen UIKit Timeline contract. The removed reduced-width image/info-rail experiment is an iOS implementation history, not an Android requirement. Android should express the same content semantics using its native layout and image pipeline.
 

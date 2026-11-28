@@ -75,24 +75,20 @@ internal data class AndroidVisualCompactPreviewBreak(
 internal object AndroidVisualCompactFlowPolicy {
     data class HeaderLayout(
         val publicationTopPx: Int,
-        val tagsTopPx: Int,
         val bottomPx: Int,
     )
 
-    /** The measured narrow column keeps title -> publication -> optional topics. */
+    /** Topics are inline and cannot add height or affect the preview break plan. */
     fun headerLayout(
         titleHeightPx: Int,
         publicationHeightPx: Int,
-        tagsHeightPx: Int?,
         textSpacingPx: Int,
     ): HeaderLayout {
         val publicationTop = titleHeightPx + textSpacingPx
         val publicationBottom = publicationTop + publicationHeightPx
-        val tagsTop = publicationBottom + textSpacingPx
         return HeaderLayout(
             publicationTopPx = publicationTop,
-            tagsTopPx = tagsTop,
-            bottomPx = tagsHeightPx?.let { tagsTop + it } ?: publicationBottom,
+            bottomPx = publicationBottom,
         )
     }
 

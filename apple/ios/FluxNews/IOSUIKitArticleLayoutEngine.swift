@@ -168,17 +168,19 @@ struct IOSUIKitArticleLayoutMetrics: Equatable {
 
 struct IOSUIKitArticleTagBadgeMetrics: Equatable {
     let text: String
-    /// Physical coordinates relative to the tag row, including RTL mirroring.
+    /// Physical coordinates relative to the inline topic group, including RTL mirroring.
     let frame: CGRect
 }
 
 struct IOSUIKitArticleTagRowMetrics: Equatable {
-    static let horizontalPadding: CGFloat = 6
-    static let verticalPadding: CGFloat = 2
-    static let spacing: CGFloat = 5
+    static let horizontalPadding: CGFloat = 3
+    static let spacing: CGFloat = 4
+    static let publicationSpacing: CGFloat = 6
 
     let badges: [IOSUIKitArticleTagBadgeMetrics]
     let overflow: IOSUIKitArticleTagBadgeMetrics?
+    let iconFrame: CGRect?
+    let isHighlighted: Bool
     let height: CGFloat
 }
 
@@ -705,7 +707,7 @@ enum IOSUIKitArticleLayoutEngine {
         // preview because it needs the room to read as a paragraph.
         let isSideTitleVariant = variant == .visualSideTitle || variant == .visualSideTitleWide
         // Every productive article layout uses one semantic order:
-        // metadata -> title -> publication row -> optional topics -> preview.
+        // metadata -> title -> publication (including optional topics) -> preview.
         let titleWidth = isSideTitleVariant
             ? max(0, geometry.availableWidth - imageSize.width - IOSUIKitArticleGeometry.sideTitleSpacing)
             : textWidth
@@ -724,12 +726,6 @@ enum IOSUIKitArticleLayoutEngine {
         let titleHeight = coreTextHeight(input.title, font: titleFont, width: titleWidth, maximumLines: nil, displayScale: scale)
         let metadataHeight = max(accessories.feedIcon, font(.subheadline, category: input.contentSizeCategory, bold: true).lineHeight)
         let dateFont = font(.caption1, category: input.contentSizeCategory, bold: false)
-        let tagRow = tagRowMetrics(
-            tags: input.tags, overflowLabels: input.tagOverflowLabels, width: titleWidth,
-            font: font(.caption2, category: input.contentSizeCategory, bold: false),
-            displayScale: scale, direction: input.layoutDirection
-        )
-        let tagRowHeight = tagRow.map { $0.height + IOSUIKitArticleGeometry.textSpacing } ?? 0
         let usesDateRowReadingTime = input.readingTime != nil
         // Reading time is one inline metadata group with the publication value:
         // "date · [doc.text] duration". The separator stays attached to the date
@@ -748,7 +744,7 @@ enum IOSUIKitArticleLayoutEngine {
         let previewFont = font(.subheadline, category: input.contentSizeCategory, bold: false)
         let sidePreviewFlow: IOSVisualCompactPreviewFlow?
         if isSideTitleVariant {
-            let topOfPreview = titleHeight + tagRowHeight + IOSUIKitArticleGeometry.textSpacing
+            let topOfPreview = titleHeight + IOSUIKitArticleGeometry.textSpacing
                 + dateHeight + IOSUIKitArticleGeometry.textSpacing
             sidePreviewFlow = IOSVisualCompactPreviewFlow.prepare(
                 text: input.preview,
@@ -787,7 +783,7 @@ enum IOSUIKitArticleLayoutEngine {
         // The column that shares its row with the image. On a wide container the
         // preview belongs to it, so it is part of the height the image competes
         // with; otherwise the preview follows below the whole row.
-        let sideTitleColumnHeight = titleHeight + tagRowHeight + IOSUIKitArticleGeometry.textSpacing + dateHeight
+        let sideTitleColumnHeight = titleHeight + IOSUIKitArticleGeometry.textSpacing + dateHeight
             + (isSideTitleVariant && previewHeight > 0
                 ? IOSUIKitArticleGeometry.textSpacing + previewHeight : 0)
         // A side preview may end before the thumbnail bottom. Continuation
@@ -804,7 +800,6 @@ enum IOSUIKitArticleLayoutEngine {
         } else {
             textBlockHeight = metadataHeight
                 + IOSUIKitArticleGeometry.textSpacing + titleHeight
-                + tagRowHeight
                 + IOSUIKitArticleGeometry.textSpacing + dateHeight
                 + (previewHeight > 0 ? IOSUIKitArticleGeometry.textSpacing + previewHeight : 0)
         }
@@ -906,11 +901,21 @@ enum IOSUIKitArticleLayoutEngine {
             width: dateWidth,
             height: dateHeight
         )
+        let publicationWidth = publicationTimeLeadingWidth + dateWidth + readingTimeReservedWidth
+        let tagsWidth = max(0, dateRowWidth - publicationWidth - IOSUIKitArticleTagRowMetrics.publicationSpacing)
+        let tagRow = tagRowMetrics(
+            tags: input.tags, overflowLabels: input.tagOverflowLabels, width: tagsWidth,
+            font: dateFont, height: dateHeight, iconSize: min(accessories.infoIcon, dateHeight),
+            symbolOnly: input.mode == .visualCompact,
+            displayScale: scale, direction: input.layoutDirection
+        )
         let tagsFrame = tagRow.map { row in
             CGRect(
-                x: physicalX(logicalX: logicalTextX, width: titleWidth, in: input.containerWidth, direction: input.layoutDirection),
-                y: dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing,
-                width: titleWidth, height: row.height
+                x: physicalX(
+                    logicalX: logicalTextX + publicationWidth + IOSUIKitArticleTagRowMetrics.publicationSpacing,
+                    width: tagsWidth, in: input.containerWidth, direction: input.layoutDirection
+                ),
+                y: dateRowY, width: tagsWidth, height: row.height
             )
         }
         publicationTimeIconFrame = input.showsRelativePublicationTime
@@ -977,7 +982,7 @@ enum IOSUIKitArticleLayoutEngine {
         if variant == .visualSideTitleTextOnly {
             previewTop = titleTop + sideTitleRowHeight + IOSUIKitArticleGeometry.textSpacing
         } else {
-            previewTop = (tagsFrame?.maxY ?? dateFrame.maxY) + IOSUIKitArticleGeometry.textSpacing
+            previewTop = dateFrame.maxY + IOSUIKitArticleGeometry.textSpacing
         }
         let actualPreviewWidth = isSideTitleVariant ? titleWidth : previewWidth
         let previewFrame = previewHeight == 0 ? nil : CGRect(
@@ -1026,57 +1031,43 @@ enum IOSUIKitArticleLayoutEngine {
         )
     }
 
-    /// At most three natural-width labels plus their possible overflow counts
-    /// are measured during normal prepared layout, never during status updates.
-    private static func tagRowMetrics(tags: [String], overflowLabels: [String], width: CGFloat, font: UIFont, displayScale: CGFloat, direction: UIUserInterfaceLayoutDirection) -> IOSUIKitArticleTagRowMetrics? {
-        guard !tags.isEmpty, width > 0 else { return nil }
-        let padding = IOSUIKitArticleTagRowMetrics.horizontalPadding * 2
+    /// One name plus a counter, using only leftover publication width. A tiny,
+    /// unreadable name falls back to icon + total count; no fit means no pixels.
+    private static func tagRowMetrics(tags: [String], overflowLabels: [String], width: CGFloat, font: UIFont, height: CGFloat, iconSize: CGFloat, symbolOnly: Bool, displayScale: CGFloat, direction: UIUserInterfaceLayoutDirection) -> IOSUIKitArticleTagRowMetrics? {
+        guard let first = tags.first, width > 0, height > 0 else { return nil }
+        let padding = symbolOnly ? 0 : IOSUIKitArticleTagRowMetrics.horizontalPadding * 2
         let gap = IOSUIKitArticleTagRowMetrics.spacing
-        let height = ceil(font.lineHeight * displayScale) / displayScale
-            + IOSUIKitArticleTagRowMetrics.verticalPadding * 2
-        let widths = tags.prefix(IOSArticleTagPresentation.maximumVisibleTags).map {
-            coreTextWidth($0, font: font, displayScale: displayScale) + padding
-        }
-        func overflowWidth(_ visible: Int) -> CGFloat {
-            coreTextWidth(overflowLabels[visible], font: font, displayScale: displayScale)
-        }
+        let naturalWidth = coreTextWidth(first, font: font, displayScale: displayScale) + padding
+        let minimumWidth = min(naturalWidth, coreTextWidth("MM…", font: font, displayScale: displayScale) + padding)
+        let nameCounterWidth = tags.count > 1 ? coreTextWidth(overflowLabels[1], font: font, displayScale: displayScale) : 0
+        let remaining = width - (symbolOnly ? iconSize + gap : 0) - (tags.count > 1 ? gap + nameCounterWidth : 0)
         var visibleCount = 0
-        var firstWidth: CGFloat?
-        for count in stride(from: widths.count, through: 1, by: -1) {
-            let trailing = tags.count > count ? gap + overflowWidth(count) : 0
-            if widths.prefix(count).reduce(0, +) + gap * CGFloat(count - 1) + trailing <= width {
-                visibleCount = count
-                break
-            }
+        if remaining >= minimumWidth {
+            visibleCount = 1
+        } else if iconSize + gap + coreTextWidth(overflowLabels[0], font: font, displayScale: displayScale) > width {
+            return nil
         }
-        if visibleCount == 0 {
-            let remaining = width - (tags.count > 1 ? gap + overflowWidth(1) : 0)
-            if remaining > 0 {
-                visibleCount = 1
-                firstWidth = min(widths[0], remaining)
-            }
+        let showsIcon = symbolOnly || visibleCount == 0
+        func frame(_ x: CGFloat, _ badgeWidth: CGFloat, _ badgeHeight: CGFloat? = nil) -> CGRect {
+            let resolvedHeight = badgeHeight ?? height
+            return CGRect(x: physicalX(logicalX: x, width: badgeWidth, in: width, direction: direction),
+                          y: (height - resolvedHeight) / 2, width: badgeWidth, height: resolvedHeight)
         }
         var x: CGFloat = 0
-        let badges = (0..<visibleCount).map { index -> IOSUIKitArticleTagBadgeMetrics in
-            let badgeWidth = firstWidth ?? widths[index]
-            defer { x += badgeWidth + gap }
-            return .init(text: tags[index], frame: CGRect(
-                x: physicalX(logicalX: x, width: badgeWidth, in: width, direction: direction),
-                y: 0, width: badgeWidth, height: height
-            ))
+        let iconFrame = showsIcon ? frame(0, iconSize, iconSize) : nil
+        if showsIcon { x += iconSize + gap }
+        var badges: [IOSUIKitArticleTagBadgeMetrics] = []
+        if visibleCount == 1 {
+            let badgeWidth = min(naturalWidth, remaining)
+            badges.append(.init(text: first, frame: frame(x, badgeWidth)))
+            x += badgeWidth + gap
         }
-        let overflow: IOSUIKitArticleTagBadgeMetrics?
-        if visibleCount < tags.count {
-            let overflowBadgeWidth = min(overflowWidth(visibleCount), max(0, width - x))
-            overflow = .init(text: overflowLabels[visibleCount], frame: CGRect(
-                x: physicalX(logicalX: x, width: overflowBadgeWidth, in: width, direction: direction),
-                y: IOSUIKitArticleTagRowMetrics.verticalPadding,
-                width: overflowBadgeWidth, height: height - IOSUIKitArticleTagRowMetrics.verticalPadding * 2
-            ))
-        } else {
-            overflow = nil
-        }
-        return .init(badges: badges, overflow: overflow, height: height)
+        let overflow = visibleCount < tags.count
+            ? IOSUIKitArticleTagBadgeMetrics(
+                text: overflowLabels[visibleCount],
+                frame: frame(x, coreTextWidth(overflowLabels[visibleCount], font: font, displayScale: displayScale))
+            ) : nil
+        return .init(badges: badges, overflow: overflow, iconFrame: iconFrame, isHighlighted: !symbolOnly, height: height)
     }
 
     private static func pixelAligned(_ length: CGFloat, scale: CGFloat) -> CGFloat {

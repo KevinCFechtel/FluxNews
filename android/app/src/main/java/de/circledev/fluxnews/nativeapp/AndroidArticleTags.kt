@@ -2,7 +2,9 @@ package de.circledev.fluxnews.nativeapp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,130 +13,119 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import java.text.NumberFormat
 
 internal data class AndroidArticleTagLayout(
-    val visibleCount: Int,
-    val firstTagMaxWidth: Int? = null,
+    val visibleCount: Int = 0,
+    val firstTagMaxWidth: Int = 0,
+    val showsOverflow: Boolean = false,
+    val showsIcon: Boolean = false,
 )
 
-/** Fits complete labels first, truncating only a lone oversized first label. */
 internal object AndroidArticleTagPolicy {
-    const val MAX_VISIBLE = 3
+    fun labels(tags: List<String>): List<String> =
+        tags.map { it.replace(Regex("\\s+"), " ").trim() }.filter { it.isNotEmpty() }.distinct()
 
+    /** Only residual publication width is offered here; never take space from the date. */
     fun layout(
-        tagWidths: List<Int>,
+        firstTagWidth: Int,
+        minimumTagWidth: Int,
         totalCount: Int,
         availableWidth: Int,
         spacing: Int,
+        iconWidth: Int,
+        symbolOnly: Boolean,
         overflowWidth: (Int) -> Int,
     ): AndroidArticleTagLayout {
-        if (totalCount == 0 || availableWidth <= 0) return AndroidArticleTagLayout(0)
-        for (count in minOf(MAX_VISIBLE, totalCount, tagWidths.size) downTo 1) {
-            val hidden = totalCount - count
-            val trailing = if (hidden > 0) spacing + overflowWidth(hidden) else 0
-            if (tagWidths.take(count).sum() + spacing * (count - 1) + trailing <= availableWidth) {
-                return AndroidArticleTagLayout(count)
-            }
+        if (totalCount == 0 || availableWidth <= 0) return AndroidArticleTagLayout()
+        val leading = if (symbolOnly) iconWidth + spacing else 0
+        val trailing = if (totalCount > 1) spacing + overflowWidth(totalCount - 1) else 0
+        val remaining = availableWidth - leading - trailing
+        if (remaining >= minOf(firstTagWidth, minimumTagWidth)) {
+            return AndroidArticleTagLayout(
+                visibleCount = 1,
+                firstTagMaxWidth = minOf(firstTagWidth, remaining),
+                showsOverflow = totalCount > 1,
+                showsIcon = symbolOnly,
+            )
         }
-        val hidden = totalCount - 1
-        val remaining = availableWidth - if (hidden > 0) spacing + overflowWidth(hidden) else 0
-        return if (remaining > 0 && tagWidths.isNotEmpty()) {
-            AndroidArticleTagLayout(1, firstTagMaxWidth = remaining)
-        } else {
-            AndroidArticleTagLayout(0)
-        }
+        // A counter alone still needs a tag symbol to disambiguate it.
+        return if (iconWidth + spacing + overflowWidth(totalCount) <= availableWidth) {
+            AndroidArticleTagLayout(showsOverflow = true, showsIcon = true)
+        } else AndroidArticleTagLayout()
     }
 }
 
 @Composable
-internal fun ArticleTagsRow(tags: List<String>, isRead: Boolean) {
-    val labels = remember(tags) {
-        tags.map { it.replace(Regex("\\s+"), " ").trim() }.filter { it.isNotEmpty() }.distinct()
-    }
+internal fun ArticleTagsRow(labels: List<String>, isRead: Boolean, symbolOnly: Boolean) {
     if (labels.isEmpty()) return
     val locale = LocalConfiguration.current.locales[0]
     val numberFormat = remember(locale) { NumberFormat.getIntegerInstance(locale) }
-    val accessibilityLabel = stringResource(
-        R.string.article_tags_accessibility,
-        android.icu.text.ListFormatter.getInstance(locale).format(labels),
-    )
-    // Only up to three candidates and their possible overflow counts are measured.
-    val overflowLabels = (0..minOf(AndroidArticleTagPolicy.MAX_VISIBLE, labels.size)).associateWith {
+    val overflowLabels = (0..1).associateWith {
         stringResource(R.string.article_tags_more, numberFormat.format(labels.size - it))
     }
     val style = MaterialTheme.typography.labelSmall
     val color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isRead) 0.75f else 1f)
     val background = MaterialTheme.colorScheme.surfaceContainerHigh
-    SubcomposeLayout(
-        modifier = Modifier.clearAndSetSemantics { contentDescription = accessibilityLabel },
-    ) { constraints ->
+    val iconSide = with(LocalDensity.current) { style.fontSize.toDp() }
+    val textMeasurer = rememberTextMeasurer()
+    val labelModifier = if (symbolOnly) Modifier else Modifier
+        .clip(RoundedCornerShape(3.dp)).background(background).padding(horizontal = 3.dp)
+    // Full topic accessibility belongs to the publication group, even if no tag fits.
+    SubcomposeLayout(modifier = Modifier.clearAndSetSemantics {}) { constraints ->
         val width = constraints.maxWidth
-        val gap = 5.dp.roundToPx()
+        val gap = 4.dp.roundToPx()
         val childConstraints = Constraints(maxWidth = width)
-        val candidates = labels.take(AndroidArticleTagPolicy.MAX_VISIBLE).mapIndexed { index, label ->
-            subcompose("tag:$index") {
-                Text(
-                    label,
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp))
-                        .background(background).padding(horizontal = 6.dp, vertical = 2.dp),
-                    style = style,
-                    color = color,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }.single().measure(childConstraints)
-        }
-        val overflow = mutableMapOf<Int, androidx.compose.ui.layout.Placeable>()
-        fun overflowFor(visible: Int) = overflow.getOrPut(visible) {
+        fun label(available: Int, key: String) = subcompose(key) {
+            Text(
+                labels.first(), modifier = labelModifier, style = style, color = color,
+                maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+            )
+        }.single().measure(Constraints(maxWidth = available))
+        val horizontalPadding = if (symbolOnly) 0 else 6.dp.roundToPx()
+        val icon = subcompose("icon") {
+            Icon(painterResource(R.drawable.ic_tag), contentDescription = null, tint = color, modifier = Modifier.size(iconSide))
+        }.single().measure(childConstraints)
+        val counters = (0..1).associateWith { visible ->
             subcompose("overflow:$visible") {
                 Text(
-                    overflowLabels.getValue(visible),
-                    style = style,
-                    color = color,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Ellipsis,
+                    overflowLabels.getValue(visible), style = style, color = color,
+                    maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
                 )
             }.single().measure(childConstraints)
         }
         val fit = AndroidArticleTagPolicy.layout(
-            tagWidths = candidates.map { it.width },
-            totalCount = labels.size,
-            availableWidth = width,
-            spacing = gap,
-            overflowWidth = { hidden -> overflowFor(labels.size - hidden).width },
+            firstTagWidth = textMeasurer.measure(
+                AnnotatedString(labels.first()), style, softWrap = false, maxLines = 1,
+            ).size.width + horizontalPadding,
+            minimumTagWidth = textMeasurer.measure(AnnotatedString("MM…"), style).size.width + horizontalPadding,
+            totalCount = labels.size, availableWidth = width, spacing = gap,
+            iconWidth = icon.width, symbolOnly = symbolOnly,
+            // Require the full counter, rather than its constrained/ellipsized width.
+            overflowWidth = { hidden ->
+                textMeasurer.measure(AnnotatedString(overflowLabels.getValue(labels.size - hidden)), style).size.width
+            },
         )
-        val visible = if (fit.firstTagMaxWidth != null) {
-            listOf(subcompose("truncatedFirst") {
-                Text(
-                    labels.first(),
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp))
-                        .background(background).padding(horizontal = 6.dp, vertical = 2.dp),
-                    style = style,
-                    color = color,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }.single().measure(Constraints(maxWidth = fit.firstTagMaxWidth)))
-        } else candidates.take(fit.visibleCount)
-        val trailing = if (labels.size > fit.visibleCount) overflowFor(fit.visibleCount) else null
-        val height = maxOf(visible.maxOfOrNull { it.height } ?: 0, trailing?.height ?: 0)
-        layout(width, height) {
+        val shownLabel = if (fit.visibleCount == 1) label(fit.firstTagMaxWidth, "fitted") else null
+        val counter = if (fit.showsOverflow) counters.getValue(fit.visibleCount) else null
+        val children = listOfNotNull(if (fit.showsIcon) icon else null, shownLabel, counter)
+        val usedWidth = children.sumOf { it.width } + gap * (children.size - 1).coerceAtLeast(0)
+        val height = children.maxOfOrNull { it.height } ?: 0
+        layout(usedWidth, height) {
             var x = 0
-            visible.forEach {
+            children.forEach {
                 it.placeRelative(x, (height - it.height) / 2)
                 x += it.width + gap
             }
-            trailing?.placeRelative(x, (height - trailing.height) / 2)
         }
     }
 }

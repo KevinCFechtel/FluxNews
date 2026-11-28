@@ -512,15 +512,16 @@ The larger `AndroidStoragePaths` ownership/lifecycle review remains deferred to 
 
 ### Publisher-provided article tags
 
-Android Article Timeline and Search rows show publisher-provided tags below
-the publication row and before any preview in Compact, Visual and Visual Compact
-modes. These are article topics, not the user's feed category. Labels are neutral,
-small and non-interactive. The row never wraps or scrolls horizontally: at most
-three labels fit the actual available width, with a reserved `+N` indicator
-for remaining tags. A lone oversized label is ellipsized. System font scaling
-is preserved; narrower layouts show fewer labels, not smaller text. Empty tag
-lists create neither a row nor extra spacing. Accessibility exposes the complete
-topic list, including visually hidden tags.
+Android Article Timeline and Search rows show publisher-provided topics inline
+after publication/reading time, using only residual width. These are article
+topics, not the user's feed category. Compact and Visual use a subtle background;
+Visual Compact uses a tag symbol and plain text, including its text-only variant.
+At most one name is shown, ellipsized after reserving the remaining-topic `+N`.
+An unreadably narrow name falls back to symbol + total-topic count; no fit means
+no visual group. Topics never add height, wrap, scroll horizontally, or reduce the
+date/reading-time width budget. System font scaling is preserved. Empty lists add
+no spacing. The publication group's accessibility exposes all topics, including
+visually omitted topics. Labels remain non-interactive.
 
 Tags arrive in the existing Core/UniFFI article summaries, without per-row
 requests. Existing local articles receive tags when fetched again through normal
