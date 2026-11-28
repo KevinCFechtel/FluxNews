@@ -4,7 +4,7 @@ This folder configures **visibility and review**, not automatic merges or
 publishing. Cargo, Gradle and GitHub Actions version updates are proposed by
 Dependabot. The reusable `dependency-security.yml` workflow performs PR
 regression checks through the required `CI Gate`, plus independent full
-daily/main-push/manual scans and strict exact-SHA release checks.
+daily/main-push/manual scans and full exact-SHA release security checks.
 
 **Operational requirements**
 
@@ -32,19 +32,24 @@ daily/main-push/manual scans and strict exact-SHA release checks.
   independent improvements; new findings, additional affected versions, changed
   provenance and audit/comparison failures block `CI Gate`. No committed
   baseline or ignore list is used.
-- Full daily and release audits retain `cargo audit --deny warnings`:
-  **vulnerabilities AND unmaintained warnings block releases**, including
-  transitive crates. Signing/publication require the full candidate-SHA audit.
+- Full daily and release audits retain `cargo audit --deny warnings` as the raw
+  evidence source. `Build/rustsec_gate.py` validates the complete report and
+  classifies only `unmaintained` as **non-blocking maintenance warnings**.
+  Vulnerabilities, unsoundness, notices, yanked packages and incomplete audits
+  still block. All findings remain in artifacts and summaries; unmaintained
+  crates also produce GitHub warning annotations. PR regression rules above are
+  unchanged, including newly introduced maintenance warnings.
+  Signing/publication still require a successful full candidate-SHA gate.
   A passing PR comparison is not release approval or proof of dependency safety.
-  Do not suppress findings or downgrade a full audit's exit status.
 - The four-item red baseline recorded on 18 October 2026 (`paste`,
   `rustls-pemfile`, `rustybuzz`, `ttf-parser`) is historical and no
   longer describes the current resolved graph. Use the current
   `core/Cargo.lock` plus the strict RustSec job for present blockers.
   The November PR batch resolved the inherited `ctutils`, `libsqlite3-sys`
-  and `rustix` findings in #155. The last verified strict audit still reports
-  unmaintained `chrono` and `basic-toml`; these are separate release blockers,
-  not unfinished work on those merged PRs. Current PR dispositions, audit
+  and `rustix` findings in #155. The 28 November follow-up replaces `chrono`
+  with `time`, patches `url`, and keeps `basic-toml` visible as non-blocking
+  maintenance debt. These changes require affected Actions, not a repetition
+  of the earlier merged PR batch. Current PR dispositions, audit
   evidence and remaining ownership are recorded only in
   `docs/operations/DEPENDENCY_MAINTENANCE.md`. No finding is cleared by merely
   changing a parent manifest constraint.

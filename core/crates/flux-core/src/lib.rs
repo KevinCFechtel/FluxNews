@@ -16,6 +16,7 @@ pub mod saved_media_sync;
 pub mod storage;
 pub mod sync;
 mod sync_cancellation;
+mod timestamps;
 
 use sync_cancellation::Cancellable;
 pub use sync_cancellation::{SyncCancellation, SyncOutcome};
@@ -25,7 +26,8 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use chrono::{DateTime, Utc};
+use time::OffsetDateTime;
+use timestamps::{format_utc, now_rfc3339};
 
 use diagnostics::{CoreDiagnosticListener, Diagnostics};
 use domain::{
@@ -102,7 +104,7 @@ pub struct FluxCore {
 struct DeliveryRuntime {
     health: RuntimeHealth,
     next_retry_at: Option<Instant>,
-    next_retry_at_utc: Option<DateTime<Utc>>,
+    next_retry_at_utc: Option<OffsetDateTime>,
 }
 pub trait CoreEventListener: Send + Sync {
     fn on_event(&self, event: CoreEvent);
@@ -670,7 +672,7 @@ impl FluxCore {
         self.store
             .add_to_listening_list_with_policy(
                 article_id,
-                &Utc::now().to_rfc3339(),
+                &now_rfc3339(),
                 settings.auto_download_listening_list,
             )
             .map(|_| ())
@@ -696,8 +698,7 @@ impl FluxCore {
                 .sync_gate
                 .lock()
                 .map_err(|_| CoreError::internal("sync gate poisoned"))?;
-            self.store
-                .save_media(enclosure_id, &Utc::now().to_rfc3339())
+            self.store.save_media(enclosure_id, &now_rfc3339())
         });
         self.diagnostics.flush();
         result.map(|_| ())
@@ -834,7 +835,7 @@ impl FluxCore {
             enclosure_id,
             position_ms,
             duration_ms,
-            &Utc::now().to_rfc3339(),
+            &now_rfc3339(),
             supported,
         )
     }
@@ -852,12 +853,8 @@ impl FluxCore {
             .lock()
             .map_err(|_| CoreError::internal("media progression capability lock poisoned"))?
             == MediaProgressCapability::Supported;
-        self.store.complete_playback(
-            enclosure_id,
-            duration_ms,
-            &Utc::now().to_rfc3339(),
-            supported,
-        )
+        self.store
+            .complete_playback(enclosure_id, duration_ms, &now_rfc3339(), supported)
     }
     pub fn restart_playback(&self, enclosure_id: i64) -> Result<(), CoreError> {
         let _sync = self
@@ -870,7 +867,7 @@ impl FluxCore {
             .map_err(|_| CoreError::internal("media progression capability lock poisoned"))?
             == MediaProgressCapability::Supported;
         self.store
-            .restart_playback(enclosure_id, &Utc::now().to_rfc3339(), supported)
+            .restart_playback(enclosure_id, &now_rfc3339(), supported)
     }
     pub fn observe_media_duration(
         &self,
@@ -878,7 +875,7 @@ impl FluxCore {
         duration_ms: u64,
     ) -> Result<(), CoreError> {
         self.store
-            .observe_media_duration(enclosure_id, duration_ms, &Utc::now().to_rfc3339())
+            .observe_media_duration(enclosure_id, duration_ms, &now_rfc3339())
     }
     pub fn media_download(&self, enclosure_id: i64) -> Result<Option<MediaDownload>, CoreError> {
         self.store.media_download(enclosure_id)
@@ -1218,7 +1215,7 @@ impl FluxCore {
             .map_err(|_| CoreError::internal("sync gate poisoned"))?;
         self.store.request_download_deletion(enclosure_id)
     }
-    pub fn evaluate_media_cleanup(&self, now: DateTime<Utc>) -> Result<Vec<i64>, CoreError> {
+    pub fn evaluate_media_cleanup(&self, now: OffsetDateTime) -> Result<Vec<i64>, CoreError> {
         let _sync = self
             .sync_gate
             .lock()
@@ -1226,7 +1223,7 @@ impl FluxCore {
         self.store.evaluate_media_cleanup(now)
     }
     pub fn evaluate_media_cleanup_now(&self) -> Result<Vec<i64>, CoreError> {
-        self.evaluate_media_cleanup(Utc::now())
+        self.evaluate_media_cleanup(OffsetDateTime::now_utc())
     }
     pub fn request_all_download_deletions(&self) -> Result<u64, CoreError> {
         let _sync = self
@@ -1481,7 +1478,7 @@ impl FluxCore {
             .map_err(|_| CoreError::internal("delivery runtime lock poisoned"))?;
         Ok(RuntimeHealthStatus {
             health: state.health,
-            next_retry_at: state.next_retry_at_utc.map(|time| time.to_rfc3339()),
+            next_retry_at: state.next_retry_at_utc.map(format_utc),
         })
     }
     pub fn delivery_health(&self) -> Result<RuntimeHealth, CoreError> {
@@ -1746,7 +1743,7 @@ impl FluxCore {
             RuntimeHealth::ConnectivityDegraded
         };
         state.next_retry_at = Some(Instant::now() + Duration::from_secs(5));
-        state.next_retry_at_utc = Some(Utc::now() + chrono::Duration::seconds(5));
+        state.next_retry_at_utc = Some(OffsetDateTime::now_utc() + time::Duration::seconds(5));
         Ok(())
     }
     fn clear_backoff(&self) -> Result<(), CoreError> {
@@ -1817,11 +1814,11 @@ mod tests {
     use super::*;
     use crate::domain::*;
     use crate::miniflux::{RemoteSavedMediaArticle, RemoteSnapshot, RemoteSource};
-    use chrono::{Duration as ChronoDuration, Utc};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::thread;
     use std::time::Duration;
     use tempfile::TempDir;
+    use time::Duration as TimeDuration;
 
     struct Source {
         snapshot: RemoteSnapshot,
@@ -2155,7 +2152,7 @@ mod tests {
         }
     }
     fn snapshot() -> RemoteSnapshot {
-        let now = Utc::now();
+        let now = OffsetDateTime::now_utc();
         RemoteSnapshot {
             categories: vec![
                 Category {
@@ -2180,27 +2177,9 @@ mod tests {
                 },
             ],
             articles: vec![
-                article(
-                    1,
-                    10,
-                    (now - ChronoDuration::days(1)).to_rfc3339(),
-                    false,
-                    false,
-                ),
-                article(
-                    2,
-                    10,
-                    (now - ChronoDuration::days(2)).to_rfc3339(),
-                    true,
-                    true,
-                ),
-                article(
-                    3,
-                    20,
-                    (now - ChronoDuration::days(3)).to_rfc3339(),
-                    true,
-                    false,
-                ),
+                article(1, 10, format_utc(now - TimeDuration::days(1)), false, false),
+                article(2, 10, format_utc(now - TimeDuration::days(2)), true, true),
+                article(3, 20, format_utc(now - TimeDuration::days(3)), true, false),
             ],
             enclosures: vec![],
         }
@@ -2760,7 +2739,7 @@ mod tests {
     #[test]
     fn keyset_pagination_is_deterministic_for_identical_publication_times_and_zero_limit_is_all() {
         let temp = TempDir::new().unwrap();
-        let time = Utc::now().to_rfc3339();
+        let time = now_rfc3339();
         let mut data = snapshot();
         data.articles = vec![
             article(3, 10, time.clone(), false, false),
@@ -2800,7 +2779,7 @@ mod tests {
     #[test]
     fn article_page_preserves_keyset_order_and_total_without_cursor() {
         let temp = TempDir::new().unwrap();
-        let time = Utc::now().to_rfc3339();
+        let time = now_rfc3339();
         let mut data = snapshot();
         data.articles = vec![
             article(4, 10, time.clone(), false, true),
@@ -3002,7 +2981,7 @@ mod tests {
     #[test]
     fn sync_retention_removes_only_expired_unstarred_read_articles() {
         let temp = TempDir::new().unwrap();
-        let old = (Utc::now() - ChronoDuration::days(91)).to_rfc3339();
+        let old = format_utc(OffsetDateTime::now_utc() - TimeDuration::days(91));
         let mut data = snapshot();
         data.articles = vec![
             article(1, 10, old.clone(), false, false),
@@ -3030,7 +3009,7 @@ mod tests {
         data.articles = vec![article(
             1,
             10,
-            (Utc::now() - ChronoDuration::days(45)).to_rfc3339(),
+            format_utc(OffsetDateTime::now_utc() - TimeDuration::days(45)),
             true,
             false,
         )];
@@ -3055,7 +3034,7 @@ mod tests {
         let recent_read = article(
             4,
             10,
-            (Utc::now() - ChronoDuration::days(89)).to_rfc3339(),
+            format_utc(OffsetDateTime::now_utc() - TimeDuration::days(89)),
             true,
             false,
         );
@@ -3116,7 +3095,7 @@ mod tests {
     fn sync_retention_preserves_old_unread_and_starred_local_articles() {
         let temp = TempDir::new().unwrap();
         let mut remote = snapshot();
-        let old = (Utc::now() - ChronoDuration::days(91)).to_rfc3339();
+        let old = format_utc(OffsetDateTime::now_utc() - TimeDuration::days(91));
         remote.articles = vec![
             article(5, 10, old.clone(), false, false),
             article(6, 10, old.clone(), true, true),
@@ -3337,9 +3316,9 @@ mod tests {
         core.set_feed_system_notifications_enabled(10, true)
             .unwrap();
         source.snapshot.lock().unwrap().articles.extend([
-            article(4, 10, Utc::now().to_rfc3339(), false, false),
-            article(5, 10, Utc::now().to_rfc3339(), false, false),
-            article(6, 20, Utc::now().to_rfc3339(), false, false),
+            article(4, 10, now_rfc3339(), false, false),
+            article(5, 10, now_rfc3339(), false, false),
+            article(6, 20, now_rfc3339(), false, false),
         ]);
         let result = core.sync(SyncReason::Periodic).unwrap();
         assert_eq!(
@@ -3365,13 +3344,12 @@ mod tests {
             ),
             (10, "Feed A", 2)
         );
-        source.snapshot.lock().unwrap().articles.push(article(
-            7,
-            10,
-            Utc::now().to_rfc3339(),
-            false,
-            false,
-        ));
+        source
+            .snapshot
+            .lock()
+            .unwrap()
+            .articles
+            .push(article(7, 10, now_rfc3339(), false, false));
         let retry = core.sync(SyncReason::Periodic).unwrap();
         assert_eq!(retry.system_notification_candidates[0].new_count, 3);
         core.acknowledge_system_notification(candidate.candidate_id)
@@ -3433,13 +3411,12 @@ mod tests {
         let (core, source) = mutation_core(&temp);
         core.set_feed_system_notifications_enabled(10, true)
             .unwrap();
-        source.snapshot.lock().unwrap().articles.push(article(
-            4,
-            10,
-            Utc::now().to_rfc3339(),
-            false,
-            false,
-        ));
+        source
+            .snapshot
+            .lock()
+            .unwrap()
+            .articles
+            .push(article(4, 10, now_rfc3339(), false, false));
         let app_start = core.sync(SyncReason::AppStart).unwrap();
         assert_eq!(
             app_start.new_articles_by_feed,
@@ -4120,7 +4097,7 @@ mod tests {
         let (core, source) = search_core(&temp);
         let mut data = snapshot();
         data.articles
-            .push(article(4, 20, Utc::now().to_rfc3339(), false, true));
+            .push(article(4, 20, now_rfc3339(), false, true));
         core.store
             .reconcile(&data.categories, &data.feeds, &data.articles)
             .unwrap();
@@ -4455,14 +4432,14 @@ mod tests {
     #[test]
     fn widget_data_is_bounded_per_feed_with_authoritative_counts() {
         let temp = TempDir::new().unwrap();
-        let now = Utc::now();
+        let now = OffsetDateTime::now_utc();
         let mut data = snapshot();
         data.articles.clear();
         for id in 1..=20 {
             data.articles.push(article(
                 id,
                 10,
-                (now - ChronoDuration::minutes(id)).to_rfc3339(),
+                format_utc(now - TimeDuration::minutes(id)),
                 false,
                 id == 20,
             ));
@@ -4470,21 +4447,21 @@ mod tests {
         data.articles.push(article(
             100,
             20,
-            (now - ChronoDuration::days(1)).to_rfc3339(),
+            format_utc(now - TimeDuration::days(1)),
             false,
             false,
         ));
         data.articles.push(article(
             101,
             20,
-            (now - ChronoDuration::days(2)).to_rfc3339(),
+            format_utc(now - TimeDuration::days(2)),
             true,
             true,
         ));
         data.articles.push(article(
             102,
             20,
-            (now - ChronoDuration::days(3)).to_rfc3339(),
+            format_utc(now - TimeDuration::days(3)),
             true,
             false,
         ));
@@ -4629,10 +4606,10 @@ mod tests {
             let mut remote = source.snapshot.lock().unwrap();
             remote
                 .articles
-                .push(article(4, 10, Utc::now().to_rfc3339(), false, false));
+                .push(article(4, 10, now_rfc3339(), false, false));
             remote
                 .articles
-                .push(article(5, 99, Utc::now().to_rfc3339(), false, false));
+                .push(article(5, 99, now_rfc3339(), false, false));
         }
 
         let delta = core.sync(SyncReason::Background).unwrap();

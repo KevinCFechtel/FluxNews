@@ -11,7 +11,7 @@ use crate::domain::{
     SaveToServiceResult, SearchArticlesRequest, SearchArticlesResult,
 };
 use crate::sync_cancellation::SyncCancellation;
-use chrono::{DateTime, SecondsFormat};
+use crate::timestamps::{parse_rfc3339, publication_time};
 use serde::Deserialize;
 
 const PAGE_SIZE: i64 = 100;
@@ -839,7 +839,7 @@ impl MinifluxClient {
                     mime_type: item.mime_type.clone(),
                 })
                 .collect::<Vec<_>>();
-            let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+            let published = publication_time(&entry.published_at).map_err(|_| {
                 CoreError::data(format!("article {} has invalid publication time", entry.id))
             })?;
             let processed = crate::article::process(&entry.content, &entry.url, &enclosure_inputs);
@@ -850,9 +850,7 @@ impl MinifluxClient {
                 title: entry.title,
                 url: entry.url,
                 comments_url: entry.comments_url,
-                published_at: published
-                    .to_utc()
-                    .to_rfc3339_opts(SecondsFormat::Secs, true),
+                published_at: published,
                 // Miniflux's removed state is not an unread state. Full Sync
                 // eventually reconciles structural/removal truth.
                 is_read: entry.status != "unread",
@@ -1239,7 +1237,7 @@ impl MinifluxClient {
                     entry.id, entry.feed_id
                 )));
             }
-            let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+            let published = publication_time(&entry.published_at).map_err(|_| {
                 CoreError::data(format!("article {} has invalid publication time", entry.id))
             })?;
             let entry_enclosures = map_enclosures(entry.id, entry.enclosures)?;
@@ -1258,9 +1256,7 @@ impl MinifluxClient {
                 title: entry.title,
                 url: entry.url,
                 comments_url: entry.comments_url,
-                published_at: published
-                    .to_utc()
-                    .to_rfc3339_opts(SecondsFormat::Secs, true),
+                published_at: published,
                 is_read: entry.status == "read",
                 is_starred: entry.starred,
                 raw_html_content: entry.content,
@@ -1766,8 +1762,8 @@ struct FeedDto {
 }
 
 fn entry_changed_at_unix(entry: &EntryDto) -> Result<i64, CoreError> {
-    DateTime::parse_from_rfc3339(&entry.changed_at)
-        .map(|value| value.timestamp())
+    parse_rfc3339(&entry.changed_at)
+        .map(|value| value.unix_timestamp())
         .map_err(|_| CoreError::data(format!("article {} has invalid changed_at", entry.id)))
 }
 
@@ -1782,7 +1778,7 @@ fn search_article_summary(entry: EntryDto) -> Result<ArticleSummary, CoreError> 
         .category
         .map(|category| category.id)
         .unwrap_or_default();
-    let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+    let published = publication_time(&entry.published_at).map_err(|_| {
         CoreError::data(format!("article {} has invalid publication time", entry.id))
     })?;
     let enclosures = entry
@@ -1802,9 +1798,7 @@ fn search_article_summary(entry: EntryDto) -> Result<ArticleSummary, CoreError> 
         title: entry.title,
         url: entry.url,
         comments_url: entry.comments_url,
-        published_at: published
-            .to_utc()
-            .to_rfc3339_opts(SecondsFormat::Secs, true),
+        published_at: published,
         is_read: entry.status == "read",
         is_starred: entry.starred,
         reading_time_minutes: entry.reading_time,
@@ -1839,7 +1833,7 @@ fn map_enclosures(
         .collect()
 }
 fn entry_to_saved_media_article(entry: EntryDto) -> Result<RemoteSavedMediaArticle, CoreError> {
-    let published = DateTime::parse_from_rfc3339(&entry.published_at).map_err(|_| {
+    let published = publication_time(&entry.published_at).map_err(|_| {
         CoreError::data(format!("article {} has invalid publication time", entry.id))
     })?;
     let enclosures = map_enclosures(entry.id, entry.enclosures)?;
@@ -1858,9 +1852,7 @@ fn entry_to_saved_media_article(entry: EntryDto) -> Result<RemoteSavedMediaArtic
             title: entry.title,
             url: entry.url,
             comments_url: entry.comments_url,
-            published_at: published
-                .to_utc()
-                .to_rfc3339_opts(SecondsFormat::Secs, true),
+            published_at: published,
             is_read: entry.status == "read",
             is_starred: entry.starred,
             raw_html_content: entry.content,
@@ -1979,6 +1971,13 @@ impl IconDto {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn nested_blob_origins_are_opaque_without_recursive_stack_growth() {
+        let url =
+            url::Url::parse(&format!("{}https://example.test/", "blob:".repeat(10_000))).unwrap();
+        assert!(matches!(url.origin(), url::Origin::Opaque(_)));
+    }
 
     #[test]
     fn entry_reading_time_reaches_article_summary() {

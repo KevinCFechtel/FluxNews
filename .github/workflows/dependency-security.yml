@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   rustsec:
-    name: ${{ inputs.base_sha != '' && 'RustSec regression gate' || 'Strict RustSec audit' }}
+    name: ${{ inputs.base_sha != '' && 'RustSec regression gate' || 'RustSec full security audit' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -57,7 +57,7 @@ jobs:
         run: |
           cargo install cargo-audit --version 0.23.0 --locked
           cargo audit --version | grep -F '0.23.0'
-      - name: Audit immutable source (regression for PRs, strict otherwise)
+      - name: Audit immutable source (PR regressions; full security gate with maintenance warnings otherwise)
         env:
           BASE_SHA: ${{ inputs.base_sha }}
         run: |

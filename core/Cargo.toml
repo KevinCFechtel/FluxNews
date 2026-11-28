@@ -10,7 +10,7 @@ version = "1.0.0"
 [workspace.dependencies]
 aes-gcm = "0.11.1"
 argon2 = "0.6.0"
-chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+time = { version = "0.3.55", features = ["parsing"] }
 base64 = "0.23.1"
 html5ever = "0.40.1"
 jni = { version = "0.22.4", default-features = false }
@@ -25,7 +25,7 @@ symphonia = { version = "0.6.1", default-features = false, features = ["all-form
 rustls-platform-verifier = "0.7.1"
 thiserror = "2.0.21"
 ureq = { version = "3.4.2", default-features = false, features = ["rustls", "platform-verifier"] }
-url = "2.5.8"
+url = "2.5.9"
 uniffi = { version = "0.32.2", features = ["cli"] }
 tempfile = "3.27.0"
 tiny-skia = "0.12.0"

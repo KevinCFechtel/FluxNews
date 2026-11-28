@@ -187,6 +187,38 @@ class ComparisonTests(unittest.TestCase):
         self.assertIn("https://rustsec.org/advisories/RUSTSEC-2026-0374.html", text)
         self.assertIn("**PASS:**", text)
 
+    def test_release_security_fix_can_ship_with_existing_maintenance_warning(self):
+        maintenance = finding()
+        vulnerability = finding(kind="vulnerability", package="url", advisory="RUSTSEC-2026-0592")
+        changes = gate.compare([maintenance, vulnerability], [maintenance])
+        self.assertEqual(gate.blocking_findings("a" * 40, changes), [])
+        full = gate.compare([], [maintenance])
+        self.assertEqual(gate.blocking_findings(None, full), [])
+        self.assertEqual(full["new"], [maintenance], "the raw finding is not filtered away")
+
+    def test_new_unmaintained_dependency_still_blocks_a_pr(self):
+        changes = gate.compare([], [finding()])
+        self.assertEqual(gate.blocking_findings("a" * 40, changes), [finding()])
+        self.assertIn("**FAIL:**", gate.summary("a" * 40, "b" * 40, "c" * 40, changes))
+
+    def test_full_summary_distinguishes_maintenance_and_security_findings(self):
+        vulnerability = finding(kind="vulnerability", package="url")
+        text = gate.summary(None, "b" * 40, "c" * 40, gate.compare([], [finding(), vulnerability]))
+        self.assertIn("Blocking findings: 1", text)
+        self.assertIn("Maintenance warnings (non-blocking): 1", text)
+        self.assertIn("**FAIL:**", text)
+
+    def test_maintenance_annotations_are_visible_and_escape_advisory_text(self):
+        item = gate.Finding("unmaintained", "RUSTSEC-2026-0374", "basic-toml", "0.1.10",
+                            "registry+https://example.test", "100% unmaintained\n::error::injected")
+        output = io.StringIO()
+        with redirect_stdout(output):
+            gate.publish_maintenance_warnings([item, finding(kind="vulnerability")])
+        text = output.getvalue()
+        self.assertEqual(len(text.splitlines()), 1)
+        self.assertTrue(text.startswith("::warning title=RustSec maintenance warning::"))
+        self.assertIn("100%25 unmaintained%0A::error::injected", text)
+
 
 class ExecutionTests(unittest.TestCase):
     def test_audits_use_one_database_no_fetch_and_an_isolated_cwd(self):
@@ -203,6 +235,20 @@ class ExecutionTests(unittest.TestCase):
             self.assertNotIn("--ignore", args)
             self.assertNotIn("--no-yanked", args)
             self.assertEqual(json.loads(output.read_text()), report())
+            self.assertEqual(output.with_suffix(".exit-code.txt").read_text(), "0\n")
+
+    def test_raw_unmaintained_exit_and_report_are_retained_before_policy_classification(self):
+        data = report(warnings={"unmaintained": [finding()]})
+        with tempfile.TemporaryDirectory() as directory:
+            scratch = Path(directory)
+            output = scratch / "report.json"
+            completed = subprocess.CompletedProcess([], 1, json.dumps(data), "")
+            with patch.object(gate, "run", return_value=completed):
+                findings = gate.audit(scratch / "Cargo.lock", scratch / "db", output, scratch)
+            self.assertEqual(findings, [finding()])
+            self.assertEqual(json.loads(output.read_text()), data)
+            self.assertEqual(output.with_suffix(".exit-code.txt").read_text(), "1\n")
+            self.assertEqual(gate.blocking_findings(None, gate.compare([], findings)), [])
 
     def test_non_json_output_is_preserved_and_blocks(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -302,9 +348,26 @@ class GitSnapshotTests(unittest.TestCase):
         self.assertEqual(metadata["head"], self.head)
         self.assertEqual(metadata["database"], self.git(self.database, "rev-parse", "HEAD"))
 
-    def test_strict_audit_rejects_an_existing_warning(self):
+    def test_full_audit_warns_without_blocking_on_unmaintained(self):
         with patch.object(gate, "audit", return_value=[finding()]), redirect_stdout(io.StringIO()):
-            self.assertEqual(gate.check(self.repo, self.output, None, self.database), 1)
+            self.assertEqual(gate.check(self.repo, self.output, None, self.database), 0)
+        metadata = json.loads((self.output / "comparison.json").read_text())
+        self.assertEqual(len(metadata["findings"]["new"]), 1)
+        self.assertEqual(metadata["blocking_findings"], [])
+        text = (self.output / "summary.md").read_text()
+        self.assertIn("Maintenance warnings (non-blocking): 1", text)
+        self.assertIn("Blocking findings: 0", text)
+        self.assertIn("**PASS:**", text)
+
+    def test_full_audit_still_blocks_vulnerabilities_and_other_warning_kinds(self):
+        for kind in ("vulnerability", "unsound", "notice", "yanked"):
+            with self.subTest(kind=kind), \
+                    patch.object(gate, "audit", return_value=[finding(kind=kind), finding()]), \
+                    redirect_stdout(io.StringIO()):
+                self.assertEqual(gate.check(self.repo, self.output, None, self.database), 1)
+                metadata = json.loads((self.output / "comparison.json").read_text())
+                self.assertEqual([item["kind"] for item in metadata["blocking_findings"]], [kind])
+                self.assertIn("**FAIL:**", (self.output / "summary.md").read_text())
 
     def test_new_advisory_blocks_real_snapshot_comparison(self):
         with patch.object(gate, "audit", side_effect=[[], [finding()], [], [finding()]]), redirect_stdout(io.StringIO()):

@@ -25,9 +25,10 @@ use crate::media_metadata::{
     AnalyzedMedia, analyze_file, article_chapters, resolve_media_reference, to_domain_chapters,
 };
 use crate::miniflux::normalize_installation_base;
-use chrono::Utc;
+use crate::timestamps::{now_rfc3339, parse_rfc3339};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
 use sha2::{Digest, Sha256};
+use time::{Duration, OffsetDateTime};
 
 const SCHEMA_VERSION: i64 = 23;
 
@@ -812,7 +813,7 @@ impl Store {
             }
         }
         for article_id in auto_download_articles {
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
             for enclosure_id in audio_enclosure_ids_for_article(&tx, article_id)? {
                 let suppressed: bool = tx
                     .query_row(
@@ -1956,7 +1957,7 @@ impl Store {
                     |row| row.get(0),
                 )
                 .map_err(sql_error)?;
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
         }
         request_download_in_transaction(&tx, enclosure_id, origin)?;
         tx.commit().map_err(sql_error)
@@ -2060,7 +2061,7 @@ impl Store {
             Some(DownloadState::Requested) => {
                 tx.execute(
                     "UPDATE media_downloads SET state='downloaded',local_file=?1,file_size_bytes=?2,downloaded_at=?3,failure_kind=NULL WHERE enclosure_id=?4",
-                    params![local_file, size, Utc::now().to_rfc3339(), enclosure_id],
+                    params![local_file, size, now_rfc3339(), enclosure_id],
                 )
                 .map_err(sql_error)?;
                 let artwork_reference = self.persist_artwork(&analyzed.artwork)?;
@@ -2374,7 +2375,7 @@ impl Store {
                 .map_err(sql_error)?;
             // A previous migration may have persisted the download before its
             // Listening List projection was restored. Repair it on safe retry.
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
         }
         if existing_state.is_some() {
             tx.commit().map_err(sql_error)?;
@@ -2382,7 +2383,7 @@ impl Store {
         }
         tx.execute(
             "INSERT INTO media_downloads(enclosure_id,state,origin,local_file,file_size_bytes,downloaded_at,failure_kind) VALUES(?1,'downloaded','manual',?2,?3,?4,NULL)",
-            params![enclosure_id, local_file, size, Utc::now().to_rfc3339()],
+            params![enclosure_id, local_file, size, now_rfc3339()],
         ).map_err(sql_error)?;
         let artwork_reference = self.persist_artwork(&analyzed.artwork)?;
         persist_media_metadata(
@@ -2534,14 +2535,11 @@ impl Store {
             .map_err(sql_error)
     }
 
-    pub fn evaluate_media_cleanup(
-        &self,
-        now: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<i64>, CoreError> {
+    pub fn evaluate_media_cleanup(&self, now: OffsetDateTime) -> Result<Vec<i64>, CoreError> {
         let settings = self.core_settings()?;
         let cutoff = match settings.download_retention {
             DownloadRetention::Forever => None,
-            DownloadRetention::Days(days) => Some(now - chrono::Duration::days(i64::from(days))),
+            DownloadRetention::Days(days) => Some(now - Duration::days(i64::from(days))),
         };
         let mut connection = self
             .connection
@@ -2564,8 +2562,8 @@ impl Store {
         let mut deleted = Vec::new();
         for (enclosure_id, downloaded_at, completed) in candidates {
             let expired = cutoff.is_some_and(|cutoff| {
-                chrono::DateTime::parse_from_rfc3339(&downloaded_at)
-                    .map(|value| value.with_timezone(&chrono::Utc) <= cutoff)
+                parse_rfc3339(&downloaded_at)
+                    .map(|value| value <= cutoff)
                     .unwrap_or(false)
             });
             if expired || (settings.delete_after_playback && completed) {
@@ -2600,7 +2598,7 @@ impl Store {
         .map_err(sql_error)?;
         upsert_remote_enclosures(&tx, std::slice::from_ref(enclosure))?;
         if is_audio_enclosure(&tx, enclosure.id)? {
-            ensure_listening_membership(&tx, article.id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article.id, &now_rfc3339())?;
         }
         tx.execute(
             "INSERT INTO media_downloads(enclosure_id,state,origin,local_file,file_size_bytes,downloaded_at,failure_kind) VALUES(?1,'requested',?2,NULL,NULL,NULL,NULL) ON CONFLICT(enclosure_id) DO UPDATE SET state='requested',origin=excluded.origin,local_file=NULL,file_size_bytes=NULL,downloaded_at=NULL,failure_kind=NULL",
@@ -3949,7 +3947,7 @@ impl Store {
             }
         }
         for article_id in auto_download_articles {
-            ensure_listening_membership(&tx, article_id, &Utc::now().to_rfc3339())?;
+            ensure_listening_membership(&tx, article_id, &now_rfc3339())?;
             for enclosure_id in audio_enclosure_ids_for_article(&tx, article_id)? {
                 let suppressed: bool = tx
                     .query_row(
@@ -9091,13 +9089,63 @@ mod tests {
         store
             .set_download_retention(DownloadRetention::Days(30))
             .unwrap();
-        let now = chrono::DateTime::parse_from_rfc3339("2026-02-01T00:00:00Z")
-            .unwrap()
-            .with_timezone(&chrono::Utc);
+        let now = parse_rfc3339("2026-02-01T00:00:00Z").unwrap();
         assert_eq!(store.evaluate_media_cleanup(now).unwrap(), vec![1000]);
         assert!(!store.auto_download_suppressed(1000).unwrap());
         assert!(store.saved_media(1000).unwrap().is_some());
         assert!(store.playback_state(1000).unwrap().is_none());
+    }
+
+    #[test]
+    fn download_retention_preserves_offset_fractional_and_invalid_timestamp_boundaries() {
+        let temp = TempDir::new().unwrap();
+        let (data, cache, media) = roots(&temp);
+        let store = Store::open(&data, &cache, &media).unwrap();
+        let (article, enclosure) = media_article_enclosure_pair();
+        store
+            .reconcile_with_enclosures(
+                &[Category {
+                    id: 1,
+                    title: "Category".into(),
+                }],
+                &[Feed {
+                    id: 10,
+                    category_id: 1,
+                    title: "Feed".into(),
+                }],
+                &[article],
+                &[enclosure],
+            )
+            .unwrap();
+        store
+            .request_download(1000, DownloadOrigin::Manual)
+            .unwrap();
+        store.download_finished(1000, "episode.mp3", 10).unwrap();
+        store
+            .set_download_retention(DownloadRetention::Days(30))
+            .unwrap();
+        let now = parse_rfc3339("2026-11-01T01:00:00-05:00").unwrap();
+        for (downloaded_at, expired) in [
+            ("2026-10-02T08:00:00+02:00", true),
+            ("2026-10-02T06:00:00.000000001Z", false),
+            ("2026-10-02T05:59:59.999999999+00:00", true),
+            ("invalid", false),
+        ] {
+            store.connection.lock().unwrap().execute(
+                "UPDATE media_downloads SET state='downloaded',downloaded_at=?1 WHERE enclosure_id=1000",
+                [downloaded_at],
+            ).unwrap();
+            assert_eq!(
+                !store.evaluate_media_cleanup(now).unwrap().is_empty(),
+                expired,
+                "{downloaded_at}"
+            );
+            assert!(store.article_summary(100).unwrap().is_some());
+            assert_eq!(
+                store.enclosure(1000).unwrap().unwrap().enclosure.article_id,
+                100
+            );
+        }
     }
 
     #[test]

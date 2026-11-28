@@ -137,9 +137,12 @@ All final scripts should print a concise release summary containing:
    (`arm64-v8a`, `x86_64`, `armeabi-v7a`). Reject missing, failed, skipped or
    inconclusive mandatory checks. Reuse existing checks and avoid duplicate
    native builds.
-   The reusable RustSec workflow also performs a **full strict audit of this
-   exact candidate SHA**, without a PR baseline. Existing findings accepted by
-   a PR regression comparison are not release waivers. The `security` result
+   The reusable RustSec workflow also performs a **full security audit of this
+   exact candidate SHA**, without a PR baseline. Existing vulnerabilities accepted
+   by a PR regression comparison are not release waivers. Pure `unmaintained`
+   findings remain visible maintenance warnings and do not block release;
+   vulnerabilities, other blocking warning kinds and incomplete audits still do,
+   as defined in `DEPENDENCY_MAINTENANCE.md`. The `security` result
    must be successful before Android signing or any platform's tag/publication
    step; missing, skipped, cancelled or failed results do not permit promotion.
    This security check also runs for iOS/macOS and validation-only dispatches.
